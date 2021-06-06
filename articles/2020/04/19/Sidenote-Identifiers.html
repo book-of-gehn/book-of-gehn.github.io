@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Sidenote: Identifiers</title>
+  <meta name="description" content="What would be a nice identifier for the people in, let’s say, a database?">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2020/04/19/Sidenote-Identifiers.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Sidenote: Identifiers</h1>
+<p class="subtitle">April 19, 2020</p>
+
+<p>What would be a nice identifier for the people in, let’s say, a database?</p>
+
+<figure><figcaption><span></span></figcaption><img style="max-width: 70%;" src="/book-of-gehn/assets/2020-04-19-Sidenote-Identifiers/email.png" /></figure>
+
+<!--more-->
+
+<p>We need identifiers to operate the tables, make joins, and all kind
+of crazy data processing.</p>
+
+<p>What would be a good one?</p>
+
+<p><label for="mf-f28bb58496658129a8f44cfa4f67ba84" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-f28bb58496658129a8f44cfa4f67ba84" class="margin-toggle " /><span class="marginnote "><img style="max-width: 70%;" class="fullwidth" alt="name-img" src="/book-of-gehn/assets/2020-04-19-Sidenote-Identifiers/name.png" />  <br /></span></p>
+
+<p>Their names and addresses? Quite old fashion. Collisions are possible
+and can be very frequent. <br />
+Building an id based on the attributes of the person is not good
+in any case: it is a matter of time that the person change
+in some way (like change her address) to make the id <em>schema</em> inconsistent.</p>
+
+<p><label for="mf-8f2adea854f461990d15f6dd398ab87c" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-8f2adea854f461990d15f6dd398ab87c" class="margin-toggle " /><span class="marginnote "><img style="max-width: 70%;" class="fullwidth" alt="ssn-img" src="/book-of-gehn/assets/2020-04-19-Sidenote-Identifiers/ssn.png" />  <br /></span></p>
+
+<p>Their government-level id, like the Social Security Number? Better but no,
+different countries have different
+identifier systems like <a href="https://en.wikipedia.org/wiki/INSEE_code">INSEE</a>
+in France. If you plan to use the software world-wide this
+will not work. <br />
+And you are still depending on
+<a href="https://www.ssa.gov/history/ssn/misused.html">humans</a> to ensure uniqueness.</p>
+
+<p>Their email? Everyone has an email, right? Yea… well. It is more
+nation agnostic but <a href="https://gist.github.com/adamloving/4401361">still…</a></p>
+
+<figure><figcaption><span></span></figcaption><img style="max-width: 70%;" src="/book-of-gehn/assets/2020-04-19-Sidenote-Identifiers/email.png" /></figure>
+
+<p>Their DNA? That’s unique right?</p>
+
+<p><em>Keep it simple. Use a plain number.</em></p>
+
+<p>Just:</p>
+
+<ul>
+  <li>do not allow a human to set the id, make the id unique by software.</li>
+  <li>do not associate any meaning to it, it is just a number.</li>
+  <li>be careful, assigning numbers incrementally will allow and attacker
+to guess what will be the next id. This may or may not be a problem.</li>
+  <li>do not reuse any id, <strong>never</strong>.</li>
+  <li>make sure that the space of possible numbers is large enough.</li>
+</ul>
+
+<figure><figcaption><span></span></figcaption><img style="max-width: 70%;" src="/book-of-gehn/assets/2020-04-19-Sidenote-Identifiers/sheep.png" /></figure>
+
+
+
+    </article>
+    <span class="print-footer">Sidenote: Identifiers - April 19, 2020 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

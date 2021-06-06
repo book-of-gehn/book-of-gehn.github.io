@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Cape Encryption</title>
+  <meta name="description" content="The Cape library ⊕https://github.com/gioblu/Cape/tree/294f810ac4831af26832e70e4ba5d073908232e2 offers a symmetric stream cipher implemented incape_decrypt an...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2019/02/03/Cape-Encryption.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Cape Encryption</h1>
+<p class="subtitle">February 3, 2019</p>
+
+<p>The Cape library<label for="mn-4bc32159a5b520259ac8bbc444bdd485" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-4bc32159a5b520259ac8bbc444bdd485" class="margin-toggle" /><span class="marginnote">https://github.com/gioblu/Cape/tree/294f810ac4831af26832e70e4ba5d073908232e2 </span>
+offers a symmetric stream cipher implemented in
+<code class="highlighter-rouge">cape_decrypt</code> and <code class="highlighter-rouge">cape_encrypt</code>.</p>
+
+<p>In addition, it offers another symmetric stream cipher, a slightly different
+of the first one, implemented in <code class="highlighter-rouge">cape_hash</code><label for="mn-07e3f75f5385a05dda74ee8bdc043d42" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-07e3f75f5385a05dda74ee8bdc043d42" class="margin-toggle" /><span class="marginnote"><code class="highlighter-rouge">cape_hash</code> is an unfortunately name for a cipher. </span></p>
+
+<p>In this write-up we are going to analyze the <code class="highlighter-rouge">cape_hash</code> stream cipher
+and see if we can break it.<!--more--></p>
+
+<!--
+>>> import sys
+>>> sys.path.append("./assets/matasano")
+>>> from challenge import generate_config                    # byexample: +timeout=10
+
+>>> seed = 20190203   # make the tests 'random' but deterministic
+
+>>> cfg = generate_config(random_state=seed)
+>>> rnd = cfg.rnd
+
+>>> with open("cape-secret", "wb") as f:
+...     _ = f.write(rnd.bytes(1))
+...     _ = f.write(rnd.bytes(65535))
+-->
+
+<!--
+?: #include <stdio.h>
+?: #include <stdlib.h>
+?: #include <errno.h>
+?: #include <stdint.h>
+
+?: #include "assets/cape_encryption/cape.h"
+
+?: typedef unsigned char uchar;
+
+?: uchar* read(
+::          const char *fname,
+::          const char *mode,
+::          unsigned int sz) {
+::  FILE *f = fopen(fname, mode);
+::  if (!f)
+::      perror("File open failed");
+::
+::  uchar *buf = (unsigned char*) malloc(sz);
+::  fread(buf, 1, sz, f);
+::  fclose(f);
+::
+::  return buf;
+:: }
+
+?: void write(
+::          const char *fname,
+::          const char *mode,
+::          const uchar* buf,
+::          unsigned int sz) {
+::  FILE *f = fopen(fname, mode);
+::  if (!f)
+::      perror("File open failed");
+::
+::  fwrite(buf, 1, sz, f);
+::  fclose(f);
+:: }
+-->
+
+<h3 id="warming-up">Warming up</h3>
+
+<p>First at all, let’s load a secret and random salt and key
+and an ASCII pseudo-English plaintext, unknown to us:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">?:</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">secret</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s">"cape-secret"</span><span class="p">,</span> <span class="s">"rb"</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="mi">65535</span><span class="p">);</span>
+<span class="o">?:</span> <span class="kt">uint8_t</span> <span class="n">salt</span> <span class="o">=</span> <span class="n">secret</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="o">?:</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">key</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">secret</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+
+<span class="o">?:</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">plaintext</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s">"assets/cape_encryption/1.txt"</span><span class="p">,</span> <span class="s">"rb"</span><span class="p">,</span> <span class="mi">2852</span><span class="p">);</span>
+
+<span class="o">?:</span> <span class="n">cape_t</span> <span class="n">cape</span><span class="p">;</span>
+<span class="o">?:</span> <span class="n">cape_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cape</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="mi">65535</span><span class="p">,</span> <span class="n">salt</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>In this post we are going to analyze only the <code class="highlighter-rouge">cape_hash</code> cipher so
+let’s use it to encrypt the plaintext  and save it to disk:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">?:</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">ciphertext</span> <span class="o">=</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">2852</span><span class="p">);</span>
+<span class="o">?:</span> <span class="n">cape_hash</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cape</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">,</span> <span class="n">ciphertext</span><span class="p">,</span> <span class="mi">2852</span><span class="p">);</span>
+
+<span class="o">?:</span> <span class="n">write</span><span class="p">(</span><span class="s">"cape-ciphertext"</span><span class="p">,</span> <span class="s">"wb"</span><span class="p">,</span> <span class="n">ciphertext</span><span class="p">,</span> <span class="mi">2852</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>For breaking the cipher we are going to use
+<a href="https://pypi.org/project/cryptonita/">cryptonita</a>, a Python lib for
+cryptanalysis.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>                 <span class="c1"># byexample: +timeout=10
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s">"cape-ciphertext"</span><span class="p">,</span> <span class="s">"rb"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">plaintext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s">"assets/cape_encryption/1.txt"</span><span class="p">,</span> <span class="s">"rt"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</code></pre></div></div>
+
+<h2 id="too-short-key-stream">Too short key stream</h2>
+
+<p>The <code class="highlighter-rouge">cape_hash</code> cipher is as follows:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">uint8_t</span> <span class="n">srk</span> <span class="o">=</span> <span class="n">cape</span><span class="o">-&gt;</span><span class="n">salt</span> <span class="o">^</span> <span class="n">cape</span><span class="o">-&gt;</span><span class="n">reduced_key</span><span class="p">;</span>
+<span class="k">for</span><span class="p">(</span><span class="kt">uint16_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">isrk</span> <span class="o">=</span> <span class="n">srk</span> <span class="o">^</span> <span class="n">i</span><span class="p">;</span>
+    <span class="n">destination</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^</span> <span class="n">isrk</span> <span class="o">^</span> <span class="n">cape</span><span class="o">-&gt;</span><span class="n">key</span><span class="p">[</span><span class="n">isrk</span> <span class="o">%</span> <span class="n">cape</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">cape-&gt;reduced_key</code> is a 8 bits secret value derived from
+the secret key <code class="highlighter-rouge">cape-&gt;key</code>.</p>
+
+<p>We will consider that <code class="highlighter-rouge">cape-&gt;salt</code> as secret too.</p>
+
+<p><label for="mn-ae57ba1dd073ebef4cfd32179d03b723" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-ae57ba1dd073ebef4cfd32179d03b723" class="margin-toggle" /><span class="marginnote">Technically, it can hold 65536 bytes but the length is a 16 bits
+unsigned integer so we lost one number wasted by representing the 0 length </span></p>
+
+<p>Despite that <code class="highlighter-rouge">cape-&gt;key</code> can hold 65535 bytes, <code class="highlighter-rouge">isrk</code> has only
+8 bits and therefor the <code class="highlighter-rouge">isrk ^ cape-&gt;key[ .. ]</code> can only give 256 bytes
+and after that it will repeat itself.</p>
+
+<p>That means that plaintext of more than 256 bytes will be xored
+with a <em>repeating</em> key stream and we know
+<a href="/book-of-gehn/articles/2018/03/01/In-XOR-We-Trust.html">how to break this</a>.</p>
+
+<h2 id="partially-known-plaintext-attack">(Partially) Known plaintext attack</h2>
+
+<p>Because the key stream is repeating <em>within</em> the encryption of a single
+plaintext, if we know a part of the plaintext we can break the rest.</p>
+
+<p>Given the first 256 bytes of the plaintext, the 256 key stream are trivially
+found:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">known_plaintext</span> <span class="o">=</span> <span class="n">plaintext</span><span class="p">[:</span><span class="mi">256</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">known_plaintext</span> <span class="o">^</span> <span class="n">ciphertext</span><span class="p">[:</span><span class="mi">256</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Then, we decrypt the rest of the message just xoring the ciphertext with
+the key stream reapeating it each 256 bytes:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">dmsg</span> <span class="o">=</span> <span class="n">ciphertext</span> <span class="o">^</span> <span class="n">kstream</span><span class="o">.</span><span class="n">inf</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">dmsg</span> <span class="o">==</span> <span class="n">plaintext</span>
+<span class="bp">True</span>
+</code></pre></div></div>
+
+<p>If the original <code class="highlighter-rouge">key</code> has less than 256 bytes, the amount of known plaintext
+required is less: the same amount of bytes that the key has.</p>
+
+<h2 id="ciphertext-only-attack">Ciphertext only attack</h2>
+
+<p>Even if we don’t have access to a known plaintext, we can mount an
+<em>ciphertext only attack</em>.</p>
+
+<p>Take the ciphertext and split it in blocks of 256 bytes each.
+Then, stack them so you will have a matrix of 256 columns.</p>
+
+<p>The last row, however it could contain less bytes (because
+the ciphertext length is not multiple of 256); for simplicity
+we are dropping it.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.conv</span> <span class="kn">import</span> <span class="n">transpose</span><span class="p">,</span> <span class="n">uniform_length</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">)</span>
+<span class="mi">2852</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">ciphertext</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="mi">256</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">uniform_length</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>   <span class="c1"># drop any shorter row
+</span></code></pre></div></div>
+
+<p>Because the key stream is repeated, each column will be xored
+with the <em>same</em> key stream byte.</p>
+
+<p>If this matrix is transposed, each <em>row</em> will be xored with
+the same key stream byte:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">tciphertexts</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tciphertexts</span><span class="p">)</span> <span class="c1"># rows
+</span><span class="mi">256</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># columns
+</span><span class="mi">11</span>
+</code></pre></div></div>
+
+<h3 id="frequency-attack">Frequency attack</h3>
+
+<p>Given the fact that the plaintext is written in ASCII English,
+we can mount a frequency attack.</p>
+
+<p><code class="highlighter-rouge">freq_attack</code> assume that one of the <code class="highlighter-rouge">most_common</code> plaintext symbols
+is in the <code class="highlighter-rouge">ntop</code> of the ciphertext symbols, encrypted of course.</p>
+
+<p>In this case we are going to use the famous <code class="highlighter-rouge">ETAOIN SHRDLU</code> model.</p>
+
+<p><label for="mn-a3af0a4f12f1e7c23c99266417e1fd27" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-a3af0a4f12f1e7c23c99266417e1fd27" class="margin-toggle" /><span class="marginnote">As rule of thumb 64 bytes is cool. </span></p>
+
+<p>For longer ciphertexts
+you can set <code class="highlighter-rouge">ntop = 1</code> and assume that the most
+frequent cipher-symbol is one of the most common plaintext symbols encrypted.</p>
+
+<p>But with only <code class="highlighter-rouge">len(tciphertexts[0]) == 11</code>, we need to set <code class="highlighter-rouge">ntop</code> to
+higher value.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring.freq</span> <span class="kn">import</span> <span class="n">etaoin_shrdlu</span>   <span class="c1"># byexample: +timeout 10
+</span><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">freq_attack</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">most_common</span> <span class="o">=</span> <span class="n">etaoin_shrdlu</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ntop</span> <span class="o">=</span> <span class="mi">5</span>
+</code></pre></div></div>
+
+<p>Under this hypothesis, a possible byte key is just the xor of those two:
+in the worst case we will have <code class="highlighter-rouge">len(most_common) * ntop</code> guesses:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">most_common</span><span class="p">)</span> <span class="o">*</span> <span class="n">ntop</span>
+<span class="mi">65</span>
+</code></pre></div></div>
+
+<p>But in the practice we have less (duplicated are removed):</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">gkey1</span> <span class="o">=</span> <span class="n">freq_attack</span><span class="p">(</span><span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">most_common</span><span class="p">,</span> <span class="n">ntop</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">gkey1</span><span class="p">)</span>
+<span class="mi">44</span>
+</code></pre></div></div>
+
+<p><label for="mn-a7594b5b5851e476cce4d9c6acaa0072" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-a7594b5b5851e476cce4d9c6acaa0072" class="margin-toggle" /><span class="marginnote">Without a frequency attack we could try the whole space of 256 bytes. It is
+totally feasible but it is faster to do a frequency attack first to reduce
+the search space </span></p>
+
+<p><code class="highlighter-rouge">gkey1</code> is <em>a guess</em>: the most likely possible values for the first byte
+of the key stream.</p>
+
+<h3 id="brute-force">Brute force</h3>
+
+<p>We can discard some guesses if they produce the wrong plaintext.</p>
+
+<p><label for="mn-18ac1e8b34bc09dfd130789459a05a34" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-18ac1e8b34bc09dfd130789459a05a34" class="margin-toggle" /><span class="marginnote">Even if the alphabet of all ASCII printable has 100 symbols and the proposed has
+64 symbols (more than half), the impact of this is <strong>enormous</strong> reducing the guesses
+in two or more orders of magnitude. </span></p>
+
+<p>Knowing that the plaintext has a reduced set of ASCII printable of letters, numbers
+and only a few punctuation symbols we can narrow the set of guesses further:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">all_in_alphabet</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">alphabet</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">b</span><span class="s">"</span><span class="se">\n</span><span class="s"> !',-.012356789?ABCDEFGHIJLMORSTVWY[]abcdefghijklmnopqrstuvwxyz"</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">all_in_alphabet</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">all_in_alphabet</span><span class="p">,</span> <span class="n">alphabet</span><span class="o">=</span><span class="n">alphabet</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now, we filter out any key which decrypted message does not fit in
+out plaintext model.</p>
+
+<p>Once again we will obtain a <strong>guess</strong>, but a shorter one this time:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">brute_force</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gkey1</span> <span class="o">=</span> <span class="n">brute_force</span><span class="p">(</span><span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">score_func</span><span class="o">=</span><span class="n">all_in_alphabet</span><span class="p">,</span> <span class="n">key_space</span><span class="o">=</span><span class="n">gkey1</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">gkey1</span><span class="p">)</span>
+<span class="mi">1</span>
+</code></pre></div></div>
+
+<p>Repeating this for all the 256 ciphertexts should yield a 256 list of
+guesses:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">gkeys</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tciphertexts</span><span class="p">:</span>                          <span class="c1"># byexample: +timeout=10
+</span><span class="o">...</span>     <span class="n">gk</span> <span class="o">=</span> <span class="n">freq_attack</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">most_common</span><span class="p">,</span> <span class="n">ntop</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">gk</span>  <span class="o">=</span> <span class="n">brute_force</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">score_func</span><span class="o">=</span><span class="n">all_in_alphabet</span><span class="p">,</span> <span class="n">key_space</span><span class="o">=</span><span class="n">gk</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">gkeys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gk</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This a <em>product</em> and the set will grow exponentially:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.fuzzy_set</span> <span class="kn">import</span> <span class="n">len_join_fuzzy_sets</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">len_join_fuzzy_sets</span><span class="p">(</span><span class="n">gkeys</span><span class="p">)</span>
+<span class="mi">626513003</span><span class="o">&lt;...&gt;</span>
+</code></pre></div></div>
+
+<p>Considering only the <em>most likely key stream</em>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.fuzzy_set</span> <span class="kn">import</span> <span class="n">join_fuzzy_sets</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">join_fuzzy_sets</span><span class="p">(</span><span class="n">gkeys</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="n">B</span><span class="p">(</span><span class="s">''</span><span class="p">))</span><span class="o">.</span><span class="n">most_likely</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>The resulting decrypted text was nice performance of almost 60% of success:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">decrypted</span> <span class="o">=</span> <span class="n">ciphertext</span> <span class="o">^</span> <span class="n">kstream</span><span class="o">.</span><span class="n">inf</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">hits</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">p</span><span class="o">==</span><span class="n">d</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">plaintext</span><span class="p">,</span> <span class="n">decrypted</span><span class="p">)))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">hits</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)</span>
+<span class="mf">0.59</span><span class="o">&lt;...&gt;</span>
+</code></pre></div></div>
+
+<p>Here are some extract of the decrypted text. See how some words are
+perfectly visible like “aitn’t”, “soul”, “I’m” and “degree”.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="n">d</span><span class="p">[:</span><span class="mi">80</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">decrypted</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="mi">256</span><span class="p">)[:</span><span class="mi">8</span><span class="p">]]</span>
+<span class="p">[</span><span class="s">"[IntsyH</span><span class="se">\n</span><span class="s">Otaf.9wanillas' dsond'tit worae5ln</span><span class="se">\n</span><span class="s">a chair,7yea3</span><span class="se">\n</span><span class="s">VfoCltxi'll lhock 'tj'c"</span><span class="p">,</span>
+ <span class="s">"rn mx6foxvsd ciis ain't yh.jorropl</span><span class="se">\n</span><span class="s">It-cyfmCshed my ehymw, edIamj, I'm'brawin6'so"</span><span class="p">,</span>
+ <span class="s">"quipqsq axt  cie best</span><span class="se">\n</span><span class="s">Mael.anhtitr onh!slr</span><span class="se">\n</span><span class="s">ice, let7the2midsEppv'e retr</span><span class="se">\n</span><span class="s">Just1knt"</span><span class="p">,</span>
+ <span class="s">"nce</span><span class="se">\n</span><span class="s">CsvacbehI7sock with qkovou,!yard lr5oiLesaver</span><span class="se">\n</span><span class="s">Yxu aakec!Loj9-ope,'na...tyfs "</span><span class="p">,</span>
+ <span class="s">"eal fyzd8?.!ncn a new phvtk, mulain' xq5whO airwaved</span><span class="se">\n</span><span class="s">Anv nhv</span><span class="se">\n</span><span class="s">ywlnre ajgzed 'rfrt"</span><span class="p">,</span>
+ <span class="s">"w my!eayzt,hmn!soul, up xi.thb epnce kmzlr I wanna'7see2ya !Yhyr,, shfme and1ton"</span><span class="p">,</span>
+ <span class="s">" thao6ahs1t iee degree</span><span class="se">\n</span><span class="s">Yxr.trnee1my syxyf Hut I bury yog sbd I?tiice fhd I'm1dhk"</span><span class="p">,</span>
+ <span class="s">"us]</span><span class="se">\n</span><span class="s">Hb2s6p 8aeuy...come xi .. lde's db!akiY..</span><span class="se">\n\n</span><span class="s">[Verde 3O</span><span class="se">\n</span><span class="s">Yht</span><span class="se">\n</span><span class="s">tpp'k it u funy1sh'"</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h2 id="final-thoughts">Final thoughts</h2>
+
+<p><code class="highlighter-rouge">cape_hash</code> is symmetric cipher which, despite of having a 65536 bytes
+length key, the key stream is repeated each 256
+of plaintext enabling a <em>cipher only attack</em>.</p>
+
+<p>Even with a short plaintext of just 2852 we got 11 bytes xored with the
+same key byte and this was enough to get almost 60% of the plaintext.</p>
+
+<p><label for="mn-88d9a764371608df6d34d6f3bba826eb" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-88d9a764371608df6d34d6f3bba826eb" class="margin-toggle" /><span class="marginnote">Based on the documentation </span></p>
+
+<p>With a theoretical maximum length of 65534 bytes for a single plaintext, we
+can obtain 256 bytes xored with the same key byte. Virtually any plaintext
+of that size can be broken completely.</p>
+
+<p>But if such scenario is not plausible, knowing a little more about the
+plaintext can really improve the attack.</p>
+
+<p>A <em>partially known plaintext</em> of just 256 bytes is fulminant and breaks
+the ciphering completely.</p>
+
+<p>Crypto is hard and developing a new cipher is harder. The only way
+to improve in this field is trying, failing, and trying again.</p>
+
+<p>A special thank you to Giovanni Blu Mitolo, the author of <code class="highlighter-rouge">cape</code>
+who made the project <em>open source</em> and asked for <em>feedback</em> to the community.</p>
+
+<!--
+$ rm -f cape-ciphertext cape-secret         # byexample: -skip +pass
+
+?: free(ciphertext);    // byexample: +pass
+?: free(plaintext);     // byexample: +pass
+?: free(secret);        // byexample: +pass
+-->
+
+
+
+
+    </article>
+    <span class="print-footer">Cape Encryption - February 3, 2019 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Qubes OS Networking</title>
+  <meta name="description" content="Qubes OS has an interesting network systemto isolate more-or-lesstrusted application virtual machines (App) from absolute untrustednetwork VMs (Net).⊕  These...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2020/11/19/Qubes-Networking.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Qubes OS Networking</h1>
+<p class="subtitle">November 19, 2020</p>
+
+<p><a href="https://www.qubes-os.org/">Qubes OS</a> has an interesting network system
+to isolate more-or-less
+trusted <em>application</em> virtual machines (App) from absolute untrusted
+<em>network</em> VMs (Net).</p>
+
+<p><label for="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="IPs" src="/book-of-gehn/assets/qubes/qubes-ips.png" />  <br /></span></p>
+
+<p>These last ones have the drivers required to handle ethernet and wifi cards
+which expose them to a potentially deathly bug lurking in the drivers.</p>
+
+<p>An additional VM is put in the middle between App VMs and Net VMs. This
+absolute trusted <em>proxy</em> VM serves as a safe firewall (Proxy).</p>
+
+<p>In this post will explore how these VMs connect and how the packets are
+forwarded up and down along this chain of VMs.<!--more--></p>
+
+<figure><figcaption><span>Three App VMs: one for work, other for personal stuff, both considered
+relatively-trusted and one more VM for untrusted stuff, all connected
+to the “firewall” VM which forwards the packets to the Net VM.
+<br />
+The “firewall” VM is isolated except for
+the firewall/routing processing so it is considered trusted while Net VM
+is not.</span></figcaption><img src="/book-of-gehn/assets/qubes/qubes-network.png" /></figure>
+
+<h2 id="addresses">Addresses</h2>
+
+<p>The first obvious thing to notice is the existence of ethernet cards
+both in App VM and Proxy VM.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@appvm:# ip address show
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP group default qlen 1000
+    <span class="nb">link</span>/ether 00:16:3e:5e:6c:19 brd ff:ff:ff:ff:ff:ff
+    inet 10.137.7.27/32 brd 10.255.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+</code></pre></div></div>
+
+<hr class="slender post-layout small" />
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# ip address show
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    <span class="nb">link</span>/ether 00:16:3e:5e:6c:18 brd ff:ff:ff:ff:ff:ff
+    inet 10.137.1.26/32 brd 10.137.1.26 scope global eth0
+       valid_lft forever preferred_lft forever
+4: vif37.0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 32
+    <span class="nb">link</span>/ether fe:ff:ff:ff:ff:ff brd ff:ff:ff:ff:ff:ff
+    inet 10.137.7.1/32 scope global vif37.0
+       valid_lft forever preferred_lft forever
+</code></pre></div></div>
+
+<p><label for="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="IPs" src="/book-of-gehn/assets/qubes/qubes-ips.png" />  <br /></span></p>
+
+<blockquote>
+  <p>“The virtual interfaces in client VMs are called <code class="highlighter-rouge">ethX</code>,
+and are provided by the <code class="highlighter-rouge">xen_netfront</code> kernel module, and
+the corresponding interfaces in the Net/Proxy VM are
+called <code class="highlighter-rouge">vifX.Y</code> and are created by the <code class="highlighter-rouge">xen_netback</code> module.”
+<br />–<a href="https://theinvisiblethings.blogspot.com/2011/09/playing-with-qubes-networking-for-fun.html">Playing with Qubes networking for fun</a></p>
+</blockquote>
+
+<p><label for="mn-390925d166339968db0d24a04d1106cc" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-390925d166339968db0d24a04d1106cc" class="margin-toggle" /><span class="marginnote">The most-right bit of the most-left byte (<code class="highlighter-rouge">fe</code>) is even so it is an unicast address.
+<br />
+The second most-right bit of the same byte is odd so it is a locally
+administrated address and it means that was arbitrary set by Qubes/Xen.
+ </span></p>
+
+<p>The <code class="highlighter-rouge">ethX</code> links have different addresses with the same
+<a href="https://hwaddress.com/company/xensource-inc/">Xensource OUI</a> <code class="highlighter-rouge">00:16:3e</code>
+while the <code class="highlighter-rouge">vifX.Y</code> have the same <a href="https://en.wikipedia.org/wiki/MAC_address">unicast-locally
+administrated</a> MAC:
+<code class="highlighter-rouge">fe:ff:ff:ff:ff:ff</code>.</p>
+
+<h2 id="routing">Routing</h2>
+
+<p>Here a ping from the App VM is routed to the Proxy VM which
+in turns routes the packet to the Net VM and the outside world
+and the response goes back through the same path to the App VM</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@appvm:# ping <span class="nt">-c</span> 1 8.8.8.8
+64 bytes from 8.8.8.8: <span class="nv">icmp_seq</span><span class="o">=</span>1 <span class="nv">ttl</span><span class="o">=</span>53 <span class="nb">time</span><span class="o">=</span>12.1 ms
+</code></pre></div></div>
+
+<hr class="slender post-layout small" />
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@appvm:# tcpdump <span class="nt">-n</span> <span class="nt">-i</span> eth0
+23:56:57.072295 ARP, Request who-has 10.137.7.1 tell 10.137.7.27, length 28
+23:56:57.072330 ARP, Reply 10.137.7.1 is-at fe:ff:ff:ff:ff:ff, length 28
+<span class="o">(</span>icmp omitted<span class="o">)</span>
+</code></pre></div></div>
+
+<hr class="slender post-layout small" />
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# tcpdump <span class="nt">-n</span> <span class="nt">-i</span> vif37.0
+23:56:57.072295 ARP, Request who-has 10.137.7.1 tell 10.137.7.27, length 28
+23:56:57.072330 ARP, Reply 10.137.7.1 is-at fe:ff:ff:ff:ff:ff, length 28
+<span class="o">(</span>icmp omitted<span class="o">)</span>
+</code></pre></div></div>
+
+<p><label for="mf-103c3d5b36df5f56ef8d5565c7424cb1" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-103c3d5b36df5f56ef8d5565c7424cb1" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="ARP" src="/book-of-gehn/assets/qubes/qubes-arp.png" />  <br /></span></p>
+
+<p>The ARP request/reply is the App VM asking for the MAC address
+of its configured gateway, the <code class="highlighter-rouge">10.137.7.1</code> which it is the IP
+of the Proxy VM’s <code class="highlighter-rouge">vif37.0</code> interface.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@appvm:# ip route show
+default via 10.137.7.1 dev eth0
+10.137.7.1 dev eth0 scope <span class="nb">link</span>
+</code></pre></div></div>
+
+<p><label for="mn-65007ced5f26024b42b9ad52a272abfb" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-65007ced5f26024b42b9ad52a272abfb" class="margin-toggle" /><span class="marginnote">You may find <code class="highlighter-rouge">REACHABLE</code> or <code class="highlighter-rouge">STALE</code>:
+the first means that the entry is valid while the second
+means it <em>was</em> valid.
+<br />
+If you are quickly enough you may see <code class="highlighter-rouge">DELAY</code>: the learning about the
+reachability is still in progress.
+ </span></p>
+
+<p>As expected, the App VM saves this in its ARP cache:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@appvm:# ip neigh show
+10.137.7.1 dev eth0 lladdr fe:ff:ff:ff:ff:ff STALE
+</code></pre></div></div>
+
+<p><label for="mf-bd5111593d31e56a5d6665b921d712c7" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-bd5111593d31e56a5d6665b921d712c7" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="Ping" src="/book-of-gehn/assets/qubes/qubes-first-part-ping.png" />  <br /></span></p>
+
+<p>Once the App VM knows the Link Layer address (aka <code class="highlighter-rouge">lladdr</code>), it sends
+the ICMP echo request, the Proxy VM <em>forwards</em> it and forwards back
+the response.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@appvm:# tcpdump <span class="nt">-n</span> <span class="nt">-i</span> eth0
+<span class="o">(</span>arp omitted<span class="o">)</span>
+23:56:58.014156 IP 10.137.7.27 <span class="o">&gt;</span> 8.8.8.8: ICMP <span class="nb">echo </span>request, <span class="nb">id </span>1177, <span class="nb">seq </span>1, length 64
+23:56:58.027402 IP 8.8.8.8 <span class="o">&gt;</span> 10.137.7.27: ICMP <span class="nb">echo </span>reply, <span class="nb">id </span>1177, <span class="nb">seq </span>1, length 64
+</code></pre></div></div>
+
+<hr class="slender post-layout small" />
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# tcpdump <span class="nt">-n</span> <span class="nt">-i</span> vif37.0
+<span class="o">(</span>arp omitted<span class="o">)</span>
+23:56:58.019581 IP 10.137.7.27 <span class="o">&gt;</span> 8.8.8.8: ICMP <span class="nb">echo </span>request, <span class="nb">id </span>1177, <span class="nb">seq </span>1, length 64
+23:56:58.032679 IP 8.8.8.8 <span class="o">&gt;</span> 10.137.7.27: ICMP <span class="nb">echo </span>reply, <span class="nb">id </span>1177, <span class="nb">seq </span>1, length 64
+</code></pre></div></div>
+
+<h2 id="upstream---downstream-forwarding">Upstream - downstream forwarding</h2>
+
+<p>The Proxy VM acts as a router.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# <span class="nb">cat</span> /proc/sys/net/ipv4/ip_forward
+1
+</code></pre></div></div>
+
+<p>However the VM will <em>drop</em> all the packets before forwarding them
+with some exceptions:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# iptables-save <span class="nt">-t</span> raw
+:PREROUTING ACCEPT <span class="o">[</span>116:43405]
+<span class="nt">-A</span> PREROUTING <span class="o">!</span> <span class="nt">-s</span> 10.137.7.27/32 <span class="nt">-i</span> vif37.0 <span class="nt">-j</span> DROP
+...
+
+root@proxyvm:# iptables-save <span class="nt">-t</span> filter
+:FORWARD DROP <span class="o">[</span>0:0]
+...
+<span class="nt">-A</span> FORWARD <span class="nt">-s</span> 10.137.7.27/32 <span class="nt">-p</span> icmp <span class="nt">-j</span> ACCEPT
+<span class="nt">-A</span> FORWARD <span class="nt">-s</span> 10.137.7.27/32 <span class="nt">-j</span> ACCEPT
+</code></pre></div></div>
+
+<p><label for="mf-72598e6a47c6eff2d841e635a906ab83" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-72598e6a47c6eff2d841e635a906ab83" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="Spoofing" src="/book-of-gehn/assets/qubes/qubes-spoofed.png" />  <br />The <em>untrusted</em> VM spoofs the source address simulating a message
+<em>from the work</em> VM; replies will be addresses to it.
+<br />
+This spoofing scenario is prevented with the <code class="highlighter-rouge">PREROUTING</code> rules.</span></p>
+
+<p>The <code class="highlighter-rouge">PREROUTING</code> rule prevents a malicious downstream VM (App VM) to send
+packets to a Proxy VM (via <code class="highlighter-rouge">vif37.0</code>) with a spoofed source IP.</p>
+
+<p>Otherwise a malicious VM could hijack the traffic of its <em>siblings</em> VMs.</p>
+
+<blockquote>
+  <blockquote>
+    <blockquote>
+      <p>Proxy VM will act as a router for a particular App VM <strong>only</strong>
+for the packets coming from <strong>that</strong> VM.</p>
+    </blockquote>
+  </blockquote>
+</blockquote>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# ip route show
+default via 10.137.1.1 dev eth0 proto static metric 100
+10.137.1.1 dev eth0 proto static scope <span class="nb">link </span>metric 100
+10.137.1.26 dev eth0 proto kernel scope <span class="nb">link </span>src 10.137.1.26 metric 100
+10.137.7.27 dev vif37.0 scope <span class="nb">link </span>metric 32715
+</code></pre></div></div>
+
+<p>So the incoming ICMP echo request packet with source IP <code class="highlighter-rouge">10.137.7.27</code>
+enters from <code class="highlighter-rouge">vif37.0</code>, it is accepted by the firewall, routed to
+<code class="highlighter-rouge">eth0</code> due the default route and goes out.</p>
+
+<p>Before leaving the Proxy VM, the packet is slightly modified…</p>
+
+<h2 id="nat">NAT</h2>
+
+<p>The Proxy VM allows routing packets coming from its App VM: we see
+this in the firewall exceptions and in the route where the
+<strong>specific</strong> App VM IP is used, <code class="highlighter-rouge">10.137.7.27</code>.</p>
+
+<p>But if we have more Proxy VMs chained ?</p>
+
+<p>Would the second Proxy VM need the IPs of the first Proxy VM and the
+App VM to setup its routes?</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>App VM &lt;-&gt; Proxy VM &lt;-&gt; another Proxy VM &lt;-&gt; ...
+</code></pre></div></div>
+
+<p>In general, any Proxy VM would need the IPs of all the downstream VMs!</p>
+
+<p>That’s not only tedious but also would leak information: higher VMs
+would know more about the topology. A Net VM would know all the IPs
+that the environment has.</p>
+
+<p>However sniffing on Proxy VM’s <code class="highlighter-rouge">eth0</code> shows something different when
+the ping of App VM is forwarded:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# tcpdump <span class="nt">-n</span> <span class="nt">-i</span> eth0
+<span class="o">(</span>arp omitted<span class="o">)</span>
+23:56:58.019649 IP 10.137.1.26 <span class="o">&gt;</span> 8.8.8.8: ICMP <span class="nb">echo </span>request, <span class="nb">id </span>1177, <span class="nb">seq </span>1, length 64
+23:56:58.032636 IP 8.8.8.8 <span class="o">&gt;</span> 10.137.1.26: ICMP <span class="nb">echo </span>reply, <span class="nb">id </span>1177, <span class="nb">seq </span>1, length 64
+</code></pre></div></div>
+
+<p>The source of the request is set to Proxy VM’s <code class="highlighter-rouge">eth0</code> IP, not App VM ones.</p>
+
+<figure><figcaption><span>Ping to 8.8.8.8 from App VM. Notice how the request is forwarded and in
+each <em>hop</em> the source address is changed (NAT).
+<br />
+The reply takes the same path but the source address is <strong>not</strong> changed.</span></figcaption><img src="/book-of-gehn/assets/qubes/qubes-full-ping.png" /></figure>
+
+<p>This is due a NAT rule that <strong>masquerade</strong> the routed traffic:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# iptables-save <span class="nt">-t</span> nat
+...
+<span class="nt">-A</span> POSTROUTING <span class="nt">-o</span> vif+ <span class="nt">-j</span> ACCEPT
+<span class="nt">-A</span> POSTROUTING <span class="nt">-o</span> lo <span class="nt">-j</span> ACCEPT
+<span class="nt">-A</span> POSTROUTING <span class="nt">-j</span> MASQUERADE
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">-o vif+</code> rule prevents masquerade traffic going downward, back to
+the App VM and the <code class="highlighter-rouge">-o lo</code> ignores loopback traffic.</p>
+
+<p>The rest, including traffic routed to <code class="highlighter-rouge">eth0</code> is masquerade.</p>
+
+<p>So all Proxy VMs and Net VMs only need to know the IP of the previous
+VM and not the full chain.</p>
+
+<h2 id="packet-walk-through">Packet walk-through</h2>
+
+<p><label for="mf-0b252f8ed11e6416af48ced72da20180" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-0b252f8ed11e6416af48ced72da20180" class="margin-toggle " /><span class="marginnote "><object align="middle" data="/book-of-gehn/uml/34cfc84b4ad538d0e44973367f2a764c1c7ac9aa.svg" type="image/svg+xml"></object>  <br /></span></p>
+
+<p>App VM does a ping to <code class="highlighter-rouge">8.8.8.8</code>, this is the walk-through</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>App VM
+| pkt:         10.137.7.27 &gt; 8.8.8.8: ICMP echo request
+|
+| route:       default via 10.137.7.1 dev eth0
+| eth0:        10.137.7.27 &gt; 8.8.8.8: ICMP echo request
+
+Proxy VM
+| vif37.0:     10.137.7.27 &gt; 8.8.8.8: ICMP echo request
+| prerouting:  ! -s 10.137.7.27/32 -i vif37.0  =&gt; NO DROP
+| filter:      FORWARD -s 10.137.7.27/32  =&gt; ACCEPT
+|
+| route:       default via 10.137.1.1 dev eth0
+| postrouting: POSTROUTING  =&gt; MASQUERADE
+|
+| eth0:        10.137.1.26 &gt; 8.8.8.8: ICMP echo request
+
+--- request is sent to upstream; reply is received moments later ---
+
+Proxy VM
+| eth0:        8.8.8.8 &gt; 10.137.1.26: ICMP echo reply
+| (rev nat):   8.8.8.8 &gt; 10.137.7.27: ICMP echo reply
+| filter:      FORWARD -s 10.137.7.27/32  =&gt; ACCEPT
+|
+| route:       10.137.7.27 dev vif37.0
+| postrouting: POSTROUTING -o vif+  =&gt; DONT MASQUERADE
+|
+| vif37.0:     8.8.8.8 &gt; 10.137.7.27: ICMP echo reply
+
+App VM
+| eth0:          8.8.8.8 &gt; 10.137.7.27: ICMP echo reply
+</code></pre></div></div>
+
+<h2 id="dns">DNS</h2>
+
+<p>The DNS traffic is handled like the above but with a twist.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@appvm:# nslookup google.com
+Server:     10.137.7.1
+Address:    10.137.7.1#53
+
+Non-authoritative answer:
+Name:   google.com
+Address: 172.217.172.46
+</code></pre></div></div>
+
+<p>It is interesting to note that App VM queried <code class="highlighter-rouge">10.137.7.1</code> to resolve
+the address: the Proxy VM is working as a DNS resolver.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@appvm:# tcpdump <span class="nt">-n</span> <span class="nt">-i</span> eth0
+...
+23:58:30.214939 IP 10.137.7.27.46734 <span class="o">&gt;</span> 10.137.7.1.53: 26595+ A? google.com. <span class="o">(</span>28<span class="o">)</span>
+23:58:30.337391 IP 10.137.7.1.53 <span class="o">&gt;</span> 10.137.7.27.46734: 26595 1/0/0 A 172.217.172.46 <span class="o">(</span>44<span class="o">)</span>
+</code></pre></div></div>
+
+<hr class="slender post-layout small" />
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# tcpdump <span class="nt">-n</span> <span class="nt">-i</span> vif37.0
+...
+23:58:30.220387 IP 10.137.7.27.46734 <span class="o">&gt;</span> 10.137.7.1.53: 26595+ A? google.com. <span class="o">(</span>28<span class="o">)</span>
+23:58:30.342664 IP 10.137.7.1.53 <span class="o">&gt;</span> 10.137.7.27.46734: 26595 1/0/0 A 172.217.172.46 <span class="o">(</span>44<span class="o">)</span>
+</code></pre></div></div>
+
+<p>But that’s a lie: there is no DNS resolver in Proxy VM and
+the DNS request is forwarded upstream:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# tcpdump <span class="nt">-n</span> <span class="nt">-i</span> eth0
+...
+23:58:30.220455 IP 10.137.1.26.46734 <span class="o">&gt;</span> 10.137.1.1.53: 26595+ A? google.com. <span class="o">(</span>28<span class="o">)</span>
+23:58:30.342616 IP 10.137.1.1.53 <span class="o">&gt;</span> 10.137.1.26.46734: 26595 1/0/0 A 172.217.172.46 <span class="o">(</span>44<span class="o">)</span>
+</code></pre></div></div>
+
+<p>Notice how the source address is masqueraded as we saw with the ping packet
+but the <strong>destination address is changed</strong> too:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>23:58:30.220387 IP 10.137.7.27.46734 &gt; 10.137.7.1.53: 26595+ A? google.com. (28)
+                    NAT  |                   |  DNAT
+                         V                   V
+23:58:30.220455 IP 10.137.1.26.46734 &gt; 10.137.1.1.53: 26595+ A? google.com. (28)
+</code></pre></div></div>
+
+<h2 id="dnat">DNAT</h2>
+
+<p>Nobody is listening on the <code class="highlighter-rouge">53 udp</code> port so the DNAT is applied <em>before</em> routing.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# iptables-save -t nat
+...
+-A PREROUTING -j PR-QBS
+-A PR-QBS -d 10.137.7.1/32 -p udp -m udp --dport 53 -j DNAT --to-destination 10.137.1.1
+-A PR-QBS -d 10.137.7.1/32 -p tcp -m tcp --dport 53 -j DNAT --to-destination 10.137.1.1
+-A PR-QBS -d 10.137.7.254/32 -p udp -m udp --dport 53 -j DNAT --to-destination 10.137.1.254
+-A PR-QBS -d 10.137.7.254/32 -p tcp -m tcp --dport 53 -j DNAT --to-destination 10.137.1.254
+...
+</code></pre></div></div>
+
+<p>Firewall rules also apply</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@proxyvm:# iptables-save -t filter
+...
+-A FORWARD -s 10.137.7.27/32 -d 10.137.1.1/32 -p udp -m udp --dport 53 -j ACCEPT
+-A FORWARD -s 10.137.7.27/32 -d 10.137.1.254/32 -p udp -m udp --dport 53 -j ACCEPT
+-A FORWARD -s 10.137.7.27/32 -d 10.137.1.1/32 -p tcp -m tcp --dport 53 -j ACCEPT
+-A FORWARD -s 10.137.7.27/32 -d 10.137.1.254/32 -p tcp -m tcp --dport 53 -j ACCEPT
+...
+</code></pre></div></div>
+
+<p>In the Net VM the destination is replaced by the DNS resolver address
+configured:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@netvm:# iptables-save -t nat
+...
+-A PR-QBS -d 10.137.3.1/32 -p udp -m udp --dport 53 -j DNAT --to-destination 8.8.8.8
+-A PR-QBS -d 10.137.3.1/32 -p tcp -m tcp --dport 53 -j DNAT --to-destination 8.8.8.8
+-A PR-QBS -d 10.137.3.254/32 -p udp -m udp --dport 53 -j DNAT --to-destination 8.8.8.8
+-A PR-QBS -d 10.137.3.254/32 -p tcp -m tcp --dport 53 -j DNAT --to-destination 8.8.8.8
+...
+</code></pre></div></div>
+
+<h2 id="future-readings">Future readings</h2>
+
+<p>About networking and sysadmin:</p>
+
+<ul>
+  <li><a href="https://lartc.org/howto/">Linux Advanced Routing &amp; Traffic Control HOWTO</a></li>
+  <li><a href="https://www.qubes-os.org/doc/vpn/">Qubes OS VPN</a></li>
+  <li><a href="https://bugzilla.netfilter.org/show_bug.cgi?id=693">Netfilter bug</a></li>
+  <li><a href="http://www.smythies.com/~doug/network/iptables_notes/">Iptables notes</a></li>
+</ul>
+
+<p>Qubes related:</p>
+
+<ul>
+  <li><a href="https://www.qubes-os.org/news/2019/12/25/qsb-056/">QSB-056</a></li>
+  <li><a href="https://github.com/QubesOS/qubes-core-agent-linux/pull/209">PR 209</a></li>
+  <li><a href="https://github.com/QubesOS/qubes-core-agent-linux/pull/201">PR 201</a></li>
+</ul>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li><a href="http://linux-ip.net/linux-ip/">Linux IP</a></li>
+  <li><a href="https://www.linuxjournal.com/content/linux-advanced-routing-tutorial">Linux Advanced Routing Tutorial</a></li>
+  <li><a href="https://theinvisiblethings.blogspot.com/2011/09/playing-with-qubes-networking-for-fun.html">Playing with Qubes networking for fun</a></li>
+</ul>
+
+
+
+
+    </article>
+    <span class="print-footer">Qubes OS Networking - November 19, 2020 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

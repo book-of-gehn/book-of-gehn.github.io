@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Kasiski Test - Part I</title>
+  <meta name="description" content="The tricky part of breaking theVigenere cipherconsists in finding the length of the key.⊕  We discussed this in thebreaking Vigenerepost.In that occasion we ...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2020/10/11/Kasiski-Test-Part-I.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Kasiski Test - Part I</h1>
+<p class="subtitle">October 11, 2020</p>
+
+<p>The tricky part of breaking the
+<a href="https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher">Vigenere cipher</a>
+consists in finding the length of the key.</p>
+
+<p><label for="mf-d8d9b4cce50aee3ec67346ab92c66548" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-d8d9b4cce50aee3ec67346ab92c66548" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img src="/book-of-gehn/assets/kasiski/kasiski_scan_positions.png" />  <br /></span></p>
+
+<p>We discussed this in the
+<a href="/book-of-gehn/articles/2018/05/01/Breaking-Vigenere.html">breaking Vigenere</a>
+post.</p>
+
+<p>In that occasion we used the
+<a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming distance</a> and
+the <a href="/book-of-gehn/articles/2019/10/04/Index-of-Coincidence.html">Index of Coincidence</a>.</p>
+
+<p>But another method existed much before the development of the IC around 1922.</p>
+
+<p>In 1863, Kasiski published a method to guess the length of the secret
+key, method that we know today as the
+<a href="https://en.wikipedia.org/wiki/Kasiski_examination">Kasiski test</a>.</p>
+
+<p>Let’s explore a <script type="math/tex">O(\vert s \vert)</script> solution with a worst case of
+<script type="math/tex">O(\vert s \vert^2)</script><!--more--></p>
+
+<h2 id="the-naive-solution">The naive solution</h2>
+
+<p>The Kasiski test consists in finding repeated ngrams in the ciphertext
+and measure the distance between them.</p>
+
+<p>If there are repeated ngram in the plaintext that were <em>leaked</em> in the
+ciphertext, that means that the secret key was also repeated exactly in
+that part.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                     repeated ngrams
+                /----------/-----------/
+    ptext:      69 63 65 20 69 63 65 20 62 61 62 79
+    kstream:    73 6F 6E 67 73 6F 6E 67 73 6F 6E 67  (key = 73 6F 6E 67)
+    ctext:      1A 0C 0B 47 1A 0C 0B 47 11 0E 0C 1E
+                \----------\-----------\
+                     repeated ngrams
+</code></pre></div></div>
+
+<p><label for="mn-7aa1bda5b4adf142e467684892c97b5d" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-7aa1bda5b4adf142e467684892c97b5d" class="margin-toggle" /><span class="marginnote">It is perfectly possible to find repeated ngrams randomly,
+just by luck. Those are the “exceptions”.
+<br />
+I will talk about that in the second-part post.
+ </span></p>
+
+<p>With some exceptions, the distance between two repeated ngrams in
+the ciphertext must be then a multiple of the length of the key.</p>
+
+<p>But for a particular ngram of length <code class="highlighter-rouge">n</code>, finding all the repeated
+ngrams requires scan the whole string, an effort of
+<script type="math/tex">O(\vert s \vert)</script>, proportional to the size of the input string.</p>
+
+<p>Repeating the process for all the ngrams of length <code class="highlighter-rouge">n</code> yields
+<script type="math/tex">O(\vert s \vert^2)</script>.</p>
+
+<p>And that’s only for <code class="highlighter-rouge">n</code>. Repeating everything again for
+the ngrams of length <code class="highlighter-rouge">n+1</code>, <code class="highlighter-rouge">n+2</code> and so
+on blows up quickly to <script type="math/tex">O(\vert s \vert^3)</script>.</p>
+
+<p>No no, we can improve this.</p>
+
+<h2 id="the-strategy">The strategy</h2>
+
+<h3 id="as_ngram_repeated_positions-algorithm"><code class="highlighter-rouge">as_ngram_repeated_positions</code> algorithm</h3>
+
+<p>We build the list of <em>all</em> repeated ngrams of length <code class="highlighter-rouge">n</code> using
+hashing in <script type="math/tex">O(\vert s \vert)</script> and not <script type="math/tex">O(\vert s \vert^2)</script>.</p>
+
+<h3 id="merge_overlaping-algorithm"><code class="highlighter-rouge">merge_overlaping</code> algorithm</h3>
+
+<p><label for="mn-b1a4c559712afcfe68a3cc14a228a82b" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-b1a4c559712afcfe68a3cc14a228a82b" class="margin-toggle" /><span class="marginnote">This is an example of
+<a href="https://en.wikipedia.org/wiki/Dynamic_programming">dynamic
+programming</a>.
+Take a look of
+<a href="assets/kasiski/MatthewBerntsenBUThesis.7z">Automating the Cracking of Simple Ciphers, by Matthew C. Berntsen</a>
+for a similar idea.
+ <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
+ </span></p>
+
+<p>Then, we build the list of the repeated ngrams of length <code class="highlighter-rouge">n+1</code>
+<em>reusing</em> the finding of the previous step.</p>
+
+<p>This will require <script type="math/tex">O(g)</script> where <script type="math/tex">g</script> is the size of the list built in the
+previous step.</p>
+
+<p>While <script type="math/tex">O(g) = O(\vert s \vert)</script> in the worst case, it is expected to
+find <em>very few</em> repeated ngrams of length <code class="highlighter-rouge">n</code> so in the practice
+<script type="math/tex">O(g) \ll O(\vert s \vert)</script>.</p>
+
+<h3 id="deltas_from_positions-algorithm"><code class="highlighter-rouge">deltas_from_positions</code> algorithm</h3>
+
+<p>The distances between the ngrams found can also be found in <script type="math/tex">O(g)</script>.</p>
+
+<p>The naive implementation would require <script type="math/tex">O(g^2)</script> but we can improve it
+a little.</p>
+
+<h3 id="frequency_of_deltas-algorithm-aka-the-main"><code class="highlighter-rouge">frequency_of_deltas</code> algorithm (aka the main)</h3>
+
+<p><code class="highlighter-rouge">frequency_of_deltas</code> will combine all the previous algorithms.</p>
+
+<p>It can be done roughly in
+<script type="math/tex">O(\vert s \vert) + O(g^m)</script> where <script type="math/tex">m</script> is the count of iterations that we
+repeat <code class="highlighter-rouge">merge_overlaping</code>.</p>
+
+<p>In the worst case, <script type="math/tex">O(g^m)</script> behaves as <script type="math/tex">O(\vert s \vert^2)</script> and
+<code class="highlighter-rouge">frequency_of_deltas</code> will be quadratic.</p>
+
+<p>But as we said, we don’t expect to find many repeated ngrams so the term
+<script type="math/tex">O(g^m)</script> will be negligible and <code class="highlighter-rouge">frequency_of_deltas</code> will remain linear.</p>
+
+<p>We have the strategy, now we need the correct tools.</p>
+
+<h2 id="data-structures">Data structures</h2>
+
+<p>We will use the following data structures:</p>
+
+<ul>
+  <li>dictionaries: with <script type="math/tex">O(1)</script> for insertion or update of a key.</li>
+  <li>lists: with <script type="math/tex">O(1)</script> for append and <script type="math/tex">O(n)</script> for iteration.</li>
+  <li>default-dictionaries: like the dictionaries but with the handy
+shortcut to create and add an entry in the dictionary if the key
+requested is not present.</li>
+</ul>
+
+<p>Python is not the fastest language but it has all the tools needed.</p>
+
+<p>Let’s start!</p>
+
+<h2 id="repeating-ngram-list---as_ngram_repeated_positions-algorithm">Repeating ngram list - <code class="highlighter-rouge">as_ngram_repeated_positions</code> algorithm</h2>
+
+<p>We are interested in to find all the positions of every single repeated
+ngram in the text.</p>
+
+<p>Focus only on the ngrams of 2 characters for now.</p>
+
+<p><label for="mf-8c277780c7574cdaab2a355d0f29039e" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-8c277780c7574cdaab2a355d0f29039e" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/kasiski_scan_count.png" /></span></p>
+
+<p>We need to count how many instances of the same ngram are, so we can
+know which are unique; and we need to track their position, so
+we can later know the distance between them.</p>
+
+<p>Storing every ngram instance in memory is expensive (for a 2 characters
+ngram you will have to store twice the source string).</p>
+
+<p>A simple solution is to use an id: different ngrams will have different
+ids while the instances of the <em>same</em> ngram will have the same id.</p>
+
+<figure><figcaption><span></span></figcaption><img style="max-width:45%;" src="/book-of-gehn/assets/kasiski/kasiski_scan_positions.png" /></figure>
+
+<p>The following Python fragment summarizes the above:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># input: s, the original text
+</span><span class="n">id_of_ngram</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+<span class="n">pos_sorted</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">ngram_cnt_by_id</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">ngram_cnt_by_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># id==0 is reserved for deletions, see later
+</span><span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">ngram</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">ngrams</span><span class="p">(</span><span class="mi">2</span><span class="p">)):</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">id_of_ngram</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">ngram</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">id_of_ngram</span><span class="p">))</span>
+
+    <span class="n">pos_sorted</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pos</span><span class="p">,</span> <span class="nb">id</span><span class="p">))</span>
+    <span class="n">ngram_cnt_by_id</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre></div></div>
+
+<p><label for="mf-3dfbcfb6f6d4f6825eea9bcbb994fbfe" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-3dfbcfb6f6d4f6825eea9bcbb994fbfe" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/as_ngram_repeated_positions.png" />  <br />Input-size/time-taken relationship of <code class="highlighter-rouge">as_ngram_repeated_positions</code>.
+ <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
+</span></p>
+
+<p>For a string of <script type="math/tex">\vert s \vert</script> characters the algorithm generates
+a list of <script type="math/tex">\vert s \vert</script>
+tuples. If chosen the data structures correctly, the algorithm runs
+in <script type="math/tex">O(\vert s \vert)</script> (linear time and space).</p>
+
+<p>One final step remains: once we have the list we need to filter out
+any unique ngram (those that have a counter of less than 2).</p>
+
+<p>This is also linear.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pos_sorted</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">pos_sorted</span>
+                      <span class="k">if</span> <span class="n">ngram_cnt_by_id</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<figure><figcaption><span></span></figcaption><img style="max-width:60%;" src="/book-of-gehn/assets/kasiski/kasiski_scan_count_filter.png" /></figure>
+
+<p>The final result is a list of tuples <code class="highlighter-rouge">(position, id)</code> with the
+positions of the ngrams and their identifiers <em>sorted</em> by their
+position.</p>
+
+<p>The algorithm can be generalized to find all the non-unique ngrams of
+length <code class="highlighter-rouge">n</code> changing <code class="highlighter-rouge">s.ngrams(2)</code> to <code class="highlighter-rouge">s.ngrams(n)</code>.</p>
+
+<p>The trick is how to build the list of ngrams of <code class="highlighter-rouge">n+1</code>
+length <em>reusing</em> the ngrams of length <code class="highlighter-rouge">n</code> found by the above algorithm.</p>
+
+<h2 id="superior-ngram-order---merge_overlaping-algorithm">Superior ngram order - <code class="highlighter-rouge">merge_overlaping</code> algorithm</h2>
+
+<p>The idea is that two ngrams <code class="highlighter-rouge">g_1</code> and <code class="highlighter-rouge">g_2</code> of <code class="highlighter-rouge">n</code> characters
+at positions <code class="highlighter-rouge">p_1</code> and <code class="highlighter-rouge">p_2</code> in the original string can be <em>merged</em>
+and build a ngram of <code class="highlighter-rouge">n+1</code> bytes at <code class="highlighter-rouge">p_1</code> if and only if
+<code class="highlighter-rouge">p_1 + 1 == p_2</code>.</p>
+
+<p>In other words, they are consecutive.</p>
+
+<figure><figcaption><span></span></figcaption><img style="max-width:60%;" src="/book-of-gehn/assets/kasiski/kasiski_merge.png" /></figure>
+
+<p>A merged ngram not necessary means that it is a repeated ngram but
+we know that any repeated ngram will be a merged one.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">id_of_ngram</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+<span class="n">ngram_cnt_by_id</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">ngram_cnt_by_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">nex</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">pos_sorted</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">pos_sorted</span><span class="p">[</span><span class="mi">1</span><span class="p">:])):</span>
+    <span class="n">pcur</span><span class="p">,</span> <span class="nb">id</span> <span class="o">=</span> <span class="n">cur</span>
+    <span class="n">pnex</span><span class="p">,</span> <span class="n">id2</span> <span class="o">=</span> <span class="n">nex</span>
+
+    <span class="k">if</span> <span class="n">pcur</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">!=</span> <span class="n">pnex</span><span class="p">:</span>
+        <span class="n">pos_sorted</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c1"># delete later (index 0 is special)
+</span>    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># the id of the merged ngram is formed by the ids of the
+</span>        <span class="c1"># original pair of ngrams.
+</span>        <span class="nb">id</span> <span class="o">=</span> <span class="n">id_of_ngram</span><span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="nb">id</span><span class="p">,</span> <span class="n">id2</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">id_of_ngram</span><span class="p">))</span>
+
+        <span class="n">pos_sorted</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pcur</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span>   <span class="c1"># new ngram
+</span>        <span class="n">ngram_cnt_by_id</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># the last position P1 always is "deleted" because there is
+# not P2 such P1 + 1 == P2 *and* P1 &lt; P2 (basically because there
+# are no more positions after P1)
+</span><span class="n">pos_sorted</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>During the scan we also count how many ngrams we built: unique
+ngrams are filtered later in linear time removing the false positives.</p>
+
+<p><label for="mf-0466b2ac93c53d43876c9893ceda0d57" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-0466b2ac93c53d43876c9893ceda0d57" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/merge_overlaping.png" />  <br />Input-size/time-taken relationship of <code class="highlighter-rouge">merge_overlaping</code>.
+ <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
+</span></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pos_sorted</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">pos_sorted</span>
+                      <span class="k">if</span> <span class="n">ngram_cnt_by_id</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">merge_overlaping</code> is a linear operation in terms of the initial <code class="highlighter-rouge">pos_sorted</code>
+list not in terms of the length of the input strings.</p>
+
+<p>In the practice this means that <code class="highlighter-rouge">merge_overlaping</code> – <script type="math/tex">O(g)</script> – will be
+faster than <code class="highlighter-rouge">as_ngram_repeated_positions</code> – <script type="math/tex">O(\vert s \vert)</script>.</p>
+
+<h2 id="computing-the-gaps---deltas_from_positions-algorithm">Computing the gaps - <code class="highlighter-rouge">deltas_from_positions</code> algorithm</h2>
+
+<p>Now that we have the position of each repeated ngram we want to
+calculate the distance between them.</p>
+
+<p>We are interested in the distance between the <em>same</em> ngrams.</p>
+
+<p>This is because we assume that the same repeated ngram in a ciphertext
+is due the encryption of the same plaintext <em>and</em> the repeating key of
+Vigenere was aligned.</p>
+
+<p>The distance should be then a multiple of the length of the key.</p>
+
+<p><label for="mf-2c67b39cb16460c7f5e089e831cf95e4" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-2c67b39cb16460c7f5e089e831cf95e4" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/kasiski_pos_grouped.png" /></span></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># group first
+</span><span class="n">pos_grouped</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">pos_sorted</span><span class="p">:</span>
+    <span class="n">pos_grouped</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+<span class="c1"># compute the gaps later
+</span><span class="n">delta_stats</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">pos_grouped</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">positions</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">positions</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+    <span class="n">delta_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Counter</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p><label for="mf-46e954f537e253f23e73044c8610e9aa" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-46e954f537e253f23e73044c8610e9aa" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/kasiski_distances.png" />  <br /></span></p>
+
+<p>We simplify the maths and calculate then the difference
+between <em>consecutive</em> positions for a given ngram.</p>
+
+<p>We assume that difference between non-consecutive values will yield a
+multiple of the previous shorter difference hence it will be also a
+multiple of the key length.</p>
+
+<p>In other words, calculating the “multiple of the multiple” does not add any
+new information.</p>
+
+<h2 id="frequency-of-deltas---frequency_of_deltas-algorithm">Frequency of deltas - <code class="highlighter-rouge">frequency_of_deltas</code> algorithm</h2>
+
+<p>Basically we put all the algorithms to work together:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">pos_sorted</span> <span class="o">=</span> <span class="n">as_ngram_repeated_positions</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="k">while</span> <span class="n">pos_sorted</span><span class="p">:</span>
+    <span class="n">delta_stats</span> <span class="o">=</span> <span class="n">deltas_from_positions</span><span class="p">(</span><span class="n">pos_sorted</span><span class="p">)</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delta_stats</span><span class="p">)</span>
+
+    <span class="n">pos_sorted</span> <span class="o">=</span> <span class="n">merge_overlaping</span><span class="p">(</span><span class="n">pos_sorted</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Here are some examples using
+<a href="https://pypi.org/project/cryptonita/">cryptonita</a></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.stats.kasiski</span> <span class="kn">import</span> <span class="n">frequency_of_deltas</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">b</span><span class="s">'ABCDBCDABCDBC'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">frequency_of_deltas</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="p">[</span><span class="n">Counter</span><span class="p">({</span><span class="mi">7</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span> <span class="n">Counter</span><span class="p">({</span><span class="mi">7</span><span class="p">:</span> <span class="mi">3</span><span class="p">}),</span> <span class="n">Counter</span><span class="p">({</span><span class="mi">7</span><span class="p">:</span> <span class="mi">2</span><span class="p">}),</span> <span class="n">Counter</span><span class="p">({</span><span class="mi">7</span><span class="p">:</span> <span class="mi">1</span><span class="p">})]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s">'1A0C0B471A0C0B47110E0C1E'</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">frequency_of_deltas</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="p">[</span><span class="n">Counter</span><span class="p">({</span><span class="mi">4</span><span class="p">:</span> <span class="mi">2</span><span class="p">}),</span> <span class="n">Counter</span><span class="p">({</span><span class="mi">4</span><span class="p">:</span> <span class="mi">1</span><span class="p">})]</span>
+</code></pre></div></div>
+
+<p>In the last example the first <code class="highlighter-rouge">Counter</code> is for the ngrams
+<code class="highlighter-rouge">1A 0C 0B</code> and <code class="highlighter-rouge">0C 0B 47</code> where found repeated at a distance of 4 once
+each one (2 in total). The second <code class="highlighter-rouge">Counter</code> is for <code class="highlighter-rouge">1A 0C 0B 47</code>
+repeated once at a distance of 4.</p>
+
+<p>As predicted the expected effort is linear while the worst case is
+quadratic.</p>
+
+<figure><figcaption><span><br />
+Expected case. <code class="highlighter-rouge">frequency_of_deltas</code> has a linear response when
+the size of the input increase linearly.
+ <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
+</span></figcaption><img src="/book-of-gehn/assets/kasiski/frequency_of_deltas.png" /></figure>
+
+<figure><figcaption><span><br />
+Worst case. <code class="highlighter-rouge">frequency_of_deltas</code> has a quadratic response when
+the size of the input increase linearly. Even with this result,
+it is better than cubic the naive implementation.
+ <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
+</span></figcaption><img src="/book-of-gehn/assets/kasiski/frequency_of_deltas_worst_case.png" /></figure>
+
+<h2 id="final-thoughts">Final thoughts</h2>
+
+<p>With <code class="highlighter-rouge">frequency_of_deltas</code> we have the most likely difference or gap,
+gap that it should be a multiple of the length of the key.</p>
+
+<p>But what if a repeated ngram happen just by luck?</p>
+
+<p>That’s for the Part II.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li><a href="/book-of-gehn/articles/2018/05/01/Breaking-Vigenere.html">Breaking Vigenere</a>.</li>
+  <li><a href="/book-of-gehn/articles/2019/10/04/Index-of-Coincidence.html">Index of Coincidence</a>.</li>
+  <li><a href="https://wiki.python.org/moin/TimeComplexity">Python Time Complexity</a>.</li>
+  <li><a href="https://en.wikipedia.org/wiki/Dynamic_programming">Dynamic Programming</a>.</li>
+  <li><a href="assets/kasiski/MatthewBerntsenBUThesis.7z">Automating the Cracking of Simple Ciphers, by Matthew C. Berntsen</a>.</li>
+</ul>
+
+
+
+    </article>
+    <span class="print-footer">Kasiski Test - Part I - October 11, 2020 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

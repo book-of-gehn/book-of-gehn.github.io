@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Seaborn Cheatsheet</title>
+  <meta name="description" content="Plotting data was always for me a weak point: it always took me a lot oftime to make the plots and graphs, reading the documentation, googlinghow to do one p...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2021/06/05/Seaborn-Cheatsheet.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Seaborn Cheatsheet</h1>
+<p class="subtitle">June 5, 2021</p>
+
+<p>Plotting data was always for me a weak point: it always took me a lot of
+time to make the plots and graphs, reading the documentation, <em>googling</em>
+how to do one particular tweak and things like that.</p>
+
+<p>So I challenge myself: could I build a <em>cheatsheet</em> about plotting?</p>
+
+<p>Yes, yes I could.</p>
+
+<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet.svg" /></figure>
+
+<p><a href="https://seaborn.pydata.org/">Seaborn</a> is a very simple but powerful
+plotting library on top of <a href="https://matplotlib.org/">matplotlib</a> designed
+for statistical analysis.</p>
+
+<p>Quick links:
+<a href="/book-of-gehn/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet.pdf">PDF (no bg)</a>,
+<a href="/book-of-gehn/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-bg.pdf">PDF (bg)</a>,
+<a href="/book-of-gehn/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet.svg">SVG (no bg)</a>,
+<a href="/book-of-gehn/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-bg.svg">SVG (bg)</a>
+.<!--more--></p>
+
+<h2 id="instructions">Instructions</h2>
+
+<p>Each rectangle list the parameters that take the plot functions.
+The bold labels inside, like <strong>hist</strong> and <strong>violin</strong>, are the names
+of the plots.</p>
+
+<p>The names are followed by a list of <strong>data parameter</strong>, also in bold.
+These are used to tell the function from <strong>where</strong> take the data. Some
+functions may take more parameters additionally, so they are in between
+<strong>square brakets</strong>.</p>
+
+<p>The rest of the parameters listed are optional. Sometimes the
+cheatsheet shows the <em>type</em> of the parameter, sometimes the <em>range</em> and
+in others just a few possible values.</p>
+
+<p>From all of that you can write Python code like the following that plots
+a histogram for the univariate <code class="highlighter-rouge">"age"</code> in the given Pandas data frame.
+The extra <code class="highlighter-rouge">kde=True</code> plots a <em>kernel density estimation</em> on top.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="n">sns</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">"age"</span><span class="p">,</span> <span class="n">kde</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Nested rectangles means that the outer rectangle <strong>includes</strong> the parameters
+listed in the inner rectangle but not the other way around.</p>
+
+<p>The <strong>dashed</strong> rectangles means the <strong>union of</strong>: the parameters are
+shared across.</p>
+
+<p>For example <code class="highlighter-rouge">bar</code> and <code class="highlighter-rouge">point</code> accepts the parameters of <code class="highlighter-rouge">box</code> and <code class="highlighter-rouge">line</code>.</p>
+
+<p>Some parameters are followed by a <em>comment in italics</em> for a quick
+explanation of the parameters.</p>
+
+<p>The cheatsheet has a lot of small plots as visual examples. Some of them
+are <strong>linked with a line</strong> with a plot function (rectangle) and some of them are
+<strong>linked with a dashed line</strong> to a particular setting.</p>
+
+<p>For example in the cheatsheet there are 4 examples of <code class="highlighter-rouge">hist</code> showing the
+different results based on <code class="highlighter-rouge">element='step'</code>, <code class="highlighter-rouge">multiple='stack'</code> and
+<code class="highlighter-rouge">multiple='dodge'</code>.</p>
+
+<p>The fourth example is linked to the rectangle for the <code class="highlighter-rouge">hist</code> function
+(bivariate) and not linked to a particular setting.</p>
+
+<p>The colors also have a meaning: plot functions of the same color belongs
+to the same <em>Seaborn module</em>.</p>
+
+<p>Seaborn has –broadly speaking– 2 groups of functions:</p>
+
+<ul>
+  <li>the ones that work at the <strong>axes level</strong>.</li>
+  <li>the ones that creates their own figure and axes, the <strong>figure level</strong>
+(or module level)</li>
+</ul>
+
+<p>The former are the core of Seaborn. Call them on the same axes to do a
+combination (an overlay) of different plots.</p>
+
+<p>The latter are however simpler. They just call the axes level function
+based on the <code class="highlighter-rouge">kind=</code> parameter.</p>
+
+<p>The advantage of the figure level functions is that they can create a
+<strong>matrix of plots</strong> with the <code class="highlighter-rouge">row=</code> and <code class="highlighter-rouge">col=</code> parameters.</p>
+
+<p>The colors represent these: red for uni/bivariate distribution plots
+(<code class="highlighter-rouge">displot</code>), blue for relationship plots (<code class="highlighter-rouge">relplot</code>) and green for
+distribution within categories plots (<code class="highlighter-rouge">catplot</code>).</p>
+
+<p>The violet group is for regressions and does not follow exactly the
+pattern above.</p>
+
+
+
+
+    </article>
+    <span class="print-footer">Seaborn Cheatsheet - June 5, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

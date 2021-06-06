@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Solving a Murder Case with Z3</title>
+  <meta name="description" content="Victor has been murdered!There are strong evidences that point that Victor was murdered bya single person. The investigation led to three suspects:Art, Bob, ...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+            R: '{\\tiny{\\_}}', s: '{_}'
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2021/05/09/Solving-a-Murder-Case-with-Z3.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Solving a Murder Case with Z3</h1>
+<p class="subtitle">May 9, 2021</p>
+
+<p>Victor has been murdered!</p>
+
+<p>There are strong evidences that point that Victor was murdered by
+a single person. The investigation led to three suspects:
+Art, Bob, and Carl.</p>
+
+<p>But who is the murder?<!--more--></p>
+
+<p><label for="mn-5d705be8de70a13814995b397e42172c" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-5d705be8de70a13814995b397e42172c" class="margin-toggle" /><span class="marginnote">I took this logic puzzle from a Stanford University course:
+<a href="http://intrologic.stanford.edu/extras/whodunnit.html">Introduction to Logic</a>
+ </span></p>
+
+<p>Art says he did not do it. He says that Bob was the victim’s friend but
+that Carl hated the victim.</p>
+
+<p>Bob says he was out of town the day of the murder, and besides he didn’t
+even know the guy.</p>
+
+<p>Carl says he is innocent and he saw Art and Bob with the victim just
+before the murder.</p>
+
+<h2 id="propositional-logic">Propositional logic</h2>
+
+<p>The proposition “Bob says he was out of town the day of the murder”
+cannot be tested by pure logic.</p>
+
+<p>It is a statement that is not related with any other statement said
+including his own so it will not be in contradiction.</p>
+
+<p>Unless we have a camera capturing Bob near the crime scene the day
+of the murder with a validated date and time, we cannot contradict his
+claim.</p>
+
+<p>The propositions “Art says he did not do it” and “Carl says he is innocent”
+have the same level of useless.</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+Art \R claims &= Bob \R friend \R of \R Victor ∧ ¬Carl \R friend \R of \R Victor  \\
+Bob \R claims &= ¬Bob \R knows \R Victor                          \\
+Carl \R claims &= Art \R saw \R with \R Victor ∧ Bob \R saw \R with \R Victor
+\end{aligned} %]]></script>
+
+<p>The propositions of above seems to be disconnected. This is a limitation
+of the <em>propositional logic</em>: we cannot connect “Bob was the victim’s
+friend” with “[Bob] didn’t even know the guy”.</p>
+
+<p>Those are two separated propositions.</p>
+
+<p>To connect them we need to use a <em>first order logic</em> or <em>predicated
+logic</em>.</p>
+
+<h2 id="first-order-logic">First order logic</h2>
+
+<p>A first order logic has more expressive power to capture more subtle
+connections.</p>
+
+<p>We know that if a person <script type="math/tex">s</script> is a friend of <script type="math/tex">v</script>,
+then <script type="math/tex">s</script> must know <script type="math/tex">v</script> – or at
+least is a reasonable assumption of how human friendship works.</p>
+
+<p>Then we can have the following two <em>predicates</em> (think in them as
+functions or parametric propositions).</p>
+
+<script type="math/tex; mode=display">is \R friend(s, v)     \\
+knows(s, v)</script>
+
+<p>These predicates are not true or false: only when we <em>fix</em> their inputs
+we can ask about their truthfulness.</p>
+
+<p><label for="mn-9a03120bc20ba885cfc74e620e63f4db" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-9a03120bc20ba885cfc74e620e63f4db" class="margin-toggle" /><span class="marginnote">Formally I should add that <script type="math/tex">s</script> belongs to the <em>domain</em> of
+suspects <script type="math/tex">\{Art, Bob, Carl\}</script> and <script type="math/tex">v</script> belongs to the <em>domain</em>
+of victims <script type="math/tex">\{Victor\}</script>.
+<br />
+Without a domain, <script type="math/tex">s</script> and <script type="math/tex">v</script> are just letters and the proposition
+makes no sense.
+ </span>
+However we can build propositions that are true or false on top
+of that:</p>
+
+<script type="math/tex; mode=display">∀ s, ∀ v \; is \R friend(s, v) ⟹  knows(s, v)</script>
+
+<p>And that proposition is true for all the suspects and victims possible.</p>
+
+<p>In particular, the following is also true:</p>
+
+<script type="math/tex; mode=display">is \R friend(Bob, Victor) ⟹  knows(Bob, Victor)</script>
+
+<p>That’s the link, the connection between “Bob was the victim’s
+friend” with “[Bob] didn’t even know the guy”.</p>
+
+<p>It is a mathematical way to say: “if Bob was the victim’s friend, then
+he knew the guy; if he didn’t know the guy he could not be his friend”.</p>
+
+<p>The claim “[Carl] saw Art […] with the victim just before the murder”
+is tricky.</p>
+
+<p>A person <script type="math/tex">s</script> can be in a public place with <script type="math/tex">v</script> and that does not implies
+anything. Even if they are in the same room, <script type="math/tex">s</script> may forget about
+<script type="math/tex">v</script> 5 minutes later.</p>
+
+<p>For the sake of simplicity we will say that the following is true:</p>
+
+<script type="math/tex; mode=display">∀ s, ∀ v \; be \R with(s, v) ⟹  knows(s, v)</script>
+
+<p>Using the predicates we can rewrite the suspects’ claims as follows:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{aligned}
+Art \R claims &= is \R friend(Bob, Victor) ∧ ¬is \R friend(Carl, Victor)  \\
+Bob \R claims &= ¬knows(Bob, Victor)                                \\
+Carl \R claims &= be \R with(Art, Victor) ∧ be \R with(Bob, Victor)
+\end{aligned} %]]></script>
+
+<h2 id="z3">Z3</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DeclareSort</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">BoolSort</span><span class="p">,</span> <span class="n">Bools</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Not</span><span class="p">,</span>
+<span class="o">...</span>                 <span class="n">Implies</span><span class="p">,</span> <span class="n">ForAll</span><span class="p">,</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">Consts</span><span class="p">,</span> <span class="n">AtLeast</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">Suspects</span> <span class="o">=</span> <span class="n">DeclareSort</span><span class="p">(</span><span class="s">'Suspects'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">Art</span><span class="p">,</span> <span class="n">Bob</span><span class="p">,</span> <span class="n">Carl</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">Consts</span><span class="p">(</span><span class="s">"Art Bob Carl s"</span><span class="p">,</span> <span class="n">Suspects</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">Victims</span> <span class="o">=</span> <span class="n">DeclareSort</span><span class="p">(</span><span class="s">'Victims'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">Victor</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">Consts</span><span class="p">(</span><span class="s">"Victor v"</span><span class="p">,</span> <span class="n">Victims</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Notice how we explicitly declare the <em>domains</em> or <em>sorts</em> over we will
+be operating: the domain of suspects and the domain of victims.</p>
+
+<p>“Bob is a sort of Suspects; Victor is a sort of Victims”. Weird.</p>
+
+<p>The sort is used to define the <em>predicates</em> –aka functions:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">is_friend</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">'is_friend'</span><span class="p">,</span> <span class="n">Suspects</span><span class="p">,</span> <span class="n">Victims</span><span class="p">,</span> <span class="n">BoolSort</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">knows</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">'knows'</span><span class="p">,</span> <span class="n">Suspects</span><span class="p">,</span> <span class="n">Victims</span><span class="p">,</span> <span class="n">BoolSort</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">be_with</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">'be_with'</span><span class="p">,</span> <span class="n">Suspects</span><span class="p">,</span> <span class="n">Victims</span><span class="p">,</span> <span class="n">BoolSort</span><span class="p">())</span>
+</code></pre></div></div>
+
+<p>All those three functions receives a suspect and a victim as inputs and
+return an element of sort boolean: true or false.</p>
+
+<p>Note how those functions are either true or false, they are just
+functions.</p>
+
+<p>In contrast the following relationships are true and they are our first
+two restrictions set:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="o">...</span>     <span class="n">ForAll</span><span class="p">([</span><span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">],</span> <span class="n">Implies</span><span class="p">(</span><span class="n">is_friend</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">knows</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">))),</span>
+<span class="o">...</span>     <span class="n">ForAll</span><span class="p">([</span><span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">],</span> <span class="n">Implies</span><span class="p">(</span><span class="n">be_with</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">knows</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">)))</span>
+<span class="o">...</span> <span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">push</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>And now the suspects’ claims:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">art_claims</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">is_friend</span><span class="p">(</span><span class="n">Bob</span><span class="p">,</span> <span class="n">Victor</span><span class="p">),</span> <span class="n">Not</span><span class="p">(</span><span class="n">is_friend</span><span class="p">(</span><span class="n">Carl</span><span class="p">,</span> <span class="n">Victor</span><span class="p">)))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">bob_claims</span> <span class="o">=</span> <span class="n">Not</span><span class="p">(</span><span class="n">knows</span><span class="p">(</span><span class="n">Bob</span><span class="p">,</span> <span class="n">Victor</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">carl_claims</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">be_with</span><span class="p">(</span><span class="n">Art</span><span class="p">,</span> <span class="n">Victor</span><span class="p">),</span> <span class="n">be_with</span><span class="p">(</span><span class="n">Bob</span><span class="p">,</span> <span class="n">Victor</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">assert_and_track</span><span class="p">(</span><span class="n">art_claims</span><span class="p">,</span> <span class="s">'art_claims'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">assert_and_track</span><span class="p">(</span><span class="n">bob_claims</span><span class="p">,</span> <span class="s">'bob_claims'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">assert_and_track</span><span class="p">(</span><span class="n">carl_claims</span><span class="p">,</span> <span class="s">'carl_claims'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Finally, we check if the claims are <em>consistent between</em> or if there are
+any <em>contradiction</em>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+<span class="n">unsat</span>
+</code></pre></div></div>
+
+<p>Nop! Someone is lying!</p>
+
+<h2 id="finding-the-murder">Finding the murder</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">unsat_core</span><span class="p">()</span>
+<span class="p">[</span><span class="n">art_claims</span><span class="p">,</span> <span class="n">bob_claims</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Z3 can calculate the <em>unsat core</em> which it is a subset of the <em>tracked</em>
+restrictions that lead to <em>unsatisfiable</em> result.</p>
+
+<p>So Art’s or Bob’s claims is/are producing contradictions.</p>
+
+<p><label for="mn-59d6686c2a8eca4e9d9c869e43a4048c" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-59d6686c2a8eca4e9d9c869e43a4048c" class="margin-toggle" /><span class="marginnote">Z3 does not produce the <em>minimum unsat core</em> by default. We could force
+it to have exactly which claim is false but in my setup I could not make
+it work.
+<br />
+So we will have to do it by hand.
+ </span></p>
+
+<p>By assumption, only one of the suspects is lying, the rest are telling
+us the truth. But who is lying?</p>
+
+<p>We restore the solver before anding the claims and this time we will require
+not all but at least 2 claims to be true.
+By assumption the third claim will be false.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">push</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">AtLeast</span><span class="p">(</span><span class="n">art_claims</span><span class="p">,</span> <span class="n">bob_claims</span><span class="p">,</span> <span class="n">carl_claims</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+<span class="n">sat</span>
+</code></pre></div></div>
+
+<p>Now, what suspect is lying?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span><span class="o">.</span><span class="nb">eval</span><span class="p">(</span><span class="n">art_claims</span><span class="p">)</span>
+<span class="bp">True</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span><span class="o">.</span><span class="nb">eval</span><span class="p">(</span><span class="n">bob_claims</span><span class="p">)</span>
+<span class="bp">False</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span><span class="o">.</span><span class="nb">eval</span><span class="p">(</span><span class="n">carl_claims</span><span class="p">)</span>
+<span class="bp">True</span>
+</code></pre></div></div>
+
+<p>So Bob is lying!</p>
+
+<p>To rule out any other possible solution we will roll back the solver
+again and in this time we use the claims as <em>assumptions</em>.</p>
+
+<p>For the <code class="highlighter-rouge">check()</code> method an assumption is a restriction like any other but
+it is not added to the solver (like when you call <code class="highlighter-rouge">add()</code>).</p>
+
+<p>This is handy way to test different claims combinations without rolling
+back the entire solver over and over.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">push</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">art_claims</span><span class="p">,</span> <span class="n">bob_claims</span><span class="p">)</span>
+<span class="n">unsat</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">bob_claims</span><span class="p">,</span> <span class="n">carl_claims</span><span class="p">)</span>
+<span class="n">unsat</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">art_claims</span><span class="p">,</span> <span class="n">carl_claims</span><span class="p">)</span>
+<span class="n">sat</span>
+</code></pre></div></div>
+
+<p>Indeed, only when Bob’s claims are <strong>not</strong> considered we see a
+consistent scenario.</p>
+
+<p>Bob was the killer.</p>
+
+
+
+
+    </article>
+    <span class="print-footer">Solving a Murder Case with Z3 - May 9, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

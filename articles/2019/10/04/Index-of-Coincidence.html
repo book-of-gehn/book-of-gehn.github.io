@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Index of Coincidence Explained</title>
+  <meta name="description" content="The concept of Index of Coincidence was introduced by William Friedmanin 1922-1923 in the paper titled“The Index of Coincidence and its Applications in Crypt...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2019/10/04/Index-of-Coincidence.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Index of Coincidence Explained</h1>
+<p class="subtitle">October 4, 2019</p>
+
+<p>The concept of Index of Coincidence was introduced by William Friedman
+in 1922-1923 in the paper titled
+“The Index of Coincidence and its Applications in Cryptoanalysis”.</p>
+
+<p>The Navy Department (US) worked in the following years on this topic
+coming, in 1955, with a paper titled “The Index of Coincidence”
+by Howard Campaigne.</p>
+
+<p>However I found some confusing and misleading concepts in the <em>modern</em>
+literature.</p>
+
+<p>This post is a summary of what I could understand from Howard’s work.<!--more--></p>
+
+<h2 id="count-coincidences">Count Coincidences</h2>
+
+<p>How similar are two strings?</p>
+
+<p><label for="mf-29b42649f58da7db82d0609a71355291" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-29b42649f58da7db82d0609a71355291" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/icoincidences/align1.png" />  <br />Two strings aligned have 6 coincidences.</span></p>
+
+<p>Put the two strings one below the other, perfectly aligned.
+Now, column by column, count how many times the same letter
+appear in the same column.</p>
+
+<p>Two strings that have substrings in common and <em>aligned</em> have
+a lot of coincidences.</p>
+
+<p>We will call this Aligned Count of Coincidences or <script type="math/tex">AC(s_1,s_2)</script>.</p>
+
+<p><label for="mf-2819dc8bccc45325265aeb08ec9d4e90" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-2819dc8bccc45325265aeb08ec9d4e90" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/icoincidences/align2.png" />  <br />Two strings, the second shifted 4 positions to the right, have 3 coincidences.</span></p>
+
+<p>But if the substrings are not <em>aligned</em> we may think, incorrectly,
+that two strings does not have nothing in common.</p>
+
+<p><label for="mf-dd4a50b770ef445d31f0558d78956154" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-dd4a50b770ef445d31f0558d78956154" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/icoincidences/align3.png" />  <br />Two strings, the second shifted 6 positions to the left, have 3 coincidences too.</span></p>
+
+<p>So we define the Count of Coincidences <script type="math/tex">C(s_1,s_2)</script>
+between two strings as how
+many columns have the same letter for <em>every</em> possible alignment.</p>
+
+<p>It’s more simple than it looks.</p>
+
+<h3 id="count-for-every-possible-alignment">Count for Every Possible Alignment</h3>
+
+<p>Pick the first <code class="highlighter-rouge">e</code> of the first string. It will have a coincidence
+with every possible <code class="highlighter-rouge">e</code> in the second string.</p>
+
+<p><label for="mf-fd89f113d74cddd00c8249527a7abafc" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-fd89f113d74cddd00c8249527a7abafc" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/icoincidences/e_coincidences.png" />  <br />Coincidences of the first <code class="highlighter-rouge">e</code> with all the <code class="highlighter-rouge">e</code> of the second string.</span></p>
+
+<p>There are 5 letters <code class="highlighter-rouge">e</code> in the second string, so we will have
+5 coincidences.</p>
+
+<p>Then pick the second <code class="highlighter-rouge">e</code> of the first string and repeat. Another
+5 coincidences.</p>
+
+<p>The first string has 3 letters <code class="highlighter-rouge">e</code> so at the end we will have 3 times 5,
+15 coincidences.</p>
+
+<p>In general for a particular byte we will have <script type="math/tex">n_i m_i</script> coincidences
+where <script type="math/tex">n_i</script> is the count of that byte in the <em>first</em> plaintext and
+<script type="math/tex">m_i</script> in the second.</p>
+
+<p>For all the possible bytes <script type="math/tex">i</script>, the count of coincidences for
+all the possible shifts and alignments is:</p>
+
+<script type="math/tex; mode=display">C(s_1,s_2) = \sum_{\forall i} n_i m_i \tag{1}\label{Coincs1s2}</script>
+
+<h2 id="expected-count">Expected Count</h2>
+
+<p>The equation <script type="math/tex">(\ref{Coincs1s2})</script> counts the coincidence between two particular
+<em>instances</em>.</p>
+
+<p><label for="mf-bee7ee936e7c100c6258d5f6c2ef9b39" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-bee7ee936e7c100c6258d5f6c2ef9b39" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/icoincidences/families.png" />  <br />Two sets or families of strings <script type="math/tex">S_1</script> and <script type="math/tex">S_2</script>; <script type="math/tex">s_1</script> and <script type="math/tex">s_2</script> are just two examples of those.</span></p>
+
+<p>Instead of comparing two particular strings we compare two <em>families</em> of strings
+where the probability of each symbol <script type="math/tex">i</script> is <script type="math/tex">p_i</script> in the first family
+and <script type="math/tex">q_i</script> in the second.</p>
+
+<p>Because <script type="math/tex">p_i</script> and <script type="math/tex">q_i</script> are independent, the probability of picking the
+same letter or symbol <script type="math/tex">i</script> is <script type="math/tex">p_i q_i</script>.</p>
+
+<p>Picking one letter or other are mutually exclusive events (disjoin events) so
+the probability of having <em>any</em> coincidence is the sum:</p>
+
+<script type="math/tex; mode=display">PrC(S_1,S_2) = \sum_{\forall i} p_i q_i \tag{3}\label{PrCoincS1S2}</script>
+
+<p>The equation <script type="math/tex">(\ref{PrCoincS1S2})</script> is shown in [Howard], equation (25)</p>
+
+<p>With <script type="math/tex">(\ref{PrCoincS1S2})</script>, the <em>expected count</em> for two strings of length <script type="math/tex">N</script>
+taken from the families <script type="math/tex">S_1</script> and <script type="math/tex">S_2</script> is:</p>
+
+<script type="math/tex; mode=display">EC(S_1,S_2) = N \sum_{\forall i} p_i q_i \tag{4}\label{ExpCoincS1S2}</script>
+
+<p>[Howard], equation (pseudo 2.5)</p>
+
+<h3 id="expected-coincidences-between-two-random-strings">Expected Coincidences Between Two Random Strings</h3>
+
+<p>If we are comparing two <em>uniformly distributed</em> random strings,
+all the letters or symbols have the same probability so
+<script type="math/tex">p_i = q_i = \frac{1}{c}</script> where <script type="math/tex">c</script> is the length of the alphabet (256 for bytes,
+26 for English letters, …)</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{align*}
+    PrC(R)         & = \sum_{\forall i} p_i q_i  \tag{3}\\
+                   & = \sum_{\forall i} \frac{1}{c} \frac{1}{c} \\
+                   & = c \frac{1}{c} \frac{1}{c}    \\
+                   & = \frac{1}{c}   \tag{5}\label{PrCoincR}
+\end{align*} %]]></script>
+
+<p>And therefore the <em>expected count</em> is</p>
+
+<script type="math/tex; mode=display">EC(R) = N \sum_{\forall i} p_i q_i = \frac{N}{c} \tag{6}\label{ExpCoincR}</script>
+
+<h2 id="cross-index-of-coincidence">Cross Index of Coincidence</h2>
+
+<p>Finally, we define the Cross Index of Coincidence, <script type="math/tex">IC(s_1,s_2)</script> for short,
+as the ratio between the count of coincidences between two strings
+(<script type="math/tex">s_1</script> and <script type="math/tex">s_2</script>) of the same length <script type="math/tex">N</script> and the <em>expected</em> coincidences assuming
+uniformly distributed random strings.</p>
+
+<p>In other words is the ratio between equations <script type="math/tex">(\ref{Coincs1s2})</script> and
+<script type="math/tex">(\ref{ExpCoincR})</script></p>
+
+<script type="math/tex; mode=display">IC(s_1,s_2) = \frac{C(s_1,s_2)}{EC(R)} = \frac{c}{N} \sum_{\forall i} n_i m_i  \tag{7}\label{IdxCoincs1s2}</script>
+
+<p>We can also use <script type="math/tex">AC(s_1,s_2)</script> instead of <script type="math/tex">C(s_1,s_2)</script> and we will
+get another variant of <script type="math/tex">IC(s_1,s_2)</script>.</p>
+
+<h3 id="c-is-not-a-normalization-factor"><script type="math/tex">c</script> is Not a Normalization Factor</h3>
+
+<p>I found in modern literature than the term <script type="math/tex">c</script> is explained as
+a normalization factor. Far from being truth.</p>
+
+<p>In fact, the values that <script type="math/tex">IC(s_1,s_2)</script>
+go from 0 to <script type="math/tex">cN</script>.</p>
+
+<p>A <em>normalized</em> IC can be obtained from <script type="math/tex">(\ref{IdxCoincs1s2})</script> if we divide it
+by <script type="math/tex">cN</script> which it is the same to ask for <script type="math/tex">PrC(S_1,S_2)</script>:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{align*}
+IC_N(s_1,s_2) & = \frac{c}{N} \sum_{\forall i} n_i m_i \frac{1}{cN}    \\
+              & = \frac{c}{c} \sum_{\forall i} \frac{n_i}{N} \frac{m_i}{N}  \\
+              & = \sum_{\forall i} p_i q_i \\
+              & = PrC(S_1,S_2)    \tag{3}
+\end{align*} %]]></script>
+
+<h3 id="cross-index-of-coincidence-between-two-families">Cross Index of Coincidence between Two Families</h3>
+
+<p>If we calculate the ratio between
+<script type="math/tex">(\ref{PrCoincS1S2})</script> and <script type="math/tex">(\ref{PrCoincR})</script> we have a way to
+compare families without needing the length:</p>
+
+<script type="math/tex; mode=display">IC(S_1,S_2) = c \sum_{\forall i} p_i q_i \tag{9}\label{IdxCoincS}</script>
+
+<h2 id="auto-index-of-coincidences">Auto Index of Coincidences</h2>
+
+<p>There is another definition of IC that compares a string
+with itself.</p>
+
+<p>It follows a similar counting process: put the string and its
+copy in two rows, count the coincidences, shift one place and repeat.</p>
+
+<p>Of course there is a case where both will have a full match. That
+case is ignored.</p>
+
+<p>The count of <em>auto</em> coincidences is:</p>
+
+<script type="math/tex; mode=display">C(s) = \sum_{\forall i} n_i (n_i-1) \tag{10}\label{Coincs}</script>
+
+<p>In term of the probabilities:</p>
+
+<script type="math/tex; mode=display">PrC(S) = \sum_{\forall i} p_i (p_i-1)  \tag{11}\label{PrCoincS}</script>
+
+<p>Once again, the IC is a ratio between the actual coincidences <script type="math/tex">C(s)</script>
+and the expected coincidences <script type="math/tex">\frac{N}{c}</script>:</p>
+
+<script type="math/tex; mode=display">IC(s) = \frac{c}{N} \sum_{\forall i} n_i (n_i-1)    \tag{12}\label{IdxCoincs}</script>
+
+<p>Or it is the ratio between the probabilities:</p>
+
+<script type="math/tex; mode=display">IC(S) = c \sum_{\forall i} p_i (p_i - 1) \tag{13}\label{IdxCoincNormS}</script>
+
+<h2 id="final-thoughts">Final Thoughts</h2>
+
+<p>This post took me a lot of time. The topic is not complex and the
+maths are very simple but it is the amount of several and slightly
+different definitions that makes hard to read and interpret.</p>
+
+<p>Counting the coincidences between two strings aligned <script type="math/tex">AC(s_1,s_2)</script>,
+not aligned <script type="math/tex">C(s_1,s_2)</script>, the probability of having a coincidence
+<script type="math/tex">PrC(S_1,S_2)</script>, the expected count, the <script type="math/tex">IC</script>, …</p>
+
+<p>I hope to got it right in this post :D</p>
+
+
+
+
+    </article>
+    <span class="print-footer">Index of Coincidence Explained - October 4, 2019 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

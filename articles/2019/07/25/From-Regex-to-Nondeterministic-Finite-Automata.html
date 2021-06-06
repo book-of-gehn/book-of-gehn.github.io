@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>From a Regex to a Nondeterministic Finite Automata</title>
+  <meta name="description" content="Before building complex state machine we need to learn the basics blocks.When the solution to a problem can be seen as set of states withtransitions from one...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2019/07/25/From-Regex-to-Nondeterministic-Finite-Automata.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>From a Regex to a Nondeterministic Finite Automata</h1>
+<p class="subtitle">July 25, 2019</p>
+
+<p>Before building complex state machine we need to learn the basics blocks.</p>
+
+<p>When the solution to a problem can be seen as set of states with
+transitions from ones to others, modeling them as a nondeterministic
+finite automatas makes clear how the solution works and allows to spot
+deficiencies.</p>
+
+<p>A regular expression is an example of this. As an introductory step
+let’s review how to turn a regex into a NFA.</p>
+
+<p>Take at look of the <a href="https://github.com/eldipa/nfa">source code in Github</a>.
+<!--more--></p>
+
+<h2 id="from-a-regular-expression-to-a-nfa">From a regular expression to a NFA</h2>
+
+<p>Before getting deep in this, let’s define a very simple problem: we
+want to validate if a particular string follows or not a given structure.</p>
+
+<p>Let’s assume that this structure can be writing using a
+<em>regular language</em>.</p>
+
+<p>A <em>regular expresion</em> or <em>regex</em> is a handy way to write this in a concise
+way. Keep in mind that most of the regex engines are more powerful than
+a NFA so not all the features that such engines provide can be translated
+to a NFA.</p>
+
+<p>But a NFA is powerful enough to solve a lot of problems so it worth it.</p>
+
+<h2 id="labeled-transitions">Labeled transitions</h2>
+
+<p>First, we say that the NFA can <em>move</em> from one state to another
+if there is a <em>transition</em> between the states and it is labeled
+with the same <em>character</em> that was read.</p>
+
+<p>We represent this with a simple arrow connecting the two states
+labeled with the particular character.</p>
+
+<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/85140f4b33a395426d5e9ae04871fcf91c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<p>A NFA allows the use of <em>epsilon</em> transitions or <script type="math/tex">\epsilon</script>-transitions
+for short.</p>
+
+<p>A NFA moves from one state to another through a <script type="math/tex">\epsilon</script>-transition
+<em>without</em> reading any character: it represents the empty string match.</p>
+
+<figure><figcaption><span>We are going to drop the label in some cases for clarity in the following diagrams.</span></figcaption><object align="middle" data="/book-of-gehn/uml/468fccb5c5c3fb0b9858c8c7dfe2fe6d1c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<h2 id="optional-match">Optional match</h2>
+
+<p>We this two simple definitions we can build an <em>optional match</em> represented
+in regex syntax as <code class="highlighter-rouge">a?</code></p>
+
+<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/e56989c0413e9c751dd65be36f3d1c921c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<p>The optional part can be as complex as we want like another NFA, no necessary must
+be a simple <em>literal</em>.</p>
+
+<figure><figcaption><span>We represent any arbitrary complex construction as state machine (<script type="math/tex">sm_1</script>) defined elsewhere. We plug it using <script type="math/tex">\epsilon</script>-transitions and we make it <em>optional</em> using a third <script type="math/tex">\epsilon</script>-transition to <em>bypass</em> <script type="math/tex">sm_1</script>.</span></figcaption><object align="middle" data="/book-of-gehn/uml/66ea21dd221ffc4edd6b1e6b38bdc0431c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<h2 id="concatenation-and-repetition-of-nfas">Concatenation and repetition of NFAs</h2>
+
+<p><label for="mf-7953ce294018b783e79fc8b87a818387" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-7953ce294018b783e79fc8b87a818387" class="margin-toggle " /><span class="marginnote "><object align="middle" data="/book-of-gehn/uml/9b612d3832cb1e6080081e4c404d4cb91c7ac9aa.svg" type="image/svg+xml"></object>  <br />Concatenation of two state machines <script type="math/tex">sm_1</script> and <script type="math/tex">sm_2</script> (<code class="highlighter-rouge">ab</code> in regex syntax).</span></p>
+
+<p>Two or more NFAs can be concatenated to match a <em>sequence</em> of submatches
+being linked one to the other using <script type="math/tex">\epsilon</script>-transitions.</p>
+
+<p>In regex notation this corresponds to <code class="highlighter-rouge">ab</code> (<code class="highlighter-rouge">a</code> followed by <code class="highlighter-rouge">b</code>)</p>
+
+<p><label for="mn-eebd97b020c69f3b6bb7cf78ea653e00" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-eebd97b020c69f3b6bb7cf78ea653e00" class="margin-toggle" /><span class="marginnote">This
+is made obvious in the diagrams:
+<script type="math/tex">sm_1</script> cannot link to itself. Underwood we will have three <script type="math/tex">sm_1</script> identical objects. </span></p>
+
+<p>As a extension, a NFA can be <em>link to a clone of itself</em>
+to match a sequence of <em>repeated</em> submatches. In regex syntax, <code class="highlighter-rouge">a{n}</code>.</p>
+
+<p><label for="mf-009f3b16467f9a74363e2e04df78fdc7" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-009f3b16467f9a74363e2e04df78fdc7" class="margin-toggle " /><span class="marginnote "><object align="middle" data="/book-of-gehn/uml/cc0ddf105fcc304d647ccf2a90bd7e351c7ac9aa.svg" type="image/svg+xml"></object>  <br />Repetition of <script type="math/tex">sm_1</script> three times  (<code class="highlighter-rouge">a{3}</code> in regex syntax).</span></p>
+
+<p>We say that the link is to a clone because technically a link to itself would
+end up in an <em>unbounded</em> loop and what we want instead is a <em>sequence</em> of
+a <em>fixed size</em>.</p>
+
+<p>When the NFA links to itself, the loop matches an <em>unbounded</em> repetition,
+a <em>zero or more</em> or <em>klee</em> construction, the famous <code class="highlighter-rouge">a*</code>:</p>
+
+<figure><figcaption><span><em>Klee</em> construction of <script type="math/tex">sm_1</script> that accepts zero or more items. Notice the difference between this (link to itself) and the fixed repetition above (link to a clone).</span></figcaption><object align="middle" data="/book-of-gehn/uml/ea8cc4e1426452d6622c096c6ff4489c1c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<p>The repetition can have different finite lower and higher bounds to form
+a <em>range</em> with a minimum and a maximum of repetitions <code class="highlighter-rouge">a{,2}</code> <code class="highlighter-rouge">a{2,4}</code>
+or with the higher limit unbounded <code class="highlighter-rouge">a{2,}</code> <code class="highlighter-rouge">a+</code>.</p>
+
+<figure><figcaption><span>Repeated at least 2 times, up to 4 times: is the combination of a fixed <code class="highlighter-rouge">a{2}</code> followed by an <em>up to</em> <code class="highlighter-rouge">a{,2}</code>.</span></figcaption><object align="middle" data="/book-of-gehn/uml/8c281cd7fb37e26e6bd52cd0d5733d641c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<h2 id="union">Union</h2>
+
+<p>Finally, the <code class="highlighter-rouge">a|b</code> regex. As you may guessed, we stick two or
+more state machines using <script type="math/tex">\epsilon</script>-transitions.</p>
+
+<figure><figcaption><span>Disjunction/union of two state machines <script type="math/tex">sm_1</script> and <script type="math/tex">sm_2</script>.</span></figcaption><object align="middle" data="/book-of-gehn/uml/4f45cac08547b5cc6a65e75bb83f1de01c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<h2 id="further-readings">Further readings</h2>
+
+<p>Aho, Lam, Sethi and Ullman. <em>Compilers: Principles, Techniques, &amp; Tools</em>, Second edition, Chapter 3.</p>
+
+<p>You can find a NFA implementation in Python <a href="https://github.com/eldipa/nfa">here in Github</a>.</p>
+
+
+
+    </article>
+    <span class="print-footer">From a Regex to a Nondeterministic Finite Automata - July 25, 2019 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

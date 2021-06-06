@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>CBC Padding Oracle Attack</title>
+  <meta name="description" content="AES and other ciphers work on blocks; if the plaintext lengthis not multiple of the block size a padding is added.If during the decryption the pad is checked...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2018/10/28/CBC-Padding-Oracle.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>CBC Padding Oracle Attack</h1>
+<p class="subtitle">October 28, 2018</p>
+
+<p>AES and other ciphers work on blocks; if the plaintext length
+is not multiple of the block size a padding is added.</p>
+
+<p>If during the decryption the pad is checked and returns an error,
+we can use this to build a <em>padding oracle</em>:
+a function that will tell us if an encrypted plaintext
+has a valid pad or not.</p>
+
+<p>Armed with this <em>padding oracle</em> we can break CBC
+one byte at time.</p>
+
+<p>Ready?<label for="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle" /><span class="marginnote"><strong>– Spoiler Alert! –</strong> </span> <em>Go!</em><!--more--></p>
+
+<h2 id="padding-oracle">Padding oracle</h2>
+
+<p>Consider the following plaintext of 15 bytes:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s">'AAAABBBBAAAA</span><span class="se">\x03\x03\x03</span><span class="s">'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="mi">15</span>
+</code></pre></div></div>
+
+<p>Now, if we pad this using <code class="highlighter-rouge">pkcs#7</code> to complete a 16 bytes block,
+the last byte will be <code class="highlighter-rouge">01</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="s">'pkcs#7'</span><span class="p">),</span> <span class="n">mutable</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="mi">1</span>
+</code></pre></div></div>
+
+<p>Now, if we change the last byte (we forge it), the unpad of the forged
+block will success or not based on what byte we set.</p>
+
+<p>There are three possible outcomes based on this last byte:</p>
+
+<ul>
+  <li>the unpad works because the last byte matches the original padding byte (<code class="highlighter-rouge">01</code>).</li>
+  <li>the unpad works because the last byte matches <em>another</em> padding sequence (<code class="highlighter-rouge">03</code>).</li>
+  <li>the unpad fails.</li>
+</ul>
+
+<p>The first case happen with the forged byte is actually the original the
+last byte.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x01</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s">'pkcs#7'</span><span class="p">)</span>
+<span class="s">'AAAABBBBAAAA</span><span class="se">\x03\x03\x03</span><span class="s">'</span>
+</code></pre></div></div>
+
+<p>The second case happen because our forged byte generates, by luck, another
+valid padding sequence.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x03</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s">'pkcs#7'</span><span class="p">)</span>
+<span class="s">'AAAABBBBAAAA</span><span class="se">\x03</span><span class="s">'</span>
+</code></pre></div></div>
+
+<p>The third and last case happen with any other byte:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x02</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s">'pkcs#7'</span><span class="p">)</span>
+<span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+<span class="o">&lt;...&gt;</span>
+<span class="nb">ValueError</span><span class="p">:</span> <span class="n">Bad</span> <span class="n">padding</span> <span class="s">'pkcs#7'</span> <span class="k">with</span> <span class="n">last</span> <span class="n">byte</span> <span class="mh">0x2</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xff</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s">'pkcs#7'</span><span class="p">)</span>
+<span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+<span class="o">&lt;...&gt;</span>
+<span class="nb">ValueError</span><span class="p">:</span> <span class="n">Bad</span> <span class="n">padding</span> <span class="s">'pkcs#7'</span> <span class="k">with</span> <span class="n">last</span> <span class="n">byte</span> <span class="mh">0xff</span>
+</code></pre></div></div>
+
+<p>Armed with this we can build a padding oracle for CBC:
+a function that will tell us if an encrypted plaintext
+has a valid pad or not.</p>
+
+<!--
+>>> import sys
+>>> sys.path.append("./assets/matasano")
+>>> from challenge import generate_config, enc_cbc, dec_cbc  # byexample: +timeout=10
+
+>>> seed = 20181028
+>>> bsize = 16
+
+>>> cfg = generate_config(random_state=seed, block_size=bsize)
+-->
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">decrypt_and_unpad_oracle</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">iv</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="p">[:</span><span class="n">bsize</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="n">bsize</span><span class="p">:]</span>
+<span class="o">...</span>     <span class="n">p</span> <span class="o">=</span> <span class="n">dec_cbc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">iv</span><span class="p">)</span> <span class="c1"># do not use cfg.iv ;)
+</span><span class="o">...</span>     <span class="k">try</span><span class="p">:</span>
+<span class="o">...</span>         <span class="n">p</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s">'pkcs#7'</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="bp">True</span>
+<span class="o">...</span>     <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="bp">False</span>
+</code></pre></div></div>
+
+<h2 id="cbc-decryption-and-padding">CBC decryption and padding</h2>
+
+<p>Let’s be <script type="math/tex">m</script> the ith plaintext block,
+<script type="math/tex">c</script> the i-1th ciphertext block and
+<script type="math/tex">x</script> the decryption of the ith ciphertext block.</p>
+
+<p>Then, we can say that for CBC the plaintext block <script type="math/tex">m</script>
+is reconstructed from this:</p>
+
+<script type="math/tex; mode=display">x \oplus c = m</script>
+
+<p>Let’s say now that instead of <script type="math/tex">c</script>
+we use <script type="math/tex">f</script>, a <em>forged</em> ciphertext block,
+if we are reconstructing the last plaintext block, this one will be:</p>
+
+<script type="math/tex; mode=display">x \oplus f = ?</script>
+
+<p>Now, because this is the last block, this will affect the padding
+of the final plaintext.</p>
+
+<p>The padding will be ok <em>only if</em> <script type="math/tex">x \oplus f</script> is
+equals to one of these:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    [?  ?  ?  ... ?  ?  01]
+    [?  ?  ?  ... ?  02 02]
+    [?  ?  ?  ... 03 03 03]
+    [?  0f 0f ... 0f 0f 0f]
+    [10 10 10 ... 10 10 10]
+</code></pre></div></div>
+
+<p>Given this fact and using a <em>padding oracle</em> we can break CBC
+one byte at time.</p>
+
+<h2 id="guess-the-last-byte">Guess the last byte</h2>
+
+<p>For the plaintext block <script type="math/tex">m</script>, let’s be <script type="math/tex">m_1</script>,
+the last byte of the block.
+Using the same convention, this last byte is</p>
+
+<script type="math/tex; mode=display">x_1 \oplus c_1 = m_1</script>
+
+<p>If instead of <script type="math/tex">c_1</script> we use a forged last byte
+<script type="math/tex">f_1</script>, the decrypted byte will be</p>
+
+<script type="math/tex; mode=display">x_1 \oplus f_1 = ?</script>
+
+<p>The decrypted message will have a valid padding only if:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{cases}
+x_1 \oplus f_1 = 01 & (1)\\
+x_1 \oplus f_1 = pp & (2)
+\end{cases} %]]></script>
+
+<p>The case 2 means that <script type="math/tex">x_1 \oplus f_1</script> is equal to
+the original padding byte and this will happen only if
+<script type="math/tex">f_1 = c_1</script> or in other words if we didn’t
+forge anything.</p>
+
+<p>It doesn’t add much info.</p>
+
+<p>The case 1 is more juicy as this is the other case with a valid
+padding and, by definition, it must be <code class="highlighter-rouge">01</code>.</p>
+
+<p>Then,</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{align*}  %%*
+x_1 \oplus f_1 & = 01                           \\
+           x_1 & = 01 \oplus f_1
+\end{align*} %%* %]]></script>
+
+<p>So we <em>learnt</em> <script type="math/tex">x_1</script> and from here it is trivial
+to break the last plaintext byte:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{align*}  %%*
+                x_1 \oplus c_1 & = m_1          \\
+    (01 \oplus f_1) \oplus c_1 & = m_1
+\end{align*} %%* %]]></script>
+
+<p>as <script type="math/tex">f_1</script> is our forged byte and <script type="math/tex">c_1</script>
+is the last byte of the previous ciphertext block, all of them known by us.</p>
+
+<p>The case 1 and 2 are easily identified as in the second case
+<script type="math/tex">f_1 = c_1</script>.</p>
+
+<p>There is, however, a special situation in which the case 1 and 2 are
+the same: this happens when the original padding byte is actually <code class="highlighter-rouge">01</code>.</p>
+
+<p>Nevertheless, the equation <script type="math/tex">(01 \oplus f_1) \oplus c_1 = m_1</script>
+is still true.</p>
+
+<h2 id="guess-the-penultimate-byte">Guess the penultimate byte</h2>
+
+<p>Knowing <script type="math/tex">x_1</script> we can forge the value
+of <script type="math/tex">m_1</script> to <code class="highlighter-rouge">02</code>:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{align*}  %%*
+      x_1 \oplus f_1 & = 02                     \\
+                 f_1 & = (02 \oplus x_1)
+\end{align*} %%* %]]></script>
+
+<p>This <script type="math/tex">f_1</script> is <strong>not</strong> the same than the previous section:
+it is a different
+forged byte used to forge a <code class="highlighter-rouge">02</code> in the last value of the plaintext.</p>
+
+<p>With this, the penultimate byte will forge a plaintext with a
+<em>valid padding</em> only if:</p>
+
+<script type="math/tex; mode=display">x_2 \oplus f_2 = 02</script>
+
+<p>Then, for the case of a valid padding we can guess
+<script type="math/tex">x_2</script> and therefore <script type="math/tex">m_2</script>:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{align*}  %%*
+      x_2 \oplus f_2 & = 02                     \\
+                 x_2 & = (02 \oplus f_2)
+\end{align*} %%* %]]></script>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{align*}  %%*
+                   x_2 \oplus c_2 & = m_2                     \\
+      (02 \oplus f_2) \oplus c_2  & = m_2
+\end{align*} %%* %]]></script>
+
+<p>At difference with guessing the last byte, in this scenario there is
+only one possible value for a valid padding: <code class="highlighter-rouge">02</code></p>
+
+<h2 id="guessing-the-rest-of-the-bytes-in-a-block">Guessing the rest of the bytes in a block</h2>
+
+<p>Now we just repeat.</p>
+
+<p>Break the last byte first, use that to forge the last byte in
+the plaintext to <code class="highlighter-rouge">01</code> and break the penultimate byte.</p>
+
+<p>Then use those two to forge the last two bytes of the
+plaintext to <code class="highlighter-rouge">02 02</code> and break the third.</p>
+
+<p>And so on till you break the whole block</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">break_cbc_last_block</span><span class="p">(</span><span class="n">cblocks</span><span class="p">,</span> <span class="n">bsize</span><span class="p">,</span> <span class="n">oracle</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">prev_cblock</span> <span class="o">=</span> <span class="n">cblocks</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">x</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">bsize</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">mutable</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">x</span> <span class="o">^=</span> <span class="n">prev_cblock</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bsize</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">prefix</span> <span class="o">=</span> <span class="n">prev_cblock</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span>
+<span class="o">...</span>         <span class="n">padn</span>   <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">bsize</span><span class="o">-</span><span class="n">i</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">posfix</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">padn</span> <span class="o">*</span> <span class="p">(</span><span class="n">bsize</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">^</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="c1"># forge the penultimate ciphertext block
+</span><span class="o">...</span>         <span class="n">cblocks</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">posfix</span><span class="p">,</span> <span class="n">mutable</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">):</span>
+<span class="o">...</span>             <span class="k">if</span> <span class="n">prev_cblock</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>
+<span class="o">...</span>                 <span class="k">continue</span>
+<span class="o">...</span>
+<span class="o">...</span>             <span class="c1"># update the forged byte
+</span><span class="o">...</span>             <span class="n">cblocks</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span>
+<span class="o">...</span>             <span class="n">forged_ciphertext</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cblocks</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>             <span class="n">good</span> <span class="o">=</span> <span class="n">oracle</span><span class="p">(</span><span class="n">forged_ciphertext</span><span class="p">)</span>
+<span class="o">...</span>             <span class="k">if</span> <span class="n">good</span><span class="p">:</span>
+<span class="o">...</span>                 <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">padn</span> <span class="o">^</span> <span class="n">B</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+<span class="o">...</span>                 <span class="k">break</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">cblocks</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">prev_cblock</span>   <span class="c1"># restore backup
+</span><span class="o">...</span>     <span class="n">x</span> <span class="o">^=</span> <span class="n">prev_cblock</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">x</span>    <span class="c1"># plain text block
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">plaintext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s">'MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc='</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">iv</span> <span class="o">+</span> <span class="n">enc_cbc</span><span class="p">(</span><span class="n">plaintext</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">bsize</span><span class="p">,</span> <span class="s">'pkcs#7'</span><span class="p">),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">iv</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">cblocks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ciphertext</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="n">bsize</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">break_cbc_last_block</span><span class="p">(</span><span class="n">cblocks</span><span class="p">,</span> <span class="n">bsize</span><span class="p">,</span> <span class="n">decrypt_and_unpad_oracle</span><span class="p">)</span>
+<span class="s">'ing</span><span class="se">\r\r\r\r\r\r\r\r\r\r\r\r\r</span><span class="s">'</span>
+</code></pre></div></div>
+
+<h2 id="break-cbc">Break CBC</h2>
+
+<p>Now we just need to repeat the whole thing again for each block:
+once we break the last block we remove it from the ciphertext
+and we repeat the attack to until all the ciphertext blocks are decrypted.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">cblocks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+<span class="o">...</span>     <span class="n">p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">break_cbc_last_block</span><span class="p">(</span><span class="n">cblocks</span><span class="p">,</span> <span class="n">bsize</span><span class="p">,</span> <span class="n">decrypt_and_unpad_oracle</span><span class="p">))</span>
+<span class="o">...</span>     <span class="k">del</span> <span class="n">cblocks</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">p</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">decripted</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s">''</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s">"pkcs#7"</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">decripted</span>
+<span class="s">'000000Now that the party is jumping'</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">decripted</span> <span class="o">==</span> <span class="n">plaintext</span>
+<span class="bp">True</span>
+</code></pre></div></div>
+
+<p>This attack is implemented in
+<a href="https://pypi.org/project/cryptonita/">cryptonita</a>. Here is a set of
+different ciphertexts to break.</p>
+
+<p><label for="mn-c37cfb512a1417b768ffea9813f05ea3" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-c37cfb512a1417b768ffea9813f05ea3" class="margin-toggle" /><span class="marginnote">This unlocks the
+<a href="https://cryptopals.com/sets/3/challenges/17">The CBC padding oracle</a>
+challenge. </span></p>
+
+<p>Enjoy!</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">plaintexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s">'./assets/matasano/17.txt'</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="p">[</span><span class="n">cfg</span><span class="o">.</span><span class="n">iv</span> <span class="o">+</span> <span class="n">enc_cbc</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">bsize</span><span class="p">,</span> <span class="s">'pkcs#7'</span><span class="p">),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">iv</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plaintexts</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks.block_ciphers</span> <span class="kn">import</span> <span class="n">decrypt_cbc_padding_attack</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">brokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">decrypt_cbc_padding_attack</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">bsize</span><span class="p">,</span> <span class="n">decrypt_and_unpad_oracle</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ciphertexts</span><span class="p">]</span> <span class="c1"># byexample: +timeout 20
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">brokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s">"pkcs#7"</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">brokens</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">plaintexts</span> <span class="o">==</span> <span class="n">brokens</span>
+<span class="bp">True</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">brokens</span>
+<span class="p">[</span><span class="s">'000000Now that the party is jumping'</span><span class="p">,</span>
+ <span class="s">"000001With the bass kicked in and the Vega's are pumpin'"</span><span class="p">,</span>
+ <span class="s">'000002Quick to the point, to the point, no faking'</span><span class="p">,</span>
+ <span class="s">"000003Cooking MC's like a pound of bacon"</span><span class="p">,</span>
+ <span class="s">"000004Burning 'em, if you ain't quick and nimble"</span><span class="p">,</span>
+ <span class="s">'000005I go crazy when I hear a cymbal'</span><span class="p">,</span>
+ <span class="s">'000006And a high hat with a souped up tempo'</span><span class="p">,</span>
+ <span class="s">"000007I'm on a roll, it's time to go solo"</span><span class="p">,</span>
+ <span class="s">"000008ollin' in my five point oh"</span><span class="p">,</span>
+ <span class="s">'000009ith my rag-top down so my hair can blow'</span><span class="p">]</span>
+</code></pre></div></div>
+
+
+
+    </article>
+    <span class="print-footer">CBC Padding Oracle Attack - October 28, 2018 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Congruence Closure with Z3</title>
+  <meta name="description" content="Assume that you know that ,  and . What can youtell me about the claim  ? Is it true or false?">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2021/04/25/Congruence-Closure.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Congruence Closure with Z3</h1>
+<p class="subtitle">April 25, 2021</p>
+
+<p>Assume that you know that <script type="math/tex">a = b</script>, <script type="math/tex">b = c</script> and <script type="math/tex">d = e</script>. What can you
+tell me about the claim <script type="math/tex">a = c</script> ? Is it true or false?<!--more--></p>
+
+<h2 id="equivalence-class">Equivalence class</h2>
+
+<p>The <script type="math/tex">=</script> denotes an <em>equivalence</em> between two elements: <script type="math/tex">a = b</script> means
+that <script type="math/tex">a</script> is equivalent to <script type="math/tex">b</script> (not necessary that they are <em>the same</em>
+element or <em>equals</em> however).</p>
+
+<p>So, because we know <script type="math/tex">a = b</script> and <script type="math/tex">b = c</script> we conclude that <script type="math/tex">a = c</script> and
+therefore the claim is true.</p>
+
+<p>You see, in general <script type="math/tex">a = X</script> is true iff <script type="math/tex">X</script> is <script type="math/tex">a</script>, <script type="math/tex">b</script>, or
+<script type="math/tex">c</script>.</p>
+
+<p><script type="math/tex">a</script>, <script type="math/tex">b</script> y <script type="math/tex">c</script> are equivalent between themselves:
+they form an <em>equivalence class</em>.</p>
+
+<p>The initial set <script type="math/tex">T: \{a, b, c, d, e\}</script> has two equivalence classes:
+<script type="math/tex">C_1: \{a, b, c\}</script> and <script type="math/tex">C_2: \{d, e\}</script></p>
+
+<h2 id="set-operations">Set operations</h2>
+
+<p>We say that the set <script type="math/tex">E</script> of equivalence <em>rules</em> induced a <em>partition</em>
+over <script type="math/tex">T</script> yielding, in this case, the two equivalence classes of above.</p>
+
+<p>And the point of all of this is…?</p>
+
+<p>Pick any claim <script type="math/tex">X = Y</script>, it will be true if and only if both elements
+are part of the same equivalence class.</p>
+
+<p>And checking <em>membership</em> can be implemented easily and efficiently. No
+matter how many elements <script type="math/tex">T</script> has, once you built the equivalence
+classes (sets), checking a claim <script type="math/tex">X = Y</script> requires two membership
+tests.</p>
+
+<p>Moreover, seen <script type="math/tex">C_1</script> and <script type="math/tex">C_2</script> as sets, adding a new equivalence rule the
+has elements of both sets like <script type="math/tex">c = d</script> <em>merges</em> <script type="math/tex">C_1</script> and <script type="math/tex">C_2</script> into a
+single set: <script type="math/tex">C</script> is the <em>union</em> of <script type="math/tex">C_1</script> and <script type="math/tex">C_2</script>.</p>
+
+<h2 id="congruence-rule">Congruence rule</h2>
+
+<p>Let’s ask ourselves if the claim <script type="math/tex">f(a) = f(c)</script> is true or not where
+<script type="math/tex">f</script> is an arbitrary function.</p>
+
+<p>There is <em>rule</em> that says if <script type="math/tex">X</script> and <script type="math/tex">Y</script> belongs to the same equivalence
+class then <script type="math/tex">f(X)</script> and <script type="math/tex">f(Y)</script> must both belong to the same equivalence class
+(but not necessary to the same class of <script type="math/tex">X</script> and <script type="math/tex">Y</script>).</p>
+
+<p>Intuitively, if <script type="math/tex">X = Y</script> then <script type="math/tex">f(X)</script> can be replaced by <script type="math/tex">f(Y)</script>.</p>
+
+<p>In general, if <script type="math/tex">X_1, Y_1 \in C_1</script>,  <script type="math/tex">X_2, Y_2 \in C_2</script>, and so on up
+to  <script type="math/tex">X_n, Y_n \in C_n</script>, then <script type="math/tex">f(X_1, X_2, ..., X_n)</script> <strong>must</strong> be
+equivalent to <script type="math/tex">f(Y_1, Y_2, ..., Y_n)</script>.</p>
+
+<p>The equivalence class and the congruence rule form a <em>congruence
+closure</em>.</p>
+
+<h2 id="playing-with-z3">Playing with Z3</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">DeclareSort</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Consts</span><span class="p">,</span> <span class="n">solve</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">T</span> <span class="o">=</span> <span class="n">DeclareSort</span><span class="p">(</span><span class="s">'T'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">Consts</span><span class="p">(</span><span class="s">'a b c d e'</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">'f'</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">'g'</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">E</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">,</span> <span class="n">b</span> <span class="o">==</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">==</span> <span class="n">e</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solve</span><span class="p">(</span><span class="n">E</span> <span class="o">+</span> <span class="p">[</span><span class="n">a</span> <span class="o">!=</span> <span class="n">c</span><span class="p">])</span>  <span class="c1"># a != c is a contradiction of a == c
+</span><span class="n">no</span> <span class="n">solution</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solve</span><span class="p">(</span><span class="n">E</span> <span class="o">+</span> <span class="p">[</span><span class="n">a</span> <span class="o">!=</span> <span class="n">d</span><span class="p">])</span>  <span class="c1"># they are in different equivalence classes, so ok
+</span><span class="p">[</span><span class="n">c</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">0</span><span class="p">,</span>
+ <span class="n">e</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">1</span><span class="p">,</span>
+ <span class="n">d</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">1</span><span class="p">,</span>
+ <span class="n">a</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">0</span><span class="p">,</span>
+ <span class="n">b</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solve</span><span class="p">(</span><span class="n">E</span> <span class="o">+</span> <span class="p">[</span><span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">!=</span> <span class="n">f</span><span class="p">(</span><span class="n">c</span><span class="p">)])</span> <span class="c1"># another contradiction
+</span><span class="n">no</span> <span class="n">solution</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solve</span><span class="p">(</span><span class="n">E</span> <span class="o">+</span> <span class="p">[</span><span class="n">g</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="o">!=</span> <span class="n">g</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">e</span><span class="p">))])</span> <span class="c1"># more interesting example...
+</span><span class="n">no</span> <span class="n">solution</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># And if we force that the last equivalence, we will get a single
+</span><span class="o">&gt;&gt;&gt;</span> <span class="c1"># equivalence class with the elements valued to 'T!val!0'
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">solve</span><span class="p">(</span><span class="n">E</span> <span class="o">+</span> <span class="p">[</span><span class="n">g</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="o">==</span> <span class="n">g</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">e</span><span class="p">))])</span>
+<span class="p">[</span><span class="n">e</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">0</span><span class="p">,</span>
+ <span class="n">d</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">0</span><span class="p">,</span>
+ <span class="n">c</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">0</span><span class="p">,</span>
+ <span class="n">a</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">0</span><span class="p">,</span>
+ <span class="n">b</span> <span class="o">=</span> <span class="n">T</span><span class="err">!</span><span class="n">val</span><span class="err">!</span><span class="mi">0</span><span class="p">]</span>
+</code></pre></div></div>
+
+
+
+    </article>
+    <span class="print-footer">Congruence Closure with Z3 - April 25, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

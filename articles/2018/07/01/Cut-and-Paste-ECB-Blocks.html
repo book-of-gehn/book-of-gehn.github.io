@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Cut and Paste ECB blocks</title>
+  <meta name="description" content="In this game we control partially a plaintext that is encryptedunder ECB mode with a secret key.This time the idea is not to reveal the key but to forge a pl...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2018/07/01/Cut-and-Paste-ECB-Blocks.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Cut and Paste ECB blocks</h1>
+<p class="subtitle">July 1, 2018</p>
+
+<p>In this game we control partially a plaintext that is encrypted
+under ECB mode with a secret key.</p>
+
+<p>This time the idea is not to reveal the key but to <em>forge</em> a plaintext.</p>
+
+<p>Welcome to the <a href="https://cryptopals.com/sets/2/challenges/13">ECB cut-and-paste</a>
+challenge!<label for="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle" /><span class="marginnote"><strong>– Spoiler Alert! –</strong> </span><!--more--></p>
+
+<h3 id="prelude-profile-creation">Prelude: profile creation</h3>
+
+<p>Imagen a scenario where two parties send encrypted messages using AES
+in ECB mode:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">"./assets/matasano"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">challenge</span> <span class="kn">import</span> <span class="n">generate_config</span><span class="p">,</span> <span class="n">enc_ecb</span><span class="p">,</span> <span class="n">dec_ecb</span>  <span class="c1"># byexample: +timeout=10
+</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">seed</span> <span class="o">=</span> <span class="mi">20180701</span>   <span class="c1"># make the tests 'random' but deterministic
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">block_size</span> <span class="o">=</span> <span class="mi">16</span>     <span class="c1"># leave this fixed, it is what happen in practice
+</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># encrypt/decrypt under this 'random' environment
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">cfg</span> <span class="o">=</span> <span class="n">generate_config</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="n">block_size</span><span class="p">,</span> <span class="n">enc_mode</span><span class="o">=</span><span class="s">'ecb'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Consider the following function that builds a ciphertext from an hypothetical
+“create profile for a new user”:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>                <span class="c1"># byexample: +timeout=10
+</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">profile_for</span><span class="p">(</span><span class="n">email</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">assert</span> <span class="n">b</span><span class="s">'&amp;'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">email</span>
+<span class="o">...</span>     <span class="k">assert</span> <span class="n">b</span><span class="s">'='</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">email</span>
+<span class="o">...</span>     <span class="k">assert</span> <span class="n">b</span><span class="s">'@'</span>     <span class="ow">in</span> <span class="n">email</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">b</span><span class="s">'email=</span><span class="si">%</span><span class="s">s&amp;uid=10&amp;role=user'</span> <span class="o">%</span> <span class="n">email</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="s">'pkcs#7'</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">enc_ecb</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_for</span><span class="p">(</span><span class="n">b</span><span class="s">'honest-email@example.com'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">c</span>
+<span class="o">&lt;...&gt;</span>\<span class="n">xc1</span>\<span class="n">xa4</span>\<span class="n">x89</span><span class="o">&lt;...&gt;</span>
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">profile_for</code> can create as many user as we want but all of them will
+have the same privilege level or role: <code class="highlighter-rouge">user</code>.</p>
+
+<p>Then the ciphertext can be sent to a server where the given credentials are
+stored and the profile is “created”.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">parse_qs</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">create_profile</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">dec_ecb</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s">'pkcs#7'</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">parse_qs</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">strict_parsing</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">create_profile</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="p">{</span><span class="n">b</span><span class="s">'email'</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="s">'honest-email@example.com'</span><span class="p">],</span> <span class="n">b</span><span class="s">'role'</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="s">'user'</span><span class="p">],</span> <span class="n">b</span><span class="s">'uid'</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="s">'10'</span><span class="p">]}</span>
+</code></pre></div></div>
+
+<h2 id="forgery">Forgery</h2>
+
+<p>It would be cool to forge <code class="highlighter-rouge">role=admin</code> there but it is not possible.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">profile_for</span><span class="p">(</span><span class="n">b</span><span class="s">'dishonest@evil.com&amp;role=admin'</span><span class="p">)</span>
+<span class="o">&lt;...&gt;</span>
+<span class="nb">AssertionError</span>
+</code></pre></div></div>
+
+<p>Let’s forge this with <a href="https://pypi.org/project/cryptonita/">cryptonita</a>.</p>
+
+<h3 id="block-alignment">Block alignment</h3>
+
+<p>We want to know how many bytes are needed so the plaintext
+at its right is aligned with the block boundary.</p>
+
+<p>In other words, given the prefix <code class="highlighter-rouge">email=</code> we now that we need 10 bytes
+to append and complete the block leaving the rest of our own plaintext
+aligned with the block boundary:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">block_size</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="s">"email="</span><span class="p">)</span>
+<span class="mi">10</span>
+</code></pre></div></div>
+
+<p>We already know how to do this even if we don’t know the prefix…
+when we have two blocks encrypted with to the same ciphertext block we are done:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">alignment</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_size</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="n">profile_for</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="s">'@'</span> <span class="o">*</span> <span class="p">(</span><span class="n">block_size</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">alignment</span><span class="p">)))</span>
+<span class="o">...</span>     <span class="n">indexes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="n">block_size</span><span class="p">)</span><span class="o">.</span><span class="n">iduplicates</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">idx_of</span><span class="o">=</span><span class="s">'both'</span><span class="p">))</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="n">indexes</span><span class="p">:</span>
+<span class="o">...</span>         <span class="k">break</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">alignment</span>
+<span class="mi">10</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">iduplicates</code> gives us the index of the <code class="highlighter-rouge">first</code> of the duplicated blocks,
+marking the <em>end</em> of the needed padding:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">indexes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="mi">1</span>
+</code></pre></div></div>
+
+<h3 id="cut-a-block">Cut a block</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">align_block</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s">'A'</span> <span class="o">*</span> <span class="n">alignment</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s">'admin'</span><span class="p">)</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="s">'pkcs#7'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">posfix</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s">'@evil.com'</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">crafted_email</span> <span class="o">=</span> <span class="n">align_block</span> <span class="o">+</span> <span class="n">target</span> <span class="o">+</span> <span class="n">posfix</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">crafted_email</span>
+<span class="s">'A&lt;...&gt;AAAadmin</span><span class="se">\x0b\x0b\x0b</span><span class="s">&lt;padding&gt;</span><span class="se">\x0b</span><span class="s">@evil.com'</span>
+</code></pre></div></div>
+
+<p>Now, when <code class="highlighter-rouge">crafted_email</code> gets encrypted, the <code class="highlighter-rouge">admin\x0b...\x0b</code>
+will be aligned to the block boundary and it will be a full block
+ready to be cut:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_for</span><span class="p">(</span><span class="n">crafted_email</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">cut</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="n">block_size</span><span class="p">)[</span><span class="n">indexes</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   add enough As to align the next block
+     |
+|--------|--------|---------|
+ email=AA adminPPP @foo.....
+              |
+              V
+|--------|--------|---------|
+         :   C1   :
+         :.......cut
+</code></pre></div></div>
+
+<p>where <code class="highlighter-rouge">PPP</code> is a <code class="highlighter-rouge">pkcs#7</code> padding such as if the whole <code class="highlighter-rouge">C1</code> block was
+the last block of the ciphertext, the decryption + un-padding would success.</p>
+
+<h3 id="paste-a-block">Paste a block</h3>
+
+<p>Now, the final step.</p>
+
+<p>We will use our valid email (at the end <em>we</em> want to be admin) but it has
+to be special: it has to contain enough padding to align the <em>last</em> block
+so we can cut it and throw it away.</p>
+
+<p>In its replacement we will put our crafted cut cipher block.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_for</span><span class="p">(</span><span class="n">b</span><span class="s">'me-AAAAAAAAAAAAAAAAA@evil.com'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">forged</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">mutable</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">forged</span><span class="p">[</span><span class="o">-</span><span class="n">block_size</span><span class="p">:]</span> <span class="o">=</span> <span class="n">cut</span>
+</code></pre></div></div>
+
+<p>The email address <code class="highlighter-rouge">me-AAAAAAAAAAAAAAAAA@evil.com</code> should be a valid
+one and with an account controlled by us if we want to do something
+beyond the cryptography exercise later.</p>
+
+<p>How many <code class="highlighter-rouge">A</code> we need to add will depend: I tried several times using
+<code class="highlighter-rouge">create_profile</code> as oracle until I got the payload aligned such the
+last <em>boundary</em> matched with the <code class="highlighter-rouge">role=|user</code> boundary.</p>
+
+<p>The following diagram show this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  insert a valid email, with As to align the last block
+       |     |
+       |     |
+|--------|--------|--------|--------|    &lt;= original
+ email=me -AAA@evi ...role= userQQQQ           |
+     |        |        |                       |
+     |        |        |                       V
+    Ca       Cb       Cc       C1 (cut)  &lt;=  encrypt
+     |        |        |        |              |
+     V        V        V        V              V
+|--------|--------|--------|--------|    &lt;= decrypted
+ email=me -AAA@evi ...role= adminPPP
+</code></pre></div></div>
+
+<p>Voila!, the plaintext is recovered and the padding removed and we
+get a admin profile.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">create_profile</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">forged</span><span class="p">))</span>
+<span class="p">{</span><span class="n">b</span><span class="s">'email'</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="s">'me-AAAAAAAAAAAAAAAAA@evil.com'</span><span class="p">],</span>
+ <span class="n">b</span><span class="s">'role'</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="s">'admin'</span><span class="p">],</span>
+ <span class="n">b</span><span class="s">'uid'</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="s">'10'</span><span class="p">]}</span>
+</code></pre></div></div>
+
+
+
+
+    </article>
+    <span class="print-footer">Cut and Paste ECB blocks - July 1, 2018 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

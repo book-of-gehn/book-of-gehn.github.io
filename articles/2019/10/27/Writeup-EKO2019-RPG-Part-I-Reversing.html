@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>RPG - Part I (IDA writeup - EKO 2019)</title>
+  <meta name="description" content="rpg is a buggy game where the player can attack toand defend from attacks of monsters.Let’s see if we can know how it works.">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2019/10/27/Writeup-EKO2019-RPG-Part-I-Reversing.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>RPG - Part I (IDA writeup - EKO 2019)</h1>
+<p class="subtitle">October 27, 2019</p>
+
+<p><code class="highlighter-rouge">rpg</code> is a buggy game where the player can attack to
+and defend from attacks of monsters.</p>
+
+<p>Let’s see if we can know how it works.<!--more--></p>
+
+<p>It is a 64 bits ELF <a href="book-of-gehn/assets/eko2019-writeups/rpg-dir/rpg">binary</a>:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>file rpg                      <span class="c"># byexample: +norm-ws</span>
+rpg: ELF 64-bit LSB executable, x86-64, version 1 <span class="o">(</span>GNU/Linux<span class="o">)</span>,
+statically linked, <span class="k">for </span>GNU/Linux 2.6.32,
+BuildID[sha1]<span class="o">=</span>&lt;...&gt;, stripped
+</code></pre></div></div>
+
+<p>We expect some part of <code class="highlighter-rouge">libc</code> in the binary
+and no symbol at all.</p>
+
+<p>So our first task is to find what pieces of the binary
+are of the game and which aren’t like <code class="highlighter-rouge">stdlib</code>.</p>
+
+<h2 id="strings-as-starting-points">Strings as Starting Points</h2>
+
+<p>Let’s see what strings we can find:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>strings <span class="nt">-a</span> <span class="nt">-16</span> rpg | <span class="nb">head</span> <span class="nt">-14</span>
+Monster %s attack to %s with %d damage.
+%s has stopped the attack.
+%s is dead. GG WP.
+Monster %s defends with %d of defense.
+%s hit a critical to %s.
+0<span class="o">)</span> Create player
+1<span class="o">)</span> Update player name
+2<span class="o">)</span> Delete player
+3<span class="o">)</span> Player attack
+4<span class="o">)</span> Player defend
+5<span class="o">)</span> Get current <span class="nb">time
+</span>User created, first delete it.
+Enter player name:
+User not created.
+</code></pre></div></div>
+
+<p>Running the program we can map those strings to a mental model
+of what it does:</p>
+
+<p><label for="mn-b939ab5d2db7281b46c3526fbe5dbe68" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-b939ab5d2db7281b46c3526fbe5dbe68" class="margin-toggle" /><span class="marginnote">If the player was not created, the options 1 to 4 print <code class="highlighter-rouge">User not created.</code>;
+if the player was created selecting 0 again yields a
+<code class="highlighter-rouge">User created, first delete it.</code> </span></p>
+
+<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/ff4c7d7469a6cfc5ffc34005ab078a2c1c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<p>Other strings shown up. Of course, I’m speculating the <em>conversion
+specifier</em> like <code class="highlighter-rouge">%s</code> and <code class="highlighter-rouge">%d</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>%s defends.
+%s roar to %s.
+Name: %s
+Lives: %d
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">ctrl+F12</code> opens the <em>Strings window</em> listing all the strings that IDA found.
+Pressing <code class="highlighter-rouge">enter</code> in one of the strings, IDA shows us the memory where it was
+found.</p>
+
+<figure><figcaption><span>Read-only <a href="https://en.wikipedia.org/wiki/Data_segment">.rodata</a>
+section where the strings of the game are stored: the
+ones that we found with <code class="highlighter-rouge">strings</code>, the ones that we saw running the program
+and some others that we did not spot like <code class="highlighter-rouge">"date +%s"</code></span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/string_address.png" /></figure>
+
+<h2 id="guessing-functions-from-their-arguments">Guessing Functions from their Arguments</h2>
+
+<p>From there we can go to the locations of the binary that have a reference
+to each string selecting the label (<code class="highlighter-rouge">aMonsterSAttack</code>) and pressing <code class="highlighter-rouge">x</code>.</p>
+
+<figure><figcaption><span>Hint: the <code class="highlighter-rouge">mov     eax, 0</code> before the call; the calling
+convention says that the <em>variadic</em> function (like <code class="highlighter-rouge">printf</code>) will
+receive 0 floating point arguments.</span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/monster_attack_loc.png" /></figure>
+
+<p>The de facto
+<a href="https://en.wikipedia.org/wiki/X86_calling_conventions">calling convention</a>
+in Linux 64 bits says that the first six
+parameters are passed to the callee in registers <code class="highlighter-rouge">rdi</code>, <code class="highlighter-rouge">rsi</code>,
+<code class="highlighter-rouge">rdx</code>, <code class="highlighter-rouge">rcx</code>, <code class="highlighter-rouge">r8</code>, <code class="highlighter-rouge">r9</code> (<code class="highlighter-rouge">xmm0</code>, <code class="highlighter-rouge">xmm1</code>, <code class="highlighter-rouge">xmm2</code>, <code class="highlighter-rouge">xmm3</code>,
+<code class="highlighter-rouge">xmm4</code>, <code class="highlighter-rouge">xmm5</code>, <code class="highlighter-rouge">xmm6</code> and <code class="highlighter-rouge">xmm7</code> for floating point arguments).</p>
+
+<p>With this we could assume that the next call after referencing
+<code class="highlighter-rouge">aMonsterSAttack</code> is a <code class="highlighter-rouge">printf</code>-like function.</p>
+
+<p>This is what we got:</p>
+
+<figure><figcaption><span>Press <code class="highlighter-rouge">n</code> on top of a label we can change the name; press <code class="highlighter-rouge">:</code>
+we can add a comment on that line.</span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/monster_attack_loc_labeled.png" /></figure>
+
+<p><label for="mf-e7596050d430b5797f3e4f8ec21c09f5" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-e7596050d430b5797f3e4f8ec21c09f5" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="SecondIndirection" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/second_indirection.png" />  <br />To get the pointer to the players name the code does a <em>second</em> indirection:
+possibly we are dealing with an attribute of a <code class="highlighter-rouge">struct</code>.</span></p>
+
+<p><code class="highlighter-rouge">printf</code>-like function call with four arguments: the format string, the
+name of the monster, name of the player and the damage.</p>
+
+<p>What about the code that <em>reads</em> the player’s name?</p>
+
+<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/enter_player_name_loc.png" /></figure>
+
+<p>Three calls happen after the print of the message. One of them should be
+a <code class="highlighter-rouge">read</code> like function:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">sub_4117C0</code>: unlikely, it only receives one parameter (<code class="highlighter-rouge">cs:off_6CC840</code>)</li>
+  <li><code class="highlighter-rouge">sub_400D16</code>: more likely, it receives a buffer and a size (<code class="highlighter-rouge">100h</code>)</li>
+  <li><code class="highlighter-rouge">sub_425850</code>: unlikely, it receives the buffer but not the size because
+the size previously set in <code class="highlighter-rouge">esi</code> is
+<a href="https://wiki.osdev.org/System_V_ABI">not preserved</a>
+between calls so it could
+be garbage. Besides, <code class="highlighter-rouge">sub_425850</code> is not call when the user needs to select an
+option in the main menu so it is unlikely that it is a <code class="highlighter-rouge">read</code> like.</li>
+</ul>
+
+<p><label for="mn-cee16291b2cc4223d67f44f2181f3b06" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-cee16291b2cc4223d67f44f2181f3b06" class="margin-toggle" /><span class="marginnote">If you said, <em>ey!</em>, may be there is a buffer overflow there. No.
+Double click in <code class="highlighter-rouge">sbuf</code> to go to the <em>Stack view</em> and right click on <code class="highlighter-rouge">sbuf</code>
+and select <code class="highlighter-rouge">Convert to Array</code>: based on IDA analysis there are at least
+264 bytes (greater than <code class="highlighter-rouge">100h</code> o 256). </span></p>
+
+<p>Ok, if the second call (<code class="highlighter-rouge">sub_400D16</code>) is <code class="highlighter-rouge">fgets?</code>,
+the third should be a <code class="highlighter-rouge">strdup?</code> call.</p>
+
+<p>Why?</p>
+
+<p>The name is stored in the stack so the only way to make it to
+survive is copying it to the heap or other global place. <code class="highlighter-rouge">strdup</code> will do
+the trick.</p>
+
+<figure><figcaption><span>The last instruction marks that <em>the user was created</em> in a global variable.
+<br />
+<code class="highlighter-rouge">cs:is_user_created</code> is tested against 0 in several
+places to check if the user was created or not.</span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/enter_player_name_loc_labeled.png" /></figure>
+
+<h2 id="keep-guessing">Keep Guessing</h2>
+
+<p>The entire block configures the hypothetical <code class="highlighter-rouge">player_struct</code> setting
+the name of the player at the offset 8 (like we saw before) and the
+lives of the player at the offset 0:</p>
+
+<pre><code class="language-asm">mov     byte ptr [rax], 10h
+mov     rax, [rbp+player_struct] ; player's lives (= 16)
+</code></pre>
+
+<p><label for="mf-82fab0e55a05443d79f82ffd82e3fbb2" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-82fab0e55a05443d79f82ffd82e3fbb2" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="DeletePlayer" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/delete_player_free.png" />  <br />No, there are not memory leaks here. The <em>delete player</em> function is a good boy.</span></p>
+
+<p>If this is correct, <code class="highlighter-rouge">mov     cs:player_struct, rax</code> saves the <em>pointer</em>
+to the struct globally, struct allocated at the begin of the block.</p>
+
+<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/enter_player_name_loc_struct_labeled.png" /></figure>
+
+<p>The key note here is that <em>we don’t know</em>. We can just guess.</p>
+
+<p>But guessing is good, and the guess in one side may give use the context to
+understand other pieces of code.</p>
+
+<h2 id="magic-numbers">Magic Numbers</h2>
+
+<p>The begin of the game gives us more clues</p>
+
+<figure><figcaption><span><code class="highlighter-rouge">time</code> and <code class="highlighter-rouge">sys_alarm</code> are wrappers of <em>syscalls</em>. In Linux a syscall
+call is made setting the <em>syscall number</em> in the <code class="highlighter-rouge">eax</code> register and calling
+<code class="highlighter-rouge">syscall</code> instruction. IDA detects those quite well.
+<br />
+Full of shifts, multiplications and <em>magic numbers</em> like
+<code class="highlighter-rouge">834E0B5Fh</code> and <code class="highlighter-rouge">41C64E6Dh</code>? That looks like a <em>congruent</em> PRNG.
+That is how I found <code class="highlighter-rouge">srand</code>.</span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/game_start_loc.png" /></figure>
+
+<p>I bet this is something like <code class="highlighter-rouge">srand(time(NULL) &gt;&gt; 8)</code>.</p>
+
+<p><label for="mf-26f80b4328a176d70fd9df25fef4ee3c" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-26f80b4328a176d70fd9df25fef4ee3c" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Rand" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/rand_loc.png" />  <br /></span></p>
+
+<p>We found <code class="highlighter-rouge">srand</code>, and we found the <em>global state</em> of the PRNG at <code class="highlighter-rouge">6CC100h</code>,
+now we can find who <em>updates</em> that global state: the guy will probably be
+the <code class="highlighter-rouge">rand</code> function.</p>
+
+<h2 id="nice-findings">Nice Findings</h2>
+
+<p><label for="mf-a06a88030ee3907312c318370e7c21ba" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-a06a88030ee3907312c318370e7c21ba" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="GetTime" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/get_time_loc.png" />  <br /></span>
+The <em>get time</em> function is quite short: it is just a call to the <code class="highlighter-rouge">date</code> program
+and no command injection is possible.</p>
+
+<p>However this gives us two pieces of information:</p>
+
+<ul>
+  <li>we know the time of the remote machine: we can break things
+like <code class="highlighter-rouge">srand(time())</code>.</li>
+  <li>we know the position of the <code class="highlighter-rouge">system</code> function (<code class="highlighter-rouge">0x411070</code>) and a
+<code class="highlighter-rouge">call</code> to it (<code class="highlighter-rouge">0x401258</code>).</li>
+</ul>
+
+<p>The <em>player attack</em> code has a preamble of several operations but after that,
+there is a interesting section.</p>
+
+<p><label for="mf-bb35bb51a5104c622725119bdcbc2e19" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-bb35bb51a5104c622725119bdcbc2e19" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="PlayerAttack" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/player_attack_loc.png" />  <br /></span></p>
+
+<p>It choose a monster name and if it is <code class="highlighter-rouge">NULL</code>, jumps to a block that copy
+the player’s name into the heap and <em>stores</em> it in the array that initially
+has the names of the <em>monsters</em>.</p>
+
+<p>Then it is passed as the first argument of a indirect call. Initially the only
+function that should be called is <code class="highlighter-rouge">monster_attack</code> but we may point to somewhere.</p>
+
+<p>Interesting things:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">monster_attack</code> does not free its argument so we may have a <strong>memory leak</strong>
+which content is controlled by us.</li>
+  <li><code class="highlighter-rouge">monster_attack</code> does free the <code class="highlighter-rouge">player_struct</code> but it doesn’t set
+<code class="highlighter-rouge">is_user_created</code> to 0 so we may have a <strong>double free</strong> if we call
+<code class="highlighter-rouge">delete_player</code> later.</li>
+  <li>unfortunately <code class="highlighter-rouge">monster_attack</code> may return 0 which makes <code class="highlighter-rouge">player_attack</code>
+to call <code class="highlighter-rouge">exit()</code>; only under a specific path <code class="highlighter-rouge">monster_attack</code> returns 1.</li>
+</ul>
+
+<p>Something similar happen in <code class="highlighter-rouge">monster_defense</code> and <code class="highlighter-rouge">roar</code> functions with
+the exception that <code class="highlighter-rouge">roar</code> returns always 0.</p>
+
+<h2 id="next-steps">Next Steps</h2>
+
+<p>We found a <strong>memory leak</strong> and a <strong>double free</strong> but we don’t have
+a real crash. We just reviewed the code.</p>
+
+<p>We need to keep exploring this, here are some ideas for a future post:</p>
+
+<ul>
+  <li><a href="http://valgrind.org/">Valgrind</a>: we could see if there are more
+memory corruptions. Play with <a href="http://lcamtuf.coredump.cx/afl/">AFL</a> perhaps?</li>
+  <li><a href="https://angr.io/">Angr</a>: trigger the leaking <code class="highlighter-rouge">strdup</code> is not trivial,
+we may use a symbolic execution for that.</li>
+  <li>Heap attack: after all, we need to know how the heap management works and
+plan the attack.</li>
+</ul>
+
+
+
+    </article>
+    <span class="print-footer">RPG - Part I (IDA writeup - EKO 2019) - October 27, 2019 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

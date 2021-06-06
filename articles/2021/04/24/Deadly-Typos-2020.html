@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Deadly Typos 2020</title>
+  <meta name="description" content="A quick summary of the top 3 typos that I found (or I wrote) in codethat they were small but they had a deep impact on the functionality.In fact, the three b...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2021/04/24/Deadly-Typos-2020.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Deadly Typos 2020</h1>
+<p class="subtitle">April 24, 2021</p>
+
+<p>A quick summary of the top 3 <em>typos</em> that I found (or I wrote) in code
+that they were small but they had a deep impact on the functionality.</p>
+
+<p>In fact, the three bugs could summarized as follows:</p>
+
+<ul>
+  <li>a missing <code class="highlighter-rouge">u</code>.</li>
+  <li>an extra <code class="highlighter-rouge">s</code>.</li>
+  <li>and a missing <code class="highlighter-rouge">*</code>.</li>
+</ul>
+
+<p>Do you want to see what is this about?</p>
+
+<!--more-->
+
+<h2 id="deep-sleep">Deep sleep</h2>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">may_sleep</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">elapsed_inactivity</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">elapsed_inactivity</span> <span class="o">&lt;</span> <span class="n">MIN_INACTIVITY_FOR_SHORT_SLEEP</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">elapsed_inactivity</span> <span class="o">&lt;</span> <span class="n">MIN_INACTIVITY_FOR_LONG_SLEEP</span><span class="p">)</span>
+        <span class="n">usleep</span><span class="p">(</span><span class="n">SLEEP_DUE_INACTIVITY_FOR_SHORT_TIME_USECS</span><span class="p">);</span>
+    <span class="k">else</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="n">SLEEP_DUE_INACTIVITY_FOR_LONG_TIME_USECS</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Issue? A missing <code class="highlighter-rouge">u</code>.</p>
+
+<p>Impact? The code calls <code class="highlighter-rouge">sleep</code> instead of <code class="highlighter-rouge">usleep</code>
+and sleeps for, let says, 10000 seconds instead of 10000 microseconds.</p>
+
+<p>The <code class="highlighter-rouge">may_sleep</code> was intended to put to sleep the CPU for a small period
+if there was not activity for some time.</p>
+
+<p>If a task is received while the CPU is sleeping, the worst case would be
+a delay of 10000 microseconds (10 milliseconds) before the task begins
+to be processed.</p>
+
+<p>With 10000 seconds, well, that’s almost 3 hours.</p>
+
+<h2 id="only-one">Only one</h2>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">row_t</span> <span class="o">*</span><span class="n">rows</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">-&gt;</span><span class="n">rows</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">matrix</span><span class="o">-&gt;</span><span class="n">row_count</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">row_t</span> <span class="o">*</span><span class="n">row</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">row</span><span class="o">-&gt;</span><span class="n">column_count</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">struct</span> <span class="n">column_t</span> <span class="o">*</span><span class="n">column</span> <span class="o">=</span> <span class="n">rows</span><span class="o">-&gt;</span><span class="n">columns</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+        <span class="n">process</span><span class="p">(</span><span class="n">column</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Issue? An extra <code class="highlighter-rouge">s</code>.</p>
+
+<p>Impact? The nested loops process every item of a 2d matrix, scanning
+in the for each row, for each column classic order.</p>
+
+<p>For simplicity the i-th row is loaded in the outer loop with a local
+<code class="highlighter-rouge">row</code> pointer.</p>
+
+<p>Unfortunately the inner loop uses <code class="highlighter-rouge">rows</code> instead of <code class="highlighter-rouge">row</code> so the inner
+loop always processes the same columns of the first row. The local
+variable <code class="highlighter-rouge">row</code> is used only for knowing the column count hence the
+compiler does not warn use about an unused variable.</p>
+
+<p>This lead to resources without proper initialization and memory
+corruptions all because the was an extra <code class="highlighter-rouge">s</code>.</p>
+
+<h2 id="less-is-worse">Less is worse</h2>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">one_round</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">ports</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="o">*</span><span class="n">start</span><span class="p">,</span> <span class="k">struct</span> <span class="n">msg_t</span> <span class="o">**</span><span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="o">*</span><span class="n">msg</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span> <span class="c1">// not found</span>
+
+    <span class="kt">uint32_t</span> <span class="n">ix</span> <span class="o">=</span> <span class="o">*</span><span class="n">start</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">uint32_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">PORT_CNT</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+       <span class="n">read</span><span class="p">(</span><span class="n">ports</span><span class="p">[(</span><span class="n">ix</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="o">%</span> <span class="n">PORT_CNT</span><span class="p">],</span> <span class="n">msg</span><span class="p">);</span>
+       <span class="k">if</span> <span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+          <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="o">*</span><span class="n">start</span> <span class="o">=</span> <span class="n">ix</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">scan</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">ports</span><span class="p">)</span> <span class="p">{</span>
+    <span class="o">*</span><span class="n">msg</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span> <span class="c1">// not found</span>
+
+    <span class="kt">uint32_t</span> <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">should_exit</span><span class="p">())</span> <span class="p">{</span>
+        <span class="n">one_round</span><span class="p">(</span><span class="n">ports</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">start</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">process</span><span class="p">(</span><span class="n">msg</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// no msg, sleep</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Issue? A missing <code class="highlighter-rouge">*</code></p>
+
+<p>The <code class="highlighter-rouge">one_round</code> function read from N ports doing a round robin starting
+from <code class="highlighter-rouge">*start</code>. Each round may be interrupted if a message is found and
+a call to <code class="highlighter-rouge">process</code> is made.</p>
+
+<p>If a full round is made without reading a message, <code class="highlighter-rouge">scan</code> takes a little
+nap assuming that it is not under a heavy workload.</p>
+
+<p>But <code class="highlighter-rouge">one_round</code> is wrong. It checks for <code class="highlighter-rouge">if (msg)</code> instead of <code class="highlighter-rouge">if
+(*msg)</code>. The former is always true returning earlier with a message
+probably empty.</p>
+
+<p><code class="highlighter-rouge">scan</code> checks for <code class="highlighter-rouge">if (*msg)</code> and if it is <code class="highlighter-rouge">NULL</code> it will believe that
+the subfunction did a full round and it didn’t find a message.</p>
+
+<p>Under a heavy workload on <em>all</em> the ports, this typo was unnoticed
+because <code class="highlighter-rouge">*msg</code> was always not-<code class="highlighter-rouge">NULL</code>.</p>
+
+<p>But when a single port was with less data, even if the rest of the ports
+were super-busy, <code class="highlighter-rouge">scan</code> did a <code class="highlighter-rouge">sleep(1)</code> impacting negatively in the
+performance. Less work made the things worse!</p>
+
+
+
+    </article>
+    <span class="print-footer">Deadly Typos 2020 - April 24, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

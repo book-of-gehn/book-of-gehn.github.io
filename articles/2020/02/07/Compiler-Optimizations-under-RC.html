@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Compiler Optimizations under a Race Condition</title>
+  <meta name="description" content="⊕  When two or more concurrent tasks perform non-atomic read/write operationsover the same data we have a race condition andthe system will be in an undefine...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2020/02/07/Compiler-Optimizations-under-RC.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Compiler Optimizations under a Race Condition</h1>
+<p class="subtitle">February 7, 2020</p>
+
+<p><label for="mf-7fbb50af557f9e5155904b080e9c6d7f" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-7fbb50af557f9e5155904b080e9c6d7f" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="" src="/book-of-gehn/assets/memory/rc/rcO0-busy-loop.png" />  <br /></span></p>
+
+<p>When two or more concurrent tasks perform non-atomic read/write operations
+over the same data we have a <em>race condition</em> and
+the system will be in an undefined state.</p>
+
+<p>But what exactly does that suppose to mean? What is behind the
+generic <em>undefined state</em>?<!--more--></p>
+
+<p>Consider the <a href="/book-of-gehn/assets/memory/rc/rc.c">following code</a></p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span><span class="o">*</span> <span class="nf">loop</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">ctx_t</span> <span class="o">*</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">p</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="o">*</span><span class="n">data</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">n</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">ROUNDS</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DATASZ</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">while</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="n">n</span><span class="p">);</span>
+            <span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">loop</code> function will run in two separated threads. One will
+increase by one each value of the array if the previous
+value was even, the other will do the same but if the previous
+value was odd.</p>
+
+<p>To <em>synchornize</em> the efforts of these two, the code has a <em>busy wait</em>,
+a <code class="highlighter-rouge">while</code>-loop that will run until the condition is set.</p>
+
+<p>The <code class="highlighter-rouge">data</code> array is not protected so this will lead to a race condition.</p>
+
+<p>Let’s compile &amp; run it:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gcc <span class="nt">--version</span>
+gcc <span class="o">(</span>Debian 6.3.0-18+deb9u1<span class="o">)</span> 6.3.0 20170516
+
+<span class="nv">$ </span>gcc <span class="nt">-std</span><span class="o">=</span>c11 <span class="nt">-lpthread</span> <span class="nt">-O0</span> <span class="nt">-ggdb</span> <span class="nt">-DDATASZ</span><span class="o">=</span>256 <span class="nt">-o</span> rcO0 rc.c
+
+<span class="nv">$ </span>./rcO0 0 1
+Sum 5120
+</code></pre></div></div>
+
+<p><label for="mn-4839516cdf4ac2ef14a8aa1b2114cad9" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-4839516cdf4ac2ef14a8aa1b2114cad9" class="margin-toggle" /><span class="marginnote">The array of <code class="highlighter-rouge">DATASZ == 256</code> numbers is initially zeroed. Two
+threads increment each value by one <code class="highlighter-rouge">ROUNDS == 10</code> times.
+<br />
+The displayed number is
+the sum of the values which should give <code class="highlighter-rouge">256 * 10 * 2 == 5120</code>.
+ </span></p>
+
+<p>Surprisingly the code seems to work computing the correct result.</p>
+
+<p>I ran several times and I always got the same.</p>
+
+<p>But the party begins when we compile with the optimizations enabled: <code class="highlighter-rouge">-O3</code>
+flag in <code class="highlighter-rouge">gcc</code>.</p>
+
+<p>This time, the optimized program hangs – <em>every time</em>.</p>
+
+<h2 id="dissection-of-an-optimized-rc">Dissection of an optimized RC</h2>
+
+<p>Let’s see what code <code class="highlighter-rouge">gcc</code> generated.</p>
+
+<p>For the non-optimized code <code class="highlighter-rouge">rcO0</code>, the following picture shows the busy loop
+<code class="highlighter-rouge">while(data[i] % 2 == n);</code>:</p>
+
+<figure><figcaption><span>The <code class="highlighter-rouge">mov eax, [rax]</code> reads the array and <code class="highlighter-rouge">cmp</code> checks for the
+condition.
+
+If it is not set, the <code class="highlighter-rouge">jz</code> jumps to the begin
+of the loop again.</span></figcaption><img src="/book-of-gehn/assets/memory/rc/rcO0-busy-loop.png" /></figure>
+
+<p>We can see how the program retries again and again until the condition
+is set before proceeding.</p>
+
+<p>But for the optimized code, the story is totally different.</p>
+
+<figure><figcaption><span>The busy loop was rewritten as one conditional: if the condition
+is not set the program will jump to an infinite loop.</span></figcaption><img src="/book-of-gehn/assets/memory/rc/rcO3-busy-loop.png" /></figure>
+
+<p>A race condition leads to an undefined state and for a compiler this
+opens the door for optimizations.</p>
+
+<p>Unless explicitly noticed, the compiler will assume that the code is
+single threaded.</p>
+
+<p><label for="mmkd-4538fa2fffab880d1e0e3c68d0d80f7d" class="margin-toggle"> ⊕</label><input type="checkbox" id="mmkd-4538fa2fffab880d1e0e3c68d0d80f7d" class="margin-toggle" /></p>
+<div id="mk-mmkd-4538fa2fffab880d1e0e3c68d0d80f7d"><span class="marginnote marginmarkdowncode"><div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</code></pre></div></div></span></div>
+<div><script>$(document).ready(function () {$('#mk-mmkd-4538fa2fffab880d1e0e3c68d0d80f7d > span').insertAfter($('#mmkd-4538fa2fffab880d1e0e3c68d0d80f7d'))});</script></div>
+
+<p>If the <code class="highlighter-rouge">while</code>-loop waits for a different value but it does not change
+it, nobody will change it ever so, unless the condition is set
+from the begin, it is an infinite loop.</p>
+
+<p>So the compiler decided to rewrite it as a single check and
+an infinite loop which explains why the program hangs.</p>
+
+<h2 id="volatile">Volatile</h2>
+
+<p><label for="mn-5e5dae5c09ec6702f0a87584374d4238" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-5e5dae5c09ec6702f0a87584374d4238" class="margin-toggle" /><span class="marginnote">Writes (<em>stores</em>) too: a compiler could optimize issuing
+only the last of many writes if not read (<em>load</em>) happen in between or it could
+issue one of them if all of them write the same value.
+<br />
+<code class="highlighter-rouge">volatile</code> disables these assumptions. </span></p>
+
+<p>C and C++ has the <code class="highlighter-rouge">volatile</code> qualifier that instructs to the compiler
+to not assume that reading twice
+the same variable could yield the
+same result even if no <em>apparent</em> write happen in between.</p>
+
+<p><label for="mn-7f9e3bdbc605f4fe193b633827320851" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-7f9e3bdbc605f4fe193b633827320851" class="margin-toggle" /><span class="marginnote"><code class="highlighter-rouge">volatile int *p</code>  pointer to volatile-data; <code class="highlighter-rouge">int * volatile p</code>
+volatile <em>pointer</em> to data. They are not the same. </span></p>
+
+<p>We could define a pointer to the volatile data:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span><span class="o">*</span> <span class="nf">loop</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">ctx_t</span> <span class="o">*</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">p</span><span class="p">;</span>
+    <span class="k">volatile</span> <span class="kt">int</span> <span class="o">*</span><span class="n">data</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
+    <span class="p">...</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DATASZ</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">while</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="n">n</span><span class="p">);</span>
+            <span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">...</span>
+</code></pre></div></div>
+
+<p><label for="mn-7aa0b705959af467cd29ba2b5cae42a9" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-7aa0b705959af467cd29ba2b5cae42a9" class="margin-toggle" /><span class="marginnote">You can generalize this cast as a macro
+<code class="highlighter-rouge">READ(x) ((volatile typeof((x)))(x))</code>
+<br />
+Take at look at Linux's
+<a href="https://github.com/torvalds/linux/blob/master/include/linux/compiler.h"><code class="highlighter-rouge">READ_ONCE</code></a>
+for a more complete construction even for non-atomic/non-primitive variables. </span></p>
+
+<p>Or we could use <code class="highlighter-rouge">volatile</code> in a cast:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span><span class="o">*</span> <span class="nf">loop</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">ctx_t</span> <span class="o">*</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">p</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="o">*</span><span class="n">data</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>      <span class="cm">/* non-volatile */</span>
+    <span class="p">...</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DATASZ</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">while</span><span class="p">(((</span><span class="k">volatile</span> <span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="n">data</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="n">n</span><span class="p">);</span>
+            <span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">...</span>
+</code></pre></div></div>
+
+<p>In the first case, any further read of or write to data will
+not be optimized by the compiler; while in the second case
+only the read of the <em>array element</em> will not be optimized.</p>
+
+<p>This is something that have an impact on the code generated.</p>
+
+<p>Even if the two programs run correctly, the
+latter case is slightly more efficient.</p>
+
+<figure><figcaption><span>On the left, the code when <code class="highlighter-rouge">data</code> was defined as <code class="highlighter-rouge">volatile int*</code>;
+on the right, when only the read <code class="highlighter-rouge">((volatile int*)data)[i]</code> was
+affected by <code class="highlighter-rouge">volatile</code>.
+<br />
+Both codes were generated with <code class="highlighter-rouge">-O3</code>: they are faster than
+the generated by <code class="highlighter-rouge">-O0</code> but slower than <code class="highlighter-rouge">-O3</code> <em>without</em> <code class="highlighter-rouge">volatile</code>,
+still yielding the correct result.
+<br />
+Notice how <code class="highlighter-rouge">++data[i];</code> was optimized on the right.
+</span></figcaption><img src="/book-of-gehn/assets/memory/rc/rcvolatile.png" /></figure>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>A race condition leads, by definition, to an undefined behaviour.</p>
+
+<p>And the compiler will take this as an opportunity for optimize
+the code even if that goes against the developer’s desires.</p>
+
+<p><code class="highlighter-rouge">volatile</code> prevents some of these optimizations but
+the race condition is <strong>still there</strong> and therefore the undefined
+behaviour.</p>
+
+<p>This means that other parties like the CPU may perform
+optimizations and <code class="highlighter-rouge">volatile</code> will not help us.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li><a href="https://www.kernel.org/doc/html/v4.12/process/volatile-considered-harmful.html">Why the “volatile” type class should not be used</a></li>
+  <li><a href="https://blog.regehr.org/archives/28">Nine ways to break your systems code using volatile</a></li>
+</ul>
+
+
+
+    </article>
+    <span class="print-footer">Compiler Optimizations under a Race Condition - February 7, 2020 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Debugging Lock Free Algorithms</title>
+  <meta name="description" content="Debugging multithread code is hard and lock free algorithmsis harder.What cleaver tricks can we use?">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2020/05/16/Debugging-Lock-Free-Algorithms.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Debugging Lock Free Algorithms</h1>
+<p class="subtitle">May 16, 2020</p>
+
+<p>Debugging multithread code is hard and lock free algorithms
+is harder.</p>
+
+<p>What cleaver tricks can we use?<!--more--></p>
+
+<h2 id="back-to-the-old-good-mutex">Back to the old good mutex</h2>
+
+<p>One simple strategy is to use a traditional mutex or other lock
+mechanisms to make our lock free code into something much easier to
+reason about.</p>
+
+<p>Consider a lock free MPMC queue; making it thread safe with a mutex
+is plain simple:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">uint32_t</span> <span class="nf">push</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+    <span class="p">...</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">full</span><span class="p">)</span>
+        <span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">...</span>
+    <span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">uint32_t</span> <span class="nf">pop</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+    <span class="p">...</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">empty</span><span class="p">)</span>
+        <span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">...</span>
+    <span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><label for="mn-d7e5c1aa888416c0537985bcd405f11c" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-d7e5c1aa888416c0537985bcd405f11c" class="margin-toggle" /><span class="marginnote"><em>Most?</em> A <code class="highlighter-rouge">mutex_lock</code>/<code class="highlighter-rouge">mutex_unlock</code> pair works
+as an <code class="highlighter-rouge">ACQUIRE</code>/<code class="highlighter-rouge">RELEASE</code> pair: instructions
+from the critical section (CS) cannot be moved <em>above the lock</em> nor
+<em>below the unlock</em> but instructions <em>outside</em> of the CS can get into the CS
+moving from the upside <em>below the lock</em> and
+from the downside <em>above the unlock</em>
+<br />
+In short, some reorders are <em>still</em> possible: things before and after the CS
+can get in, things in the CS cannot get out. </span></p>
+
+<p>What did we get? <em>Most</em> of the possible reorders
+and subtle race conditions are out.</p>
+
+<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/mpmc-queue/mutex.png" /></figure>
+
+<p>If you still have a bug then it is more likely to be a <em>classic</em> bug like
+mistaking <code class="highlighter-rouge">&lt;</code> by <code class="highlighter-rouge">&lt;=</code> or a missing <code class="highlighter-rouge">+1</code> somewhere –<em>and trust me, you
+will make this kind of errors too</em>.</p>
+
+<h2 id="lightweight-prints">Lightweight prints</h2>
+
+<p><label for="mn-99114dcac28d017f0e326fed2d887b8e" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-99114dcac28d017f0e326fed2d887b8e" class="margin-toggle" /><span class="marginnote">
+A buffer of fixed size power of 2 with entries of fixed size
+simplify the implementation making it faster and less intrusive
+than a plain <code class="highlighter-rouge">printf</code>. </span></p>
+
+<p>The idea is to have a global shared ring buffer for logs with multiple
+writers in mind.</p>
+
+<p>To avoid race conditions among the writers, the index is incremented
+atomically before doing each write. This is another example of a
+<em>reserve-and-then</em> strategy.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">trace</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>  <span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">__atomic_fetch_add</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tpos</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">__ATOMIC_RELAXED</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">seq</span> <span class="o">&amp;</span> <span class="n">tmask</span><span class="p">;</span>
+
+    <span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">id</span> <span class="o">=</span> <span class="n">thread_id</span><span class="p">();</span>
+    <span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">seq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">;</span>
+    <span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>In my <a href="/book-of-gehn/articles/2020/03/22/Lock-Free-Queue-Part-I.html">previous post</a>
+we saw that a write may not be visible to others until we need <em>commit</em>.</p>
+
+<p>We don’t do this on purpose: if we add a kind of barrier/memory reorder
+we may be affecting the code under test and we may masking the bug.</p>
+
+<p><label for="mmkd-279a024733ed9ead498068a1e44e6e4e" class="margin-toggle"> ⊕</label><input type="checkbox" id="mmkd-279a024733ed9ead498068a1e44e6e4e" class="margin-toggle" /></p>
+<div id="mk-mmkd-279a024733ed9ead498068a1e44e6e4e"><span class="marginnote marginmarkdowncode"><div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">(</span>gdb<span class="o">)</span> <span class="nb">set </span>print pretty on
+<span class="o">(</span>gdb<span class="o">)</span> p <span class="o">(</span>tpos - 5<span class="o">)</span> &amp; tmask
+<span class="o">(</span>gdb<span class="o">)</span> p tbuf[<span class="nv">$]</span>@5
+</code></pre></div></div>Pretty print the last 5 entries</span></div>
+<div><script>$(document).ready(function () {$('#mk-mmkd-279a024733ed9ead498068a1e44e6e4e > span').insertAfter($('#mmkd-279a024733ed9ead498068a1e44e6e4e'))});</script></div>
+
+<p>Anyways the buffer is not read ever –it is a multiple-writers zero-readers
+buffer. This idea is to read the buffer from a debugger in a synchronous way
+so we should not have any race condition.</p>
+
+<h3 id="what-you-read-is-not-what-it-happen">What you read is not what it happen</h3>
+
+<p>Consider the following traced code:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">trace</span><span class="p">(</span><span class="s">"foo..."</span><span class="p">);</span>
+<span class="n">foo</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>You may think that the trace is enough to know when <code class="highlighter-rouge">foo()</code> is called.</p>
+
+<p>You may read</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>thread 1: foo...
+thread 2: foo...
+</code></pre></div></div>
+
+<p>but what happen actually was that thread 2 called <code class="highlighter-rouge">foo()</code> before
+the thread 1:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// thread 1                         // thread 2</span>
+<span class="n">trace</span><span class="p">(</span><span class="s">"foo..."</span><span class="p">);</span>
+                                    <span class="n">trace</span><span class="p">(</span><span class="s">"foo..."</span><span class="p">);</span>
+                                    <span class="n">foo</span><span class="p">();</span>
+<span class="n">foo</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>Interleaving is possible, and no, you cannot use a mutex there.</p>
+
+<p><label for="mmkd-c4e79dfe919e5ac07386d2372ccb8ad0" class="margin-toggle"> ⊕</label><input type="checkbox" id="mmkd-c4e79dfe919e5ac07386d2372ccb8ad0" class="margin-toggle" /></p>
+<div id="mk-mmkd-c4e79dfe919e5ac07386d2372ccb8ad0"><span class="marginnote marginmarkdowncode"><div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>thread 1: begin foo...
+thread 2: begin foo...
+thread 2: end foo...
+thread 1: end foo...
+</code></pre></div></div>You may read this but...</span></div>
+<div><script>$(document).ready(function () {$('#mk-mmkd-c4e79dfe919e5ac07386d2372ccb8ad0 > span').insertAfter($('#mmkd-c4e79dfe919e5ac07386d2372ccb8ad0'))});</script></div>
+
+<p>Wrapping the code with two traces is a better alternative:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">trace</span><span class="p">(</span><span class="s">"begin foo"</span><span class="p">);</span>
+<span class="n">foo</span><span class="p">();</span>
+<span class="n">trace</span><span class="p">(</span><span class="s">"end foo"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>However you still cannot know if thread 1 called <code class="highlighter-rouge">foo()</code> before or after
+the thread 2.</p>
+
+<p>If <code class="highlighter-rouge">trace()</code> and <code class="highlighter-rouge">foo()</code> are inline, the compiler/CPU may see
+this:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span> <span class="o">=</span> <span class="s">"begin foo"</span><span class="p">;</span>
+<span class="n">foo_a</span><span class="p">;</span>
+<span class="n">foo_b</span><span class="p">;</span>
+<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span> <span class="o">=</span> <span class="s">"end foo"</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>There is an obvious relationship between the first and the second
+trace instructions so <code class="highlighter-rouge">"begin foo..."</code> happens before <code class="highlighter-rouge">"end foo..."</code>
+but nothing prevents the compiler or the CPU to reorder the inline
+instructions from <code class="highlighter-rouge">foo()</code>.</p>
+
+<p>So what could happen is:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// thread 1                         // thread 2</span>
+<span class="n">foo_a</span><span class="p">;</span>
+<span class="n">foo_b</span><span class="p">;</span>
+<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span> <span class="o">=</span> <span class="s">"begin foo"</span><span class="p">;</span>
+                                    <span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span> <span class="o">=</span> <span class="s">"begin foo"</span><span class="p">;</span>
+                                    <span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span> <span class="o">=</span> <span class="s">"end foo"</span><span class="p">;</span>
+<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span> <span class="o">=</span> <span class="s">"end foo"</span><span class="p">;</span>
+                                    <span class="n">foo_a</span><span class="p">;</span>
+                                    <span class="n">foo_b</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>So not only thread 1 called <code class="highlighter-rouge">foo()</code> <em>before</em> thread 2 but even after
+the log entry <code class="highlighter-rouge">"end foo"</code> the thread 2 <em>didn’t call</em> <code class="highlighter-rouge">foo()</code> at all.</p>
+
+<p>Sorry to say but you don’t have much options and whatever you choose
+it will affect the precision of the log or it will affect the behaviour
+of you code under debug.</p>
+
+<h2 id="automated-tools">Automated tools</h2>
+
+<p>This would be the holy grial but we are still far from a tool to detect
+race conditions in general.</p>
+
+<p><a href="https://clang.llvm.org/docs/ThreadSanitizer.html">Thread Sanitizer</a>, also
+known as <em>tsan</em>, goes in that direction.</p>
+
+<p><a href="https://valgrind.org/docs/manual/hg-manual.html">Helgrind</a> has been
+for a while too.</p>
+
+<p>This is a huge area to explore…</p>
+
+<h2 id="code">Code</h2>
+
+<p>Take at look how <a href="https://github.com/eldipa/loki">loki library’s</a>
+debug facilities are implemented. It humbly supports tracing, mutexes and
+a compiled version with tsan.</p>
+
+<p>Alternative methods are welcome!!</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li>Jeff Preshing’s <a href="https://preshing.com/20120522/lightweight-in-memory-logging/">lightweight logging</a></li>
+  <li>Shameem Akhter and Jason Roberts’ <a href="https://www.drdobbs.com/cpp/multithreaded-debugging-techniques/199200938?pgno=1">multithreading debugging techniques</a></li>
+</ul>
+
+<p>References were taken on May 1st.</p>
+
+
+
+    </article>
+    <span class="print-footer">Debugging Lock Free Algorithms - May 16, 2020 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

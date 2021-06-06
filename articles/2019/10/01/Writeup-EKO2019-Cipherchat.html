@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Cipherchat (Crypto writeup - EKO 2019)</title>
+  <meta name="description" content="We start with a communicationbetween two machines, encrypted with an unknown algorithm andthe challenge is to break it.As a hint we have the code that the cl...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2019/10/01/Writeup-EKO2019-Cipherchat.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Cipherchat (Crypto writeup - EKO 2019)</h1>
+<p class="subtitle">October 1, 2019</p>
+
+<p>We start with a <a href="/book-of-gehn/assets/eko2019-writeups/cipherchat-dir/cipherchat.pcap">communication</a>
+between two machines, encrypted with an unknown algorithm and
+the challenge is to break it.</p>
+
+<p>As a <em>hint</em> we have the code that the client used to talk with the server.<!--more--></p>
+
+<h2 id="decompile">Decompile</h2>
+
+<p>It is a Python 3 <a href="/book-of-gehn/assets/eko2019-writeups/cipherchat-dir/client.min.pyc">compiled code</a>
+so our first task is to decompile it.</p>
+
+<p>For this I’m going to use <a href="https://github.com/rocky/python-uncompyle6">uncompyle6</a></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ uncompyle6 --encoding utf-8 -o . client.min.pyc       # byexample: +skip
+</code></pre></div></div>
+
+<p>This is what we got:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;...&gt;</span>
+<span class="err">ۈ</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="err">𢜁</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="err">ې</span> <span class="o">=</span> <span class="nb">chr</span>
+<span class="err">𐬴</span> <span class="o">=</span> <span class="k">print</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="err">䈶</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostbyname</span>
+<span class="err">چ</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span>
+<span class="err">ޠ</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span>
+<span class="err">𨐜</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span>
+<span class="err">𐫛</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="err">نحي</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span>
+<span class="err">𐤭</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="nb">exit</span>
+<span class="err">𣏲</span> <span class="o">=</span> <span class="s">'localhost'</span>
+<span class="err">ࡃ</span> <span class="o">=</span> <span class="mi">12345</span>
+<span class="err">珽</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="err">𐠨</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">def</span> <span class="err">𡛓(</span><span class="nf">t</span><span class="p">):</span>
+    <span class="err">敩</span> <span class="o">=</span> <span class="s">''</span>
+    <span class="err">𨆂</span> <span class="o">=</span> <span class="err">珽</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'latin-1'</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+<span class="o">&lt;...&gt;</span>
+</code></pre></div></div>
+
+<p>The <code class="highlighter-rouge">ۈ</code> looks like a variable where <code class="highlighter-rouge">䈶</code> is just
+an alias of <code class="highlighter-rouge">socket.gethostbyname</code>.</p>
+
+<p><label for="mn-53880a7583d72ebb86ba6fdc0c12b444" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-53880a7583d72ebb86ba6fdc0c12b444" class="margin-toggle" /><span class="marginnote">Vim tip: <code class="highlighter-rouge">:%s//x/g</code> replaces the last searched string by <code class="highlighter-rouge">x</code>.
+Combined with <code class="highlighter-rouge">*</code> it is very useful to replace hard-to-write words
+like <code class="highlighter-rouge">ۈ</code>. </span></p>
+
+<p>I did a little of search-and-replace to have better names, I filtered out
+artificial constructions like using a variable to hold the constant <code class="highlighter-rouge">True</code>
+and things like that.</p>
+
+<p>Finally, I tried to rename the variables to have a meaningful name.</p>
+
+<p>The decompiled code is
+<a href="/book-of-gehn/assets/eko2019-writeups/cipherchat-dir/client.min.py">here</a>.</p>
+
+<h2 id="analysis-of-the-cipher">Analysis of the Cipher</h2>
+
+<p>This is the cipher function:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_shift</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">encxor</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">out</span> <span class="o">=</span> <span class="s">''</span>
+<span class="o">...</span>     <span class="n">key</span> <span class="o">=</span> <span class="n">key_seed</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'latin-1'</span><span class="p">):</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="o">...</span>             <span class="k">break</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">x</span> <span class="o">=</span> <span class="n">n</span> <span class="o">^</span> <span class="n">key</span>
+<span class="o">...</span>             <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="n">key_shift</span><span class="p">)</span> <span class="o">%</span> <span class="mi">256</span>
+<span class="o">...</span>             <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
+<span class="o">...</span>                 <span class="k">pass</span>
+<span class="o">...</span>             <span class="k">else</span><span class="p">:</span>
+<span class="o">...</span>                 <span class="k">break</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">out</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">out</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'latin-1'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>It is a <em>stream cipher</em> where the key stream evolves doing <em>shifts</em>
+of <code class="highlighter-rouge">key_shift</code> starting from <code class="highlighter-rouge">key_seed</code>.</p>
+
+<p>On particularity is that if the output byte <code class="highlighter-rouge">x</code> is 0 or it is
+equal to the (next) <code class="highlighter-rouge">key</code> byte, the <code class="highlighter-rouge">key</code> byte is ignored and the
+key stream is moved forward one byte.</p>
+
+<p>So in the output <code class="highlighter-rouge">out</code> we will never see a 0 or a key byte.</p>
+
+<p>This is the same function but simplified:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_shift</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">encxor</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">out</span> <span class="o">=</span> <span class="s">''</span>
+<span class="o">...</span>     <span class="n">key</span> <span class="o">=</span> <span class="n">key_seed</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'latin-1'</span><span class="p">):</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="o">...</span>             <span class="k">break</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">...</span>         <span class="k">while</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">x</span> <span class="o">=</span> <span class="n">n</span> <span class="o">^</span> <span class="n">key</span>
+<span class="o">...</span>             <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="n">key_shift</span><span class="p">)</span> <span class="o">%</span> <span class="mi">256</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">out</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">out</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">'latin-1'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><label for="mn-6c2727d0ceb9d0b3dd59966c8aeea305" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-6c2727d0ceb9d0b3dd59966c8aeea305" class="margin-toggle" /><span class="marginnote">We say <em>almost</em> because to runs of the key stream will be identical until
+one of them, based on the plaintext, hit the <code class="highlighter-rouge">x == 0 or x == key</code> condition
+<em>shifting</em> with respect the other. </span></p>
+
+<p>Another particularity is that the cipher is <em>stateless</em>: two
+plaintexts will be encrypted with <em>almost</em> the same key stream.</p>
+
+<p>The other interesting part is how the <code class="highlighter-rouge">key_seed</code> and
+<code class="highlighter-rouge">key_shift</code> are initialized.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">_</span><span class="p">,</span> <span class="n">srcport</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()</span>
+<span class="n">key_seed</span> <span class="o">=</span> <span class="p">(</span><span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">65280</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+<span class="n">key_shift</span> <span class="o">=</span> <span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">255</span>
+</code></pre></div></div>
+
+<p><label for="mn-29b74d3a67b35195e76b5cc3656b1d05" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-29b74d3a67b35195e76b5cc3656b1d05" class="margin-toggle" /><span class="marginnote">The pcap had only one single TCP stream but in much nosier captures
+it is handy to use <code class="highlighter-rouge">Statistic &gt; Conversations</code> in <code class="highlighter-rouge">wireshark</code>
+to summarize the protocols, addresses and ports. </span></p>
+
+<p>Not secret at all. <code class="highlighter-rouge">srcport</code> is the source port chosen by the OS which
+from the <a href="/book-of-gehn/assets/eko2019-writeups/cipherchat-dir/cipherchat.pcap">pcap</a>
+we know that it is 47898.</p>
+
+<p>So</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">srcport</span> <span class="o">=</span> <span class="mi">47898</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span> <span class="o">=</span> <span class="p">(</span><span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">65280</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_shift</span> <span class="o">=</span> <span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">255</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span><span class="p">,</span> <span class="n">key_shift</span>
+<span class="p">(</span><span class="mi">187</span><span class="p">,</span> <span class="mi">26</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="decrypting">Decrypting</h2>
+
+<p>With this and the <code class="highlighter-rouge">encxor</code> function we can decrypt every message sent from the
+client to the server.</p>
+
+<p><label for="mn-c23d52cd96fa1c4eb14218c5cb4e1c78" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-c23d52cd96fa1c4eb14218c5cb4e1c78" class="margin-toggle" /><span class="marginnote">Another <code class="highlighter-rouge">wireshark</code> tip: select one packet, then
+<code class="highlighter-rouge">Follow TCP stream</code>, filter to see only the <code class="highlighter-rouge">client-&gt;server</code> packets
+and select <code class="highlighter-rouge">show data</code> as <code class="highlighter-rouge">raw</code>. </span></p>
+
+<p>Which by the way are these:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">raw</span> <span class="o">=</span> <span class="s">'''
+... cba28100
+... 94bd8a655300
+... 94a586674400
+... 94b08c614c1d1f18abc7cdb600
+... 94b08c614c1d26e3c4cbf9927f4261221afa89a7b29e7f4c7a00
+... 94b08c614c1d1e51ffcdd6b7982d53293a01afd0aca8d77059207f15fcc2ac8895720f2f0c0fb7c5a380df7f5f2ce600
+... 94b08c614c1d341ee4c993f9ba2d4f202d10afddabb484314d2a2d59eac2b2dbdb506406180de4d4be819046432815e7fed6bbb6707854230ee6e6e68bdd555c00
+... 94b08c614c1d301eabc2d0f8d36148203f55e6dde3b49931522a2a59f1c2a6939f00
+... 94a586674400
+... 94a49a605700
+... '''</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>            <span class="c1"># byexample: +timeout=10
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">msgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">B</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">raw</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">'</span><span class="se">\n</span><span class="s">'</span><span class="p">))]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">msgs</span><span class="p">:</span>
+<span class="o">...</span>     <span class="n">tmp</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">'latin-1'</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">tmp</span> <span class="o">=</span> <span class="n">encxor</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">print</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+<span class="n">b</span><span class="s">'pwn</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/help</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/ping</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/echo Hi bro</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/echo What are you doing?</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/echo I think that you are looking for the flag</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/echo cool, I have this for you: EKO{pseudo_perfect_secrecy_X0R}</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/echo go go! load it in you board</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/ping</span><span class="se">\x00</span><span class="s">'</span>
+<span class="n">b</span><span class="s">'/quit</span><span class="se">\x00</span><span class="s">'</span>
+</code></pre></div></div>
+
+<p>That’s it: <code class="highlighter-rouge">EKO{pseudo_perfect_secrecy_X0R}</code>.</p>
+
+
+
+
+    </article>
+    <span class="print-footer">Cipherchat (Crypto writeup - EKO 2019) - October 1, 2019 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

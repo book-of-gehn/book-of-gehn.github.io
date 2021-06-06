@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Effects of CPU Cache Coherence</title>
+  <meta name="description" content="⊕  Most modern cpus see a single shared main memory seeingthe same thing, eventually.This post explores what isbehind this “eventually” term.">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2020/02/15/CPU-Cache-Coherence.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Effects of CPU Cache Coherence</h1>
+<p class="subtitle">February 15, 2020</p>
+
+<p><label for="mf-60ce1018c40b8a23f191ac0831675972" class="margin-toggle  ">⊕</label><input type="checkbox" id="mf-60ce1018c40b8a23f191ac0831675972" class="margin-toggle  " /><span class="marginnote  "><img style="" class="fullwidth" alt="" src="/book-of-gehn/assets/memory/rc/cnt-cpu-2ndcpu-heatmap.png" />  <br /></span></p>
+
+<p>Most modern cpus see a single <em>shared</em> main memory seeing
+the same thing, <em>eventually</em>.</p>
+
+<p>This post explores what is
+behind this <em>“eventually”</em> term.<!--more--></p>
+
+<p>Consider the <a href="/book-of-gehn/assets/memory/rc/rccnt.c">following function</a>.</p>
+
+<p>It is executed by two threads that increment by one
+the values of an array one at time: one waiting for even numbers
+before incrementing, the other waiting for odd numbers.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span><span class="o">*</span> <span class="nf">loop</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">struct</span> <span class="n">ctx_t</span> <span class="o">*</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">p</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="o">*</span><span class="n">data</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="o">*</span><span class="n">counters</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">counters</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-&gt;</span><span class="n">n</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">ROUNDS</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">DATASZ</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kt">int</span> <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="k">while</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="n">n</span><span class="p">)</span> <span class="p">{</span>
+                <span class="o">++</span><span class="n">cnt</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+            <span class="n">counters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cnt</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The threads synchronize themselves with a <em>busy-loop</em> but the
+shared array <code class="highlighter-rouge">ctx-&gt;data</code> is not protected in any way
+so there is a <em>race condition</em> there.</p>
+
+<p>As we saw in a
+<a href="/book-of-gehn/articles/2020/02/07/Compiler-Optimizations-under-RC.html">previous post</a>
+we can avoid any corruption due the RC for this so simple program
+if we don’t allow the compiler to optimize the code.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>gcc <span class="nt">--version</span>
+gcc <span class="o">(</span>Debian 6.3.0-18+deb9u1<span class="o">)</span> 6.3.0 20170516
+
+<span class="nv">$ </span>gcc <span class="nt">-std</span><span class="o">=</span>c11 <span class="nt">-lpthread</span> <span class="nt">-O0</span> <span class="nt">-ggdb</span> <span class="nt">-DDATASZ</span><span class="o">=</span>8 <span class="nt">-o</span> rccnt rccnt.c
+</code></pre></div></div>
+
+<p>If the two threads see the same value <em>eventually</em>, how much <em>“time”</em>
+does it take?</p>
+
+<p>How many times a busy-loop cycled gives us a rough estimation.<label for="mn-7eae8864761ccf972aa824fd18352073" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-7eae8864761ccf972aa824fd18352073" class="margin-toggle" /><span class="marginnote">That is the purpose of <code class="highlighter-rouge">counters</code>: track how many cycles took see the
+expected value at each index. </span></p>
+
+<p><label for="mn-13df53b6943eef89557be17c1fee6918" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-13df53b6943eef89557be17c1fee6918" class="margin-toggle" /><span class="marginnote">See man page of <code class="highlighter-rouge">pthread_attr_setaffinity_np</code> </span></p>
+
+<p>To play with different cpus, the program sets the cpu’s affinity
+of each thread configurable from the command line.</p>
+
+<p>For example, to set the affinity of both threads to the cpu number 0 we do:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>./rccnt 0 0
+4960841 0 0 0 0 0 0 0
+4846049 0 0 0 0 0 0 0
+Sum 160
+</code></pre></div></div>
+
+<blockquote>
+  <p>For this post I ran several times the program with all
+the possible combinations of cpus; scripts and the dataset are
+<a href="/book-of-gehn/assets/memory/rc/rccnt-data.tar.gz">here</a>.</p>
+</blockquote>
+
+<h2 id="cpu-contention">CPU contention</h2>
+
+<p>Let’s plot what happens when both threads want to use the same cpu:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">sns</span><span class="o">.</span><span class="n">catplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s">'arr_ix'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'cycles'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">'b'</span><span class="p">,</span>
+<span class="o">...</span>             <span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s">'cpu'</span><span class="p">]</span> <span class="o">==</span> <span class="n">d</span><span class="p">[</span><span class="s">'2nd cpu'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">])</span>
+</code></pre></div></div>
+
+<figure><figcaption><span>In the x-axis we have the index of each element (of an array of
+<code class="highlighter-rouge">DATASZ==8</code> elements); in the y-axis the amount of cycles need until
+the value got the correct parity.</span></figcaption><img src="/book-of-gehn/assets/memory/rc/cnt-cpu0-cpu0.png" /></figure>
+
+<p>Weird?</p>
+
+<!-- TODO add some scketch with speedlines -->
+
+<p>Assume that the first thread accesses to its cpu.</p>
+
+<p>This thread checks for even numbers and because the array is initialized
+to zero it has a <em>free pass</em> to increment their values <em>without</em>
+busy-looping once.</p>
+
+<p>But after the first round, it will restart again and now all the values
+are set to 1 so it <em>will</em> need to wait.</p>
+
+<p>The second thread will <em>not</em> run immediately because the cpu is still
+in use by the first thread.</p>
+
+<p>We have a <em>contention</em> scenario.</p>
+
+<p>Without voluntary <em>yielding</em> the execution, the first thread will not
+release the cpu;
+only after a while the OS scheduler will kick it off.</p>
+
+<p>Once that, the second thread runs freely
+until it finishes the round and starts the next one again falling
+in the same contention scenario.</p>
+
+<p>That explains why there is a huge amount of cycles before
+accessing the first element and zero for the rest.</p>
+
+<h2 id="shared-and-private-caches">Shared and Private Caches</h2>
+
+<p>When both threads run in the same cpu they have an immediate visibility
+of the modifications done by the other.</p>
+
+<p>But what happen when the threads run in different cpus?</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">sns</span><span class="o">.</span><span class="n">catplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s">'2nd cpu'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'cycles'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">'b'</span><span class="p">,</span>
+<span class="o">...</span>             <span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">[(</span><span class="n">d</span><span class="p">[</span><span class="s">'cpu'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s">'2nd cpu'</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)])</span>
+</code></pre></div></div>
+
+<figure><figcaption><span>Plot how many cycles happen when the first thread
+ran in the cpu 0 and the other ran in any other cpu.
+<br />
+Each point represents the cycles that happen in one
+array access in one execution of <code class="highlighter-rouge">rccnt</code>.
+<br />
+<br />
+Note how values around and greater than 1000 are outliers.
+<br />
+Outliers are only a small fraction of the overall set (~0.413%);
+I presume that these are because a thread is waiting while the
+other has <em>no</em> access to the cpu because the OS scheduler decided to
+give the cpu to <em>another</em> process.
+</span></figcaption><img src="/book-of-gehn/assets/memory/rc/cnt-cpu0-per-2ndcpu.png" /></figure>
+
+<p>Interesting pattern: when the second thread runs in
+the cpus from 1 to 7 and 16 to 23 require less iterations than other
+cpus.</p>
+
+<p>They can see the effects of the first thread <em>sooner</em>.</p>
+
+<p>This is an artifact of having a <em>shared</em> and <em>private</em> caches.</p>
+
+<p>Modern hardware has several <em>cores</em> per cpu die or <em>socket</em>.</p>
+
+<p>While all the cores<label for="mn-e61a6d78380c87e3db4715b66db691ed" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-e61a6d78380c87e3db4715b66db691ed" class="margin-toggle" /><span class="marginnote">The reality is that this is not standard: the details depends of the
+technology and vendor and changed over the time.
+<br />
+<br />
+For this post I will assume that L1 and L2 are per socket and L3 shared
+for all the sockets. </span> share the same L3 cache,
+each socket has its own private L1 and L2 caches shared by
+only the cores of that socket.</p>
+
+<h2 id="cache-coherence">Cache coherence</h2>
+
+<p>When a thread does a store/write it modifies its closest cache: L1.</p>
+
+<p>The <em>same</em> thread does a load/read to that address, it will read
+exactly <em>that</em> value.</p>
+
+<p>But other threads will read that value <em>eventually</em>.</p>
+
+<p>This is a <em>coherent</em> system.<label for="mn-f8a57711e071b99190022efdc2c27771" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-f8a57711e071b99190022efdc2c27771" class="margin-toggle" /><span class="marginnote"><em>Consistency</em> and store/load reordering is for another post. </span>
+It talks about how the stores are
+visible to other threads but not necessary in which order.</p>
+
+<p>Having a coherent system is critical for today’s code that relay in
+a unified and shared view of the memory regardless of which thread
+is running in which core.</p>
+
+<!-- TODO another diagram here? -->
+
+<p>But each core has its own private L1 and L2 caches and each socket
+its own L3 cache: a store in one core will affect its L1 immediately
+but the store will take some time to be visible to L1/L2 caches
+of other cores in the same socket and a little longer to be
+visible in the caches of other sockets.</p>
+
+<p><label for="mn-fe89caff6ba37f96128be77a66704d91" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-fe89caff6ba37f96128be77a66704d91" class="margin-toggle" /><span class="marginnote">“Multicore Cache Coherence” (in the reference)
+explains how to achieve this. </span></p>
+
+<p>To have a <em>coherent view</em> of the memory, the caches <em>synchronize</em>
+themselves</p>
+
+<p>Let’s see the effects of this comparing each cpu against the other.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s">'cycles'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">]</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s">'cpu'</span><span class="p">,</span> <span class="s">'2nd cpu'</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">x</span><span class="p">[</span><span class="s">'arr_ix'</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s">'cycles'</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sns</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div></div>
+
+<figure><figcaption><span>Plot a heatmap comparing each cpu agaist each other. Outliers
+(<code class="highlighter-rouge">cycles &gt; 1000</code>)
+are ignored and the mean is used as the aggregation function.
+<br />
+<br />
+The major diagonal (when both threads use the same cpu) has
+the lowest values but this is because we removed the outliers
+so it is not entirely correct.
+<br />
+<br />
+The other two minor diagonals also have the lowest values but this
+is <em>not</em> the product of removing outliers.
+</span></figcaption><img src="/book-of-gehn/assets/memory/rc/cnt-cpu-2ndcpu-heatmap.png" /></figure>
+
+<p>The heatmap corroborates the <em>clustering</em>: cpus 0 to 7 and 16 to 23 can
+see the effects of the other thread in the same cluster <em>sooner</em> than
+the other cpus. The same for the other cluster that spans cpus
+8 to 15 and 24 to 31.</p>
+
+<p>When the two threads are in separated clusters not only they spend
+more cycles looping but also it seems that the amount of cycles
+is more unpredictable.</p>
+
+<p>This makes the heatmap <em>almost</em> symmetric with some squares slightly
+brighter than their counterparts.<label for="mn-4e230f20ae9a764a7d6ffd75d94e3d46" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-4e230f20ae9a764a7d6ffd75d94e3d46" class="margin-toggle" /><span class="marginnote">This is more like a
+hunch. </span></p>
+
+<p>This is the effect of having separated caches.</p>
+
+<p>But the heatmap reveals something else!</p>
+
+<h2 id="hyper-threading">Hyper-threading</h2>
+
+<p>There are two minor diagonals that have the lowest
+cycles values and cannot be explained by the caches.</p>
+
+<p>It happens when we use the pairs 0 and 16, 1 and 17, 2 and 18 and so on.</p>
+
+<p>Those pairs are hyper-threads of the same core.</p>
+
+<p>Modern cores do <em>instruction level paralellism</em><label for="mn-eb8e80d290e4a6c9a1cb00e177bf17ea" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-eb8e80d290e4a6c9a1cb00e177bf17ea" class="margin-toggle" /><span class="marginnote"><em>Paralellism</em> is perhaps too
+optimistic. Even if the same core can run multiple things, several
+components are mutually exclusive used. <em>Concurrent</em> is a better word. </span>
+and execute two or more threads.</p>
+
+<p>In this case, we have 2 hyper-threads per core, sharing the same L1.</p>
+
+<figure><figcaption><span>High-level diagram. The colours are qualitative following the same
+color palette used by the heatmap.</span></figcaption><img src="/book-of-gehn/assets/memory/rc/cpus-cache-arch.png" /></figure>
+
+<h2 id="open-questions">Open questions</h2>
+
+<p>We used an array of 8 elements of <code class="highlighter-rouge">int</code> which gives us 32 bytes.
+Current technology uses cache lines of 64 bytes. Will the results
+in this post change if we use larger arrays?</p>
+
+<p>We saw how two threads running in the same cpu fight each other
+because none <em>yields</em> the cpu;
+<a href="http://man7.org/linux/man-pages/man2/sched_yield.2.html">sched_yield</a>
+is POSIX function to <em>relinquish</em> the cpu. What would happen?</p>
+
+<p>The heatmap was not entirely symmetric. Does it mean that we need
+to collect more data and try to understand and suppress the noise,
+or is there something else?</p>
+
+<p>What about <a href="https://en.wikipedia.org/wiki/Non-uniform_memory_access">NUMA</a>
+ (Non Uniform Memory Address)? Could the results
+shown in this post be explained by it?</p>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>The modern architectures present the memory as a single shared unit;
+caches are put in between the memory and the cpus to match the
+difference in speed.</p>
+
+<p>If a multithread application runs, the caches may have different
+values for the same addresses so a coherency mechanism is put in place.</p>
+
+<p>But it is not free and changes done by one thread take longer
+to be seen by the other when running in different cores, especially
+in different cpu sockets.</p>
+
+<p>And the things gets worst if two thread modified memory addresses
+that are <em>near</em> each other and both fit in the <em>same</em> cache line.
+Because the cache coherence works line by line, a store in one position
+will invalidate the cache of other threads that have that <em>dirty</em> line
+even if they are not using that particular address.
+This is known as <em>false sharing</em> and it can degrade the performance
+a lot under specific circumstances.</p>
+
+<p>These conclusions highly depend of the hardware and may not apply
+to all the systems but this post shows how complex can get such a
+simple thing like a cache.</p>
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li><a href="http://course.ece.cmu.edu/~ece600/lectures/lecture17.pdf">Multicore Cache Coherence (Lecture 17)</a>, John P. Shen. October 25, 2017.</li>
+  <li><a href="https://software.intel.com/en-us/articles/avoiding-and-identifying-false-sharing-among-threads">Avoiding and Identifying False Sharing Among Threads</a>, Intel, November 2, 2011</li>
+</ul>
+
+
+
+    </article>
+    <span class="print-footer">Effects of CPU Cache Coherence - February 15, 2020 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

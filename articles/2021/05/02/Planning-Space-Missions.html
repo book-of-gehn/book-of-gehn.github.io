@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Planning Space Missions with Z3</title>
+  <meta name="description" content="A space company is planning the next 4 years. It has several projects,each one with its own budget requirement per year, but the company has alimited budget ...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2021/05/02/Planning-Space-Missions.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Planning Space Missions with Z3</h1>
+<p class="subtitle">May 2, 2021</p>
+
+<p>A space company is planning the next 4 years. It has several projects,
+each one with its own budget requirement per year, but the company has a
+limited budget to invest.</p>
+
+<p>Moreover, some projects <em>depends</em> on others to make them feasible and
+some projects <em>cannot be done</em> if other projects due unbreakable restrictions.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Project</th>
+      <th>1st</th>
+      <th>2nd</th>
+      <th>3rd</th>
+      <th>4th</th>
+      <th>Depends</th>
+      <th>Not</th>
+      <th>Profit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1 Cube-1 nano-sat</td>
+      <td>1.1</td>
+      <td>2</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>12</td>
+    </tr>
+    <tr>
+      <td>2 Cube-2 nano-sat</td>
+      <td> </td>
+      <td>2.5</td>
+      <td>2</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>12</td>
+    </tr>
+    <tr>
+      <td>3 Infrared sat</td>
+      <td> </td>
+      <td> </td>
+      <td>1</td>
+      <td>4.1</td>
+      <td>on 6</td>
+      <td>with 4</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td>4 Colored img sat</td>
+      <td> </td>
+      <td> </td>
+      <td>2</td>
+      <td>8</td>
+      <td> </td>
+      <td>with 3</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <td>5 Mars probe</td>
+      <td> </td>
+      <td>2</td>
+      <td>8</td>
+      <td>4.4</td>
+      <td>on 1 &amp; 2</td>
+      <td> </td>
+      <td>12</td>
+    </tr>
+    <tr>
+      <td>6 Microwave tech</td>
+      <td>4</td>
+      <td>2.3</td>
+      <td>2</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Under an incredible amount of assumptions and good luck, what is the
+best strategy to maximize the profit?<!--more--></p>
+
+<p>We can model if one project is make or not with a <em>boolean variable</em>
+<script type="math/tex">P_i</script>; we not longer are in the plane of <em>pure real linear
+programming</em>.</p>
+
+<p>The relation between the profit and them is simply:</p>
+
+<script type="math/tex; mode=display">Z = max\{12 P_1 + 12 P_2 + 18 P_3 + 15 P_4 + 12 P_5 + 1 P_6 \}</script>
+
+<p>But we have restriction on the budget per year. Let’s say 6 and let’s
+assume that the unspent budget of one year <script type="math/tex">B_j</script> can be used the next one
+(and let’s assume that the unspent budget is not part of the profit).</p>
+
+<script type="math/tex; mode=display">1.1 P_1 + 4   P_6 +     B_1                         = 6         \\
+2   P_1 + 2.5 P_2 + 2   P_5 + 2.3 P_6 +   B_2       = 6 + B_1   \\
+2   P_2 + 1   P_3 + 2   P_4 + 8   P_5 + 2 P_6 + B_3 = 6 + B_2   \\
+4.1 P_3 + 8   P_4 + 4.4 P_5 +     B_4               = 6 + B_3</script>
+
+<p>This is <em>mixed linear programming</em>: mixing integers (booleans) and real
+arithmetics.</p>
+
+<p>The interesting part is how to model the restrictions between the
+projects using only integers/booleans.</p>
+
+<h2 id="boolean-theory-as-integer-linear-inequalities">Boolean theory as integer linear inequalities</h2>
+
+<p>The company could choose to do project 3 or project 4 but not both.</p>
+
+<p>Becase all the variables <script type="math/tex">P_i</script> can be 0 or 1, this is modeled as:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+P_3 + P_4 <= 1 %]]></script>
+
+<p>In general, <em>zero or one</em> restriction among <script type="math/tex">X_i</script> is modeled as</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\sum_{\forall i} X_i <= 1 %]]></script>
+
+<p>We can tweak this to make an <em>one and only one</em> restriction
+(<script type="math/tex">\sum_{\forall i} X_i = 1</script>), a <em>at least N</em> restriction
+(<script type="math/tex">\sum_{\forall i} X_i >= N</script>),
+a <em>no more than N</em> restriction (<script type="math/tex">% <![CDATA[
+\sum_{\forall i} X_i <= N %]]></script>) and more.</p>
+
+<p>In particular, the <em>at least 1</em> is equivalent to do the boolean <em>or</em>
+operation: <script type="math/tex">X_1 ∨ X_2 ∨ \dots ∨ X_n = Y</script></p>
+
+<p>What about the dependency restrictions? Project 3 depends on 6 and
+project 5 depends on 1 and 2.</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+P_3 <= P_6          \\
+2 P_5 <= P_1 + P_2  \\ %]]></script>
+
+<p>In general, a boolean variable <script type="math/tex">Y</script> depends on <script type="math/tex">N</script> boolean variables
+<script type="math/tex">X_i</script>, then</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+N Y <= \sum_{\forall i} X_i %]]></script>
+
+<p>As before, we can tweak this to make a <em>depends on at least M</em>
+restriction (<script type="math/tex">% <![CDATA[
+M Y <= \sum_{\forall i} X_i %]]></script> with <script type="math/tex">% <![CDATA[
+M < N %]]></script>).</p>
+
+<p>A <script type="math/tex">Y</script> depends on <script type="math/tex">X_i</script> is weaker than <script type="math/tex">X_i ⟹  Y</script> (in the
+former case, <script type="math/tex">Y</script> may be false even of all the dependencies are
+satisfied).</p>
+
+<p>An implication can be modeled as:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+N Y <= \sum_{\forall i} X_i <= (N-1) + Y %]]></script>
+
+<p>This last one can be seen as if <strong>all</strong> the dependencies are set, <script type="math/tex">Y</script>
+is set. In boolean terminology, this is an <em>and</em>:
+<script type="math/tex">X_1 ∧ X_2 ∧ \dots ∧ X_n = Y</script></p>
+
+<h2 id="z3-time">Z3 time!</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">Bools</span><span class="p">,</span> <span class="n">Reals</span><span class="p">,</span> <span class="n">Optimize</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">Optimize</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">P</span> <span class="o">=</span> <span class="n">Bools</span><span class="p">(</span><span class="s">'P0 P1 P2 P3 P4 P5 P6'</span><span class="p">)</span> <span class="c1"># P[0] will not be used
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">B</span> <span class="o">=</span> <span class="n">Reals</span><span class="p">(</span><span class="s">'B0 B1 B2 B3 B4'</span><span class="p">)</span> <span class="c1"># B[0] will not be used
+</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">profit</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">maximize</span><span class="p">(</span><span class="mi">12</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">18</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>Variables <code class="highlighter-rouge">P[0]</code> and <code class="highlighter-rouge">B[0]</code> are not used, they were created just to make
+the <code class="highlighter-rouge">P[i]</code> notation to match with the inequalities of above.</p>
+
+<p>However, I’m not going to let Z3 pick random values for them so I’m
+going to pin them:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="o">...</span>     <span class="n">P</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">False</span><span class="p">,</span>
+<span class="o">...</span>     <span class="n">B</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+<span class="o">...</span> <span class="p">)</span>
+</code></pre></div></div>
+
+<p>The following is a 1-to-1 translation of the inequalities for the budget
+restrictions:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="o">...</span>     <span class="mf">1.1</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span>   <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span>       <span class="n">B</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span><span class="p">,</span>
+<span class="o">...</span>     <span class="mi">2</span>   <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">2.5</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span>   <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="mf">2.3</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span>     <span class="n">B</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">B</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+<span class="o">...</span>     <span class="mi">2</span>   <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>   <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span>   <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="mi">8</span>   <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="n">B</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">B</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+<span class="o">...</span>     <span class="mf">4.1</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="mi">8</span>   <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="mf">4.4</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span>       <span class="n">B</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">B</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="o">...</span> <span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now, I want to set the dependency and conflict restrictions in two
+different ways: using inequalities as described above and using Z3 high
+level abstraction to work with <code class="highlighter-rouge">Bools</code> and its support for <em>boolean
+theories</em>.</p>
+
+<p>Because of this I’m going to preserve a copy of the current
+object <code class="highlighter-rouge">s</code> to restore it later.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">push</span><span class="p">()</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>Note: technically <code class="highlighter-rouge">push()</code> and <code class="highlighter-rouge">pop()</code> also change what solver can be
+used; a safer alternative could be use <code class="highlighter-rouge">Optimize</code>’s deep copy.
+However, currently in Z3 version <code class="highlighter-rouge">4.8.10</code> it is not supported (a bug
+perhaps?)</p>
+</blockquote>
+
+<h2 id="integer-linear-programming">Integer linear programming</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">IntSort</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">to_int</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">IntSort</span><span class="p">()</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="o">...</span>     <span class="c1"># conflict rule: or P3 or P4 but not both
+</span><span class="o">...</span>     <span class="n">to_int</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">+</span> <span class="n">to_int</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span>
+<span class="o">...</span>     <span class="c1"># dependency rule: P3 depends on P6
+</span><span class="o">...</span>     <span class="n">to_int</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">to_int</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">6</span><span class="p">]),</span>
+<span class="o">...</span>     <span class="c1"># dependency rule: P5 depends on P1 and P2
+</span><span class="o">...</span>     <span class="mi">2</span> <span class="o">*</span> <span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">to_int</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">to_int</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="o">...</span> <span class="p">)</span>
+</code></pre></div></div>
+
+<p>As you see, <code class="highlighter-rouge">Bools</code> cannot be added up or compared by inequality
+directly (how would you interpret <code class="highlighter-rouge">True + True</code>?). Instead we <em>cast them</em>
+to integers.</p>
+
+<p>In the other inequalities we didn’t have to because things like
+<code class="highlighter-rouge">2 * P[5]</code> already makes an integer expression; multiplying by 0 or 1
+does not work however.</p>
+
+<blockquote>
+  <p>Note: currently in Z3 version <code class="highlighter-rouge">4.8.10</code> has a <code class="highlighter-rouge">ToInt</code> function but it
+does not work with <code class="highlighter-rouge">Bools</code> (<code class="highlighter-rouge">BoolRef</code> objects).</p>
+</blockquote>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+<span class="n">sat</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">profit</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="mi">55</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">model</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span><span class="s">"Projects:</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="n">f</span><span class="s">"- {P[i]} = {m[P[i]]}</span><span class="se">\n</span><span class="s">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">)])</span>
+<span class="n">Projects</span><span class="p">:</span>
+ <span class="o">-</span> <span class="n">P1</span> <span class="o">=</span> <span class="bp">True</span>
+ <span class="o">-</span> <span class="n">P2</span> <span class="o">=</span> <span class="bp">True</span>
+ <span class="o">-</span> <span class="n">P3</span> <span class="o">=</span> <span class="bp">True</span>
+ <span class="o">-</span> <span class="n">P4</span> <span class="o">=</span> <span class="bp">False</span>
+ <span class="o">-</span> <span class="n">P5</span> <span class="o">=</span> <span class="bp">True</span>
+ <span class="o">-</span> <span class="n">P6</span> <span class="o">=</span> <span class="bp">True</span>
+</code></pre></div></div>
+
+<p>Now let’s see how we can rewrite the inequalities for dependency and
+conflict restrictions.</p>
+
+<h2 id="boolean-theory">Boolean theory</h2>
+
+<p>First we restore the solver to the point before adding those
+inequalities:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Now we use <em>boolean expressions</em> which may make more sense:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">And</span><span class="p">,</span> <span class="n">If</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+<span class="o">...</span>     <span class="c1"># conflict rule: P3 and P4 cannot happen
+</span><span class="o">...</span>     <span class="n">And</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">P</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">==</span> <span class="bp">False</span><span class="p">,</span>
+<span class="o">...</span>     <span class="c1"># If the dependency P6 is not met, P3 must be False,
+</span><span class="o">...</span>     <span class="c1"># otherwise whatever P3 is fine
+</span><span class="o">...</span>     <span class="n">If</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="bp">False</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="bp">False</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span>
+<span class="o">...</span>     <span class="c1"># If the dependencies P1 and P2 are not met, P5 must be False,
+</span><span class="o">...</span>     <span class="c1"># otherwise whatever P5 is fine
+</span><span class="o">...</span>     <span class="n">If</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">P</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">==</span> <span class="bp">False</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="bp">False</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+<span class="o">...</span> <span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+<span class="n">sat</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">profit</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="mi">55</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">model</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span><span class="s">"Projects:</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="n">f</span><span class="s">"- {P[i]} = {m[P[i]]}</span><span class="se">\n</span><span class="s">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">)])</span>
+<span class="n">Projects</span><span class="p">:</span>
+ <span class="o">-</span> <span class="n">P1</span> <span class="o">=</span> <span class="bp">True</span>
+ <span class="o">-</span> <span class="n">P2</span> <span class="o">=</span> <span class="bp">True</span>
+ <span class="o">-</span> <span class="n">P3</span> <span class="o">=</span> <span class="bp">True</span>
+ <span class="o">-</span> <span class="n">P4</span> <span class="o">=</span> <span class="bp">False</span>
+ <span class="o">-</span> <span class="n">P5</span> <span class="o">=</span> <span class="bp">True</span>
+ <span class="o">-</span> <span class="n">P6</span> <span class="o">=</span> <span class="bp">True</span>
+</code></pre></div></div>
+
+<p>Z3 has a bunch of boolean expressions/functions that can replace the
+traditional inequalities: <code class="highlighter-rouge">If</code>, <code class="highlighter-rouge">AtMost</code>, <code class="highlighter-rouge">AtLeast</code>, <code class="highlighter-rouge">Implies</code>, <code class="highlighter-rouge">And</code>,
+<code class="highlighter-rouge">Or</code> and <code class="highlighter-rouge">Not</code>.</p>
+
+
+
+
+    </article>
+    <span class="print-footer">Planning Space Missions with Z3 - May 2, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>CTR Bitflipping</title>
+  <meta name="description" content="No much to explain: encryption does not offer anyprotection against forgery.We saw this in the CBC Bitflipping postand we will see it again here but this tim...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2019/08/22/CTR-Bitfliping.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>CTR Bitflipping</h1>
+<p class="subtitle">August 22, 2019</p>
+
+<p>No much to explain: encryption <strong>does not</strong> offer any
+protection against forgery.</p>
+
+<p>We saw this in the <a href="/book-of-gehn/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
+and we will see it again here but this time it will be
+the CTR encryption mode our victim.<label for="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle" /><span class="marginnote"><strong>– Spoiler Alert! –</strong> </span><!--more--></p>
+
+<!--
+>>> from cryptonita import B, load_bytes     # byexample: +timeout=10
+
+>>> import sys
+>>> sys.path.append("./assets/matasano")
+>>> from challenge import generate_config, enc_ctr, dec_ctr  # byexample: +timeout=10
+
+>>> seed = 20190822   # make the tests 'random' but deterministic
+>>> block_size = 16     # leave this fixed, it is what happen in practice
+-->
+
+<p>Recall from <a href="/book-of-gehn/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
+the scenario where we have a <code class="highlighter-rouge">add_user_data</code> function to <em>user</em>
+profiles:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">cfg</span> <span class="o">=</span> <span class="n">generate_config</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="n">block_size</span><span class="p">,</span>
+<span class="o">...</span>         <span class="n">enc_mode</span><span class="o">=</span><span class="s">'ctr'</span><span class="p">,</span>
+<span class="o">...</span>         <span class="n">prefix</span> <span class="o">=</span> <span class="s">"comment1=cooking</span><span class="si">%20</span><span class="s">MCs;userdata="</span><span class="p">,</span>
+<span class="o">...</span>         <span class="n">posfix</span> <span class="o">=</span> <span class="s">";comment2=</span><span class="si">%20</span><span class="s">like</span><span class="si">%20</span><span class="s">a</span><span class="si">%20</span><span class="s">pound</span><span class="si">%20</span><span class="s">of</span><span class="si">%20</span><span class="s">bacon"</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">add_user_data</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">assert</span> <span class="s">';'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">m</span> <span class="ow">and</span> <span class="s">'='</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">m</span>
+<span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">m</span> <span class="o">+</span> <span class="n">cfg</span><span class="o">.</span><span class="n">posfix</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">enc_ctr</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>We control the user’s data but we cannot control the entire profile.
+In particular, we cannot say that we have the administration role
+adding <code class="highlighter-rouge">admin=true</code>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">is_admin</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">dec_ctr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">b</span><span class="s">'admin=true'</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">b</span><span class="s">';'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In <a href="/book-of-gehn/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
+we saw that CBC does not offer any protection agaisnt foregery and how to
+break it.</p>
+
+<p>In this post we will do the same but attacking the CTR mode.</p>
+
+<p>First we will create our <em>target</em> plaintext and a <em>padding</em> plaintext.
+The former is the plaintext that we <em>want</em> to inject and the latter is
+the one that we are <em>allowed</em> to inject.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s">';admin=true;'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">padding</span> <span class="o">=</span> <span class="s">'A'</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Then we create our profile:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">ctext</span> <span class="o">=</span> <span class="n">add_user_data</span><span class="p">(</span><span class="n">padding</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now, because CTR turns a block cipher into a stream cipher using
+<em>xor</em>, we can <em>patch it</em> trivially:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">patch</span> <span class="o">=</span> <span class="n">target</span> <span class="o">^</span> <span class="n">B</span><span class="p">(</span><span class="n">padding</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The only catch is that we don’t know <em>where</em> our padding is located
+so we don’t know where to patch.</p>
+
+<p>For this we can use <code class="highlighter-rouge">is_admin</code> as an <em>oracle</em> function, trying
+each position and knowning the correct one only when we get
+<code class="highlighter-rouge">is_admin(..) == True</code></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">)</span> <span class="o">-</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">cpatched</span> <span class="o">=</span> <span class="n">ctext</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">ctext</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">l</span><span class="p">]</span> <span class="o">^</span> <span class="n">patch</span><span class="p">)</span> <span class="o">+</span> <span class="n">ctext</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">l</span><span class="p">:]</span>
+<span class="o">...</span>     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">cpatched</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="n">is_admin</span><span class="p">(</span><span class="n">cpatched</span><span class="p">):</span>
+<span class="o">...</span>         <span class="k">print</span><span class="p">(</span><span class="s">"Priv escalated! Patch at </span><span class="si">%</span><span class="s">i"</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+<span class="n">Priv</span> <span class="n">escalated</span><span class="err">!</span> <span class="n">Patch</span> <span class="n">at</span> <span class="mi">32</span>
+</code></pre></div></div>
+
+<p>Broken!
+<a href="https://cryptopals.com/sets/4/challenges/26">CTR bitflipping</a>
+challenge unlock!</p>
+
+
+
+    </article>
+    <span class="print-footer">CTR Bitflipping - August 22, 2019 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

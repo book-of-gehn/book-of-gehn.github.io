@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Reds and Blues Architecture</title>
+  <meta name="description" content="⊕  Original design: a little messy with IO mixed with CPU bounded code.Could we design an architecture that allows us to have insight about theperformance of...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2020/09/09/Reds-and-Blues-Architecture.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Reds and Blues Architecture</h1>
+<p class="subtitle">September 9, 2020</p>
+
+<p><label for="mf-c517aba0e777644668f87b82062240e3" class="margin-toggle  ">⊕</label><input type="checkbox" id="mf-c517aba0e777644668f87b82062240e3" class="margin-toggle  " /><span class="marginnote  "><img style="max-width: 100%;" class="fullwidth" alt="" src="/book-of-gehn/assets/design/reds-and-blues-original.png" />  <br />Original design: a little messy with IO mixed with CPU bounded code.</span></p>
+
+<p>Could we design an architecture that allows us to have insight about the
+performance of the system?</p>
+
+<p>When you spend nights debugging searching where is the bottleneck, it is
+when you blame the you of the past for a so <em>opaque</em> and slow architecture.</p>
+
+<p>This is the proposal of a simple architecture that allows
+introspection and enables – too many times forgotten – basic
+optimizations.<!--more--></p>
+
+<h2 id="a-case-of-study">A case of study</h2>
+
+<p>Imagine that we need to accept requests from a client and forward them
+to a server.</p>
+
+<p>The server will do the real job and it will return us the result of the
+operation which we will store in a database.</p>
+
+<p>But the server is stateful and processing the same request twice will
+corrupt the server.</p>
+
+<p>It is our job to filter the duplicates out.</p>
+
+<p>For that we use the same database to query if the given task was already
+seen or if it is a novel one.</p>
+
+<p>The following pseudo-code shows the proposed solution:</p>
+
+<p><label for="mf-c517aba0e777644668f87b82062240e3" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-c517aba0e777644668f87b82062240e3" class="margin-toggle " /><span class="marginnote "><img style="max-width: 100%;" class="fullwidth" alt="" src="/book-of-gehn/assets/design/reds-and-blues-original.png" />  <br />Original design: a little messy with IO mixed with CPU bounded code.</span></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">receive_request</span><span class="p">()</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">calculate_hash</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">database</span><span class="o">.</span><span class="n">is_present</span><span class="p">(</span><span class="n">h</span><span class="p">):</span>
+        <span class="k">return</span> <span class="c1"># nothing else, drop duplicated
+</span>
+    <span class="n">database</span><span class="o">.</span><span class="n">create_new_request</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">req</span><span class="p">)</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">process_request_and_get_result</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+    <span class="n">database</span><span class="o">.</span><span class="n">save_result</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>When we stress the code we found that it is just not fast enough.</p>
+
+<p>The code uses different resources and all of them need to be up to the
+task.</p>
+
+<p>Because there is no separation between them, it is hard to know where is
+the bottleneck.</p>
+
+<h2 id="reds-and-blues">Reds and Blues</h2>
+
+<p>We can refactor the code into several threads allowing each to interact
+with a single resource.</p>
+
+<p>In particular we want to distinguish which threads do IO operations and which
+don’t.</p>
+
+<p>The threads will communicate each other with queues.</p>
+
+<p>The objective is <em>not</em> to run code concurrently to booster the speed but
+to <em>make explicit the implicit</em>.</p>
+
+<p>And the queues will provide us that insight.</p>
+
+<p>But first, this is the diagram of the refactored code:</p>
+
+<figure><figcaption><span>Split the code into 5 threads connected with queues. From left to right,
+up to down: R, H, N, P and S.
+<br />
+Each thread and arrow is colored: reds for IO code and blues for CPU
+code.</span></figcaption><img src="/book-of-gehn/assets/design/reds-and-blues-redesigned.png" /></figure>
+
+<p>Consider the queue between the thread that receives the requests (R) and
+the thread that calculates the hash of it (H).</p>
+
+<p>If the queue starts to fill up that would mean that or we are receiving
+too many requests or that the hash is taking more than than expected.</p>
+
+<p>The queue does not tell exactly where is the problem but <em>cuts and
+reduces</em> the search area.</p>
+
+<p>Some other examples:</p>
+
+<ul>
+  <li>if the threads N’s and S’s queues are getting full, that may indicate
+a problem with the database. Slow queries? Slow disk?</li>
+  <li>if instead the thread P is the bottleneck, then the server is the
+problem. Slow network? Too chatty protocol? A server-side problem?</li>
+</ul>
+
+<h2 id="the-queues">The queues</h2>
+
+<p>To make any insight the queues must track:</p>
+
+<p><label for="mf-281f20833cb43e4fcb40920dfa571ba5" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-281f20833cb43e4fcb40920dfa571ba5" class="margin-toggle " /><span class="marginnote "><img style="max-width: 60%;" class="fullwidth" alt="" src="/book-of-gehn/assets/design/comm/queues-stats.png" />  <br />Metrics: in and out over time, plus drops and queue's length. When
+two queues are connected, one of the metrics can be deduced from the
+other.</span></p>
+
+<ul>
+  <li>items pushed into the queue over time (throughput of the producer)</li>
+  <li>items popped from the queue over time (throughput of the consumer)</li>
+  <li>the occupancy of the queue (also known as the length of the queue)</li>
+  <li>items dropped due the queue was full</li>
+</ul>
+
+<p>In a architecture where there are multiple queues, it is generally
+redundant to have a count of the items pushed and the items popped.</p>
+
+<p>We could track only the items pushed and use that metric for the exit
+queue to estimate the items popped from the enter queue.</p>
+
+<p>For example, if the thread H is pushing 10k items per second in the exit
+queue (that connects H with N), we can conclude that H is popping 10k items
+per seconds from its enter queue (that connects R with H).</p>
+
+<p><label for="mf-7ab23d6394645fa9e0949d9dc148e056" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-7ab23d6394645fa9e0949d9dc148e056" class="margin-toggle " /><span class="marginnote "><img style="max-width: 40%;" class="fullwidth" alt="" src="/book-of-gehn/assets/stuff/reallycoolstuff.png" />  <br /></span></p>
+
+<p>For analyzing the performance
+<a href="http://www.brendangregg.com/usemethod.html">Brendan Gregg’s USE method</a>
+states that every resource must be characterized by three metrics:</p>
+
+<ul>
+  <li>utilization: average time that the resource was busy</li>
+  <li>saturation: degree of extra work that the resource didn’t handle,
+often queued</li>
+  <li>errors: well, that, errors, like drops.</li>
+</ul>
+
+<p>There are two categories of resources which differ in the definition of
+<em>utilization</em>:</p>
+
+<ul>
+  <li>IO resources, like network, disk: the utilization is the amount of
+time that the resource was busy.</li>
+  <li>Capacity resources, like the memory: the utilization in this case is
+the amount of memory in use.</li>
+</ul>
+
+<p>This is more generic way to analysis the performance of a system: using
+queues for statistics is a particular case.</p>
+
+<p>But there is more…</p>
+
+<h2 id="batchbulk-for-free">Batch/Bulk for free</h2>
+
+<p><label for="mf-e52f0d894e8b298f95ffdd338fa34654" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-e52f0d894e8b298f95ffdd338fa34654" class="margin-toggle " /><span class="marginnote "><img style="max-width: 60%;" class="fullwidth" alt="" src="/book-of-gehn/assets/design/comm/chatty.png" />  <br />Each message requires an encapsulation header and a <em>syscall</em> to send it.
+Costs that you may per message; more messages means more you pay.</span></p>
+
+<p>The explicit queues allows to delay the processing but in exchange they
+allow to process the items in batch or bulk operations.</p>
+
+<p>A classic example would be the database: instead of querying each time
+we could query every 1k items doing a single bulk operation.</p>
+
+<p>For example, we could save 1k results in a single operation.</p>
+
+<p>This not only save bandwidth with the database but also IO operations.</p>
+
+<p><label for="mf-5d01a65f89c4de875e29e386764cc57e" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-5d01a65f89c4de875e29e386764cc57e" class="margin-toggle " /><span class="marginnote "><img style="max-width: 60%;" class="fullwidth" alt="" src="/book-of-gehn/assets/design/comm/less-chatty.png" />  <br />Less is more. Also it enables specific per-bundle compression.</span></p>
+
+<p>The communication with the server could be also improved. Instead of
+sending a request per work item, we could send them in packs: less
+messages going back and forward through the network it is always a good
+deal.</p>
+
+<p>Less chatty communication means more time and space for the real data,
+a better channel utilization.</p>
+
+<h2 id="asynchronous-for-free">Asynchronous for free</h2>
+
+<p>And talking about network, sending a request and <em>waiting</em> for the
+response is incredible slow.</p>
+
+<p><label for="mf-9d739157461ce1da740357d1ae16d884" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-9d739157461ce1da740357d1ae16d884" class="margin-toggle " /><span class="marginnote "><img style="max-width: 60%;" class="fullwidth" alt="" src="/book-of-gehn/assets/design/comm/async.png" />  <br />While a bulk calls amortize the cost per message, asynchronous
+calls make more use of the capacity of the network so you can send
+more in the same time.</span></p>
+
+<p>We can send the requests <em>asynchronously</em> to the server without waiting
+for the responses, and receive them later.</p>
+
+<p>This is perfectly possible because we put queues between who trigger the
+request (N) and who do something with the response (S).</p>
+
+<p>The architecture supports asynchronous mechanisms out of the box.</p>
+
+<h2 id="everything-is-violet">Everything is violet</h2>
+
+<p>We categorized the threads in threads with high IO and threads with high
+CPU but it is important to highlight the fact that all the threads are
+running in the same machine with <strong>shared</strong> resources.</p>
+
+<p>A CPU thread could end up doing a lot of IO because the system ran out
+of memory and it is swapping.</p>
+
+<p>A IO thread that sends requests to the network may use a lot of CPU because
+the serialization of the request is expensive.</p>
+
+<p>The queues provide insight but they must be taken as a complement of
+other metrics of the system.</p>
+
+<p>At the end, everything is tainted with reds <em>and</em> blues.</p>
+
+<h2 id="further-readings">Further readings</h2>
+
+<ul>
+  <li><a href="http://www.brendangregg.com/usemethod.html">Brendan Gregg’s USE method</a></li>
+  <li><a href="https://www.youtube.com/watch?v=K9w2cipqfvc">Performance Analysis: The USE Method</a></li>
+</ul>
+
+
+
+    </article>
+    <span class="print-footer">Reds and Blues Architecture - September 9, 2020 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

