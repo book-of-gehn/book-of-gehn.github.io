@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2019/10/27/Writeup-EKO2019-RPG-Part-I-Reversing.html">
+  <link rel="canonical" href="/articles/2019/10/27/Writeup-EKO2019-RPG-Part-I-Reversing.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -83,7 +83,7 @@ and defend from attacks of monsters.</p>
 
 <p>Let’s see if we can know how it works.<!--more--></p>
 
-<p>It is a 64 bits ELF <a href="book-of-gehn/assets/eko2019-writeups/rpg-dir/rpg">binary</a>:</p>
+<p>It is a 64 bits ELF <a href="assets/eko2019-writeups/rpg-dir/rpg">binary</a>:</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>file rpg                      <span class="c"># byexample: +norm-ws</span>
 rpg: ELF 64-bit LSB executable, x86-64, version 1 <span class="o">(</span>GNU/Linux<span class="o">)</span>,
@@ -125,7 +125,7 @@ of what it does:</p>
 if the player was created selecting 0 again yields a
 <code class="highlighter-rouge">User created, first delete it.</code> </span></p>
 
-<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/ff4c7d7469a6cfc5ffc34005ab078a2c1c7ac9aa.svg" type="image/svg+xml"></object></figure>
+<figure><figcaption><span></span></figcaption><object align="middle" data="/uml/ff4c7d7469a6cfc5ffc34005ab078a2c1c7ac9aa.svg" type="image/svg+xml"></object></figure>
 
 <p>Other strings shown up. Of course, I’m speculating the <em>conversion
 specifier</em> like <code class="highlighter-rouge">%s</code> and <code class="highlighter-rouge">%d</code>:</p>
@@ -143,7 +143,7 @@ found.</p>
 <figure><figcaption><span>Read-only <a href="https://en.wikipedia.org/wiki/Data_segment">.rodata</a>
 section where the strings of the game are stored: the
 ones that we found with <code class="highlighter-rouge">strings</code>, the ones that we saw running the program
-and some others that we did not spot like <code class="highlighter-rouge">"date +%s"</code></span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/string_address.png" /></figure>
+and some others that we did not spot like <code class="highlighter-rouge">"date +%s"</code></span></figcaption><img src="/assets/eko2019-writeups/rpg-dir/string_address.png" /></figure>
 
 <h2 id="guessing-functions-from-their-arguments">Guessing Functions from their Arguments</h2>
 
@@ -152,7 +152,7 @@ to each string selecting the label (<code class="highlighter-rouge">aMonsterSAtt
 
 <figure><figcaption><span>Hint: the <code class="highlighter-rouge">mov     eax, 0</code> before the call; the calling
 convention says that the <em>variadic</em> function (like <code class="highlighter-rouge">printf</code>) will
-receive 0 floating point arguments.</span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/monster_attack_loc.png" /></figure>
+receive 0 floating point arguments.</span></figcaption><img src="/assets/eko2019-writeups/rpg-dir/monster_attack_loc.png" /></figure>
 
 <p>The de facto
 <a href="https://en.wikipedia.org/wiki/X86_calling_conventions">calling convention</a>
@@ -167,9 +167,9 @@ parameters are passed to the callee in registers <code class="highlighter-rouge"
 <p>This is what we got:</p>
 
 <figure><figcaption><span>Press <code class="highlighter-rouge">n</code> on top of a label we can change the name; press <code class="highlighter-rouge">:</code>
-we can add a comment on that line.</span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/monster_attack_loc_labeled.png" /></figure>
+we can add a comment on that line.</span></figcaption><img src="/assets/eko2019-writeups/rpg-dir/monster_attack_loc_labeled.png" /></figure>
 
-<p><label for="mf-e7596050d430b5797f3e4f8ec21c09f5" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-e7596050d430b5797f3e4f8ec21c09f5" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="SecondIndirection" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/second_indirection.png" />  <br />To get the pointer to the players name the code does a <em>second</em> indirection:
+<p><label for="mf-e7596050d430b5797f3e4f8ec21c09f5" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-e7596050d430b5797f3e4f8ec21c09f5" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="SecondIndirection" src="/assets/eko2019-writeups/rpg-dir/second_indirection.png" />  <br />To get the pointer to the players name the code does a <em>second</em> indirection:
 possibly we are dealing with an attribute of a <code class="highlighter-rouge">struct</code>.</span></p>
 
 <p><code class="highlighter-rouge">printf</code>-like function call with four arguments: the format string, the
@@ -177,7 +177,7 @@ name of the monster, name of the player and the damage.</p>
 
 <p>What about the code that <em>reads</em> the player’s name?</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/enter_player_name_loc.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/eko2019-writeups/rpg-dir/enter_player_name_loc.png" /></figure>
 
 <p>Three calls happen after the print of the message. One of them should be
 a <code class="highlighter-rouge">read</code> like function:</p>
@@ -210,7 +210,7 @@ the trick.</p>
 <figure><figcaption><span>The last instruction marks that <em>the user was created</em> in a global variable.
 <br />
 <code class="highlighter-rouge">cs:is_user_created</code> is tested against 0 in several
-places to check if the user was created or not.</span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/enter_player_name_loc_labeled.png" /></figure>
+places to check if the user was created or not.</span></figcaption><img src="/assets/eko2019-writeups/rpg-dir/enter_player_name_loc_labeled.png" /></figure>
 
 <h2 id="keep-guessing">Keep Guessing</h2>
 
@@ -222,12 +222,12 @@ lives of the player at the offset 0:</p>
 mov     rax, [rbp+player_struct] ; player's lives (= 16)
 </code></pre>
 
-<p><label for="mf-82fab0e55a05443d79f82ffd82e3fbb2" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-82fab0e55a05443d79f82ffd82e3fbb2" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="DeletePlayer" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/delete_player_free.png" />  <br />No, there are not memory leaks here. The <em>delete player</em> function is a good boy.</span></p>
+<p><label for="mf-82fab0e55a05443d79f82ffd82e3fbb2" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-82fab0e55a05443d79f82ffd82e3fbb2" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="DeletePlayer" src="/assets/eko2019-writeups/rpg-dir/delete_player_free.png" />  <br />No, there are not memory leaks here. The <em>delete player</em> function is a good boy.</span></p>
 
 <p>If this is correct, <code class="highlighter-rouge">mov     cs:player_struct, rax</code> saves the <em>pointer</em>
 to the struct globally, struct allocated at the begin of the block.</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/enter_player_name_loc_struct_labeled.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/eko2019-writeups/rpg-dir/enter_player_name_loc_struct_labeled.png" /></figure>
 
 <p>The key note here is that <em>we don’t know</em>. We can just guess.</p>
 
@@ -244,11 +244,11 @@ call is made setting the <em>syscall number</em> in the <code class="highlighter
 <br />
 Full of shifts, multiplications and <em>magic numbers</em> like
 <code class="highlighter-rouge">834E0B5Fh</code> and <code class="highlighter-rouge">41C64E6Dh</code>? That looks like a <em>congruent</em> PRNG.
-That is how I found <code class="highlighter-rouge">srand</code>.</span></figcaption><img src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/game_start_loc.png" /></figure>
+That is how I found <code class="highlighter-rouge">srand</code>.</span></figcaption><img src="/assets/eko2019-writeups/rpg-dir/game_start_loc.png" /></figure>
 
 <p>I bet this is something like <code class="highlighter-rouge">srand(time(NULL) &gt;&gt; 8)</code>.</p>
 
-<p><label for="mf-26f80b4328a176d70fd9df25fef4ee3c" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-26f80b4328a176d70fd9df25fef4ee3c" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Rand" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/rand_loc.png" />  <br /></span></p>
+<p><label for="mf-26f80b4328a176d70fd9df25fef4ee3c" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-26f80b4328a176d70fd9df25fef4ee3c" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Rand" src="/assets/eko2019-writeups/rpg-dir/rand_loc.png" />  <br /></span></p>
 
 <p>We found <code class="highlighter-rouge">srand</code>, and we found the <em>global state</em> of the PRNG at <code class="highlighter-rouge">6CC100h</code>,
 now we can find who <em>updates</em> that global state: the guy will probably be
@@ -256,7 +256,7 @@ the <code class="highlighter-rouge">rand</code> function.</p>
 
 <h2 id="nice-findings">Nice Findings</h2>
 
-<p><label for="mf-a06a88030ee3907312c318370e7c21ba" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-a06a88030ee3907312c318370e7c21ba" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="GetTime" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/get_time_loc.png" />  <br /></span>
+<p><label for="mf-a06a88030ee3907312c318370e7c21ba" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-a06a88030ee3907312c318370e7c21ba" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="GetTime" src="/assets/eko2019-writeups/rpg-dir/get_time_loc.png" />  <br /></span>
 The <em>get time</em> function is quite short: it is just a call to the <code class="highlighter-rouge">date</code> program
 and no command injection is possible.</p>
 
@@ -272,7 +272,7 @@ like <code class="highlighter-rouge">srand(time())</code>.</li>
 <p>The <em>player attack</em> code has a preamble of several operations but after that,
 there is a interesting section.</p>
 
-<p><label for="mf-bb35bb51a5104c622725119bdcbc2e19" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-bb35bb51a5104c622725119bdcbc2e19" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="PlayerAttack" src="/book-of-gehn/assets/eko2019-writeups/rpg-dir/player_attack_loc.png" />  <br /></span></p>
+<p><label for="mf-bb35bb51a5104c622725119bdcbc2e19" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-bb35bb51a5104c622725119bdcbc2e19" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="PlayerAttack" src="/assets/eko2019-writeups/rpg-dir/player_attack_loc.png" />  <br /></span></p>
 
 <p>It choose a monster name and if it is <code class="highlighter-rouge">NULL</code>, jumps to a block that copy
 the player’s name into the heap and <em>stores</em> it in the array that initially
@@ -323,7 +323,7 @@ plan the attack.</li>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2020/10/11/Kasiski-Test-Part-I.html">
+  <link rel="canonical" href="/articles/2020/10/11/Kasiski-Test-Part-I.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -82,15 +82,15 @@
 <a href="https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher">Vigenere cipher</a>
 consists in finding the length of the key.</p>
 
-<p><label for="mf-d8d9b4cce50aee3ec67346ab92c66548" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-d8d9b4cce50aee3ec67346ab92c66548" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img src="/book-of-gehn/assets/kasiski/kasiski_scan_positions.png" />  <br /></span></p>
+<p><label for="mf-96d189137e158c8bfdda21446922b64c" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-96d189137e158c8bfdda21446922b64c" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img src="/assets/kasiski/kasiski_scan_positions.png" />  <br /></span></p>
 
 <p>We discussed this in the
-<a href="/book-of-gehn/articles/2018/05/01/Breaking-Vigenere.html">breaking Vigenere</a>
+<a href="/articles/2018/05/01/Breaking-Vigenere.html">breaking Vigenere</a>
 post.</p>
 
 <p>In that occasion we used the
 <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming distance</a> and
-the <a href="/book-of-gehn/articles/2019/10/04/Index-of-Coincidence.html">Index of Coincidence</a>.</p>
+the <a href="/articles/2019/10/04/Index-of-Coincidence.html">Index of Coincidence</a>.</p>
 
 <p>But another method existed much before the development of the IC around 1922.</p>
 
@@ -215,7 +215,7 @@ ngram in the text.</p>
 
 <p>Focus only on the ngrams of 2 characters for now.</p>
 
-<p><label for="mf-8c277780c7574cdaab2a355d0f29039e" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-8c277780c7574cdaab2a355d0f29039e" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/kasiski_scan_count.png" /></span></p>
+<p><label for="mf-8c277780c7574cdaab2a355d0f29039e" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-8c277780c7574cdaab2a355d0f29039e" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/assets/kasiski/kasiski_scan_count.png" /></span></p>
 
 <p>We need to count how many instances of the same ngram are, so we can
 know which are unique; and we need to track their position, so
@@ -227,7 +227,7 @@ ngram you will have to store twice the source string).</p>
 <p>A simple solution is to use an id: different ngrams will have different
 ids while the instances of the <em>same</em> ngram will have the same id.</p>
 
-<figure><figcaption><span></span></figcaption><img style="max-width:45%;" src="/book-of-gehn/assets/kasiski/kasiski_scan_positions.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="max-width:45%;" src="/assets/kasiski/kasiski_scan_positions.png" /></figure>
 
 <p>The following Python fragment summarizes the above:</p>
 
@@ -243,7 +243,7 @@ ids while the instances of the <em>same</em> ngram will have the same id.</p>
     <span class="n">ngram_cnt_by_id</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
 </code></pre></div></div>
 
-<p><label for="mf-3dfbcfb6f6d4f6825eea9bcbb994fbfe" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-3dfbcfb6f6d4f6825eea9bcbb994fbfe" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/as_ngram_repeated_positions.png" />  <br />Input-size/time-taken relationship of <code class="highlighter-rouge">as_ngram_repeated_positions</code>.
+<p><label for="mf-3dfbcfb6f6d4f6825eea9bcbb994fbfe" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-3dfbcfb6f6d4f6825eea9bcbb994fbfe" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/assets/kasiski/as_ngram_repeated_positions.png" />  <br />Input-size/time-taken relationship of <code class="highlighter-rouge">as_ngram_repeated_positions</code>.
  <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
 </span></p>
 
@@ -261,7 +261,7 @@ any unique ngram (those that have a counter of less than 2).</p>
                       <span class="k">if</span> <span class="n">ngram_cnt_by_id</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
 </code></pre></div></div>
 
-<figure><figcaption><span></span></figcaption><img style="max-width:60%;" src="/book-of-gehn/assets/kasiski/kasiski_scan_count_filter.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="max-width:60%;" src="/assets/kasiski/kasiski_scan_count_filter.png" /></figure>
 
 <p>The final result is a list of tuples <code class="highlighter-rouge">(position, id)</code> with the
 positions of the ngrams and their identifiers <em>sorted</em> by their
@@ -282,7 +282,7 @@ and build a ngram of <code class="highlighter-rouge">n+1</code> bytes at <code c
 
 <p>In other words, they are consecutive.</p>
 
-<figure><figcaption><span></span></figcaption><img style="max-width:60%;" src="/book-of-gehn/assets/kasiski/kasiski_merge.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="max-width:60%;" src="/assets/kasiski/kasiski_merge.png" /></figure>
 
 <p>A merged ngram not necessary means that it is a repeated ngram but
 we know that any repeated ngram will be a merged one.</p>
@@ -313,7 +313,7 @@ we know that any repeated ngram will be a merged one.</p>
 <p>During the scan we also count how many ngrams we built: unique
 ngrams are filtered later in linear time removing the false positives.</p>
 
-<p><label for="mf-0466b2ac93c53d43876c9893ceda0d57" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-0466b2ac93c53d43876c9893ceda0d57" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/merge_overlaping.png" />  <br />Input-size/time-taken relationship of <code class="highlighter-rouge">merge_overlaping</code>.
+<p><label for="mf-0466b2ac93c53d43876c9893ceda0d57" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-0466b2ac93c53d43876c9893ceda0d57" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/assets/kasiski/merge_overlaping.png" />  <br />Input-size/time-taken relationship of <code class="highlighter-rouge">merge_overlaping</code>.
  <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
 </span></p>
 
@@ -340,7 +340,7 @@ Vigenere was aligned.</p>
 
 <p>The distance should be then a multiple of the length of the key.</p>
 
-<p><label for="mf-2c67b39cb16460c7f5e089e831cf95e4" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-2c67b39cb16460c7f5e089e831cf95e4" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/kasiski_pos_grouped.png" /></span></p>
+<p><label for="mf-2c67b39cb16460c7f5e089e831cf95e4" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-2c67b39cb16460c7f5e089e831cf95e4" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/assets/kasiski/kasiski_pos_grouped.png" /></span></p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># group first
 </span><span class="n">pos_grouped</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
@@ -354,7 +354,7 @@ Vigenere was aligned.</p>
     <span class="n">delta_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">Counter</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
 </code></pre></div></div>
 
-<p><label for="mf-46e954f537e253f23e73044c8610e9aa" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-46e954f537e253f23e73044c8610e9aa" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/book-of-gehn/assets/kasiski/kasiski_distances.png" />  <br /></span></p>
+<p><label for="mf-46e954f537e253f23e73044c8610e9aa" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-46e954f537e253f23e73044c8610e9aa" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/assets/kasiski/kasiski_distances.png" />  <br /></span></p>
 
 <p>We simplify the maths and calculate then the difference
 between <em>consecutive</em> positions for a given ngram.</p>
@@ -406,14 +406,14 @@ quadratic.</p>
 Expected case. <code class="highlighter-rouge">frequency_of_deltas</code> has a linear response when
 the size of the input increase linearly.
  <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
-</span></figcaption><img src="/book-of-gehn/assets/kasiski/frequency_of_deltas.png" /></figure>
+</span></figcaption><img src="/assets/kasiski/frequency_of_deltas.png" /></figure>
 
 <figure><figcaption><span><br />
 Worst case. <code class="highlighter-rouge">frequency_of_deltas</code> has a quadratic response when
 the size of the input increase linearly. Even with this result,
 it is better than cubic the naive implementation.
  <a href="assets/kasiski/perf_kasiski.py"><i class="fab fa-github"></i> code</a>
-</span></figcaption><img src="/book-of-gehn/assets/kasiski/frequency_of_deltas_worst_case.png" /></figure>
+</span></figcaption><img src="/assets/kasiski/frequency_of_deltas_worst_case.png" /></figure>
 
 <h2 id="final-thoughts">Final thoughts</h2>
 
@@ -427,8 +427,8 @@ gap that it should be a multiple of the length of the key.</p>
 <h2 id="references">References</h2>
 
 <ul>
-  <li><a href="/book-of-gehn/articles/2018/05/01/Breaking-Vigenere.html">Breaking Vigenere</a>.</li>
-  <li><a href="/book-of-gehn/articles/2019/10/04/Index-of-Coincidence.html">Index of Coincidence</a>.</li>
+  <li><a href="/articles/2018/05/01/Breaking-Vigenere.html">Breaking Vigenere</a>.</li>
+  <li><a href="/articles/2019/10/04/Index-of-Coincidence.html">Index of Coincidence</a>.</li>
   <li><a href="https://wiki.python.org/moin/TimeComplexity">Python Time Complexity</a>.</li>
   <li><a href="https://en.wikipedia.org/wiki/Dynamic_programming">Dynamic Programming</a>.</li>
   <li><a href="assets/kasiski/MatthewBerntsenBUThesis.7z">Automating the Cracking of Simple Ciphers, by Matthew C. Berntsen</a>.</li>
@@ -445,7 +445,7 @@ gap that it should be a multiple of the length of the key.</p>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

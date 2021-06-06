@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2020/04/28/Lock-Free-Queue-Part-II.html">
+  <link rel="canonical" href="/articles/2020/04/28/Lock-Free-Queue-Part-II.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -83,7 +83,7 @@ is tricky, adding more producers and consumers moves this
 to the next level.</p>
 
 <p>This is the continuation of the
-<a href="/book-of-gehn/articles/2020/03/22/Lock-Free-Queue-Part-I.html">lock-free single-producer single-consumer queue</a><!--more--></p>
+<a href="/articles/2020/03/22/Lock-Free-Queue-Part-I.html">lock-free single-producer single-consumer queue</a><!--more--></p>
 
 <p>Not only we need to prevent race conditions between the producers and
 the consumers but also between producers and between consumers.</p>
@@ -117,7 +117,7 @@ compete in a race to put what they <em>think</em> that it is the new value of he
 <p>More over the space reserved for both will overlap leading
 to a memory corruption.</p>
 
-<figure><figcaption><span>Two producers racing for reserving the same space.</span></figcaption><img src="/book-of-gehn/assets/mpmc-queue/reserve-race-condition.png" /></figure>
+<figure><figcaption><span>Two producers racing for reserving the same space.</span></figcaption><img src="/assets/mpmc-queue/reserve-race-condition.png" /></figure>
 
 <p>What we need is the load, compute and store on <code class="highlighter-rouge">q-&gt;prod_head</code>
 as a <em>single atomic operation</em>. This is called <em>read-modify-write</em> operation.</p>
@@ -215,7 +215,7 @@ didn’t <em>released</em> the memory reserved.</p>
 <figure><figcaption><span>Two producers racing for marking the data as ready.
 <br />
 If the producer 2 updates the tail before the producer 1, the
-consumers may read that the producer 1 may not had written yet.</span></figcaption><img src="/book-of-gehn/assets/mpmc-queue/ready-race-condition.png" /></figure>
+consumers may read that the producer 1 may not had written yet.</span></figcaption><img src="/assets/mpmc-queue/ready-race-condition.png" /></figure>
 
 <p>What we need is to enforce an order: all the previous <code class="highlighter-rouge">push()</code> must
 complete before a producer update the tail.</p>
@@ -249,7 +249,7 @@ at the new head.</p>
 
 <p>The code can be found in <a href="https://github.com/eldipa/loki">the loki library</a>.</p>
 
-<figure class="fullwidth"><img src="/book-of-gehn/assets/mpmc-queue/relativity-quantic-concurrent-programming.png" /><figcaption></figcaption></figure>
+<figure class="fullwidth"><img src="/assets/mpmc-queue/relativity-quantic-concurrent-programming.png" /><figcaption></figcaption></figure>
 
 <h2 id="future-research-on-the-busy-waits">Future research on the busy waits</h2>
 
@@ -339,7 +339,7 @@ for DPDK’s <a href="http://git.dpdk.org/dpdk/tree/lib/librte_ring/rte_ring_c11
 
 <p>Also <a href="https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html">GCC Atomics, gcc.gnu.org</a>
 and my previous post
-<a href="/book-of-gehn/articles/2020/03/22/Lock-Free-Queue-Part-I.html">lock-free single-producer single-consumer queue</a>.</p>
+<a href="/articles/2020/03/22/Lock-Free-Queue-Part-I.html">lock-free single-producer single-consumer queue</a>.</p>
 
 <p>Also:</p>
 
@@ -362,7 +362,7 @@ and my previous post
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

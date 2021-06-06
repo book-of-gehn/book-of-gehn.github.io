@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2021/03/07/Quiescent-Environment.html">
+  <link rel="canonical" href="/articles/2021/03/07/Quiescent-Environment.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -143,7 +143,7 @@ tuning guides.</li>
 recompile.</li>
   <li>prefer deterministic (like counting the elapsed time) over sampling, specially for
 small-fast function targets; sometimes sampling is the only way however.</li>
-  <li>use a <a href="/book-of-gehn/articles/2021/02/27/High-Precision-Timers.html">high precision clock</a>.</li>
+  <li>use a <a href="/articles/2021/02/27/High-Precision-Timers.html">high precision clock</a>.</li>
   <li>perhaps a <a href="https://github.com/plasma-umass/coz">causal profiler
 (coz)</a>. See
 <a href="https://easyperf.net/blog/2020/02/26/coz-vs-sampling-profilers">post</a>
@@ -181,7 +181,7 @@ interruptions) and more.</p>
 
 <p>Graphical interfaces, network traffic and disk usage add to the mix.</p>
 
-<figure class="fullwidth"><img src="/book-of-gehn/assets/timing-assets/all-services-up-and-down.svg" /><figcaption>The elapsed time of `foo()` executed 1000 times and sorted
+<figure class="fullwidth"><img src="/assets/timing-assets/all-services-up-and-down.svg" /><figcaption>The elapsed time of `foo()` executed 1000 times and sorted
 from the smallest value to the largest. The last 10 values were drop
 (not shown); numbers are in nanoseconds. On the left the experiment
 was done in a machine without any modification; on the right all the
@@ -263,9 +263,9 @@ some instructions from <code class="highlighter-rouge">foo()</code> <em>before</
 <p>Even if <code class="highlighter-rouge">foo()</code> is not inline, code <em>before</em> the <code class="highlighter-rouge">begin</code> may be
 executed <em>after</em> it (and the same for the <code class="highlighter-rouge">end</code> mark).</p>
 
-<p><label for="mn-8deee7756f840e019fa18f4da18cddad" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-8deee7756f840e019fa18f4da18cddad" class="margin-toggle" /><span class="marginnote">I wrote a few posts about this: a lock free queue <a href="/book-of-gehn/articles/2020/03/22/Lock-Free-Queue-Part-I.html">part
+<p><label for="mn-0d9e0af75a1955fa2cd95154b312475e" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-0d9e0af75a1955fa2cd95154b312475e" class="margin-toggle" /><span class="marginnote">I wrote a few posts about this: a lock free queue <a href="/articles/2020/03/22/Lock-Free-Queue-Part-I.html">part
 1</a>,
-<a href="/book-of-gehn/articles/2020/04/28/Lock-Free-Queue-Part-II.html">part
+<a href="/articles/2020/04/28/Lock-Free-Queue-Part-II.html">part
 2</a>.
  </span></p>
 
@@ -275,7 +275,7 @@ executed <em>after</em> it (and the same for the <code class="highlighter-rouge"
 
 <h2 id="precision-of-the-measurement">Precision of the measurement</h2>
 
-<p>Getting the time is not cost-free. Even the most <a href="/book-of-gehn/articles/2021/02/27/High-Precision-Timers.html">precise
+<p>Getting the time is not cost-free. Even the most <a href="/articles/2021/02/27/High-Precision-Timers.html">precise
 clocks</a> like
 <code class="highlighter-rouge">clock_gettime</code> adds some delay.</p>
 
@@ -371,7 +371,7 @@ is very common and almost unavoidable.</p>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

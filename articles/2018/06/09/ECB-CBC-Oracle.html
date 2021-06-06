@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2018/06/09/ECB-CBC-Oracle.html">
+  <link rel="canonical" href="/articles/2018/06/09/ECB-CBC-Oracle.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -84,7 +84,7 @@ and how we can build
 to distinguish ECB from CBC using
 <a href="https://pypi.org/project/cryptonita/">cryptonita</a></p>
 
-<p>This will be the bases for <a href="/book-of-gehn/articles/2018/06/10/Breaking-ECB.html">breaking ECB</a>
+<p>This will be the bases for <a href="/articles/2018/06/10/Breaking-ECB.html">breaking ECB</a>
 in a later post.<label for="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle" /><span class="marginnote"><strong>– Spoiler Alert! –</strong> </span>.<!--more--></p>
 
 <h3 id="pkcs7-padding"><code class="highlighter-rouge">PKCS#7</code> padding</h3>
@@ -122,7 +122,7 @@ to XOR the current plaintext block before encrypting it.</p>
 <a href="https://en.wikipedia.org/wiki/Initialization_vector">Initialization Vector</a>
 for the XOR operation.</p>
 
-<figure><figcaption><span></span></figcaption><img style="max-width:60%;" alt="CBC Enc" src="/book-of-gehn/assets/matasano/cbc-enc.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="max-width:60%;" alt="CBC Enc" src="/assets/matasano/cbc-enc.png" /></figure>
 
 <p>This IV should be random but for the sake of the test it
 will be full of zeros.</p>
@@ -142,7 +142,7 @@ will be full of zeros.</p>
 <span class="n">b</span><span class="s">"I'm back and I'm ringin' the bell&lt;...&gt;Play that funky music </span><span class="se">\n</span><span class="s">"</span>
 </code></pre></div></div>
 
-<figure><figcaption><span><br />At difference with the encryption, the decryption of one block doesn't depend of any other: you can decrypt any block at random or in parallel.</span></figcaption><img style="max-width:60%;" alt="CBC Dec" src="/book-of-gehn/assets/matasano/cbc-dec.png" /></figure>
+<figure><figcaption><span><br />At difference with the encryption, the decryption of one block doesn't depend of any other: you can decrypt any block at random or in parallel.</span></figcaption><img style="max-width:60%;" alt="CBC Dec" src="/assets/matasano/cbc-dec.png" /></figure>
 
 <h3 id="generating-secrets">Generating secrets</h3>
 
@@ -282,7 +282,7 @@ otherwise CBC (so we will use <code class="highlighter-rouge">has_duplicates</co
 
 <h2 id="break-it">Break it!</h2>
 
-<p>Of course, <a href="/book-of-gehn/articles/2018/06/10/Breaking-ECB.html">keep reading.</a></p>
+<p>Of course, <a href="/articles/2018/06/10/Breaking-ECB.html">keep reading.</a></p>
 
 
 
@@ -295,7 +295,7 @@ otherwise CBC (so we will use <code class="highlighter-rouge">has_duplicates</co
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

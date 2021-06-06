@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2020/11/19/Qubes-Networking.html">
+  <link rel="canonical" href="/articles/2020/11/19/Qubes-Networking.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -83,7 +83,7 @@ to isolate more-or-less
 trusted <em>application</em> virtual machines (App) from absolute untrusted
 <em>network</em> VMs (Net).</p>
 
-<p><label for="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="IPs" src="/book-of-gehn/assets/qubes/qubes-ips.png" />  <br /></span></p>
+<p><label for="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="IPs" src="/assets/qubes/qubes-ips.png" />  <br /></span></p>
 
 <p>These last ones have the drivers required to handle ethernet and wifi cards
 which expose them to a potentially deathly bug lurking in the drivers.</p>
@@ -100,7 +100,7 @@ to the “firewall” VM which forwards the packets to the Net VM.
 <br />
 The “firewall” VM is isolated except for
 the firewall/routing processing so it is considered trusted while Net VM
-is not.</span></figcaption><img src="/book-of-gehn/assets/qubes/qubes-network.png" /></figure>
+is not.</span></figcaption><img src="/assets/qubes/qubes-network.png" /></figure>
 
 <h2 id="addresses">Addresses</h2>
 
@@ -127,7 +127,7 @@ both in App VM and Proxy VM.</p>
        valid_lft forever preferred_lft forever
 </code></pre></div></div>
 
-<p><label for="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="IPs" src="/book-of-gehn/assets/qubes/qubes-ips.png" />  <br /></span></p>
+<p><label for="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-892e94a4ec9e032aabff049c1567de9b" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="IPs" src="/assets/qubes/qubes-ips.png" />  <br /></span></p>
 
 <blockquote>
   <p>“The virtual interfaces in client VMs are called <code class="highlighter-rouge">ethX</code>,
@@ -175,7 +175,7 @@ and the response goes back through the same path to the App VM</p>
 <span class="o">(</span>icmp omitted<span class="o">)</span>
 </code></pre></div></div>
 
-<p><label for="mf-103c3d5b36df5f56ef8d5565c7424cb1" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-103c3d5b36df5f56ef8d5565c7424cb1" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="ARP" src="/book-of-gehn/assets/qubes/qubes-arp.png" />  <br /></span></p>
+<p><label for="mf-103c3d5b36df5f56ef8d5565c7424cb1" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-103c3d5b36df5f56ef8d5565c7424cb1" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="ARP" src="/assets/qubes/qubes-arp.png" />  <br /></span></p>
 
 <p>The ARP request/reply is the App VM asking for the MAC address
 of its configured gateway, the <code class="highlighter-rouge">10.137.7.1</code> which it is the IP
@@ -200,7 +200,7 @@ reachability is still in progress.
 10.137.7.1 dev eth0 lladdr fe:ff:ff:ff:ff:ff STALE
 </code></pre></div></div>
 
-<p><label for="mf-bd5111593d31e56a5d6665b921d712c7" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-bd5111593d31e56a5d6665b921d712c7" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="Ping" src="/book-of-gehn/assets/qubes/qubes-first-part-ping.png" />  <br /></span></p>
+<p><label for="mf-bd5111593d31e56a5d6665b921d712c7" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-bd5111593d31e56a5d6665b921d712c7" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="Ping" src="/assets/qubes/qubes-first-part-ping.png" />  <br /></span></p>
 
 <p>Once the App VM knows the Link Layer address (aka <code class="highlighter-rouge">lladdr</code>), it sends
 the ICMP echo request, the Proxy VM <em>forwards</em> it and forwards back
@@ -243,7 +243,7 @@ root@proxyvm:# iptables-save <span class="nt">-t</span> filter
 <span class="nt">-A</span> FORWARD <span class="nt">-s</span> 10.137.7.27/32 <span class="nt">-j</span> ACCEPT
 </code></pre></div></div>
 
-<p><label for="mf-72598e6a47c6eff2d841e635a906ab83" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-72598e6a47c6eff2d841e635a906ab83" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="Spoofing" src="/book-of-gehn/assets/qubes/qubes-spoofed.png" />  <br />The <em>untrusted</em> VM spoofs the source address simulating a message
+<p><label for="mf-72598e6a47c6eff2d841e635a906ab83" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-72598e6a47c6eff2d841e635a906ab83" class="margin-toggle " /><span class="marginnote "><img style="" class="fullwidth" alt="Spoofing" src="/assets/qubes/qubes-spoofed.png" />  <br />The <em>untrusted</em> VM spoofs the source address simulating a message
 <em>from the work</em> VM; replies will be addresses to it.
 <br />
 This spoofing scenario is prevented with the <code class="highlighter-rouge">PREROUTING</code> rules.</span></p>
@@ -309,7 +309,7 @@ the ping of App VM is forwarded:</p>
 <figure><figcaption><span>Ping to 8.8.8.8 from App VM. Notice how the request is forwarded and in
 each <em>hop</em> the source address is changed (NAT).
 <br />
-The reply takes the same path but the source address is <strong>not</strong> changed.</span></figcaption><img src="/book-of-gehn/assets/qubes/qubes-full-ping.png" /></figure>
+The reply takes the same path but the source address is <strong>not</strong> changed.</span></figcaption><img src="/assets/qubes/qubes-full-ping.png" /></figure>
 
 <p>This is due a NAT rule that <strong>masquerade</strong> the routed traffic:</p>
 
@@ -330,7 +330,7 @@ VM and not the full chain.</p>
 
 <h2 id="packet-walk-through">Packet walk-through</h2>
 
-<p><label for="mf-0b252f8ed11e6416af48ced72da20180" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-0b252f8ed11e6416af48ced72da20180" class="margin-toggle " /><span class="marginnote "><object align="middle" data="/book-of-gehn/uml/34cfc84b4ad538d0e44973367f2a764c1c7ac9aa.svg" type="image/svg+xml"></object>  <br /></span></p>
+<p><label for="mf-d25f6862948d6a704bbd885cbf582532" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-d25f6862948d6a704bbd885cbf582532" class="margin-toggle " /><span class="marginnote "><object align="middle" data="/uml/34cfc84b4ad538d0e44973367f2a764c1c7ac9aa.svg" type="image/svg+xml"></object>  <br /></span></p>
 
 <p>App VM does a ping to <code class="highlighter-rouge">8.8.8.8</code>, this is the walk-through</p>
 
@@ -490,7 +490,7 @@ configured:</p>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

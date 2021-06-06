@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2020/05/16/Debugging-Lock-Free-Algorithms.html">
+  <link rel="canonical" href="/articles/2020/05/16/Debugging-Lock-Free-Algorithms.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -128,7 +128,7 @@ can get in, things in the CS cannot get out. </span></p>
 <p>What did we get? <em>Most</em> of the possible reorders
 and subtle race conditions are out.</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/mpmc-queue/mutex.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/mpmc-queue/mutex.png" /></figure>
 
 <p>If you still have a bug then it is more likely to be a <em>classic</em> bug like
 mistaking <code class="highlighter-rouge">&lt;</code> by <code class="highlighter-rouge">&lt;=</code> or a missing <code class="highlighter-rouge">+1</code> somewhere –<em>and trust me, you
@@ -158,7 +158,7 @@ atomically before doing each write. This is another example of a
 <span class="p">}</span>
 </code></pre></div></div>
 
-<p>In my <a href="/book-of-gehn/articles/2020/03/22/Lock-Free-Queue-Part-I.html">previous post</a>
+<p>In my <a href="/articles/2020/03/22/Lock-Free-Queue-Part-I.html">previous post</a>
 we saw that a write may not be visible to others until we need <em>commit</em>.</p>
 
 <p>We don’t do this on purpose: if we add a kind of barrier/memory reorder
@@ -296,7 +296,7 @@ a compiled version with tsan.</p>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

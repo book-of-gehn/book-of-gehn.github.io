@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2018/09/16/Ouroboros-Circular-Buffer.html">
+  <link rel="canonical" href="/articles/2018/09/16/Ouroboros-Circular-Buffer.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -85,7 +85,7 @@ of a circular buffer over a continuous and finite memory slice.</p>
 Ancient Greek and symbolize a snake eating
 its own tail – a convenient image for a circular buffer.</p>
 
-<figure><figcaption><span></span></figcaption><img style="" src="/book-of-gehn/assets/circular_buffer/buffer_0_10.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="" src="/assets/circular_buffer/buffer_0_10.png" /></figure>
 
 <p>Source code can be found in the
 <a href="https://github.com/eldipa/tiburoncin">tiburoncin project</a>. Enjoy it!<!--more--></p>
@@ -117,7 +117,7 @@ the <code class="highlighter-rouge">head</code>.</p>
 the <em>free space</em> has the size of the whole buffer and the
 <em>ready space</em> is empty:</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/circular_buffer/buffer_0_0.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/circular_buffer/buffer_0_0.png" /></figure>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">?:</span> <span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span> <span class="o">==</span> <span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span>
 <span class="p">(</span><span class="kt">bool</span><span class="p">)</span> <span class="nb">true</span>
@@ -134,7 +134,7 @@ the <em>free space</em> has the size of the whole buffer and the
 is reduced and the <em>ready space</em> is increased,
 all of them in the same proportion.</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/circular_buffer/buffer_0_10.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/circular_buffer/buffer_0_10.png" /></figure>
 
 <p>The implementation does not track how many bytes are written.
 It is up to the caller to write in the buffer from
@@ -167,7 +167,7 @@ the <code class="highlighter-rouge">head</code> pointer:</p>
 the buffer’s <code class="highlighter-rouge">tail</code> we need to notify to the circular buffer
 that the data can be discarded.</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/circular_buffer/buffer_8_14.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/circular_buffer/buffer_8_14.png" /></figure>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">?:</span> <span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">.</span><span class="n">buf</span><span class="p">[</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">],</span> <span class="s">"FFGG"</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
 <span class="o">?:</span> <span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
@@ -202,7 +202,7 @@ pointer is restarted and set back to the begin.</p>
 <p>The <em>free space</em> is expanded from the <code class="highlighter-rouge">head</code> to the <code class="highlighter-rouge">tail</code> and
 the <code class="highlighter-rouge">tail</code> is in front of the <code class="highlighter-rouge">head</code>:</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/circular_buffer/buffer_8_0.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/circular_buffer/buffer_8_0.png" /></figure>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">?:</span> <span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
 
@@ -224,7 +224,7 @@ increase because the circular buffer will always inform how many
 
 <p>The <em>ready space</em> is limited by the end of the buffer in this case:</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/circular_buffer/buffer_8_2.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/circular_buffer/buffer_8_2.png" /></figure>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">?:</span> <span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
 
@@ -245,7 +245,7 @@ increase because the circular buffer will always inform how many
 <p>Now, this is exactly the same situation that happen at the begin,
 when the buffer was empty, but now it means that it is full.</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/circular_buffer/buffer_8_8.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/circular_buffer/buffer_8_8.png" /></figure>
 
 <p>To differentiate these two cases, internally there is a flag
 that tracks when the <code class="highlighter-rouge">head</code> is <em>behind</em> the <code class="highlighter-rouge">tail</code>:</p>
@@ -269,7 +269,7 @@ that tracks when the <code class="highlighter-rouge">head</code> is <em>behind</
 rest of the bytes written are <em>ready</em> to be consumed and
 the <code class="highlighter-rouge">head</code> is in front of the <code class="highlighter-rouge">tail</code> again:</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/circular_buffer/buffer_0_8.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/circular_buffer/buffer_0_8.png" /></figure>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">?:</span> <span class="n">circular_buffer_advance_tail</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
 
@@ -290,7 +290,7 @@ the <code class="highlighter-rouge">head</code> is in front of the <code class="
 the ambiguous cases but the <code class="highlighter-rouge">hbehind</code> variable tell us that
 the <code class="highlighter-rouge">head</code> is behind the <code class="highlighter-rouge">tail</code> again:</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/circular_buffer/buffer_0_0_full.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/circular_buffer/buffer_0_0_full.png" /></figure>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">?:</span> <span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
 
@@ -326,7 +326,7 @@ the <code class="highlighter-rouge">head</code> is behind the <code class="highl
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

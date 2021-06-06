@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2020/11/29/RC-on-XDP-RX-Queue.html">
+  <link rel="canonical" href="/articles/2020/11/29/RC-on-XDP-RX-Queue.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -78,7 +78,7 @@
       <h1>RC-on-XDP-RX-Queue</h1>
 <p class="subtitle">November 29, 2020</p>
 
-<p><label for="mf-482d5a7a07746c31570f73c75afe4260" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-482d5a7a07746c31570f73c75afe4260" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="max-width:120%;" alt="RC on RX queue" src="/book-of-gehn/assets/xdp-rx-rc/rx-rc-queues.png" />  <br /></span></p>
+<p><label for="mf-d7a190fb3f98e822c26ae2b6ef1256f5" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-d7a190fb3f98e822c26ae2b6ef1256f5" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="max-width:120%;" alt="RC on RX queue" src="/assets/xdp-rx-rc/rx-rc-queues.png" />  <br /></span></p>
 
 <p>Picture this: you’d been developing for six months a network sniffer
 using XDP, a kernel <em>in-pass</em> in Linux.</p>
@@ -129,14 +129,14 @@ the frames are available again.</p>
 XDP then writes the incoming packet in a free frame (2) and pushes the
 address into the RX queue (3). The user application consumes from the RX
 queue (4) addresses of packets ready to be read or write (5). When it is
-done, the address is pushed back to the FQ for reuse (6).</span></figcaption><img style="max-width:80%;" alt="UMEM cycle" src="/book-of-gehn/assets/xdp-rx-rc/rx-rc-umem-cycle.png" /></figure>
+done, the address is pushed back to the FQ for reuse (6).</span></figcaption><img style="max-width:80%;" alt="UMEM cycle" src="/assets/xdp-rx-rc/rx-rc-umem-cycle.png" /></figure>
 
 <p>The packet descriptor returned by <code class="highlighter-rouge">xsk_ring_cons__rx_desc</code> has two
 attributes: the packet’s address and its length.</p>
 
 <p>The address is an <code class="highlighter-rouge">uint64_t</code> offset respect the UMEM’s base address.</p>
 
-<p><label for="mf-e34702a9b002fa12328e1ec2277e184c" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-e34702a9b002fa12328e1ec2277e184c" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="UMEM frame" src="/book-of-gehn/assets/xdp-rx-rc/rx-rc-frame.png" />  <br /></span></p>
+<p><label for="mf-e34702a9b002fa12328e1ec2277e184c" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-e34702a9b002fa12328e1ec2277e184c" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="UMEM frame" src="/assets/xdp-rx-rc/rx-rc-frame.png" />  <br /></span></p>
 
 <p>The UMEM is a memory pool divided evenly by 2048 or 4096 bytes, the
 frame size and addresses are aligned to the frame size plus an offset for a
@@ -364,7 +364,7 @@ the network card to user.</p>
 <p>Remember than the RX is a single-producer queue so it is not thread safe
 for concurrent pushes.</p>
 
-<p><label for="mf-482d5a7a07746c31570f73c75afe4260" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-482d5a7a07746c31570f73c75afe4260" class="margin-toggle " /><span class="marginnote "><img style="max-width:120%;" alt="RC on RX queue" src="/book-of-gehn/assets/xdp-rx-rc/rx-rc-queues.png" />  <br /></span></p>
+<p><label for="mf-d7a190fb3f98e822c26ae2b6ef1256f5" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-d7a190fb3f98e822c26ae2b6ef1256f5" class="margin-toggle " /><span class="marginnote "><img style="max-width:120%;" alt="RC on RX queue" src="/assets/xdp-rx-rc/rx-rc-queues.png" />  <br /></span></p>
 
 <p>No problem when XDP runs in the driver but when it does in the generic
 mode, the kernel may be receiving several packets and pushing them
@@ -469,7 +469,7 @@ found <a href="https://github.com/torvalds/linux/commit/bf0bdd1343efbbf65b4d53ae
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

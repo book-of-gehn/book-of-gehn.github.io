@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2019/08/22/CTR-Bitfliping.html">
+  <link rel="canonical" href="/articles/2019/08/22/CTR-Bitfliping.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -81,7 +81,7 @@
 <p>No much to explain: encryption <strong>does not</strong> offer any
 protection against forgery.</p>
 
-<p>We saw this in the <a href="/book-of-gehn/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
+<p>We saw this in the <a href="/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
 and we will see it again here but this time it will be
 the CTR encryption mode our victim.<label for="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-92c40aed2262db60522dbf16855f07d8" class="margin-toggle" /><span class="marginnote"><strong>– Spoiler Alert! –</strong> </span><!--more--></p>
 
@@ -96,7 +96,7 @@ the CTR encryption mode our victim.<label for="mn-92c40aed2262db60522dbf16855f07
 >>> block_size = 16     # leave this fixed, it is what happen in practice
 -->
 
-<p>Recall from <a href="/book-of-gehn/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
+<p>Recall from <a href="/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
 the scenario where we have a <code class="highlighter-rouge">add_user_data</code> function to <em>user</em>
 profiles:</p>
 
@@ -120,7 +120,7 @@ adding <code class="highlighter-rouge">admin=true</code>.</p>
 <span class="o">...</span>     <span class="k">return</span> <span class="n">b</span><span class="s">'admin=true'</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">b</span><span class="s">';'</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>In <a href="/book-of-gehn/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
+<p>In <a href="/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a>
 we saw that CBC does not offer any protection agaisnt foregery and how to
 break it.</p>
 
@@ -177,7 +177,7 @@ challenge unlock!</p>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

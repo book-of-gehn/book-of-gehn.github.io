@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">
+  <link rel="canonical" href="/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -79,7 +79,7 @@
 <p class="subtitle">January 26, 2021</p>
 
 <p>We have the same vulnerability than we have in
-<a href="/book-of-gehn/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-V.html">stack4</a>
+<a href="/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-V.html">stack4</a>
 but this time we will make our own egg/shellcode.<!--more--></p>
 
 <h2 id="same-vuln">Same vuln</h2>
@@ -176,7 +176,7 @@ other UNIX systems treat the <code class="highlighter-rouge">envp==NULL</code> c
 
 <p>No problem! We can design a single array in the stack to fulfill both:</p>
 
-<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/ed64ad6ce4e7162edd7dbf8ce8e80e471c7ac9aa.svg" type="image/svg+xml"></object></figure>
+<figure><figcaption><span></span></figcaption><object align="middle" data="/uml/ed64ad6ce4e7162edd7dbf8ce8e80e471c7ac9aa.svg" type="image/svg+xml"></object></figure>
 
 <p>In assembly this translates to:</p>
 
@@ -309,14 +309,14 @@ and then we extract the <code class="highlighter-rouge">.text</code> section:</p
 pi@raspberrypi:~<span class="nv">$ </span>objcopy <span class="nt">-O</span> binary <span class="nt">--only-section</span><span class="o">=</span>.text egg.o egg.text
 </code></pre></div></div>
 
-<p>The assembly can be found <a href="/book-of-gehn/assets/azeria-arm-challenges-assets/egg.s">here</a>.</p>
+<p>The assembly can be found <a href="/assets/azeria-arm-challenges-assets/egg.s">here</a>.</p>
 
 <h2 id="testing">Testing</h2>
 
 <p>It is always a good idea to test the shellcode <em>separately</em> from the
 exploitation.</p>
 
-<p>For this <a href="/book-of-gehn/assets/azeria-arm-challenges-assets/test-egg.c">we can create a small C program</a>
+<p>For this <a href="/assets/azeria-arm-challenges-assets/test-egg.c">we can create a small C program</a>
 to load the <em>egg</em> from a file
 into a buffer with <em>permission for execution</em> and then jump into it:</p>
 
@@ -366,7 +366,7 @@ inspect what syscalls are being called and with which parameters:</p>
 <p>We can write the egg in the stack and then jump to it. The content
 of the stack should be:</p>
 
-<figure><figcaption><span></span></figcaption><object align="middle" data="/book-of-gehn/uml/b7f34862962704f7be1d7d121d78099f1c7ac9aa.svg" type="image/svg+xml"></object></figure>
+<figure><figcaption><span></span></figcaption><object align="middle" data="/uml/b7f34862962704f7be1d7d121d78099f1c7ac9aa.svg" type="image/svg+xml"></object></figure>
 
 <p><code class="highlighter-rouge">addr1</code> is <code class="highlighter-rouge">sp</code>. But what value is?</p>
 
@@ -389,7 +389,7 @@ pi@raspberrypi:~<span class="nv">$ </span>setarch linux32 <span class="nt">--add
 pwn!
 </code></pre></div></div>
 
-<p>The assembly of the egg can be found <a href="/book-of-gehn/assets/azeria-arm-challenges-assets/egg.s">here</a>.</p>
+<p>The assembly of the egg can be found <a href="/assets/azeria-arm-challenges-assets/egg.s">here</a>.</p>
 
 <h2 id="readings">Readings</h2>
 
@@ -411,7 +411,7 @@ pwn!
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

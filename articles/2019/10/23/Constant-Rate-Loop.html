@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2019/10/23/Constant-Rate-Loop.html">
+  <link rel="canonical" href="/articles/2019/10/23/Constant-Rate-Loop.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -78,15 +78,15 @@
       <h1>Constant Rate Loop</h1>
 <p class="subtitle">October 23, 2019</p>
 
-<p><label for="mf-e1406f7dc5c4cd4de5628db455ab7473" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-e1406f7dc5c4cd4de5628db455ab7473" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="Bite" src="/book-of-gehn/assets/distributing/constant_rate/examples/bite.gif" />  <br />Same animation that last 1 second in a loop. From top to down, the first
+<p><label for="mf-b8eafacf9bb5c2e922af224b19f5fdd2" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-b8eafacf9bb5c2e922af224b19f5fdd2" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="Bite" src="/assets/distributing/constant_rate/examples/bite.gif" />  <br />Same animation that last 1 second in a loop. From top to down, the first
 is an animation without any frame lost, the second had lost some frames
 but <code class="highlighter-rouge">draw()</code> is still in sync, the last one lost the same amount
 of frames but <code class="highlighter-rouge">draw()</code> used its own notion of time an got out of sync.
- <a href="https://github.com/eldipa/book-of-gehn/blob/master/assets/distributing/constant_rate/examples/drop_iterations.py"><i class="fab fa-github"></i> code</a></span></p>
+ <a href="https://github.com/book-of-gehn/book-of-gehn.github.io/blob/master/assets/distributing/constant_rate/examples/drop_iterations.py"><i class="fab fa-github"></i> code</a></span></p>
 
-<figure><figcaption><span></span></figcaption><img style="" src="/book-of-gehn/assets/distributing/constant_rate/examples/rest-nodrop.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="" src="/assets/distributing/constant_rate/examples/rest-nodrop.png" /></figure>
 
-<figure><figcaption><span></span></figcaption><img style="" src="/book-of-gehn/assets/distributing/constant_rate/examples/rest-drop.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="" src="/assets/distributing/constant_rate/examples/rest-drop.png" /></figure>
 
 <!--more-->
 
@@ -126,12 +126,12 @@ the machine: faster machines will render faster animations.</p>
         <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p><label for="mf-4252ef4640f595889a83767042f30726" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-4252ef4640f595889a83767042f30726" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Clock drift" src="/book-of-gehn/assets/distributing/constant_rate/examples/clock_drift.png" />  <br />Plot the difference between the real time <code class="highlighter-rouge">now()</code> and the expected in
+<p><label for="mf-976aa4eb8afcf540914bf761165c895a" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-976aa4eb8afcf540914bf761165c895a" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Clock drift" src="/assets/distributing/constant_rate/examples/clock_drift.png" />  <br />Plot the difference between the real time <code class="highlighter-rouge">now()</code> and the expected in
 each iteration <code class="highlighter-rouge">it * rate</code> looping during 1 second at a rate of <code class="highlighter-rouge">1/60</code>.
 Using a <em>fixed sleep</em> loop the difference
 increase linearly while using a <em>constant rate</em> loop the difference is
 quite low and relatively constant.
- <a href="https://github.com/eldipa/book-of-gehn/blob/master/assets/distributing/constant_rate/examples/clock_drift.py"><i class="fab fa-github"></i> code</a></span></p>
+ <a href="https://github.com/book-of-gehn/book-of-gehn.github.io/blob/master/assets/distributing/constant_rate/examples/clock_drift.py"><i class="fab fa-github"></i> code</a></span></p>
 
 <p>The problem is that we are not considering neither the time elapsed
 in <code class="highlighter-rouge">draw()</code> nor the fact that <code class="highlighter-rouge">sleep()</code> may sleep more than it
@@ -194,7 +194,7 @@ the loop sleeps the remaining time to complete the current iteration.</p>
 again otherwise will be introducing a clock drift due the extra
 delays of <code class="highlighter-rouge">sleep()</code>.</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/distributing/constant_rate/examples/rest-nodrop.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/distributing/constant_rate/examples/rest-nodrop.png" /></figure>
 
 <p>That’s the happy path.</p>
 
@@ -227,9 +227,9 @@ if the following <code class="highlighter-rouge">func()</code> calls were always
 <figure><figcaption><span>The iteration 1 took too long and the iteration 2 was lost.
 <br />
 Note how the begin of the iteration 3 starts at the begin of
-a new slot.</span></figcaption><img src="/book-of-gehn/assets/distributing/constant_rate/examples/rest-drop.png" /></figure>
+a new slot.</span></figcaption><img src="/assets/distributing/constant_rate/examples/rest-drop.png" /></figure>
 
-<p>Full code in <a href="https://github.com/eldipa/book-of-gehn/blob/master/assets/distributing/constant_rate/constant_rate.py"><i class="fab fa-github"></i> github</a>.</p>
+<p>Full code in <a href="https://github.com/book-of-gehn/book-of-gehn.github.io/blob/master/assets/distributing/constant_rate/constant_rate.py"><i class="fab fa-github"></i> github</a>.</p>
 
 <h3 id="if-behind-keep-working">If behind, keep working</h3>
 
@@ -257,14 +257,14 @@ a new slot.</span></figcaption><img src="/book-of-gehn/assets/distributing/const
 iteration before the deadline we take some rest until the next
 iteration.</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/distributing/constant_rate/examples/rest-nodrop.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/distributing/constant_rate/examples/rest-nodrop.png" /></figure>
 
-<p><label for="mf-a67ec2010f261bceaa51f2667a0feced" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-a67ec2010f261bceaa51f2667a0feced" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="no rest keep working" src="/book-of-gehn/assets/distributing/constant_rate/examples/norest-nolost.png" />  <br />Iteration 2 is not dropped and begins as soon as possible.
+<p><label for="mf-a67ec2010f261bceaa51f2667a0feced" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-a67ec2010f261bceaa51f2667a0feced" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="no rest keep working" src="/assets/distributing/constant_rate/examples/norest-nolost.png" />  <br />Iteration 2 is not dropped and begins as soon as possible.
 <br />
 Contrast this with the <em>drop &amp; rest</em> strategy:
 </span></p>
 
-<p><label for="mf-dada2313d9f8fe68e7cc74c1fb541b6e" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-dada2313d9f8fe68e7cc74c1fb541b6e" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="drop and rest" src="/book-of-gehn/assets/distributing/constant_rate/examples/rest-drop.png" />  <br /></span></p>
+<p><label for="mf-dada2313d9f8fe68e7cc74c1fb541b6e" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-dada2313d9f8fe68e7cc74c1fb541b6e" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="drop and rest" src="/assets/distributing/constant_rate/examples/rest-drop.png" />  <br /></span></p>
 
 <p>But if we are behind schedule we do something different: the last
 partially consumed iteration is not considered lost.</p>
@@ -286,7 +286,7 @@ not rest, it will keep working.</p>
 No rest is taken, trying to <em>catch up</em> as soon as possible without
 loosing any frame even if that means call <code class="highlighter-rouge">func()</code> in the middle of an
 iteration.
-</span></figcaption><img src="/book-of-gehn/assets/distributing/constant_rate/examples/norest-nolost.png" /></figure>
+</span></figcaption><img src="/assets/distributing/constant_rate/examples/norest-nolost.png" /></figure>
 
 <p><em>No rest-keep working</em> is suitable for situations where we want to
 minimize the drops; <em>drop &amp; rest</em> is better when we want to call
@@ -297,18 +297,18 @@ working</em> will be forced to drop the iterations in the middle.</p>
 
 <figure><figcaption><span><code class="highlighter-rouge">func()</code> took more than 2 iterations to complete so the iteration
 2 is considered lost.
-</span></figcaption><img src="/book-of-gehn/assets/distributing/constant_rate/examples/norest-lost.png" /></figure>
+</span></figcaption><img src="/assets/distributing/constant_rate/examples/norest-lost.png" /></figure>
 
 <h3 id="synchronization-on-drops">Synchronization on Drops</h3>
 
 <p>The <code class="highlighter-rouge">func()</code> may need to know when it is not being called
 as expected, when some iterations are being dropped.</p>
 
-<p><label for="mf-e1406f7dc5c4cd4de5628db455ab7473" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-e1406f7dc5c4cd4de5628db455ab7473" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Bite" src="/book-of-gehn/assets/distributing/constant_rate/examples/bite.gif" />  <br />Same animation that last 1 second in a loop. From top to down, the first
+<p><label for="mf-b8eafacf9bb5c2e922af224b19f5fdd2" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-b8eafacf9bb5c2e922af224b19f5fdd2" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Bite" src="/assets/distributing/constant_rate/examples/bite.gif" />  <br />Same animation that last 1 second in a loop. From top to down, the first
 is an animation without any frame lost, the second had lost some frames
 but <code class="highlighter-rouge">draw()</code> is still in sync, the last one lost the same amount
 of frames but <code class="highlighter-rouge">draw()</code> used its own notion of time an got out of sync.
- <a href="https://github.com/eldipa/book-of-gehn/blob/master/assets/distributing/constant_rate/examples/drop_iterations.py"><i class="fab fa-github"></i> code</a></span></p>
+ <a href="https://github.com/book-of-gehn/book-of-gehn.github.io/blob/master/assets/distributing/constant_rate/examples/drop_iterations.py"><i class="fab fa-github"></i> code</a></span></p>
 
 <p>If <code class="highlighter-rouge">draw()</code> is too slow, the loop will drop some iterations as shown.</p>
 
@@ -337,7 +337,7 @@ and <code class="highlighter-rouge">draw()</code> will skip some frames but it w
 <figure><figcaption><span>The first row shows all the frames that forms the animation. The other two
 are the frames plotted by a <em>slow</em> <code class="highlighter-rouge">draw()</code> with some frames dropped.
 But the first <code class="highlighter-rouge">draw()</code> (second row) kept in sync while the other did not.
- <a href="https://github.com/eldipa/book-of-gehn/blob/master/assets/distributing/constant_rate/examples/drop_iterations.py"><i class="fab fa-github"></i> code</a></span></figcaption><img src="/book-of-gehn/assets/distributing/constant_rate/examples/bite_frames.png" /></figure>
+ <a href="https://github.com/book-of-gehn/book-of-gehn.github.io/blob/master/assets/distributing/constant_rate/examples/drop_iterations.py"><i class="fab fa-github"></i> code</a></span></figcaption><img src="/assets/distributing/constant_rate/examples/bite_frames.png" /></figure>
 
 <h2 id="known-uses">Known Uses</h2>
 
@@ -364,7 +364,7 @@ from <a href="https://opengameart.org/content/dark-saber-werewolf">OpenGameArt</
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

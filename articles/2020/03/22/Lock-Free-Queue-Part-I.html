@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2020/03/22/Lock-Free-Queue-Part-I.html">
+  <link rel="canonical" href="/articles/2020/03/22/Lock-Free-Queue-Part-I.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -83,12 +83,12 @@ universe is relatively easy, doing the same when you have
 two threads, the implementation of a lock-free queue
 is <em>more challenging</em>.</p>
 
-<figure><figcaption><span></span></figcaption><img style="" src="/book-of-gehn/assets/mpmc-queue/queue-sp-sc.png" /></figure>
+<figure><figcaption><span></span></figcaption><img style="" src="/assets/mpmc-queue/queue-sp-sc.png" /></figure>
 
 <p>In this first part will analyse and implement a lock-free single-producer
 single-consumer queue. A multi-producer multi-consumer queue is
 described in the
-<a href="/book-of-gehn/articles/2020/04/28/Lock-Free-Queue-Part-II.html">second part</a>.<!--more--></p>
+<a href="/articles/2020/04/28/Lock-Free-Queue-Part-II.html">second part</a>.<!--more--></p>
 
 <p>In a traditional queue we have two pointers:
 the <em>head</em>, that points to the next free entry to write and the
@@ -97,12 +97,12 @@ the <em>head</em>, that points to the next free entry to write and the
 <figure><figcaption><span>When a producer pushes a new data to the queue, she moves forward
 the <em>head</em> and writes the data; meanwhile the consumer
 reads the data and moves forward the <em>tail</em>.
-</span></figcaption><img src="/book-of-gehn/assets/mpmc-queue/queue-data.png" /></figure>
+</span></figcaption><img src="/assets/mpmc-queue/queue-data.png" /></figure>
 
-<p><label for="mf-d26917559fb6cef03a9c838a1c5b70ed" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-d26917559fb6cef03a9c838a1c5b70ed" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Full queue" src="/book-of-gehn/assets/mpmc-queue/queue-full.png" />  <br />Full queue. One entry is always left empty to differentiate a
+<p><label for="mf-50d6f78deafe668126e3474af4634e2b" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-50d6f78deafe668126e3474af4634e2b" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Full queue" src="/assets/mpmc-queue/queue-full.png" />  <br />Full queue. One entry is always left empty to differentiate a
 full queue from an empty queue.
 <br />
-<a href="/book-of-gehn/articles/2018/09/16/Ouroboros-Circular-Buffer.html">Other implementations</a>
+<a href="/articles/2018/09/16/Ouroboros-Circular-Buffer.html">Other implementations</a>
 do not waste this entry.</span></p>
 
 <p>The pointers serve as stop-markers: the producer will not write if
@@ -110,7 +110,7 @@ the head points to an entry that is immediately before the entry
 pointed by the head; the consumer will not read if the tail and the
 head are pointing to the same entry.</p>
 
-<p><label for="mf-cdd9896fded24335cbc1f13fa08a7234" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-cdd9896fded24335cbc1f13fa08a7234" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Empty queue" src="/book-of-gehn/assets/mpmc-queue/queue-empty.png" />  <br />Empty queue. When head and tail pointers are the same there
+<p><label for="mf-cdd9896fded24335cbc1f13fa08a7234" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-cdd9896fded24335cbc1f13fa08a7234" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Empty queue" src="/assets/mpmc-queue/queue-empty.png" />  <br />Empty queue. When head and tail pointers are the same there
 is not ambiguity.</span></p>
 
 <p>In the first case we say that the queue is full; in the second, the
@@ -153,7 +153,7 @@ begin to write starting from <em>that</em> point.</p>
 <p>Only when the producer finishes, she will move forward her <em>tail</em>,
 <em>commiting</em> the change and allowing the readers to proceed.</p>
 
-<figure><figcaption><span></span></figcaption><img src="/book-of-gehn/assets/mpmc-queue/queue-sp-sc.png" /></figure>
+<figure><figcaption><span></span></figcaption><img src="/assets/mpmc-queue/queue-sp-sc.png" /></figure>
 
 <p>The consumer does something similar: moving the consumer’s head
 <em>reserves</em> the entries to read so other readers will not pop the same data;
@@ -230,7 +230,7 @@ the <em>compiler</em> from optimize them.</p>
 <p>We <em>really need</em> that those loads and stores happen even if the compiler thinks
 that they are not needed.</p>
 
-<p><label for="mn-0f9151a75d79a00e3bbccb3b762f67a2" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-0f9151a75d79a00e3bbccb3b762f67a2" class="margin-toggle" /><span class="marginnote"><a href="/book-of-gehn/articles/2020/02/07/Compiler-Optimizations-under-RC.html">Take at look</a>
+<p><label for="mn-d675b2880b7a193c2192e738eba9f4ea" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-d675b2880b7a193c2192e738eba9f4ea" class="margin-toggle" /><span class="marginnote"><a href="/articles/2020/02/07/Compiler-Optimizations-under-RC.html">Take at look</a>
 of what <code class="highlighter-rouge">volatile</code> does.
 <br />
 See also the comments about this in
@@ -281,7 +281,7 @@ is masked <code class="highlighter-rouge">size-1</code> instead with module of <
 the actual write of the data. Even if the compiler does not do that,
 the CPU may do it.</p>
 
-<p><label for="mf-175a47fc061191f1816b3f3809a516ca" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-175a47fc061191f1816b3f3809a516ca" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Store reorder" src="/book-of-gehn/assets/mpmc-queue/reorder-2stores.png" />  <br /></span></p>
+<p><label for="mf-175a47fc061191f1816b3f3809a516ca" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-175a47fc061191f1816b3f3809a516ca" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="Store reorder" src="/assets/mpmc-queue/reorder-2stores.png" />  <br /></span></p>
 
 <p>This is a <em>store reorder</em>. A store is typically much expensive than
 a load and they are moved <em>upwards</em> to start them sooner
@@ -316,7 +316,7 @@ so all the stores that <em>happen before</em> of the tail update are
 are two valid outcomes: reorder on each side of the barrier are perfectly
 valid (left).
 <br />
-Reorder across the barrier are not (right).</span></figcaption><img src="/book-of-gehn/assets/mpmc-queue/reorder-barrier.png" /></figure>
+Reorder across the barrier are not (right).</span></figcaption><img src="/assets/mpmc-queue/reorder-barrier.png" /></figure>
 
 <p>A full write barrier is the nuke option as it prevents <em>any</em> store reorder
 across that point for all the threads.</p>
@@ -368,8 +368,8 @@ in the Acquire - Release memory model.</p>
 <p>We say that the consumer <em>acquires</em> the producer’s tail and the
 producer <em>release</em> it.</p>
 
-<p><label for="mn-d6e5b76856cea76f0330aad5e58ed433" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-d6e5b76856cea76f0330aad5e58ed433" class="margin-toggle" /><span class="marginnote">
-<img class="fullwidth" style="float: right; margin-left: 10px;" src="/book-of-gehn/assets/mpmc-queue/reorder-what.png" />
+<p><label for="mn-c39de21739bab2321b3b66b8e8fd1de6" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-c39de21739bab2321b3b66b8e8fd1de6" class="margin-toggle" /><span class="marginnote">
+<img class="fullwidth" style="float: right; margin-left: 10px;" src="/assets/mpmc-queue/reorder-what.png" />
 <em>“No reads or writes in the current thread can be reordered
 after this <code class="highlighter-rouge">RELEASE</code> store. All writes in the current thread are visible
 in other threads that <code class="highlighter-rouge">ACQUIRE</code> (load) the same atomic variable.
@@ -509,7 +509,7 @@ for DPDK’s <a href="http://git.dpdk.org/dpdk/tree/lib/librte_ring/rte_ring_c11
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 

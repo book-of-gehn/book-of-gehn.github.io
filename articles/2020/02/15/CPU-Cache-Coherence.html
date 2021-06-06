@@ -47,24 +47,24 @@
       <script src="https://d3js.org/d3.v4.min.js"></script>
     
 
-    <script src='/book-of-gehn/js/venn/venn.min.js'></script>
-    <script src='/book-of-gehn/js/venn/helper.js'></script>
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
 
-    <script src='/book-of-gehn/js/fix_syntax_highlight.js'></script>
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/tufte.css">
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/latex.css">
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
 
-  <link rel="canonical" href="/book-of-gehn/articles/2020/02/15/CPU-Cache-Coherence.html">
+  <link rel="canonical" href="/articles/2020/02/15/CPU-Cache-Coherence.html">
 
-  <link rel="stylesheet" type="text/css" href="/book-of-gehn/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
 
-  <link type="application/atom+xml" rel="alternate" href="/book-of-gehn/feed.xml" title="The Book of Gehn" />
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
 </head>
 
   <body>
     <header>
 	
-		<h1 class="header-title"><a href="/book-of-gehn/">The Book of Gehn</a></h1>
+		<h1 class="header-title"><a href="//">The Book of Gehn</a></h1>
 		
 		
 	
@@ -78,7 +78,7 @@
       <h1>Effects of CPU Cache Coherence</h1>
 <p class="subtitle">February 15, 2020</p>
 
-<p><label for="mf-60ce1018c40b8a23f191ac0831675972" class="margin-toggle  ">⊕</label><input type="checkbox" id="mf-60ce1018c40b8a23f191ac0831675972" class="margin-toggle  " /><span class="marginnote  "><img style="" class="fullwidth" alt="" src="/book-of-gehn/assets/memory/rc/cnt-cpu-2ndcpu-heatmap.png" />  <br /></span></p>
+<p><label for="mf-60ce1018c40b8a23f191ac0831675972" class="margin-toggle  ">⊕</label><input type="checkbox" id="mf-60ce1018c40b8a23f191ac0831675972" class="margin-toggle  " /><span class="marginnote  "><img style="" class="fullwidth" alt="" src="/assets/memory/rc/cnt-cpu-2ndcpu-heatmap.png" />  <br /></span></p>
 
 <p>Most modern cpus see a single <em>shared</em> main memory seeing
 the same thing, <em>eventually</em>.</p>
@@ -86,7 +86,7 @@ the same thing, <em>eventually</em>.</p>
 <p>This post explores what is
 behind this <em>“eventually”</em> term.<!--more--></p>
 
-<p>Consider the <a href="/book-of-gehn/assets/memory/rc/rccnt.c">following function</a>.</p>
+<p>Consider the <a href="/assets/memory/rc/rccnt.c">following function</a>.</p>
 
 <p>It is executed by two threads that increment by one
 the values of an array one at time: one waiting for even numbers
@@ -118,7 +118,7 @@ shared array <code class="highlighter-rouge">ctx-&gt;data</code> is not protecte
 so there is a <em>race condition</em> there.</p>
 
 <p>As we saw in a
-<a href="/book-of-gehn/articles/2020/02/07/Compiler-Optimizations-under-RC.html">previous post</a>
+<a href="/articles/2020/02/07/Compiler-Optimizations-under-RC.html">previous post</a>
 we can avoid any corruption due the RC for this so simple program
 if we don’t allow the compiler to optimize the code.</p>
 
@@ -150,7 +150,7 @@ Sum 160
 <blockquote>
   <p>For this post I ran several times the program with all
 the possible combinations of cpus; scripts and the dataset are
-<a href="/book-of-gehn/assets/memory/rc/rccnt-data.tar.gz">here</a>.</p>
+<a href="/assets/memory/rc/rccnt-data.tar.gz">here</a>.</p>
 </blockquote>
 
 <h2 id="cpu-contention">CPU contention</h2>
@@ -163,7 +163,7 @@ the possible combinations of cpus; scripts and the dataset are
 
 <figure><figcaption><span>In the x-axis we have the index of each element (of an array of
 <code class="highlighter-rouge">DATASZ==8</code> elements); in the y-axis the amount of cycles need until
-the value got the correct parity.</span></figcaption><img src="/book-of-gehn/assets/memory/rc/cnt-cpu0-cpu0.png" /></figure>
+the value got the correct parity.</span></figcaption><img src="/assets/memory/rc/cnt-cpu0-cpu0.png" /></figure>
 
 <p>Weird?</p>
 
@@ -218,7 +218,7 @@ Outliers are only a small fraction of the overall set (~0.413%);
 I presume that these are because a thread is waiting while the
 other has <em>no</em> access to the cpu because the OS scheduler decided to
 give the cpu to <em>another</em> process.
-</span></figcaption><img src="/book-of-gehn/assets/memory/rc/cnt-cpu0-per-2ndcpu.png" /></figure>
+</span></figcaption><img src="/assets/memory/rc/cnt-cpu0-per-2ndcpu.png" /></figure>
 
 <p>Interesting pattern: when the second thread runs in
 the cpus from 1 to 7 and 16 to 23 require less iterations than other
@@ -293,7 +293,7 @@ so it is not entirely correct.
 <br />
 The other two minor diagonals also have the lowest values but this
 is <em>not</em> the product of removing outliers.
-</span></figcaption><img src="/book-of-gehn/assets/memory/rc/cnt-cpu-2ndcpu-heatmap.png" /></figure>
+</span></figcaption><img src="/assets/memory/rc/cnt-cpu-2ndcpu-heatmap.png" /></figure>
 
 <p>The heatmap corroborates the <em>clustering</em>: cpus 0 to 7 and 16 to 23 can
 see the effects of the other thread in the same cluster <em>sooner</em> than
@@ -329,7 +329,7 @@ and execute two or more threads.</p>
 <p>In this case, we have 2 hyper-threads per core, sharing the same L1.</p>
 
 <figure><figcaption><span>High-level diagram. The colours are qualitative following the same
-color palette used by the heatmap.</span></figcaption><img src="/book-of-gehn/assets/memory/rc/cpus-cache-arch.png" /></figure>
+color palette used by the heatmap.</span></figcaption><img src="/assets/memory/rc/cpus-cache-arch.png" /></figure>
 
 <h2 id="open-questions">Open questions</h2>
 
@@ -393,7 +393,7 @@ simple thing like a cache.</p>
             
             Gehn
         </span></br>
-            <a style="text-decoration: none;" href="/book-of-gehn/feed.xml"><img height="16px" width="16px" src="/book-of-gehn/assets/blog-assets/rss-32px.png" /></a>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
         <br>
         
 
