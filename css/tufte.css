@@ -242,6 +242,20 @@ p > cite.epigraph {
   font-style: normal;
   margin-top: .8rem; }
 
+aside#sidebar {
+  float: right;
+  width: 200px;
+  min-height: 504px;
+  padding-left: 20px;
+  font-size: 12px;
+  line-height: 1.3; }
+
+aside#sidebar ul {
+  list-style-type: none; }
+
+aside#sidebar input#search {
+  width: 99%; }
+
 body {
   width: 87.5%;
   margin-left: auto;
@@ -704,8 +718,7 @@ label.margin-toggle:not(.sidenote-number) {
   font-size: 2.8rem; }
 
 header > nav.group, body > footer {
-  width: 95%;
-  padding-top: 2rem; }
+  width: 95%; }
 
 nav.group a.active {
   font-weight: bold; }
@@ -722,14 +735,30 @@ header > nav a {
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: #073564;
-  padding-top: 1.5rem;
   text-decoration: none;
   display: inline-block;
-  float: left;
   margin-top: 0;
   margin-bottom: 0;
   padding-right: 2rem;
   vertical-align: baseline; }
+
+header > nav form {
+  display: inline-block;
+  vertical-align: baseline; }
+
+header > nav form > input {
+  max-width: 150px; }
+
+header > nav form button {
+  background-color: #073564;
+  border: none;
+  color: white;
+  padding: 5px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  margin: 4px 2px;
+  cursor: pointer; }
 
 header > nav a img {
   height: 5rem;
