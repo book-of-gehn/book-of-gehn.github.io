@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Document Building: from static web blogs to textbooks</title>
+  <meta name="description" content="I’ve being writing for a long time. I’m far from being a good writer buthaving the consistency to write at least a blog post every month gave memore expressi...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
+
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
+
+  <link rel="canonical" href="/articles/2021/06/12/Document-building-from-static-blog-to-textbook.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
+
+    <script src='/js/lunr-2.3.9.js'></script>
+    <script src='/js/search_index.js'></script>
+    <script src='/js/search.js'></script>
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+    
+		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Document Building: from static web blogs to textbooks</h1>
+<p class="subtitle">June 12, 2021</p>
+
+<p>I’ve being writing for a long time. I’m far from being a good writer but
+having the consistency to write at least a blog post every month gave me
+more expressive power.</p>
+
+<p>Being a non-English native speaker, that also put me in an uncomfortable
+position –out of the confort zone– but looking back, even with all my
+mistakes, I really improved.</p>
+
+<p>I’m using a bunch of different technologies to assist me:</p>
+
+<ul>
+  <li>the <a href="https://book-of-gehn.github.io">blog site</a> is written in
+<a href="https://guides.github.com/features/mastering-markdown/">Markdown</a> and
+turned into a static web site with <a href="https://jekyllrb.com/">Jekyll</a>.</li>
+  <li>the <a href="https://github.com/eldipa/taller-clases/">C/C++ lectures</a> that I
+give are made with <a href="https://ctan.org/pkg/beamer">Latex/Beamer</a>.</li>
+  <li>the <a href="https://github.com/eldipa/guia-taller">C/C++ textbook</a> is also
+in Markdown but it’s compiled into a PDF using
+<a href="https://pandoc.org/">Pandoc</a> and
+<a href="https://pypi.org/project/foliant/">Foliant</a>.</li>
+</ul>
+
+<p>And while those have been incredible powerful, I hit the limitations of them
+in time to time.</p>
+
+<p>This writeup is meant to brainstorm and design a new way to work.<!--more--></p>
+
+<p>I don’t want to have a single tool to do everything. I want to be more
+humble and less ambitious and diagram a <em>pipeline</em> flexible enough to
+help me to simplify and speed up my writings.</p>
+
+<h2 id="mathematics">Mathematics</h2>
+
+<p>Some of my posts are about cryptography, some about logic and certainly
+I’m going to explore more related fields in the future like quantum computing,
+mathematics and physics.</p>
+
+<p>All of these posts have mathematical formulas and symbols.</p>
+
+<p>Having the ability to write formulas in Markdown is super helpful (for me).
+I use <em>inline</em> formulas, like <script type="math/tex">E = mc^2</script>, and <em>block-level</em> formulas:</p>
+
+<script type="math/tex; mode=display">K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
+K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\</script>
+
+<p>Behind the scenes these are written as:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$$
+K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
+K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\
+$$
+</code></pre></div></div>
+
+<p>The downside is that my Markdown editor believes that those pieces of
+text are in Markdown notation so the highlighted syntax goes crazy.</p>
+
+<p>It would be nicer to use Markdown’s code-fenced blocks to make the
+Markdown engine (and editor) aware of them and turn them into beautiful
+math symbols later.</p>
+
+<p>Something like:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>`` `{.math}
+K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
+K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\
+`` `
+</code></pre></div></div>
+
+<p>Neither Jekyll or Pandoc have something like this, but in Pandoc I could
+write some <a href="https://pandoc.org/filters.html">Pandoc filter</a> to turn a
+Markdown code-fenced block tagged as <code class="highlighter-rouge">{.math}</code> into Tex/Latex.</p>
+
+<p>And what it means <em>into Tex/Latex</em> exactly is not trivial.</p>
+
+<p>For my blog I use <a href="https://www.mathjax.org/">MathJax</a> to render
+Tex/Latex in the browser; for my lectures/textbook, I use a Tex/Latex
+engine like <a href="https://linux.die.net/man/1/pdflatex">pdflatex</a> to get a
+PDF.</p>
+
+<p>But how to do it using a single pipeline, <em>I dunno</em>.</p>
+
+<h2 id="macros">Macros</h2>
+
+<p>While Tex/Latex makes beautiful documents, it is not the best language.</p>
+
+<p>Typing <code class="highlighter-rouge">\hat{R}</code> to get <script type="math/tex">\hat{R}</script> gets quickly annoying if
+you have to write <script type="math/tex">\hat{R}</script> several times.</p>
+
+<p>In this case I use Tex/Latex <em>macros</em> to write <code class="highlighter-rouge">\R</code> instead of <code class="highlighter-rouge">\hat{R}</code>.</p>
+
+<p>But what about other non-Tex stuff?</p>
+
+<p>I write a lot about programming and it’s handy to show code with
+highlighted syntax:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+  <span class="k">pass</span>
+</code></pre></div></div>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">bar</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Those were made with Markdown’s <em>fenced-code blocks</em> where
+you <em>tag</em> the block with the language to you are writing.</p>
+
+<p>Jekyll doesn’t, but Pandoc supports <em>tagged inline code</em>.</p>
+
+<p>Just type <code class="highlighter-rouge">{.python}</code> after an inline and that’s it but as you
+may imagine, doing it for each inline code is tedious.</p>
+
+<p>Most of my posts talks about a single language and my textbook is mostly
+about C/C++ so why not make all the inline code highlighted with a
+particular syntax by default?</p>
+
+<p>Once again, Pandoc’s filters fit perfect for the job.</p>
+
+<h2 id="fixing-syntax-highlighting">Fixing syntax highlighting</h2>
+
+<p>For the blog, the code is highlighted with
+<a href="https://github.com/rouge-ruby/rouge">Rouge</a>. It works like a charm but
+no without some sharp corners.</p>
+
+<p>Its support for assembly is limited. I cannot blame it, there are a lot
+of assembly syntaxes out there!</p>
+
+<p>A hack that I did was to run some Javascript to patch the HTML in
+runtime and add the missing CSS classes to the unrecognized mnemonics.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">xpath</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">.//div[contains(@class,'language-nasm')]//span[(((text() = 'blt') or (text() = 'b'))]</span><span class="dl">"</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">elems_iter</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">evaluate</span><span class="p">(</span><span class="nx">xpath</span><span class="p">,</span> <span class="nb">document</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">XPathResult</span><span class="p">.</span><span class="nx">ANY_TYPE</span><span class="p">,</span> <span class="kc">null</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">elems</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="kd">var</span> <span class="nx">el</span> <span class="o">=</span> <span class="nx">elems_iter</span><span class="p">.</span><span class="nx">iterateNext</span><span class="p">();</span>
+<span class="k">while</span> <span class="p">(</span><span class="nx">el</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">elems</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">el</span><span class="p">);</span>
+    <span class="nx">el</span> <span class="o">=</span> <span class="nx">elems_iter</span><span class="p">.</span><span class="nx">iterateNext</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">elems</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">el</span> <span class="o">=</span> <span class="nx">elems</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">classList</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="dl">'</span><span class="s1">k</span><span class="dl">'</span><span class="p">);</span> <span class="c1">// keyword</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">classList</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="dl">'</span><span class="s1">n</span><span class="dl">'</span><span class="p">);</span> <span class="c1">// noun</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>I could do the same with Pandoc which uses
+<a href="https://pygments.org/">Pygments</a> for the highlighting. I’ve already
+have some experience with it from my <a href="https://github.com/bad-address/iasm">interactive assembler
+<em>iasm</em></a> so it is factible.</p>
+
+<p>Certainly is going to be useful for the textbook.</p>
+
+<h2 id="preprocessing">Preprocessing</h2>
+
+<p>You cannot set any layout in Markdown: put some image in the
+right margin, make a text an epigraph or a side-note.</p>
+
+<p>It’s on purpose: Markdown wants to be simple, in contrast with HTML. But
+in some cases it too simple.</p>
+
+<p>Jekyll allows you to pass HTML code along the Markdown. In my blog I use instead
+<a href="https://jekyllrb.com/docs/liquid/">Liquid</a> tags to make my live a
+little easier.</p>
+
+<p>This allows me not only to avoid writing HTML but also performing
+arbitrary operations like creating images on the fly (see more later).</p>
+
+<p>In my C/C++ lectures written in Tex/Latex, I required to generate
+different <em>flavors</em> of slides.</p>
+
+<p>Slides for presenting in class with little text but a lot of diagrams;
+slides for reading with a lot of text, the <em>handout</em> for the students.</p>
+
+<p>With the pandemic, I switched to virtual classes (no news here). Sharing
+my screen allowed me to <em>draw</em> over the slides. They have incomplete
+diagrams that I complete interactively with the students during the lecture.</p>
+
+<p>Make this within Tex/Latex is possible but it is a pain.</p>
+
+<p>So I resorted to use a preprocessor. Similar to Liquid I used
+<a href="https://jinja.palletsprojects.com/en/3.0.x/">Jinja2</a></p>
+
+<p>While all of these could be done, in theory, with Pandoc filters, I
+think that having a preprocessor and <em>template engine</em> like Jinja2 can
+be quite handy.</p>
+
+<h2 id="images-and-diagrams">Images and diagrams</h2>
+
+<p>I make a lot of diagrams, state machines and plots but I try to not make
+them by hand.</p>
+
+<p>Tools that requires a human to do the layout are a waste of time (there
+are exceptions like me <a href="/book-of-gehn/articles/2021/06/05/Seaborn-Cheatsheet.html">Seaborn Cheatsheet</a>).</p>
+
+<p>Instead I prefer to <em>describe</em> the diagram in text and let a
+program to do the image and layout for me.</p>
+
+<p>For a lot of them I use <a href="https://plantuml.com">PlantUML</a>. Despite the
+name, it is for more than UML.</p>
+
+<p>For simpler block diagrams I use <a href="http://ditaa.sourceforge.net/">Ditaa</a>
+and for graph-like I have the good old <a href="https://graphviz.org/">Graphviz</a>.</p>
+
+<p>So far I’m using these tools for by blog so I write the
+PlantUML/Ditaa/Graphviz diagrams (text) inside a Liquid tag in the same
+Markdown.</p>
+
+<p>During the building, the correct tool is called and the image is
+generated while the Liquid tag is replaced by some HTML <code class="highlighter-rouge">&lt;img&gt;</code> link.</p>
+
+<p>For my C/C++ textbook, I use a Foliant plugin that does the same but
+instead of Liquid tags, Foliant uses HTML tags as <em>hook points</em> to call
+third party plugins.</p>
+
+<p>Probably I’m going to use Jinja2 for these too. I’m not convinced of
+using HTML tags/hooks or Pandoc filters here.</p>
+
+<p>Related to this, make <a href="https://seaborn.pydata.org/">Seaborn</a> and
+<a href="https://matplotlib.org/">Matplotlib</a> plots from the Markdown directly
+would be nice too.</p>
+
+<h2 id="interactive-diagrams">Interactive diagrams</h2>
+
+<p>This applies only to my blog and Javascript is the thing that brings
+life anything. From simple <a href="https://github.com/benfred/venn.js/">Venn
+diagrams</a> to arbitrary complex
+<a href="https://d3js.org/">D3 diagrams</a>.</p>
+
+<p>But I want those beautiful diagrams be part of my non-interactive
+lectures and textbook.</p>
+
+<p>How to do it is still an open question.</p>
+
+<h2 id="assembly">Assembly</h2>
+
+<p>And not, I’m not talking about ARM.</p>
+
+<p>All the Markdown files are meant to be integrated in some meaningful
+way. Assembled. Linked.</p>
+
+<p>For the blog, Jekyll generates an independent web page for each post. It
+just put each in a file that follows the <code class="highlighter-rouge">year/month/day/post-name.html</code>
+pattern name.</p>
+
+<p>A textbook is more complicated however.</p>
+
+<p>Foliant joins together all the Markdown files and call Pandoc <em>once</em> to
+generate a single Tex/Latex file and from there, a <em>single</em> PDF.</p>
+
+<p>This doesn’t scale.</p>
+
+<p>It would be much efficient to generate a Tex/Latex per Markdown file, a
+PDF per file and join them together at the end.</p>
+
+<p>Like in a C/C++ compilation schema, you compile each unit separately and
+link them at the end: if you have to modify a single file, you just need
+to compile that one only and not the whole thing.</p>
+
+<p>Foliant does this on purpose and for a good reason: when you write a
+textbook you want to have links and references to other parts including
+parts of <em>other</em> Markdown files.</p>
+
+<p>To <em>resolve</em> them, all the Markdown files need to be processed as a
+single unit.</p>
+
+<p>To have a separated unit compilation, I’m going to figure out how to
+<em>resolve the links and references</em> at the Tex/Latex level.</p>
+
+<p>A simple <code class="highlighter-rouge">cat *.pdf &gt; final.pdf</code> will not work.</p>
+
+<h2 id="post-processing">Post-processing</h2>
+
+<p>A few things that I do manually:</p>
+
+<ul>
+  <li>optimize the size of the PNG files with
+<a href="https://linux.die.net/man/1/optipng">optipng</a></li>
+  <li>check the grammar with <a href="https://languagetool.org/">LanguageTool</a></li>
+  <li>review broken links (this is not even automated!)</li>
+</ul>
+
+<p>Some will still be manual (like checking the grammar) but the rest
+should be part of the pipeline.</p>
+
+<p>The review of any broken link could be done at the Pandoc filter level
+for example.</p>
+
+<h2 id="pipeline">Pipeline</h2>
+
+<p>There are a lot of tools to call in sequence and to avoid recompilation,
+a tool should not be called if its input didn’t change since the last
+time it was called.</p>
+
+<p>I don’t want to generate the same HTML page if the Markdown didn’t
+change.</p>
+
+<p>Jekyll does a relative good thing here but Foliant doesn’t.</p>
+
+<p>I think that a plain <a href="https://www.gnu.org/software/make/">Makefile</a>
+should work. May be something on top to <em>visualize</em> the pipeline?</p>
+
+<p>And the <em>toolchain</em> should be in its own
+<a href="https://www.docker.com/">Docker</a>.</p>
+
+<h2 id="final-thoughts">Final thoughts</h2>
+
+<p>Rewrite my blog, lectures and the work-in-progress textbook is not going
+to be trivial.</p>
+
+<p>There are a lot of gaps and problems without solution but I bet that
+this is going to improve my workflow.</p>
+
+<p>Fingers crossed.</p>
+
+
+
+    </article>
+    <span class="print-footer">Document Building: from static web blogs to textbooks - June 12, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

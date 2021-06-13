@@ -1,4 +1,322 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-06-12T04:51:02+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">Seaborn Cheatsheet</title><link href="/articles/2021/06/05/Seaborn-Cheatsheet.html" rel="alternate" type="text/html" title="Seaborn Cheatsheet" /><published>2021-06-05T00:00:00+02:00</published><updated>2021-06-05T00:00:00+02:00</updated><id>/articles/2021/06/05/Seaborn-Cheatsheet</id><content type="html" xml:base="/articles/2021/06/05/Seaborn-Cheatsheet.html">&lt;p&gt;Plotting data was always for me a weak point: it always took me a lot of
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-06-13T02:59:16+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">Document Building: from static web blogs to textbooks</title><link href="/articles/2021/06/12/Document-building-from-static-blog-to-textbook.html" rel="alternate" type="text/html" title="Document Building: from static web blogs to textbooks" /><published>2021-06-12T00:00:00+02:00</published><updated>2021-06-12T00:00:00+02:00</updated><id>/articles/2021/06/12/Document-building-from-static-blog-to-textbook</id><content type="html" xml:base="/articles/2021/06/12/Document-building-from-static-blog-to-textbook.html">&lt;p&gt;I’ve being writing for a long time. I’m far from being a good writer but
+having the consistency to write at least a blog post every month gave me
+more expressive power.&lt;/p&gt;
+
+&lt;p&gt;Being a non-English native speaker, that also put me in an uncomfortable
+position –out of the confort zone– but looking back, even with all my
+mistakes, I really improved.&lt;/p&gt;
+
+&lt;p&gt;I’m using a bunch of different technologies to assist me:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;the &lt;a href=&quot;https://book-of-gehn.github.io&quot;&gt;blog site&lt;/a&gt; is written in
+&lt;a href=&quot;https://guides.github.com/features/mastering-markdown/&quot;&gt;Markdown&lt;/a&gt; and
+turned into a static web site with &lt;a href=&quot;https://jekyllrb.com/&quot;&gt;Jekyll&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;the &lt;a href=&quot;https://github.com/eldipa/taller-clases/&quot;&gt;C/C++ lectures&lt;/a&gt; that I
+give are made with &lt;a href=&quot;https://ctan.org/pkg/beamer&quot;&gt;Latex/Beamer&lt;/a&gt;.&lt;/li&gt;
+  &lt;li&gt;the &lt;a href=&quot;https://github.com/eldipa/guia-taller&quot;&gt;C/C++ textbook&lt;/a&gt; is also
+in Markdown but it’s compiled into a PDF using
+&lt;a href=&quot;https://pandoc.org/&quot;&gt;Pandoc&lt;/a&gt; and
+&lt;a href=&quot;https://pypi.org/project/foliant/&quot;&gt;Foliant&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;And while those have been incredible powerful, I hit the limitations of them
+in time to time.&lt;/p&gt;
+
+&lt;p&gt;This writeup is meant to brainstorm and design a new way to work.&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;p&gt;I don’t want to have a single tool to do everything. I want to be more
+humble and less ambitious and diagram a &lt;em&gt;pipeline&lt;/em&gt; flexible enough to
+help me to simplify and speed up my writings.&lt;/p&gt;
+
+&lt;h2 id=&quot;mathematics&quot;&gt;Mathematics&lt;/h2&gt;
+
+&lt;p&gt;Some of my posts are about cryptography, some about logic and certainly
+I’m going to explore more related fields in the future like quantum computing,
+mathematics and physics.&lt;/p&gt;
+
+&lt;p&gt;All of these posts have mathematical formulas and symbols.&lt;/p&gt;
+
+&lt;p&gt;Having the ability to write formulas in Markdown is super helpful (for me).
+I use &lt;em&gt;inline&lt;/em&gt; formulas, like &lt;script type=&quot;math/tex&quot;&gt;E = mc^2&lt;/script&gt;, and &lt;em&gt;block-level&lt;/em&gt; formulas:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
+K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\&lt;/script&gt;
+
+&lt;p&gt;Behind the scenes these are written as:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$$
+K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
+K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\
+$$
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The downside is that my Markdown editor believes that those pieces of
+text are in Markdown notation so the highlighted syntax goes crazy.&lt;/p&gt;
+
+&lt;p&gt;It would be nicer to use Markdown’s code-fenced blocks to make the
+Markdown engine (and editor) aware of them and turn them into beautiful
+math symbols later.&lt;/p&gt;
+
+&lt;p&gt;Something like:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;`` `{.math}
+K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
+K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
+K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\
+`` `
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Neither Jekyll or Pandoc have something like this, but in Pandoc I could
+write some &lt;a href=&quot;https://pandoc.org/filters.html&quot;&gt;Pandoc filter&lt;/a&gt; to turn a
+Markdown code-fenced block tagged as &lt;code class=&quot;highlighter-rouge&quot;&gt;{.math}&lt;/code&gt; into Tex/Latex.&lt;/p&gt;
+
+&lt;p&gt;And what it means &lt;em&gt;into Tex/Latex&lt;/em&gt; exactly is not trivial.&lt;/p&gt;
+
+&lt;p&gt;For my blog I use &lt;a href=&quot;https://www.mathjax.org/&quot;&gt;MathJax&lt;/a&gt; to render
+Tex/Latex in the browser; for my lectures/textbook, I use a Tex/Latex
+engine like &lt;a href=&quot;https://linux.die.net/man/1/pdflatex&quot;&gt;pdflatex&lt;/a&gt; to get a
+PDF.&lt;/p&gt;
+
+&lt;p&gt;But how to do it using a single pipeline, &lt;em&gt;I dunno&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;macros&quot;&gt;Macros&lt;/h2&gt;
+
+&lt;p&gt;While Tex/Latex makes beautiful documents, it is not the best language.&lt;/p&gt;
+
+&lt;p&gt;Typing &lt;code class=&quot;highlighter-rouge&quot;&gt;\hat{R}&lt;/code&gt; to get &lt;script type=&quot;math/tex&quot;&gt;\hat{R}&lt;/script&gt; gets quickly annoying if
+you have to write &lt;script type=&quot;math/tex&quot;&gt;\hat{R}&lt;/script&gt; several times.&lt;/p&gt;
+
+&lt;p&gt;In this case I use Tex/Latex &lt;em&gt;macros&lt;/em&gt; to write &lt;code class=&quot;highlighter-rouge&quot;&gt;\R&lt;/code&gt; instead of &lt;code class=&quot;highlighter-rouge&quot;&gt;\hat{R}&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;But what about other non-Tex stuff?&lt;/p&gt;
+
+&lt;p&gt;I write a lot about programming and it’s handy to show code with
+highlighted syntax:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;pass&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Those were made with Markdown’s &lt;em&gt;fenced-code blocks&lt;/em&gt; where
+you &lt;em&gt;tag&lt;/em&gt; the block with the language to you are writing.&lt;/p&gt;
+
+&lt;p&gt;Jekyll doesn’t, but Pandoc supports &lt;em&gt;tagged inline code&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Just type &lt;code class=&quot;highlighter-rouge&quot;&gt;{.python}&lt;/code&gt; after an inline and that’s it but as you
+may imagine, doing it for each inline code is tedious.&lt;/p&gt;
+
+&lt;p&gt;Most of my posts talks about a single language and my textbook is mostly
+about C/C++ so why not make all the inline code highlighted with a
+particular syntax by default?&lt;/p&gt;
+
+&lt;p&gt;Once again, Pandoc’s filters fit perfect for the job.&lt;/p&gt;
+
+&lt;h2 id=&quot;fixing-syntax-highlighting&quot;&gt;Fixing syntax highlighting&lt;/h2&gt;
+
+&lt;p&gt;For the blog, the code is highlighted with
+&lt;a href=&quot;https://github.com/rouge-ruby/rouge&quot;&gt;Rouge&lt;/a&gt;. It works like a charm but
+no without some sharp corners.&lt;/p&gt;
+
+&lt;p&gt;Its support for assembly is limited. I cannot blame it, there are a lot
+of assembly syntaxes out there!&lt;/p&gt;
+
+&lt;p&gt;A hack that I did was to run some Javascript to patch the HTML in
+runtime and add the missing CSS classes to the unrecognized mnemonics.&lt;/p&gt;
+
+&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;xpath&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;.//div[contains(@class,'language-nasm')]//span[(((text() = 'blt') or (text() = 'b'))]&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems_iter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;evaluate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;xpath&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;XPathResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ANY_TYPE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[];&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;iterateNext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;elems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;iterateNext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;classList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// keyword&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;classList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;remove&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// noun&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;I could do the same with Pandoc which uses
+&lt;a href=&quot;https://pygments.org/&quot;&gt;Pygments&lt;/a&gt; for the highlighting. I’ve already
+have some experience with it from my &lt;a href=&quot;https://github.com/bad-address/iasm&quot;&gt;interactive assembler
+&lt;em&gt;iasm&lt;/em&gt;&lt;/a&gt; so it is factible.&lt;/p&gt;
+
+&lt;p&gt;Certainly is going to be useful for the textbook.&lt;/p&gt;
+
+&lt;h2 id=&quot;preprocessing&quot;&gt;Preprocessing&lt;/h2&gt;
+
+&lt;p&gt;You cannot set any layout in Markdown: put some image in the
+right margin, make a text an epigraph or a side-note.&lt;/p&gt;
+
+&lt;p&gt;It’s on purpose: Markdown wants to be simple, in contrast with HTML. But
+in some cases it too simple.&lt;/p&gt;
+
+&lt;p&gt;Jekyll allows you to pass HTML code along the Markdown. In my blog I use instead
+&lt;a href=&quot;https://jekyllrb.com/docs/liquid/&quot;&gt;Liquid&lt;/a&gt; tags to make my live a
+little easier.&lt;/p&gt;
+
+&lt;p&gt;This allows me not only to avoid writing HTML but also performing
+arbitrary operations like creating images on the fly (see more later).&lt;/p&gt;
+
+&lt;p&gt;In my C/C++ lectures written in Tex/Latex, I required to generate
+different &lt;em&gt;flavors&lt;/em&gt; of slides.&lt;/p&gt;
+
+&lt;p&gt;Slides for presenting in class with little text but a lot of diagrams;
+slides for reading with a lot of text, the &lt;em&gt;handout&lt;/em&gt; for the students.&lt;/p&gt;
+
+&lt;p&gt;With the pandemic, I switched to virtual classes (no news here). Sharing
+my screen allowed me to &lt;em&gt;draw&lt;/em&gt; over the slides. They have incomplete
+diagrams that I complete interactively with the students during the lecture.&lt;/p&gt;
+
+&lt;p&gt;Make this within Tex/Latex is possible but it is a pain.&lt;/p&gt;
+
+&lt;p&gt;So I resorted to use a preprocessor. Similar to Liquid I used
+&lt;a href=&quot;https://jinja.palletsprojects.com/en/3.0.x/&quot;&gt;Jinja2&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;While all of these could be done, in theory, with Pandoc filters, I
+think that having a preprocessor and &lt;em&gt;template engine&lt;/em&gt; like Jinja2 can
+be quite handy.&lt;/p&gt;
+
+&lt;h2 id=&quot;images-and-diagrams&quot;&gt;Images and diagrams&lt;/h2&gt;
+
+&lt;p&gt;I make a lot of diagrams, state machines and plots but I try to not make
+them by hand.&lt;/p&gt;
+
+&lt;p&gt;Tools that requires a human to do the layout are a waste of time (there
+are exceptions like me &lt;a href=&quot;/book-of-gehn/articles/2021/06/05/Seaborn-Cheatsheet.html&quot;&gt;Seaborn Cheatsheet&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;Instead I prefer to &lt;em&gt;describe&lt;/em&gt; the diagram in text and let a
+program to do the image and layout for me.&lt;/p&gt;
+
+&lt;p&gt;For a lot of them I use &lt;a href=&quot;https://plantuml.com&quot;&gt;PlantUML&lt;/a&gt;. Despite the
+name, it is for more than UML.&lt;/p&gt;
+
+&lt;p&gt;For simpler block diagrams I use &lt;a href=&quot;http://ditaa.sourceforge.net/&quot;&gt;Ditaa&lt;/a&gt;
+and for graph-like I have the good old &lt;a href=&quot;https://graphviz.org/&quot;&gt;Graphviz&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;So far I’m using these tools for by blog so I write the
+PlantUML/Ditaa/Graphviz diagrams (text) inside a Liquid tag in the same
+Markdown.&lt;/p&gt;
+
+&lt;p&gt;During the building, the correct tool is called and the image is
+generated while the Liquid tag is replaced by some HTML &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;img&amp;gt;&lt;/code&gt; link.&lt;/p&gt;
+
+&lt;p&gt;For my C/C++ textbook, I use a Foliant plugin that does the same but
+instead of Liquid tags, Foliant uses HTML tags as &lt;em&gt;hook points&lt;/em&gt; to call
+third party plugins.&lt;/p&gt;
+
+&lt;p&gt;Probably I’m going to use Jinja2 for these too. I’m not convinced of
+using HTML tags/hooks or Pandoc filters here.&lt;/p&gt;
+
+&lt;p&gt;Related to this, make &lt;a href=&quot;https://seaborn.pydata.org/&quot;&gt;Seaborn&lt;/a&gt; and
+&lt;a href=&quot;https://matplotlib.org/&quot;&gt;Matplotlib&lt;/a&gt; plots from the Markdown directly
+would be nice too.&lt;/p&gt;
+
+&lt;h2 id=&quot;interactive-diagrams&quot;&gt;Interactive diagrams&lt;/h2&gt;
+
+&lt;p&gt;This applies only to my blog and Javascript is the thing that brings
+life anything. From simple &lt;a href=&quot;https://github.com/benfred/venn.js/&quot;&gt;Venn
+diagrams&lt;/a&gt; to arbitrary complex
+&lt;a href=&quot;https://d3js.org/&quot;&gt;D3 diagrams&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;But I want those beautiful diagrams be part of my non-interactive
+lectures and textbook.&lt;/p&gt;
+
+&lt;p&gt;How to do it is still an open question.&lt;/p&gt;
+
+&lt;h2 id=&quot;assembly&quot;&gt;Assembly&lt;/h2&gt;
+
+&lt;p&gt;And not, I’m not talking about ARM.&lt;/p&gt;
+
+&lt;p&gt;All the Markdown files are meant to be integrated in some meaningful
+way. Assembled. Linked.&lt;/p&gt;
+
+&lt;p&gt;For the blog, Jekyll generates an independent web page for each post. It
+just put each in a file that follows the &lt;code class=&quot;highlighter-rouge&quot;&gt;year/month/day/post-name.html&lt;/code&gt;
+pattern name.&lt;/p&gt;
+
+&lt;p&gt;A textbook is more complicated however.&lt;/p&gt;
+
+&lt;p&gt;Foliant joins together all the Markdown files and call Pandoc &lt;em&gt;once&lt;/em&gt; to
+generate a single Tex/Latex file and from there, a &lt;em&gt;single&lt;/em&gt; PDF.&lt;/p&gt;
+
+&lt;p&gt;This doesn’t scale.&lt;/p&gt;
+
+&lt;p&gt;It would be much efficient to generate a Tex/Latex per Markdown file, a
+PDF per file and join them together at the end.&lt;/p&gt;
+
+&lt;p&gt;Like in a C/C++ compilation schema, you compile each unit separately and
+link them at the end: if you have to modify a single file, you just need
+to compile that one only and not the whole thing.&lt;/p&gt;
+
+&lt;p&gt;Foliant does this on purpose and for a good reason: when you write a
+textbook you want to have links and references to other parts including
+parts of &lt;em&gt;other&lt;/em&gt; Markdown files.&lt;/p&gt;
+
+&lt;p&gt;To &lt;em&gt;resolve&lt;/em&gt; them, all the Markdown files need to be processed as a
+single unit.&lt;/p&gt;
+
+&lt;p&gt;To have a separated unit compilation, I’m going to figure out how to
+&lt;em&gt;resolve the links and references&lt;/em&gt; at the Tex/Latex level.&lt;/p&gt;
+
+&lt;p&gt;A simple &lt;code class=&quot;highlighter-rouge&quot;&gt;cat *.pdf &amp;gt; final.pdf&lt;/code&gt; will not work.&lt;/p&gt;
+
+&lt;h2 id=&quot;post-processing&quot;&gt;Post-processing&lt;/h2&gt;
+
+&lt;p&gt;A few things that I do manually:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;optimize the size of the PNG files with
+&lt;a href=&quot;https://linux.die.net/man/1/optipng&quot;&gt;optipng&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;check the grammar with &lt;a href=&quot;https://languagetool.org/&quot;&gt;LanguageTool&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;review broken links (this is not even automated!)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Some will still be manual (like checking the grammar) but the rest
+should be part of the pipeline.&lt;/p&gt;
+
+&lt;p&gt;The review of any broken link could be done at the Pandoc filter level
+for example.&lt;/p&gt;
+
+&lt;h2 id=&quot;pipeline&quot;&gt;Pipeline&lt;/h2&gt;
+
+&lt;p&gt;There are a lot of tools to call in sequence and to avoid recompilation,
+a tool should not be called if its input didn’t change since the last
+time it was called.&lt;/p&gt;
+
+&lt;p&gt;I don’t want to generate the same HTML page if the Markdown didn’t
+change.&lt;/p&gt;
+
+&lt;p&gt;Jekyll does a relative good thing here but Foliant doesn’t.&lt;/p&gt;
+
+&lt;p&gt;I think that a plain &lt;a href=&quot;https://www.gnu.org/software/make/&quot;&gt;Makefile&lt;/a&gt;
+should work. May be something on top to &lt;em&gt;visualize&lt;/em&gt; the pipeline?&lt;/p&gt;
+
+&lt;p&gt;And the &lt;em&gt;toolchain&lt;/em&gt; should be in its own
+&lt;a href=&quot;https://www.docker.com/&quot;&gt;Docker&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;final-thoughts&quot;&gt;Final thoughts&lt;/h2&gt;
+
+&lt;p&gt;Rewrite my blog, lectures and the work-in-progress textbook is not going
+to be trivial.&lt;/p&gt;
+
+&lt;p&gt;There are a lot of gaps and problems without solution but I bet that
+this is going to improve my workflow.&lt;/p&gt;
+
+&lt;p&gt;Fingers crossed.&lt;/p&gt;</content><author><name>Gehn</name></author><summary type="html">I’ve being writing for a long time. I’m far from being a good writer but having the consistency to write at least a blog post every month gave me more expressive power. Being a non-English native speaker, that also put me in an uncomfortable position –out of the confort zone– but looking back, even with all my mistakes, I really improved. I’m using a bunch of different technologies to assist me: the blog site is written in Markdown and turned into a static web site with Jekyll. the C/C++ lectures that I give are made with Latex/Beamer. the C/C++ textbook is also in Markdown but it’s compiled into a PDF using Pandoc and Foliant. And while those have been incredible powerful, I hit the limitations of them in time to time. This writeup is meant to brainstorm and design a new way to work.</summary></entry><entry><title type="html">Seaborn Cheatsheet</title><link href="/articles/2021/06/05/Seaborn-Cheatsheet.html" rel="alternate" type="text/html" title="Seaborn Cheatsheet" /><published>2021-06-05T00:00:00+02:00</published><updated>2021-06-05T00:00:00+02:00</updated><id>/articles/2021/06/05/Seaborn-Cheatsheet</id><content type="html" xml:base="/articles/2021/06/05/Seaborn-Cheatsheet.html">&lt;p&gt;Plotting data was always for me a weak point: it always took me a lot of
 time to make the plots and graphs, reading the documentation, &lt;em&gt;googling&lt;/em&gt;
 how to do one particular tweak and things like that.&lt;/p&gt;
 
@@ -2152,283 +2470,4 @@ because &lt;code class=&quot;highlighter-rouge&quot;&gt;*msg&lt;/code&gt; was al
 
 &lt;p&gt;But when a single port was with less data, even if the rest of the ports
 were super-busy, &lt;code class=&quot;highlighter-rouge&quot;&gt;scan&lt;/code&gt; did a &lt;code class=&quot;highlighter-rouge&quot;&gt;sleep(1)&lt;/code&gt; impacting negatively in the
-performance. Less work made the things worse!&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pointer" /><category term="memory" /><summary type="html">A quick summary of the top 3 typos that I found (or I wrote) in code that they were small but they had a deep impact on the functionality. In fact, the three bugs could summarized as follows: a missing u. an extra s. and a missing *. Do you want to see what is this about?</summary></entry><entry><title type="html">Quiescent Environment</title><link href="/articles/2021/03/07/Quiescent-Environment.html" rel="alternate" type="text/html" title="Quiescent Environment" /><published>2021-03-07T00:00:00+01:00</published><updated>2021-03-07T00:00:00+01:00</updated><id>/articles/2021/03/07/Quiescent-Environment</id><content type="html" xml:base="/articles/2021/03/07/Quiescent-Environment.html">&lt;p&gt;You are working in optimizing a piece of software to reduce
-the CPU cycles that it takes.&lt;/p&gt;
-
-&lt;p&gt;To compare your improvements, it is reasonable to measure the elapsed
-time before and after your change.&lt;/p&gt;
-
-&lt;p&gt;Unless you are using a simulator, it is impossible to run a program
-&lt;em&gt;isolated&lt;/em&gt; from the rest and your measurements will be noisy.&lt;/p&gt;
-
-&lt;p&gt;If you want to take precise measurements you need a &lt;em&gt;quiescent&lt;/em&gt;
-environment as much as possible.&lt;!--more--&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;an-incomplete-cheatsheet&quot;&gt;An incomplete cheatsheet&lt;/h2&gt;
-
-&lt;p&gt;Isolate the machine:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;use a bare metal machine or VMs if not possible. Try to
-avoid container environments.&lt;/li&gt;
-  &lt;li&gt;unplug the network cable or reduce by some mean the traffic (from
-outside the machine)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;At hardware level disable:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;Hyperthreading (hardware multitenancy)&lt;/li&gt;
-  &lt;li&gt;Intel Turbo Boost or Overclocking &lt;a href=&quot;https://askubuntu.com/questions/619875/disabling-intel-turbo-boost-in-ubuntu&quot;&gt;How-to (maybe)&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;Dynamic Voltage &amp;amp; Frequency Scaling &lt;a href=&quot;https://askubuntu.com/questions/523640/how-i-can-disable-cpu-frequency-scaling-and-set-the-system-to-performance&quot;&gt;How-to (maybe)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;At the kernel level:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;isolate one or more CPUs so you run your programs there without much
-interruptions from other tasks. Two options: removing the CPUs from the
-scheduler at boottime &lt;a href=&quot;https://www.kernel.org/doc/html/v4.19/admin-guide/kernel-parameters.html?highlight=isolcpu&quot;&gt;(isolcpus)&lt;/a&gt;
-or assigning them to an isolated cgroup at runtime
-&lt;a href=&quot;https://manpages.ubuntu.com/manpages/bionic/man1/cset.1.html&quot;&gt;(cset)&lt;/a&gt;.&lt;/li&gt;
-  &lt;li&gt;use a preconfigured
-&lt;a href=&quot;https://manpages.debian.org/buster/tuned/tuned.8.en.html&quot;&gt;tuned&lt;/a&gt; setup.
-&lt;a href=&quot;https://github.com/redhat-performance/tuned/blob/master/profiles/realtime/tuned.conf&quot;&gt;(repo)&lt;/a&gt;;
-&lt;a href=&quot;https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/tuning_guide/chap-Realtime-Specific_Tuning&quot;&gt;(guide)&lt;/a&gt;.&lt;/li&gt;
-  &lt;li&gt;disable the interruptions handling in those CPUs.&lt;/li&gt;
-  &lt;li&gt;use thread’s CPU affinity to assign the threads to each CPU (this is
-mandatory if you disabled the scheduler with &lt;code class=&quot;highlighter-rouge&quot;&gt;isolcpus&lt;/code&gt;). See
-&lt;a href=&quot;https://man7.org/linux/man-pages/man1/taskset.1.html&quot;&gt;taskset&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;disable not needed kernel threads ? &lt;a href=&quot;https://www.kernel.org/doc/Documentation/kernel-per-CPU-kthreads.txt&quot;&gt;may
-be&lt;/a&gt;; and
-other sources of noise. See &lt;a href=&quot;https://lwn.net/Articles/816298/&quot;&gt;more&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;At the user-space level:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;disable all the services that you can&lt;/li&gt;
-  &lt;li&gt;follow some part of the
-&lt;a href=&quot;https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/tuning_guide/chap-general_system_tuning&quot;&gt;general&lt;/a&gt;
-and
-&lt;a href=&quot;https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/tuning_guide/chap-Realtime-Specific_Tuning&quot;&gt;advanced&lt;/a&gt;
-tuning guides.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;At the instrumentation level:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;static low-overhead instrumentation if possible, dynamic if you can’t
-recompile.&lt;/li&gt;
-  &lt;li&gt;prefer deterministic (like counting the elapsed time) over sampling, specially for
-small-fast function targets; sometimes sampling is the only way however.&lt;/li&gt;
-  &lt;li&gt;use a &lt;a href=&quot;/articles/2021/02/27/High-Precision-Timers.html&quot;&gt;high precision clock&lt;/a&gt;.&lt;/li&gt;
-  &lt;li&gt;perhaps a &lt;a href=&quot;https://github.com/plasma-umass/coz&quot;&gt;causal profiler
-(coz)&lt;/a&gt;. See
-&lt;a href=&quot;https://easyperf.net/blog/2020/02/26/coz-vs-sampling-profilers&quot;&gt;post&lt;/a&gt;
-and &lt;a href=&quot;https://www.youtube.com/watch?v=r-TLSBdHe1A&quot;&gt;video&lt;/a&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;At the binary level:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;code alignment can be mostly controlled by the compiler, but it may
-add delays due the increasing of the binary. See
-&lt;a href=&quot;https://easyperf.net/blog/2018/01/25/Code_alignment_options_in_llvm&quot;&gt;post&lt;/a&gt;.&lt;/li&gt;
-  &lt;li&gt;if you cannot control it, randomize it: you will add noise but it
-will be random noise and not &lt;em&gt;biased noise&lt;/em&gt; which is much worst.
-&lt;a href=&quot;https://github.com/ccurtsinger/stabilizer&quot;&gt;Stabilizer (may be)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;The experiment:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;automate the setup of the machine as much as possible&lt;/li&gt;
-  &lt;li&gt;automate the experiment execution so it can be reproduced again in
-the future.&lt;/li&gt;
-  &lt;li&gt;run several executions and track the minimum value (if applies); if
-possible, try to run several different benchmark programs that use your
-target function.&lt;/li&gt;
-  &lt;li&gt;use different test suites and benchmarks (&lt;a href=&quot;https://github.com/google/benchmark&quot;&gt;google’s&lt;/a&gt;).&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;sources-of-noise-in-the-environment&quot;&gt;Sources of noise in the environment&lt;/h2&gt;
-
-&lt;p&gt;There are a lot.&lt;/p&gt;
-
-&lt;p&gt;Other processes running, the OS scheduler making your program to &lt;em&gt;yield&lt;/em&gt;
-the CPU, the OS interrupting to process a more urgent task (like
-interruptions) and more.&lt;/p&gt;
-
-&lt;p&gt;Graphical interfaces, network traffic and disk usage add to the mix.&lt;/p&gt;
-
-&lt;figure class=&quot;fullwidth&quot;&gt;&lt;img src=&quot;/assets/timing-assets/all-services-up-and-down.svg&quot; /&gt;&lt;figcaption&gt;The elapsed time of `foo()` executed 1000 times and sorted
-from the smallest value to the largest. The last 10 values were drop
-(not shown); numbers are in nanoseconds. On the left the experiment
-was done in a machine without any modification; on the right all the
-services were turned off, the CPU were isolated and the IRQ where
-disabled. Note not only how smaller values are obtained in the
-right environment (less noisy) but also the dispersion of the numbers
-is smaller: on the left the time goes from 0.765 to 0.8 ns (range of 0.035 ns)
-while on the right the time goes from 0.7635 to 0.7665 ns (range of
-0.003 ns). One order of magnitude.&lt;/figcaption&gt;&lt;/figure&gt;
-
-&lt;p&gt;But software is not the only source of noise.&lt;/p&gt;
-
-&lt;p&gt;The CPU may decide to &lt;em&gt;slowdown&lt;/em&gt; to conserve energy/reduce the power
-consumption. This is called &lt;a href=&quot;https://en.wikipedia.org/wiki/Dynamic_frequency_scaling&quot;&gt;Dynamic Voltage &amp;amp; Frequency Scaling
-(DVFS)&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;On the other hand, the CPU may &lt;em&gt;speedup&lt;/em&gt; and run faster if it see that
-other CPUs are idle (basically the energy/power not used by the idle CPUs
-is used by the busy CPU increasing the frequency). This is called
-&lt;a href=&quot;https://en.wikipedia.org/wiki/Overclocking&quot;&gt;Dynamic Overclocking&lt;/a&gt;
-or in Intel parlance, &lt;a href=&quot;https://en.wikipedia.org/wiki/Intel_Turbo_Boost&quot;&gt;Turbo Boost&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;multitenancy-illusion-of-power&quot;&gt;Multitenancy: illusion of power&lt;/h2&gt;
-
-&lt;p&gt;Is you hardware fully dedicated to you and your programs?&lt;/p&gt;
-
-&lt;p&gt;In these days you need to take into account the virtualization:
-how your OS interacts with the hypervisor
-(if you are running in a VM like in AWS) and how many other VMs are
-running in the same &lt;em&gt;bare metal&lt;/em&gt;, competing for it.&lt;/p&gt;
-
-&lt;p&gt;And VMs are not the only ones that add overheads. If you are in
-container like if you are using docker, you have the same issue.&lt;/p&gt;
-
-&lt;p&gt;This is called &lt;a href=&quot;https://en.wikipedia.org/wiki/Multitenancy&quot;&gt;multitenancy&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;A similar illusion of power can come from the hardware. Intel’s
-&lt;a href=&quot;https://en.wikipedia.org/wiki/Hyper-threading&quot;&gt;Hyperthreading&lt;/a&gt;
-technology allows a CPU (a core) to run two threads
-concurrently.&lt;/p&gt;
-
-&lt;p&gt;While having each thread it own set of registers in the CPU, the
-hardware is &lt;em&gt;not&lt;/em&gt; duplicated (you &lt;em&gt;don’t&lt;/em&gt; have two cores).&lt;/p&gt;
-
-&lt;p&gt;Instead, hardware units like the ALU is shared among the hyper threads.
-While the OS may show a CPU with 2 hyperthreads as 2 different cores,
-the performance is only 15%-30% compared to a non-hyperthreaded CPU.&lt;/p&gt;
-
-&lt;p&gt;This is another form of multitenancy, a hardware-based multitenancy if
-you want.&lt;/p&gt;
-
-&lt;h2 id=&quot;noise-of-the-measurement&quot;&gt;Noise of the measurement&lt;/h2&gt;
-
-&lt;p&gt;If you use a dynamic instrumentation like &lt;a href=&quot;https://valgrind.org/&quot;&gt;Valgrind&lt;/a&gt;,
-the code will &lt;a href=&quot;https://valgrind.org/info/about.html&quot;&gt;slowdown&lt;/a&gt;
-by a factor in range from 5 to 100.&lt;/p&gt;
-
-&lt;p&gt;A static instrumentation is faster but requires recompilation: you may
-need to add code by hand or let the compiler to do it.&lt;/p&gt;
-
-&lt;p&gt;And it is not trivial. Consider the following code:&lt;/p&gt;
-
-&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;experiment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;setup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-
-    &lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;begin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-    &lt;span class=&quot;kt&quot;&gt;uint64_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;end&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;now&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-
-    &lt;span class=&quot;n&quot;&gt;tear_down&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Elapsed %lu&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;begin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;‘If &lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt; is &lt;em&gt;inlined&lt;/em&gt;, the compiler / CPU may decide to execute
-some instructions from &lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt; &lt;em&gt;before&lt;/em&gt; taking the &lt;code class=&quot;highlighter-rouge&quot;&gt;begin&lt;/code&gt; mark (or
-&lt;em&gt;after&lt;/em&gt; the &lt;code class=&quot;highlighter-rouge&quot;&gt;end&lt;/code&gt; mark).&lt;/p&gt;
-
-&lt;p&gt;Even if &lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt; is not inline, code &lt;em&gt;before&lt;/em&gt; the &lt;code class=&quot;highlighter-rouge&quot;&gt;begin&lt;/code&gt; may be
-executed &lt;em&gt;after&lt;/em&gt; it (and the same for the &lt;code class=&quot;highlighter-rouge&quot;&gt;end&lt;/code&gt; mark).&lt;/p&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-0d9e0af75a1955fa2cd95154b312475e&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-0d9e0af75a1955fa2cd95154b312475e&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;I wrote a few posts about this: a lock free queue &lt;a href=&quot;/articles/2020/03/22/Lock-Free-Queue-Part-I.html&quot;&gt;part
-1&lt;/a&gt;,
-&lt;a href=&quot;/articles/2020/04/28/Lock-Free-Queue-Part-II.html&quot;&gt;part
-2&lt;/a&gt;.
- &lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;Welcome to the &lt;em&gt;out of order execution&lt;/em&gt; world.&lt;/p&gt;
-
-&lt;p&gt;You could use barriers but these are &lt;strong&gt;not&lt;/strong&gt; cheap.&lt;/p&gt;
-
-&lt;h2 id=&quot;precision-of-the-measurement&quot;&gt;Precision of the measurement&lt;/h2&gt;
-
-&lt;p&gt;Getting the time is not cost-free. Even the most &lt;a href=&quot;/articles/2021/02/27/High-Precision-Timers.html&quot;&gt;precise
-clocks&lt;/a&gt; like
-&lt;code class=&quot;highlighter-rouge&quot;&gt;clock_gettime&lt;/code&gt; adds some delay.&lt;/p&gt;
-
-&lt;p&gt;If instrumenting the binary (statically or dynamically) is too invasive,
-sampling is another option like &lt;a href=&quot;https://perf.wiki.kernel.org/index.php/Main_Page&quot;&gt;linux’s perf&lt;/a&gt;
-(see &lt;a href=&quot;http://www.brendangregg.com/perf.html&quot;&gt;more&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;You just ask what function is a program running a few times per second
-and count how many times a particular function was seen.&lt;/p&gt;
-
-&lt;p&gt;More times a function was seen, more &lt;em&gt;expensive&lt;/em&gt; should be because it
-was found more times in the CPU.&lt;/p&gt;
-
-&lt;p&gt;But it is tricky. What if the function is &lt;em&gt;called&lt;/em&gt; a lot of times? That
-would increase the probability of find it in the CPU too and it is not
-necessary related with its performance.&lt;/p&gt;
-
-&lt;p&gt;And if you want to see the performance of a very small-quick function,
-how many times do you need to sample the CPU until find the function
-there? Unlikely, short events are mostly invisible for sampling tools.&lt;/p&gt;
-
-&lt;p&gt;This is the trade-off between &lt;em&gt;deterministic&lt;/em&gt; and &lt;em&gt;sampling&lt;/em&gt; profilers.&lt;/p&gt;
-
-&lt;h2 id=&quot;unknown-variables&quot;&gt;Unknown variables&lt;/h2&gt;
-
-&lt;p&gt;This is perhaps the most subtle topic.&lt;/p&gt;
-
-&lt;p&gt;You have the first version of &lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt;, let’s name it &lt;code class=&quot;highlighter-rouge&quot;&gt;foo_1()&lt;/code&gt;. By some
-mean you measure its performance in the most precise way and you
-obtained &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;How do you know that &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; is real and not the product from an &lt;em&gt;unknown&lt;/em&gt;
-source of noise?&lt;/p&gt;
-
-&lt;p&gt;You don’t and you can probably assume that &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt; &lt;strong&gt;is&lt;/strong&gt;, in some part,
-contributed by unknown sources of noise.&lt;/p&gt;
-
-&lt;p&gt;Assuming &lt;em&gt;additive&lt;/em&gt; noise you can approximate the real value &lt;code class=&quot;highlighter-rouge&quot;&gt;X&lt;/code&gt;
-measuring &lt;code class=&quot;highlighter-rouge&quot;&gt;foo_1()&lt;/code&gt; several times and getting the minimum.&lt;/p&gt;
-
-&lt;p&gt;Now that you “know” the performance of &lt;code class=&quot;highlighter-rouge&quot;&gt;foo_1()&lt;/code&gt; you want to improve it.&lt;/p&gt;
-
-&lt;p&gt;You have &lt;code class=&quot;highlighter-rouge&quot;&gt;foo_2()&lt;/code&gt;, you measure it several times, get the minimum and
-obtain the approximated value of &lt;code class=&quot;highlighter-rouge&quot;&gt;Y&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;If you find &lt;code class=&quot;highlighter-rouge&quot;&gt;X &amp;gt; Y&lt;/code&gt; you may get happy: you improved &lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt;, &lt;strong&gt;didn’t
-you?&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;The fact that the improvement may &lt;strong&gt;not&lt;/strong&gt; due your modification to
-&lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt; but due the fact you did &lt;strong&gt;any&lt;/strong&gt; modification.&lt;/p&gt;
-
-&lt;p&gt;Changing the code changes how the code is loaded in the memory.&lt;/p&gt;
-
-&lt;p&gt;A simple refactor moving two functions closer in the same file may
-result in a better performance.&lt;/p&gt;
-
-&lt;p&gt;Consider the following two versions of the same &lt;code class=&quot;highlighter-rouge&quot;&gt;.c&lt;/code&gt; file:&lt;/p&gt;
-
-&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// version A            // version B&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;            &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-   &lt;span class=&quot;c1&quot;&gt;// code...              // code...&lt;/span&gt;
-   &lt;span class=&quot;n&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;                   &lt;span class=&quot;n&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;                       &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;zaz&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;            &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-   &lt;span class=&quot;c1&quot;&gt;// code...              // code...&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;                       &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;            &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zaz&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-   &lt;span class=&quot;c1&quot;&gt;// code...              // code...&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;                       &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Version B may be &lt;em&gt;faster&lt;/em&gt; than A just because &lt;code class=&quot;highlighter-rouge&quot;&gt;bar()&lt;/code&gt; was moved closer
-to &lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt; and the code of &lt;code class=&quot;highlighter-rouge&quot;&gt;bar()&lt;/code&gt; gets into the cache at the moment
-that &lt;code class=&quot;highlighter-rouge&quot;&gt;foo()&lt;/code&gt; does the call.&lt;/p&gt;
-
-&lt;p&gt;Code layout, &lt;a href=&quot;https://easyperf.net/blog/2018/01/18/Code_alignment_issues&quot;&gt;code alignment&lt;/a&gt;,
-data alignment, and who knows what else may change.&lt;/p&gt;
-
-&lt;p&gt;And trust me, &lt;a href=&quot;https://users.cs.northwestern.edu/~robby/courses/322-2013-spring/mytkowicz-wrong-data.pdf&quot;&gt;Producing Wrong Data Without Doing Anything Obviously Wrong!&lt;/a&gt;
-is very common and almost unavoidable.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="quiescent" /><category term="performance" /><summary type="html">You are working in optimizing a piece of software to reduce the CPU cycles that it takes. To compare your improvements, it is reasonable to measure the elapsed time before and after your change. Unless you are using a simulator, it is impossible to run a program isolated from the rest and your measurements will be noisy. If you want to take precise measurements you need a quiescent environment as much as possible.</summary></entry></feed>
+performance. Less work made the things worse!&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pointer" /><category term="memory" /><summary type="html">A quick summary of the top 3 typos that I found (or I wrote) in code that they were small but they had a deep impact on the functionality. In fact, the three bugs could summarized as follows: a missing u. an extra s. and a missing *. Do you want to see what is this about?</summary></entry></feed>
