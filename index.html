@@ -85,6 +85,40 @@
     
        <span class="index-single-post">
           <hr class="slender post-layout">
+          <a href="/articles/2021/06/14/Performance-of-ITE-Expressions.html"><h2 class="larger">Performance of ITE Expressions (incomplete)</h2></a>
+          <br><span class="smaller">June 14, 2021</span>  <br/>
+          <div><p>A <em>branch</em> is an expensive operation even in modern CPUs because the
+computer will know which of the paths is taken only in the latest stages
+of the CPU pipeline.</p>
+
+<p>In the meantime, the CPU <em>stalls</em>.</p>
+
+<p>Modern CPUs use branch prediction, speculative execution and instruction
+reordering to minimize the impact of a branch.</p>
+
+<p>They do a good job but still a <em>branch</em> is potentially expensive so they
+are replaced by <em>branchless</em> variants.</p>
+
+<p><label for="mf-4c1937e8b17cd3ed5a6b2730036f8828" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-4c1937e8b17cd3ed5a6b2730036f8828" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="" src="/assets/performance-ite-expr/min-check-elapsed-per-func-in-encrypt-experiment.svg" />  <br />Minimum  <code class="highlighter-rouge">check-elapsed</code> time (y axis) per branch/branchless function (x axis).</span></p>
+
+<p><code class="highlighter-rouge">If-Then-Else</code> or ITE for short, are symbolic expression that denotes
+a value chosen from two possible values based on a condition. These are
+the <em>symbolic branch</em>.</p>
+
+<p>Naturally we could rewrite a symbolic ITE with a symbolic <em>branchless</em>
+expression.</p>
+
+<p>The question is: which is better for a solver like Z3? Which makes the
+SMT/SAT solver faster?</p>
+
+<p>After two weeks working on this post <strong>I still don’t have an answer but at
+least I know some unknowns.</strong></p>
+
+</div>
+       </span>
+    
+       <span class="index-single-post">
+          <hr class="slender post-layout">
           <a href="/articles/2021/06/12/Document-building-from-static-blog-to-textbook.html"><h2 class="larger">Document Building: from static web blogs to textbooks</h2></a>
           <br><span class="smaller">June 12, 2021</span>  <br/>
           <div><p>I’ve being writing for a long time. I’m far from being a good writer but

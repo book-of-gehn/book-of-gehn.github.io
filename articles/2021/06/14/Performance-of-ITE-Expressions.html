@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Performance of ITE Expressions (incomplete)</title>
+  <meta name="description" content="A branch is an expensive operation even in modern CPUs because thecomputer will know which of the paths is taken only in the latest stagesof the CPU pipeline...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
+
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
+
+  <link rel="canonical" href="/articles/2021/06/14/Performance-of-ITE-Expressions.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
+
+    <script src='/js/lunr-2.3.9.js'></script>
+    <script src='/js/search_index.js'></script>
+    <script src='/js/search.js'></script>
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+    
+		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>Performance of ITE Expressions (incomplete)</h1>
+<p class="subtitle">June 14, 2021</p>
+
+<p>A <em>branch</em> is an expensive operation even in modern CPUs because the
+computer will know which of the paths is taken only in the latest stages
+of the CPU pipeline.</p>
+
+<p>In the meantime, the CPU <em>stalls</em>.</p>
+
+<p>Modern CPUs use branch prediction, speculative execution and instruction
+reordering to minimize the impact of a branch.</p>
+
+<p>They do a good job but still a <em>branch</em> is potentially expensive so they
+are replaced by <em>branchless</em> variants.</p>
+
+<p><label for="mf-4c1937e8b17cd3ed5a6b2730036f8828" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-4c1937e8b17cd3ed5a6b2730036f8828" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="" src="/assets/performance-ite-expr/min-check-elapsed-per-func-in-encrypt-experiment.svg" />  <br />Minimum  <code class="highlighter-rouge">check-elapsed</code> time (y axis) per branch/branchless function (x axis).</span></p>
+
+<p><code class="highlighter-rouge">If-Then-Else</code> or ITE for short, are symbolic expression that denotes
+a value chosen from two possible values based on a condition. These are
+the <em>symbolic branch</em>.</p>
+
+<p>Naturally we could rewrite a symbolic ITE with a symbolic <em>branchless</em>
+expression.</p>
+
+<p>The question is: which is better for a solver like Z3? Which makes the
+SMT/SAT solver faster?</p>
+
+<p>After two weeks working on this post <strong>I still don’t have an answer but at
+least I know some unknowns.</strong><!--more--></p>
+
+<h2 id="z3-if-then-else">Z3 <code class="highlighter-rouge">If-Then-Else</code></h2>
+
+<p>In Z3 we use <code class="highlighter-rouge">z3.If</code> to build such symbolic expressions.</p>
+
+<p>Take for example the following Python function <code class="highlighter-rouge">xtime</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">xtime</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">thenval</span> <span class="o">=</span> <span class="p">(((</span><span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">^</span> <span class="mh">0x1B</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">elseval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">condval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&amp;</span> <span class="mh">0x80</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">thenval</span> <span class="k">if</span> <span class="n">condval</span> <span class="k">else</span> <span class="n">elseval</span>
+</code></pre></div></div>
+
+<p>Symbolically, we could rewrite it as follows:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">If</span><span class="p">,</span> <span class="n">BitVec</span><span class="p">,</span> <span class="n">simplify</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">xtime_branch</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">thenval</span> <span class="o">=</span> <span class="p">(((</span><span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">^</span> <span class="mh">0x1B</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">elseval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">condval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&amp;</span> <span class="mh">0x80</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">If</span><span class="p">(</span><span class="n">condval</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">thenval</span><span class="p">,</span> <span class="n">elseval</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Remember that in Python, the <code class="highlighter-rouge">(thenval) if (condval) else (elseval)</code> is
+<strong>evaluated</strong> at runtime but in Z3 we cannot evaluate anything.</p>
+
+<p>So we need to model the fact that the output of <code class="highlighter-rouge">xtime</code> it may be
+<code class="highlighter-rouge">thenval</code> or <code class="highlighter-rouge">elseval</code>, depending of the condition.</p>
+
+<p>Let’s see what is the result of <code class="highlighter-rouge">xtime_branch</code></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">T</span> <span class="o">=</span> <span class="n">BitVec</span><span class="p">(</span><span class="s">'T'</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">xtime_branch</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+<span class="n">If</span><span class="p">(</span><span class="n">T</span> <span class="o">&amp;</span> <span class="mi">128</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">^</span> <span class="mi">27</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">255</span><span class="p">,</span> <span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">xtime_branch</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+<span class="n">If</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span> <span class="mi">0</span><span class="p">),</span>
+   <span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+          <span class="o">~</span><span class="n">Extract</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+          <span class="n">Extract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+          <span class="o">~</span><span class="n">Extract</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+          <span class="mi">1</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Before continuing, I would like to simplify <code class="highlighter-rouge">xtime_branch</code> a little:</p>
+
+<ul>
+  <li>the input are always an 8 bits, so the <code class="highlighter-rouge">x &amp; 0xFF</code> mask is not needed</li>
+  <li>the <code class="highlighter-rouge">thenval</code> can reuse the <code class="highlighter-rouge">elseval</code></li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">xtime_branch</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">elseval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">thenval</span> <span class="o">=</span> <span class="p">(</span><span class="n">elseval</span> <span class="o">^</span> <span class="mh">0x1B</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">condval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&amp;</span> <span class="mh">0x80</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">If</span><span class="p">(</span><span class="n">condval</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">thenval</span><span class="p">,</span> <span class="n">elseval</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">xtime_branch</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+<span class="n">If</span><span class="p">(</span><span class="n">T</span> <span class="o">&amp;</span> <span class="mi">128</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">^</span> <span class="mi">27</span><span class="p">,</span> <span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">xtime_branch</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+<span class="n">If</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+   <span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span> <span class="mi">0</span><span class="p">),</span>
+   <span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+          <span class="o">~</span><span class="n">Extract</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+          <span class="n">Extract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+          <span class="o">~</span><span class="n">Extract</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+          <span class="mi">1</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>As you see, this <code class="highlighter-rouge">xtime_branch</code> and the previous one yield the <strong>same
+result</strong> after applying <code class="highlighter-rouge">z3.simplify</code>.</p>
+
+<p>However I’m going to keep those simplifications explicit in
+<code class="highlighter-rouge">xtime_branch</code> for further optimizations later.</p>
+
+<h2 id="branchless-ite">Branchless ITE</h2>
+
+<p>The <code class="highlighter-rouge">(a &amp; 0x80) != 0</code> condition is equivalent to <code class="highlighter-rouge">(a &gt;&gt; 7) != 0</code>.</p>
+
+<p>The key point to notice is that when <code class="highlighter-rouge">(a &amp; 0x80) != 0</code> then <code class="highlighter-rouge">a &gt;&gt; 7 == 1</code>; when
+<code class="highlighter-rouge">(a &amp; 0x80) == 0</code> then <code class="highlighter-rouge">a &gt;&gt; 7 == 0</code>.</p>
+
+<p>With this <em>single bit boolean</em> we can get rid of the <code class="highlighter-rouge">If</code> doing a <strong>branchless</strong>
+<a href="https://graphics.stanford.edu/~seander/bithacks.html#IntegerMinOrMax">bithack</a></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">xtime_branchless</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">elseval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">thenval</span> <span class="o">=</span> <span class="p">(</span><span class="n">elseval</span> <span class="o">^</span> <span class="mh">0x1B</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">condval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span><span class="p">)</span> <span class="c1"># it can be 0 or 1
+</span><span class="o">...</span>     <span class="k">return</span> <span class="n">elseval</span> <span class="o">^</span> <span class="p">((</span><span class="n">thenval</span> <span class="o">^</span> <span class="n">elseval</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">-</span><span class="p">(</span><span class="n">condval</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">xtime_branchless</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">^</span> <span class="p">(</span><span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">^</span> <span class="mi">27</span> <span class="o">^</span> <span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">-</span><span class="p">(</span><span class="n">T</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">xtime_branchless</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+<span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">^</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">255</span><span class="o">*</span><span class="p">(</span><span class="n">T</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span><span class="p">)),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">^</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">Extract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span><span class="p">)),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>We don’t longer have an ITE expression!</p>
+
+<p>But there is a catch…</p>
+
+<h2 id="bit-broadcasting">Bit broadcasting</h2>
+
+<p>The catch is that we have some multiplications:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">255*(T &gt;&gt; 7)</code></li>
+  <li><code class="highlighter-rouge">3*Extract(1, 0, T &gt;&gt; 7)</code></li>
+</ul>
+
+<p>These come from <code class="highlighter-rouge">-(condval)</code>.</p>
+
+<p>When <code class="highlighter-rouge">condval</code> is 0, then <code class="highlighter-rouge">-(condval)</code> is 0, represented as eight <code class="highlighter-rouge">0</code> bits,
+the <code class="highlighter-rouge">((thenval ^ elseval) &amp; -(condval))</code> goes to 0 and the expression
+reduces to the left part of the main xor: <code class="highlighter-rouge">elseval</code>.</p>
+
+<p>When <code class="highlighter-rouge">condval</code> is 1, then <code class="highlighter-rouge">-(condval)</code> is 1, represented as eight <code class="highlighter-rouge">1</code>
+bits because in Z3 (and it a lot of other languages), the negative
+numbers are in 2-complement representation.</p>
+
+<p>This <code class="highlighter-rouge">1</code> bits mask <em>allows</em> the right side to be xor’d with the left
+side <code class="highlighter-rouge">elseval ^ thenval ^ elseval</code> which reduces to <code class="highlighter-rouge">thenval</code>.</p>
+
+<p>This why the <strong>branchless</strong> bithack works and more over, from <em>where</em>
+those multiplications come: from the 2-complement.</p>
+
+<p><code class="highlighter-rouge">z3.simplify</code> was <strong>not</strong> smart enough to <em>broadcasting</em> the least
+significant bit of <code class="highlighter-rouge">a &gt;&gt; 7</code>.</p>
+
+<p>We could do it better <em>broadcasting</em> the most significant bit
+of <code class="highlighter-rouge">a</code> and build the <em>condition mask</em> directly:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">Extract</span><span class="p">,</span> <span class="n">Concat</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">xtime_broadcasted</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">elseval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">thenval</span> <span class="o">=</span> <span class="p">(</span><span class="n">elseval</span> <span class="o">^</span> <span class="mh">0x1B</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">msb</span> <span class="o">=</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">condmask</span> <span class="o">=</span> <span class="n">Concat</span><span class="p">(</span><span class="o">*</span><span class="p">([</span><span class="n">msb</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">))</span> <span class="c1"># broadcast a single bit to 8 bits
+</span><span class="o">...</span>     <span class="k">return</span> <span class="n">elseval</span> <span class="o">^</span> <span class="p">((</span><span class="n">thenval</span> <span class="o">^</span> <span class="n">elseval</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">condmask</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">xtime_broadcasted</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">^</span>
+<span class="p">(</span><span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">^</span> <span class="mi">27</span> <span class="o">^</span> <span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span>
+<span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span>
+                                        <span class="mi">7</span><span class="p">,</span>
+                                        <span class="n">T</span><span class="p">),</span>
+                                        <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+                                        <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+                                   <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+                            <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+                     <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+              <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">xtime_broadcasted</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+<span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">^</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">^</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">^</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Ugly but once simplified with <code class="highlighter-rouge">z3.simplify</code>, <code class="highlighter-rouge">xtime_broadcasted</code> seems to
+be quite simple: only bit picking and xor.</p>
+
+<h2 id="one-last-hack">One last hack</h2>
+
+<p><code class="highlighter-rouge">xtime_broadcasted</code> can be simplified further <em>canceling</em> the <code class="highlighter-rouge">elseval</code>
+from <code class="highlighter-rouge">thenval ^ elseval</code> because <code class="highlighter-rouge">thenval == elseval &amp; 0x1B</code></p>
+
+<p>So <code class="highlighter-rouge">elseval ^ ((thenval ^ elseval) &amp; condmask)</code> reduces to
+<code class="highlighter-rouge">elseval ^ (0x1B &amp; condmask)</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">xtime_cancelled</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">elseval</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">msb</span> <span class="o">=</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">condmask</span> <span class="o">=</span> <span class="n">Concat</span><span class="p">(</span><span class="o">*</span><span class="p">([</span><span class="n">msb</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">))</span> <span class="c1"># broadcast a single bit to 8 bits
+</span><span class="o">...</span>     <span class="k">return</span> <span class="n">elseval</span> <span class="o">^</span> <span class="p">(</span><span class="mh">0x1B</span> <span class="o">&amp;</span> <span class="n">condmask</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">xtime_cancelled</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span> <span class="o">^</span>
+<span class="mi">27</span> <span class="o">&amp;</span>
+<span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span>
+                                        <span class="mi">7</span><span class="p">,</span>
+                                        <span class="n">T</span><span class="p">),</span>
+                                        <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+                                        <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+                                   <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+                            <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+                     <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+              <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">xtime_cancelled</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+<span class="n">Concat</span><span class="p">(</span><span class="n">Extract</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">^</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">^</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">^</span> <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span>
+       <span class="n">Extract</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">T</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Note how <code class="highlighter-rouge">z3.simplify</code> was <strong>smart</strong> enough to do the <em>cancellation</em>
+automatically by itself: once simplified by Z3, <code class="highlighter-rouge">xtime_broadcasted</code> and
+<code class="highlighter-rouge">xtime_cancelled</code> are the same.</p>
+
+<h2 id="correctness-of-xtime">Correctness of <code class="highlighter-rouge">xtime*</code></h2>
+
+<p>Let’s verify that we didn’t screw up.</p>
+
+<p>The search space is only <script type="math/tex">2^8</script> so we can prove if the
+<code class="highlighter-rouge">xtime_X</code> works comparing it with the original <code class="highlighter-rouge">xtime</code> <strong>for all the
+possible inputs</strong>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">BitVec</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">BitVec</span><span class="p">(</span><span class="s">'a'</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">full_search</span> <span class="o">=</span> <span class="p">[</span><span class="n">And</span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">i</span><span class="p">,</span> <span class="n">xtime_branch</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="n">xtime</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">)]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="n">full_search</span><span class="p">))</span>
+<span class="n">sat</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">full_search</span> <span class="o">=</span> <span class="p">[</span><span class="n">And</span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">i</span><span class="p">,</span> <span class="n">xtime_branchless</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="n">xtime</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">)]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="n">full_search</span><span class="p">))</span>
+<span class="n">sat</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">full_search</span> <span class="o">=</span> <span class="p">[</span><span class="n">And</span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">i</span><span class="p">,</span> <span class="n">xtime_cancelled</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="n">xtime</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">)]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="n">full_search</span><span class="p">))</span>
+<span class="n">sat</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">full_search</span> <span class="o">=</span> <span class="p">[</span><span class="n">And</span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">i</span><span class="p">,</span> <span class="n">xtime_broadcasted</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="n">xtime</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">)]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="n">full_search</span><span class="p">))</span>
+<span class="n">sat</span>
+</code></pre></div></div>
+
+<p>Everything is in order.</p>
+
+<h2 id="experiments-setup">Experiments setup</h2>
+
+<p>The 4 functions were tested in <a href="/assets/performance-ite-expr/performance-ite-expr.py">4 different
+experiments</a>
+ or scenarios:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">null_experiment</code>: an 8-bit vector and a simple bitmask operation on it
+<strong>without</strong> using <code class="highlighter-rouge">xtime*</code>. Intended to see the performance of Z3 in a
+trivial case.</li>
+  <li><code class="highlighter-rouge">single_bitvec_experiment</code>: a call to <code class="highlighter-rouge">xtime*</code> on an 8-bit vector
+and the verification of the results testing 256 possible values.</li>
+  <li><code class="highlighter-rouge">mix_two_bitvec_experiment</code>: call <code class="highlighter-rouge">xtime*</code> twice on two 8-bit vectors,
+perform a few bitmask operations on them and verify the correctness doing
+a full search of the 65536 possible values.</li>
+  <li><code class="highlighter-rouge">encrypt_rounds_experiment</code>: call <code class="highlighter-rouge">xtime*</code> several times doing
+several bitmask and shift operations on 32 8-bit vectors. This
+represents a simplified version of a single round of the AES cipher.</li>
+</ul>
+
+<p>For each experiment, each <code class="highlighter-rouge">xtime*</code> function was tested using the
+simplified and not-simplified variants.</p>
+
+<p>Each experiment consisted in create and setup a new <code class="highlighter-rouge">z3.Solver</code> with its
+<em>own</em> <code class="highlighter-rouge">z3.Context</code> and <a href="/assets/performance-ite-expr/perf-results.pq">measure the time</a>
+that it took checking the model:
+the <code class="highlighter-rouge">check-elapsed</code> time.</p>
+
+<p>Because Z3 is <strong>not</strong> deterministic, we ran each experiment at least 20
+times with a maximum of 100 times and collected not only the
+<code class="highlighter-rouge">check-elapsed</code> time but also the <a href="/assets/performance-ite-expr/z3-stats-results.pq">statistics of the
+solver</a> provided by
+Z3 with <code class="highlighter-rouge">solver.statistics()</code>.</p>
+
+<p>The <code class="highlighter-rouge">null_experiment</code> actually does <strong>not</strong> use the <code class="highlighter-rouge">xtime*</code> function and
+it is used to have an idea of how small the  <code class="highlighter-rouge">check-elapsed</code> time can
+be.</p>
+
+<h2 id="experiments-results">Experiments results</h2>
+
+<p>The first thing that we can see is how each <code class="highlighter-rouge">xtime*</code> performed in each
+experiment.</p>
+
+<figure class="fullwidth"><img src="/assets/performance-ite-expr/mean-check-elapsed-per-func-experiment.svg" /><figcaption>Mean  `check-elapsed` time (y axis) per `xtime*` function (x axis).
+Each subplot corresponds to a different experiment.</figcaption></figure>
+
+<p>A few remarks:</p>
+
+<ul>
+  <li>The <code class="highlighter-rouge">null_experiment</code> shows a quite stable plot regardless of the
+<code class="highlighter-rouge">xtime*</code> used as expected.</li>
+  <li>For <code class="highlighter-rouge">single_bitvec_experiment</code> and <code class="highlighter-rouge">mix_two_bitvec_experiment</code> there
+is little difference if <code class="highlighter-rouge">xtime*</code> was simplified or not but it <strong>really
+made a difference</strong> for the <code class="highlighter-rouge">encrypt_rounds_experiment</code>.</li>
+  <li>The ITE expression of <code class="highlighter-rouge">xtime_branch</code> performed better than the others
+in <code class="highlighter-rouge">single_bitvec_experiment</code> but it was as twice as slow in
+<code class="highlighter-rouge">mix_two_bitvec_experiment</code>. <em>Why?</em></li>
+  <li>The <code class="highlighter-rouge">encrypt_rounds_experiment</code> shows some weird results: a
+simplified <code class="highlighter-rouge">xtime_branchless</code> is incredibly slow while the
+non-simplified version is incredibly fast, even faster than the rest.</li>
+  <li>Moreover, in <code class="highlighter-rouge">encrypt_rounds_experiment</code> the simplified <code class="highlighter-rouge">xtime_broadcasted</code>
+and <code class="highlighter-rouge">xtime_cancelled</code> have different performance but as we shown before,
+they are the same!</li>
+</ul>
+
+<p>This last item makes me thing, are we seeing an outlier affecting the
+mean?</p>
+
+<p>We can rule that out measuring the <em>minimum</em> instead of the <em>mean</em>.</p>
+
+<figure><figcaption><span>Minimum  <code class="highlighter-rouge">check-elapsed</code> time (y axis) per <code class="highlighter-rouge">xtime*</code> function (x axis).
+Each subplot corresponds to a different experiment. Note how the plot
+has the same shape than before.</span></figcaption><img src="/assets/performance-ite-expr/min-check-elapsed-per-func-in-encrypt-experiment.svg" /></figure>
+
+<p>Nope, same thing.</p>
+
+<p>Could be this discrepancy be just by luck? We need a measure independent
+from the time and Z3 tracks several statistics for that.</p>
+
+<p>It’s unclear what they mean however.</p>
+
+<p>Exploring a little it seems that there is a relationship between <code class="highlighter-rouge">'added
+eqs'</code> and the elapsed time.</p>
+
+<figure><figcaption><span>Relation and linear regression between the time that <code class="highlighter-rouge">check()</code> took and
+the amount of <code class="highlighter-rouge">added eqs</code>. They follow almost a perfect linear
+relationship.</span></figcaption><img src="/assets/performance-ite-expr/rel-check-elapsed-and-added-eqs.svg" /></figure>
+
+<p>Let’s see how many <code class="highlighter-rouge">eqs</code> were <code class="highlighter-rouge">added</code> in the
+<code class="highlighter-rouge">encrypt_rounds_experiment</code>:</p>
+
+<figure><figcaption><span>Mean <code class="highlighter-rouge">added eqs</code> (y axis) per <code class="highlighter-rouge">xtime*</code> function (x axis).
+Each subplot corresponds to a different experiment. Note how the plot
+has the same shape than before showing a strong relationship between
+<code class="highlighter-rouge">added eqs</code> and the <code class="highlighter-rouge">check-elapsed</code> time.</span></figcaption><img src="/assets/performance-ite-expr/mean-added-eqs-per-func-in-encrypt-experiment.svg" /></figure>
+
+<p>Same shape that before: for some reason Z3 added more eqs in
+<code class="highlighter-rouge">xtime_broadcasted</code> than in <code class="highlighter-rouge">xtime_cancelled</code>
+(both simplified) even if both are the same Z3 expressions.</p>
+
+<p>So the discrepancy is not due the noise: Z3 indeed saw these two as
+different things.</p>
+
+<h3 id="code-and-results">Code and results</h3>
+
+<ul>
+  <li><a href="/assets/performance-ite-expr/performance-ite-expr.py">Experiments (Python code)</a></li>
+  <li><a href="/assets/performance-ite-expr/plot.py">Plotting (Python code)</a></li>
+  <li><a href="/assets/performance-ite-expr/perf-results.pq">Runtime results (Pandas DataFrame in Parquet format)</a></li>
+  <li><a href="/assets/performance-ite-expr/z3-stats-results.pq">Z3 stats (Pandas DataFrame in Parquet format)</a></li>
+</ul>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>None.</p>
+
+<p>I’m still missing a lot of pieces of this puzzle.</p>
+
+
+
+
+    </article>
+    <span class="print-footer">Performance of ITE Expressions (incomplete) - June 14, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>
