@@ -207,6 +207,15 @@ particular syntax by default?</p>
 
 <h2 id="fixing-syntax-highlighting">Fixing syntax highlighting</h2>
 
+<p><label for="mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb" class="margin-toggle"> ⊕</label><input type="checkbox" id="mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb" class="margin-toggle" /></p>
+<div id="mk-mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb"><span class="marginnote marginmarkdowncode"><div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">pdisass</span> <span class="o">&amp;</span><span class="n">main</span>
+ <span class="err">►</span> <span class="mh">0x1044c</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;</span>       <span class="k">push</span>   <span class="err">{</span><span class="n">fp</span><span class="p">,</span> <span class="n">lr</span><span class="err">}</span>
+   <span class="mh">0x10450</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span>     <span class="k">add</span>    <span class="n">fp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span>
+   <span class="mh">0x10454</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span>     <span class="k">sub</span>    <span class="n">sp</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="err">#</span><span class="mh">0x50</span>
+   <span class="mh">0x10470</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span>    <span class="n">bl</span>     <span class="err">#</span><span class="n">gets</span><span class="err">@</span><span class="n">plt</span> <span class="o">&lt;</span><span class="n">gets</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+</code></pre></div></div></span></div>
+<div><script>$(document).ready(function () {$('#mk-mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb > span').insertAfter($('#mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb'))});</script></div>
+
 <p>For the blog, the code is highlighted with
 <a href="https://github.com/rouge-ruby/rouge">Rouge</a>. It works like a charm but
 no without some sharp corners.</p>
@@ -276,11 +285,13 @@ be quite handy.</p>
 
 <h2 id="images-and-diagrams">Images and diagrams</h2>
 
+<p><label for="mf-8c43495893bc436c757e27a698704351" class="margin-toggle  ">⊕</label><input type="checkbox" id="mf-8c43495893bc436c757e27a698704351" class="margin-toggle  " /><span class="marginnote  "><img style="" class="fullwidth" alt="" src="/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-v1.svg" />  <br /></span></p>
+
 <p>I make a lot of diagrams, state machines and plots but I try to not make
 them by hand.</p>
 
 <p>Tools that requires a human to do the layout are a waste of time (there
-are exceptions like me <a href="/book-of-gehn/articles/2021/06/05/Seaborn-Cheatsheet.html">Seaborn Cheatsheet</a>).</p>
+are exceptions like me <a href="/articles/2021/06/05/Seaborn-Cheatsheet.html">Seaborn Cheatsheet</a>).</p>
 
 <p>Instead I prefer to <em>describe</em> the diagram in text and let a
 program to do the image and layout for me.</p>
@@ -290,6 +301,8 @@ name, it is for more than UML.</p>
 
 <p>For simpler block diagrams I use <a href="http://ditaa.sourceforge.net/">Ditaa</a>
 and for graph-like I have the good old <a href="https://graphviz.org/">Graphviz</a>.</p>
+
+<p><label for="mf-029d41dcf8a97a3b1b6bb5e45d9af0d2" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-029d41dcf8a97a3b1b6bb5e45d9af0d2" class="margin-toggle " /><span class="marginnote "><object align="middle" data="/uml/399c03db9497f365d6e048da0696cae61c7ac9aa.svg" type="image/svg+xml"></object>  <br /></span></p>
 
 <p>So far I’m using these tools for by blog so I write the
 PlantUML/Ditaa/Graphviz diagrams (text) inside a Liquid tag in the same
@@ -399,6 +412,10 @@ to be trivial.</p>
 
 <p>There are a lot of gaps and problems without solution but I bet that
 this is going to improve my workflow.</p>
+
+<p>So far, this is want I think it may work:</p>
+
+<figure><figcaption><span></span></figcaption><object align="middle" data="/uml/e3d4801595e03eed8ca3488fce8b4c511c7ac9aa.svg" type="image/svg+xml"></object></figure>
 
 <p>Fingers crossed.</p>
 

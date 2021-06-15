@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-06-15T00:56:06+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">Performance of ITE Expressions (incomplete)</title><link href="/articles/2021/06/14/Performance-of-ITE-Expressions.html" rel="alternate" type="text/html" title="Performance of ITE Expressions (incomplete)" /><published>2021-06-14T00:00:00+02:00</published><updated>2021-06-14T00:00:00+02:00</updated><id>/articles/2021/06/14/Performance-of-ITE-Expressions</id><content type="html" xml:base="/articles/2021/06/14/Performance-of-ITE-Expressions.html">&lt;p&gt;A &lt;em&gt;branch&lt;/em&gt; is an expensive operation even in modern CPUs because the
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-06-15T02:29:02+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">Performance of ITE Expressions (incomplete)</title><link href="/articles/2021/06/14/Performance-of-ITE-Expressions.html" rel="alternate" type="text/html" title="Performance of ITE Expressions (incomplete)" /><published>2021-06-14T00:00:00+02:00</published><updated>2021-06-14T00:00:00+02:00</updated><id>/articles/2021/06/14/Performance-of-ITE-Expressions</id><content type="html" xml:base="/articles/2021/06/14/Performance-of-ITE-Expressions.html">&lt;p&gt;A &lt;em&gt;branch&lt;/em&gt; is an expensive operation even in modern CPUs because the
 computer will know which of the paths is taken only in the latest stages
 of the CPU pipeline.&lt;/p&gt;
 
@@ -513,6 +513,15 @@ particular syntax by default?&lt;/p&gt;
 
 &lt;h2 id=&quot;fixing-syntax-highlighting&quot;&gt;Fixing syntax highlighting&lt;/h2&gt;
 
+&lt;p&gt;&lt;label for=&quot;mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb&quot; class=&quot;margin-toggle&quot; /&gt;&lt;/p&gt;
+&lt;div id=&quot;mk-mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb&quot;&gt;&lt;span class=&quot;marginnote marginmarkdowncode&quot;&gt;&lt;div class=&quot;language-nasm highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;pwndbg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pdisass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;
+ &lt;span class=&quot;err&quot;&gt;►&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1044c&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;       &lt;span class=&quot;k&quot;&gt;push&lt;/span&gt;   &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lr&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
+   &lt;span class=&quot;mh&quot;&gt;0x10450&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;add&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
+   &lt;span class=&quot;mh&quot;&gt;0x10454&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;sub&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x50&lt;/span&gt;
+   &lt;span class=&quot;mh&quot;&gt;0x10470&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;36&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;bl&lt;/span&gt;     &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;script&gt;$(document).ready(function () {$('#mk-mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb &gt; span').insertAfter($('#mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb'))});&lt;/script&gt;&lt;/div&gt;
+
 &lt;p&gt;For the blog, the code is highlighted with
 &lt;a href=&quot;https://github.com/rouge-ruby/rouge&quot;&gt;Rouge&lt;/a&gt;. It works like a charm but
 no without some sharp corners.&lt;/p&gt;
@@ -582,11 +591,13 @@ be quite handy.&lt;/p&gt;
 
 &lt;h2 id=&quot;images-and-diagrams&quot;&gt;Images and diagrams&lt;/h2&gt;
 
+&lt;p&gt;&lt;label for=&quot;mf-8c43495893bc436c757e27a698704351&quot; class=&quot;margin-toggle  &quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-8c43495893bc436c757e27a698704351&quot; class=&quot;margin-toggle  &quot; /&gt;&lt;span class=&quot;marginnote  &quot;&gt;&lt;img style=&quot;&quot; class=&quot;fullwidth&quot; alt=&quot;&quot; src=&quot;/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-v1.svg&quot; /&gt;  &lt;br /&gt;&lt;/span&gt;&lt;/p&gt;
+
 &lt;p&gt;I make a lot of diagrams, state machines and plots but I try to not make
 them by hand.&lt;/p&gt;
 
 &lt;p&gt;Tools that requires a human to do the layout are a waste of time (there
-are exceptions like me &lt;a href=&quot;/book-of-gehn/articles/2021/06/05/Seaborn-Cheatsheet.html&quot;&gt;Seaborn Cheatsheet&lt;/a&gt;).&lt;/p&gt;
+are exceptions like me &lt;a href=&quot;/articles/2021/06/05/Seaborn-Cheatsheet.html&quot;&gt;Seaborn Cheatsheet&lt;/a&gt;).&lt;/p&gt;
 
 &lt;p&gt;Instead I prefer to &lt;em&gt;describe&lt;/em&gt; the diagram in text and let a
 program to do the image and layout for me.&lt;/p&gt;
@@ -596,6 +607,8 @@ name, it is for more than UML.&lt;/p&gt;
 
 &lt;p&gt;For simpler block diagrams I use &lt;a href=&quot;http://ditaa.sourceforge.net/&quot;&gt;Ditaa&lt;/a&gt;
 and for graph-like I have the good old &lt;a href=&quot;https://graphviz.org/&quot;&gt;Graphviz&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;label for=&quot;mf-029d41dcf8a97a3b1b6bb5e45d9af0d2&quot; class=&quot;margin-toggle &quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-029d41dcf8a97a3b1b6bb5e45d9af0d2&quot; class=&quot;margin-toggle &quot; /&gt;&lt;span class=&quot;marginnote &quot;&gt;&lt;object align=&quot;middle&quot; data=&quot;/uml/399c03db9497f365d6e048da0696cae61c7ac9aa.svg&quot; type=&quot;image/svg+xml&quot;&gt;&lt;/object&gt;  &lt;br /&gt;&lt;/span&gt;&lt;/p&gt;
 
 &lt;p&gt;So far I’m using these tools for by blog so I write the
 PlantUML/Ditaa/Graphviz diagrams (text) inside a Liquid tag in the same
@@ -705,6 +718,10 @@ to be trivial.&lt;/p&gt;
 
 &lt;p&gt;There are a lot of gaps and problems without solution but I bet that
 this is going to improve my workflow.&lt;/p&gt;
+
+&lt;p&gt;So far, this is want I think it may work:&lt;/p&gt;
+
+&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;&lt;/span&gt;&lt;/figcaption&gt;&lt;object align=&quot;middle&quot; data=&quot;/uml/e3d4801595e03eed8ca3488fce8b4c511c7ac9aa.svg&quot; type=&quot;image/svg+xml&quot;&gt;&lt;/object&gt;&lt;/figure&gt;
 
 &lt;p&gt;Fingers crossed.&lt;/p&gt;</content><author><name>Gehn</name></author><summary type="html">I’ve being writing for a long time. I’m far from being a good writer but having the consistency to write at least a blog post every month gave me more expressive power. Being a non-English native speaker, that also put me in an uncomfortable position –out of the confort zone– but looking back, even with all my mistakes, I really improved. I’m using a bunch of different technologies to assist me: the blog site is written in Markdown and turned into a static web site with Jekyll. the C/C++ lectures that I give are made with Latex/Beamer. the C/C++ textbook is also in Markdown but it’s compiled into a PDF using Pandoc and Foliant. And while those have been incredible powerful, I hit the limitations of them in time to time. This writeup is meant to brainstorm and design a new way to work.</summary></entry><entry><title type="html">Seaborn Cheatsheet</title><link href="/articles/2021/06/05/Seaborn-Cheatsheet.html" rel="alternate" type="text/html" title="Seaborn Cheatsheet" /><published>2021-06-05T00:00:00+02:00</published><updated>2021-06-05T00:00:00+02:00</updated><id>/articles/2021/06/05/Seaborn-Cheatsheet</id><content type="html" xml:base="/articles/2021/06/05/Seaborn-Cheatsheet.html">&lt;p&gt;Plotting data was always for me a weak point: it always took me a lot of
 time to make the plots and graphs, reading the documentation, &lt;em&gt;googling&lt;/em&gt;
