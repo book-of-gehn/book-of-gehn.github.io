@@ -278,8 +278,27 @@ h1.header-title {
   font-weight: 400;
   margin-top: 4rem;
   margin-bottom: 1.5rem;
-  font-size: 6rem;
+  font-size: 5rem;
   line-height: 1; }
+
+ul.header-list {
+  text-align: right;
+  display: inline-block;
+  list-style: none;
+  margin-top: 50px;
+  margin-left: 30px;
+  width: initial;
+  border-right: 2px solid black;
+  /* position: absolute; */
+  /* right: 10%; */
+  /* top: 0px; */ }
+
+ul.header-list li {
+  margin-top: 0px;
+  padding-right: 5px; }
+
+hgroup.header-group {
+  display: inline-block; }
 
 h2 {
   font-style: italic;

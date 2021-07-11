@@ -68,7 +68,14 @@
     <header>
 	
     
+                <hgroup class="header-group">
 		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li><a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a></li>
+                </ul>
 		
 		
 	
@@ -82,6 +89,36 @@
       <h1></h1>
 <p class="subtitle"></p>
 
+    
+       <span class="index-single-post">
+          <hr class="slender post-layout">
+          <a href="/articles/2021/07/11/Home-Made-Python-F-String.html"><h2 class="larger">Home Made Python F-String</h2></a>
+          <br><span class="smaller">July 11, 2021</span>  <br/>
+          <div><p>Python 3.6 introduced the so called <em>f-strings</em>: literal strings that
+support formatting from the variable in the local context.</p>
+
+<p>Before 3.6 you would to do something like this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">11</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">22</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s">"x={x} y={y}"</span><span class="o">.</span><span class="nb">format</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+<span class="s">'x=11 y=22'</span>
+</code></pre></div></div>
+
+<p>But with the f-strings we can remove the burocratic call to <code class="highlighter-rouge">format</code>:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="s">"x={x} y={y}"</span>
+<span class="s">'x=11 y=22'</span>
+</code></pre></div></div>
+
+<p>A few days ago
+<a href="https://yurichev.com/news/20210707_py_problem/">Yurichev</a> posted: could
+we achieve a similar feature but without using the f-strings?.</p>
+
+<p>Challenge accepted.</p>
+
+</div>
+       </span>
     
        <span class="index-single-post">
           <hr class="slender post-layout">
@@ -1367,11 +1404,16 @@ trusted authority.</p>
           <br><span class="smaller">December 18, 2016</span>  <br/>
           <div><p><label for="mf-5d444facb38e79ef0c8ab5be26ebb333" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-5d444facb38e79ef0c8ab5be26ebb333" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="Trimming and Scraping" src="/assets/trimming_scraping_ddrescue.png" />  <br />Trimming and Scraping</span></p>
 
-<p>A friend of mine called me: a girl friend of him was hopeless trying to recover her thesis from a corrupted usb stick <em>three days</em> before her presentation.</p>
+<p>A friend of mine called me: a girl friend of him was hopeless trying to recover
+her thesis from a corrupted usb stick <em>three days</em> before her presentation.</p>
 
-<p>She was working in her thesis for almost a year, saving all the progresses in that usb stick. But what she didn’t know was that an usb memory has a limited number of writes and with more writes eventually the file system gets corrupted.</p>
+<p>She was working in her thesis for almost a year, saving all the progresses
+in that usb stick. But what she didn’t know was that an usb memory has a
+limited number of writes and with more writes eventually
+the file system gets corrupted.</p>
 
-<p>This is the real story behind a forensics rally trying to recover her one year work.</p>
+<p>This is the real story behind a forensics rally trying
+to recover her one year work.</p>
 
 </div>
        </span>
