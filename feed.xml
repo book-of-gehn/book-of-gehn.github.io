@@ -1,4 +1,338 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-07-11T20:27:38+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">Home Made Python F-String</title><link href="/articles/2021/07/11/Home-Made-Python-F-String.html" rel="alternate" type="text/html" title="Home Made Python F-String" /><published>2021-07-11T00:00:00+02:00</published><updated>2021-07-11T00:00:00+02:00</updated><id>/articles/2021/07/11/Home-Made-Python-F-String</id><content type="html" xml:base="/articles/2021/07/11/Home-Made-Python-F-String.html">&lt;p&gt;Python 3.6 introduced the so called &lt;em&gt;f-strings&lt;/em&gt;: literal strings that
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-07-12T05:35:36+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">SMT Goals and Strategies</title><link href="/articles/2021/07/12/SMT-Goals-and-Strategies.html" rel="alternate" type="text/html" title="SMT Goals and Strategies" /><published>2021-07-12T00:00:00+02:00</published><updated>2021-07-12T00:00:00+02:00</updated><id>/articles/2021/07/12/SMT-Goals-and-Strategies</id><content type="html" xml:base="/articles/2021/07/12/SMT-Goals-and-Strategies.html">&lt;p&gt;SMT/SAT problems are in general &lt;em&gt;undecidable&lt;/em&gt;: basically we cannot know
+if we can get even an answer. The &lt;em&gt;search space&lt;/em&gt; is in general infinite.&lt;/p&gt;
+
+&lt;p&gt;But several concrete problems have a reduced space and &lt;em&gt;may be tractable&lt;/em&gt;:
+while theoritical really hard, we can find a solution in a resonable
+time.&lt;/p&gt;
+
+&lt;p&gt;Still, a solver may need some extra help to navigate across the search
+space.&lt;/p&gt;
+
+&lt;p&gt;A &lt;em&gt;strategy&lt;/em&gt; is a &lt;em&gt;guide&lt;/em&gt; that hopefully will lead to a solution
+(&lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt;) in a &lt;em&gt;reasonable time&lt;/em&gt; using a
+&lt;em&gt;reasonable amount of resources&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;It is quite an art and the concepts were around for more than 30 years.&lt;/p&gt;
+
+&lt;p&gt;This post is a quick overview of concepts like &lt;em&gt;strategies&lt;/em&gt;, &lt;em&gt;tactics&lt;/em&gt;,
+&lt;em&gt;tacticals&lt;/em&gt;, &lt;em&gt;merit order&lt;/em&gt;, &lt;em&gt;cost functions&lt;/em&gt;, &lt;em&gt;heuristic functions&lt;/em&gt;,
+&lt;em&gt;goals&lt;/em&gt;, &lt;em&gt;approximations&lt;/em&gt;, &lt;em&gt;redundancy control&lt;/em&gt;, &lt;em&gt;search strategies&lt;/em&gt;,
+&lt;em&gt;probes&lt;/em&gt; and a few more.&lt;/p&gt;
+
+&lt;p&gt;Quite a heavy post I’m afraid.&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;goals&quot;&gt;Goals&lt;/h2&gt;
+
+&lt;p&gt;A &lt;em&gt;goal&lt;/em&gt; is what we want to solve. Depending of the underlying &lt;em&gt;theory&lt;/em&gt;
+this can be:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;a set of inequations, and we want to see if there is a solution to them.&lt;/li&gt;
+  &lt;li&gt;a set of propositional clauses, and want to see if exist
+propositional variables to make them true.&lt;/li&gt;
+  &lt;li&gt;even a combination of theories are possible.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let be the &lt;em&gt;goal set&lt;/em&gt; &lt;script type=&quot;math/tex&quot;&gt;{G}&lt;/script&gt; consisting of a single goal &lt;script type=&quot;math/tex&quot;&gt;G&lt;/script&gt;:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+G: [ a = b + 1, (a &lt; 0 ∨ a &gt; 0), b &gt; 3 ] %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;The goal is to see if
+there is an &lt;em&gt;assignment&lt;/em&gt; for &lt;script type=&quot;math/tex&quot;&gt;a&lt;/script&gt; and &lt;script type=&quot;math/tex&quot;&gt;b&lt;/script&gt; such those inequations hold
+or if there is a &lt;em&gt;contradiction&lt;/em&gt; so it doesn’t exist such assignment.&lt;/p&gt;
+
+&lt;p&gt;In the first case we say that the such assignment &lt;em&gt;satisfies&lt;/em&gt; the goal
+(the solver returned &lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt;); in the second case the problem is
+&lt;em&gt;unsatisfied&lt;/em&gt; (&lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt;).&lt;/p&gt;
+
+&lt;h2 id=&quot;tactics&quot;&gt;Tactics&lt;/h2&gt;
+
+&lt;p&gt;A &lt;em&gt;tactic&lt;/em&gt; tries to solve the goal or at least tries to make it easier
+to solve.&lt;/p&gt;
+
+&lt;p&gt;The tactic &lt;code class=&quot;highlighter-rouge&quot;&gt;elim&lt;/code&gt;, for example, eliminates intermedian variables such given
+&lt;script type=&quot;math/tex&quot;&gt;a = b + 1&lt;/script&gt; the tactic can eliminate &lt;script type=&quot;math/tex&quot;&gt;a&lt;/script&gt; and replace it by
+&lt;script type=&quot;math/tex&quot;&gt;b + 1&lt;/script&gt;.&lt;/p&gt;
+
+&lt;p&gt;It doesn’t solve the problem, but it makes it a little easier to solve
+later.&lt;/p&gt;
+
+&lt;p&gt;A tactic may have 4 possible results:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt;: the tactic resolved the goal and returned a &lt;em&gt;model&lt;/em&gt;, an
+&lt;em&gt;assignment&lt;/em&gt; that satisfies the goal.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt;: the tactic found a contradiction and returned a &lt;em&gt;proof&lt;/em&gt; of
+why the goal is &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;unknown&lt;/code&gt;: the tactic returns a set of &lt;em&gt;subgoals&lt;/em&gt;,
+hopefully being simpler to solve.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;fail&lt;/code&gt;: the tactic didn’t work.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In this case the tactic &lt;code class=&quot;highlighter-rouge&quot;&gt;elim&lt;/code&gt; returns &lt;code class=&quot;highlighter-rouge&quot;&gt;unknown&lt;/code&gt; and the following
+1-goal set:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+G_1: [ (b + 1 &lt; 0 ∨ b + 1 &gt; 0), b &gt; 3] %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;The tactic &lt;code class=&quot;highlighter-rouge&quot;&gt;split-or&lt;/code&gt; takes each goal and &lt;em&gt;splits&lt;/em&gt; the disjunctives
+generating a &lt;em&gt;subgoal&lt;/em&gt; per case. Like before this tactic returns
+&lt;code class=&quot;highlighter-rouge&quot;&gt;unknown&lt;/code&gt; and the subgoals (an ordered set):&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+G_2: [ b + 1 &lt; 0, b &gt; 3]    \\
+G_3: [ b + 1 &gt; 0, b &gt; 3] %]]&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;approximations&quot;&gt;Approximations&lt;/h3&gt;
+
+&lt;p&gt;The tactics may &lt;em&gt;under-approximate&lt;/em&gt; by changing the initial goal by
+another, hopeful simpler, which if it is &lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; then the initial goal is
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; too.&lt;/p&gt;
+
+&lt;p&gt;An example could be adding more restrictions or assumptions: if the new
+&lt;em&gt;more restrictive&lt;/em&gt; problem is &lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; then the initial is &lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; too. This
+is known as &lt;em&gt;strengthening&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;However, if a &lt;em&gt;under-approximate&lt;/em&gt; tactic yields &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt; we cannot say
+anything about the initial goal.&lt;/p&gt;
+
+&lt;p&gt;The tactics may also &lt;em&gt;over-approximate&lt;/em&gt; by making a new goal &lt;em&gt;less
+restrictive&lt;/em&gt;: if the new problem is &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt; then the initial goal is
+&lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt; too; if the new problem is &lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; however, we cannot say anything
+else.&lt;/p&gt;
+
+&lt;p&gt;An example could be removing restrictions or assumptions known as
+&lt;em&gt;weakening&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;goals-sets&quot;&gt;Goals sets&lt;/h2&gt;
+
+&lt;p&gt;In [2] the returned set by a tactic is in fact two: the set of goals &lt;em&gt;added&lt;/em&gt; and
+the set of goals &lt;em&gt;deleted&lt;/em&gt; from the initial goal set. The &lt;em&gt;deleted&lt;/em&gt; set
+not only deletes the goals but also &lt;em&gt;marks&lt;/em&gt; them to make sure they are
+not readded later (called &lt;em&gt;redundacy control&lt;/em&gt; [1])&lt;/p&gt;
+
+&lt;p&gt;In [1] the tactic are categorized as &lt;em&gt;ordering-based&lt;/em&gt; if their input
+is a &lt;em&gt;set of objects&lt;/em&gt; (all the goals) and &lt;em&gt;subgoal-reduction&lt;/em&gt;
+if their input is a &lt;em&gt;single object&lt;/em&gt; (a single goal).&lt;/p&gt;
+
+&lt;p&gt;The first operates over all the goals in each step and it is where
+it makes possible to &lt;em&gt;add&lt;/em&gt; or &lt;em&gt;remove&lt;/em&gt; goals from the set.&lt;/p&gt;
+
+&lt;p&gt;On the other hand the second operates over each goal at time.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Note: [1] uses &lt;em&gt;ordering-based&lt;/em&gt; and &lt;em&gt;subgoal-reduction&lt;/em&gt; to categorize
+&lt;em&gt;strategies&lt;/em&gt; and not
+&lt;em&gt;tactics&lt;/em&gt; but it seems reasonable to stretch a little the definition.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;tactics-products-models-and-proofs&quot;&gt;Tactics’ products: models and proofs&lt;/h3&gt;
+
+&lt;p&gt;Note that subgoals &lt;script type=&quot;math/tex&quot;&gt;G_2&lt;/script&gt; and &lt;script type=&quot;math/tex&quot;&gt;G_3&lt;/script&gt; comes from a &lt;em&gt;disjunctive&lt;/em&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;at least one must be true to declare the parent goal &lt;code class=&quot;highlighter-rouge&quot;&gt;G_1&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;all of them must be false to declare the parent goal &lt;code class=&quot;highlighter-rouge&quot;&gt;G_1&lt;/code&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In addition the tactic must build a model from &lt;em&gt;one&lt;/em&gt; of the subgoal
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; and a proof from &lt;em&gt;all&lt;/em&gt; the subgoals when they are &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is handled by the tactic’s &lt;em&gt;model converter&lt;/em&gt; and &lt;em&gt;proof converter&lt;/em&gt;
+functions, &lt;code class=&quot;highlighter-rouge&quot;&gt;mc&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;pc&lt;/code&gt; for short.&lt;/p&gt;
+
+&lt;h2 id=&quot;proof-graphs--search-graphs&quot;&gt;Proof graphs / Search graphs&lt;/h2&gt;
+
+&lt;p&gt;The successive application of tactics generates subgoals that induce a
+tree structure know as the &lt;em&gt;proof tree&lt;/em&gt;:&lt;/p&gt;
+
+&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;&lt;/span&gt;&lt;/figcaption&gt;&lt;object align=&quot;middle&quot; data=&quot;/uml/52637bb5773d16f88f74489bc2ac72c61c7ac9aa.svg&quot; type=&quot;image/svg+xml&quot;&gt;&lt;/object&gt;&lt;/figure&gt;
+
+&lt;p&gt;Formally, to say proof &lt;em&gt;tree&lt;/em&gt; we need to restrict the tactics to not
+generate repeated goals (so we don’t have cycles).&lt;/p&gt;
+
+&lt;p&gt;Having then a &lt;em&gt;single&lt;/em&gt; starting goal, the &lt;em&gt;successive application&lt;/em&gt; of
+the tactics forms a &lt;em&gt;tree&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;We can extend this and have &lt;em&gt;multiple&lt;/em&gt; starting goals in which case we
+will have an &lt;em&gt;acyclic graph&lt;/em&gt; like described in [3]. (in [3] is more
+specific and refers to &lt;em&gt;goals&lt;/em&gt; and &lt;em&gt;tactics&lt;/em&gt; as &lt;em&gt;states&lt;/em&gt; (of a proof)
+and &lt;em&gt;rules of induction&lt;/em&gt; but they are the same idea).&lt;/p&gt;
+
+&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;&lt;/span&gt;&lt;/figcaption&gt;&lt;object align=&quot;middle&quot; data=&quot;/uml/1149eb86deda6112b727afda931840f11c7ac9aa.svg&quot; type=&quot;image/svg+xml&quot;&gt;&lt;/object&gt;&lt;/figure&gt;
+
+&lt;p&gt;With &lt;em&gt;subgoal-reduction&lt;/em&gt; tactics, the graph is generated edge by edge;
+with &lt;em&gt;ordering-based&lt;/em&gt; tactics, the graph is generated by multiple edges
+at time.&lt;/p&gt;
+
+&lt;p&gt;Note that the generation (or walking) of this graph is
+non-deterministic: why you would the solver choose to explore the
+edge/edges from one node/nodes instead of the other?&lt;/p&gt;
+
+&lt;p&gt;To make it deterministic we have a way to &lt;em&gt;choose&lt;/em&gt; which exploration do
+and in which &lt;em&gt;order&lt;/em&gt;. This is the &lt;em&gt;search strategy&lt;/em&gt; based on a &lt;em&gt;merit
+order&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;search-strategy&quot;&gt;Search strategy&lt;/h2&gt;
+
+&lt;p&gt;In [3] it is introduced the notion of &lt;em&gt;merit order&lt;/em&gt;, a relationship
+between every pair of nodes in the graph: &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; ≼ &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;This &lt;em&gt;merit order&lt;/em&gt; could have different definitions:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; ≼ &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt; if &lt;script type=&quot;math/tex&quot;&gt;i&lt;/script&gt; ≤ &lt;script type=&quot;math/tex&quot;&gt;j&lt;/script&gt; (a &lt;em&gt;breadth first&lt;/em&gt; order)&lt;/li&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; ≼ &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt; if &lt;script type=&quot;math/tex&quot;&gt;c(g_i)&lt;/script&gt; ≤ &lt;script type=&quot;math/tex&quot;&gt;c(g_j)&lt;/script&gt; for some &lt;em&gt;cost function&lt;/em&gt;
+&lt;script type=&quot;math/tex&quot;&gt;c(n)&lt;/script&gt; ≥ &lt;script type=&quot;math/tex&quot;&gt;0&lt;/script&gt;.&lt;/li&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; ≼ &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt; if &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; is in a predecesor layer or level than
+&lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt; (&lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; is better than &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt; because it required less
+applications of tactics)&lt;/li&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; ≼ &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt; if &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; is in a successor layer than &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt;
+(a &lt;em&gt;depth first&lt;/em&gt; order).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A &lt;em&gt;search strategy&lt;/em&gt; could use the &lt;em&gt;merit order&lt;/em&gt; to &lt;em&gt;schedule&lt;/em&gt; which
+goal process next:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; is processed &lt;em&gt;before&lt;/em&gt; than &lt;em&gt;any&lt;/em&gt; &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; that has a worse
+merit than &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; (&lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; ≼ &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt;) &lt;em&gt;and&lt;/em&gt; worse than any &lt;em&gt;ancestor&lt;/em&gt;
+of &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt;.&lt;/li&gt;
+  &lt;li&gt;if &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; is generated &lt;em&gt;before&lt;/em&gt; than &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt; then &lt;script type=&quot;math/tex&quot;&gt;g_j&lt;/script&gt; or any of
+its ancestors has a worse merit than &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A particular case is when the &lt;em&gt;merit order&lt;/em&gt; is based on a &lt;em&gt;cost
+function&lt;/em&gt; &lt;script type=&quot;math/tex&quot;&gt;c()&lt;/script&gt; and an &lt;em&gt;heuristic function&lt;/em&gt; &lt;script type=&quot;math/tex&quot;&gt;h()&lt;/script&gt;.&lt;/p&gt;
+
+&lt;p&gt;If &lt;script type=&quot;math/tex&quot;&gt;c(g_i)&lt;/script&gt; is the cost to reach &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt;, then &lt;script type=&quot;math/tex&quot;&gt;h(g_i)&lt;/script&gt; &lt;em&gt;estimates&lt;/em&gt;
+the additional cost that would take to go from &lt;script type=&quot;math/tex&quot;&gt;g_i&lt;/script&gt; to a &lt;em&gt;trivial
+goal&lt;/em&gt;, one that is ⊤ (trivially &lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt;) or ⊥ (trivially &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;The estimation can be seen as how much more will take to get to a
+final resolution.&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;h()&lt;/script&gt; may &lt;em&gt;under-estimate&lt;/em&gt; the additional cost or &lt;em&gt;over-estimate&lt;/em&gt; it.&lt;/p&gt;
+
+&lt;h2 id=&quot;tacticals&quot;&gt;Tacticals&lt;/h2&gt;
+
+&lt;p&gt;While tactics operate at the goal set level, &lt;em&gt;tacticals&lt;/em&gt; operate one
+level higher: they operate with the tactics.&lt;/p&gt;
+
+&lt;p&gt;Think in tacticals as functions that receive tactics as their arguments.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;repeat(t)&lt;/code&gt; is a tactical that takes a tactic and applies it several times
+until the tactic &lt;code class=&quot;highlighter-rouge&quot;&gt;fails&lt;/code&gt; so &lt;code class=&quot;highlighter-rouge&quot;&gt;repeat(elim)&lt;/code&gt; applies &lt;code class=&quot;highlighter-rouge&quot;&gt;elim&lt;/code&gt; over and over
+until no other change happens.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;then(t1, t2)&lt;/code&gt; applies &lt;code class=&quot;highlighter-rouge&quot;&gt;t1&lt;/code&gt; and if it didn’t fail applies &lt;code class=&quot;highlighter-rouge&quot;&gt;t2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;orelse(t1, t2)&lt;/code&gt; applies &lt;code class=&quot;highlighter-rouge&quot;&gt;t1&lt;/code&gt; and if it failed applies &lt;code class=&quot;highlighter-rouge&quot;&gt;t2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is a handy way to build the &lt;em&gt;strategy&lt;/em&gt; to solve the problem in
+terms of tacticals and tactics.&lt;/p&gt;
+
+&lt;h2 id=&quot;probes-or-formula-measures&quot;&gt;Probes or formula measures&lt;/h2&gt;
+
+&lt;p&gt;A &lt;em&gt;probe&lt;/em&gt; or &lt;em&gt;formula measure&lt;/em&gt; is a tactic which does not modify the
+goal set but it fails or not based on attributes or properties of the
+current goal set.&lt;/p&gt;
+
+&lt;p&gt;A &lt;em&gt;probe&lt;/em&gt; could count how many variables a formula has or if the
+inequations follow are written in a particular way.&lt;/p&gt;
+
+&lt;p&gt;Based on a &lt;em&gt;probe&lt;/em&gt; one tactic or other could be applied next.&lt;/p&gt;
+
+&lt;p&gt;For example &lt;code class=&quot;highlighter-rouge&quot;&gt;orelse(then(c1, t1), t2)&lt;/code&gt; applies &lt;code class=&quot;highlighter-rouge&quot;&gt;t1&lt;/code&gt; &lt;em&gt;if&lt;/em&gt; the probe (or
+check) &lt;code class=&quot;highlighter-rouge&quot;&gt;c1&lt;/code&gt; didn’t fail otherwise &lt;code class=&quot;highlighter-rouge&quot;&gt;t2&lt;/code&gt; is applied.&lt;/p&gt;
+
+&lt;h2 id=&quot;reasoning-engines&quot;&gt;Reasoning engines&lt;/h2&gt;
+
+&lt;p&gt;At the end the goals needs to be translated into a suitable format and
+sent to the &lt;em&gt;reasoning engine&lt;/em&gt; for the final resolution.&lt;/p&gt;
+
+&lt;p&gt;For example each inequation can be seen as a &lt;em&gt;propositional variable&lt;/em&gt;
+and the problem gets reduced to a SAT problem.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+G_2: [ b + 1 &lt; 0, b &gt; 3]    \\
+G_3: [ b + 1 &gt; 0, b &gt; 3]    \\
+                            \\
+G_2 → C_2: [ p ∧ q]    \\
+G_3 → C_3: [ r ∧ q] %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;Notice that the conversion was not 1-to-1: &lt;script type=&quot;math/tex&quot;&gt;p&lt;/script&gt; and &lt;script type=&quot;math/tex&quot;&gt;r&lt;/script&gt; could be
+&lt;script type=&quot;math/tex&quot;&gt;true&lt;/script&gt; when the original inequations &lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
+b + 1 &lt; 0 %]]&gt;&lt;/script&gt; and &lt;script type=&quot;math/tex&quot;&gt;b + 1 &gt; 0&lt;/script&gt;
+cannot.&lt;/p&gt;
+
+&lt;p&gt;The solver then needs to verify if the solution found by the engine is
+corrects and make the proper changes to the formulation and try again.&lt;/p&gt;
+
+&lt;p&gt;And this is expensive. That’s the idea behind the strategy: make the
+search space smaller and try to make the conversion from the
+arbitrary initial &lt;em&gt;theory&lt;/em&gt; to the theory supported by the engine.&lt;/p&gt;
+
+&lt;h3 id=&quot;reasoning-engines-as-tactics&quot;&gt;Reasoning engines as tactics&lt;/h3&gt;
+
+&lt;p&gt;If the solver supports more than one reasoning engine, the engine
+could be seen as a tactic and which engine to use being determined
+by the strategy like any other tactic.&lt;/p&gt;
+
+&lt;h2 id=&quot;strategies&quot;&gt;Strategies&lt;/h2&gt;
+
+&lt;p&gt;Finally!&lt;/p&gt;
+
+&lt;p&gt;A &lt;em&gt;strategy&lt;/em&gt; is a series of &lt;em&gt;tacticals&lt;/em&gt; and &lt;em&gt;tactics&lt;/em&gt; (including the
+&lt;em&gt;reasoning engine&lt;/em&gt; and possibly &lt;em&gt;probes&lt;/em&gt;)
+that combined hope to solve a particular problem: determine if it is
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; and get a &lt;em&gt;model&lt;/em&gt; of it or it is &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt; and get a &lt;em&gt;proof&lt;/em&gt; of why.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;search space&lt;/em&gt; is in general infinite so it is not possible to solve
+any arbitrary problem but a strategy may &lt;em&gt;guide&lt;/em&gt; the search process into
+the direction that hopefully will lead to a solution (&lt;code class=&quot;highlighter-rouge&quot;&gt;sat&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;unsat&lt;/code&gt;)
+in a &lt;em&gt;reasonable time&lt;/em&gt; using a &lt;em&gt;reasonable amount of resources&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The search space is generated and explored on each tactic application:
+multiple edges at time when a &lt;em&gt;ordered-based&lt;/em&gt; tactic is used, a single
+edge when it is a &lt;em&gt;subgoal-reduction&lt;/em&gt; tactic.&lt;/p&gt;
+
+&lt;p&gt;Adding new goals &lt;em&gt;expands&lt;/em&gt; the &lt;em&gt;active&lt;/em&gt; search space; removing goals not
+only &lt;em&gt;reduces&lt;/em&gt; the space but also prevents future tactics to readd the
+removed goal offering a &lt;em&gt;redundancy control&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The application of the tactics is nondeterministic and an &lt;em&gt;well founded
+order&lt;/em&gt; must prioritize which tactic next.&lt;/p&gt;
+
+&lt;p&gt;This is where a &lt;em&gt;merit order&lt;/em&gt;, a &lt;em&gt;cost function&lt;/em&gt; and a &lt;em&gt;heuristic function&lt;/em&gt;
+play a role to prioritize.&lt;/p&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;p&gt;[0] Moura, L.D., &amp;amp; Passmore, G. (2013). &lt;em&gt;The Strategy Challenge in SMT
+Solving&lt;/em&gt;. Automated Reasoning and Mathematics.&lt;/p&gt;
+
+&lt;p&gt;[1] Bonacina, Maria Paola. (1999). &lt;em&gt;A Taxonomy of Theorem-Proving Strategies&lt;/em&gt;.
+10.1007/3-540-48317-9_3.&lt;/p&gt;
+
+&lt;p&gt;[2] Bonacina, Maria Paola &amp;amp; Hsiang, Jieh. (1998). &lt;em&gt;On the Modelling of Search
+in Theorem Proving — Towards a Theory of Strategy Analysis&lt;/em&gt;. Information
+and Computation. 147. 171-208. 10.1006/inco.1998.2739.&lt;/p&gt;
+
+&lt;p&gt;[3] Kowalski, R. (2012). 10 &lt;em&gt;Search Strategies for Theorem-Proving&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;further-readings&quot;&gt;Further readings&lt;/h2&gt;
+
+&lt;p&gt;[4] Plaisted D.A. (1994) &lt;em&gt;The search efficiency of theorem proving
+strategies&lt;/em&gt;. In: Bundy A. (eds) Automated Deduction — CADE-12. CADE 1994.
+Lecture Notes in Computer Science (Lecture Notes in Artificial
+Intelligence (LNAI)), vol 814. Springer, Berlin, Heidelberg.
+https://doi.org/10.1007/3-540-58156-1_5&lt;/p&gt;
+
+&lt;p&gt;[5] Bonacina, Maria Paola &amp;amp; Hsiang, Jieh. (1994). &lt;em&gt;Parallelization of
+Deduction Strategies: An Analytical Study&lt;/em&gt;. J. Autom. Reasoning. 13.
+1-33. 10.1007/BF00881910.&lt;/p&gt;</content><author><name>Gehn</name></author><summary type="html">SMT/SAT problems are in general undecidable: basically we cannot know if we can get even an answer. The search space is in general infinite. But several concrete problems have a reduced space and may be tractable: while theoritical really hard, we can find a solution in a resonable time. Still, a solver may need some extra help to navigate across the search space. A strategy is a guide that hopefully will lead to a solution (sat or unsat) in a reasonable time using a reasonable amount of resources. It is quite an art and the concepts were around for more than 30 years. This post is a quick overview of concepts like strategies, tactics, tacticals, merit order, cost functions, heuristic functions, goals, approximations, redundancy control, search strategies, probes and a few more. Quite a heavy post I’m afraid.</summary></entry><entry><title type="html">Home Made Python F-String</title><link href="/articles/2021/07/11/Home-Made-Python-F-String.html" rel="alternate" type="text/html" title="Home Made Python F-String" /><published>2021-07-11T00:00:00+02:00</published><updated>2021-07-11T00:00:00+02:00</updated><id>/articles/2021/07/11/Home-Made-Python-F-String</id><content type="html" xml:base="/articles/2021/07/11/Home-Made-Python-F-String.html">&lt;p&gt;Python 3.6 introduced the so called &lt;em&gt;f-strings&lt;/em&gt;: literal strings that
 support formatting from the variable in the local context.&lt;/p&gt;
 
 &lt;p&gt;Before 3.6 you would to do something like this:&lt;/p&gt;
@@ -2670,184 +3004,4 @@ non-negative.&lt;/p&gt;
 &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# We use m.eval() to evaluate complex expressions in the model context
 &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Costs =&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;costs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Income =&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;income&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Profit =&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;profit&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;Costs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3130000&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Income&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;31760000&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;9&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Profit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3590000&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;9&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Gehn</name></author><category term="z3" /><category term="smt" /><category term="sat" /><category term="solver" /><category term="linear" /><category term="optimization" /><category term="blending" /><summary type="html">A whisky producer uses three kind of licor to make their whisky: , and . Three kind of whisky can be made using the licor in the following proportions: Whisky Sales Price Recipe No less than 60% of , no more than 20% of No less than 15% of , no more than 80% of No more than 50% of The producer has the following stock and price list from its licor supplier: Licor Stock Price Note: the prices are in $ per liter and the stock are in liters. The goal is to maximize the profit.</summary></entry><entry><title type="html">Optimum Packaging of Chocolate</title><link href="/articles/2021/04/27/Optimum-Packaging-of-Chocolate.html" rel="alternate" type="text/html" title="Optimum Packaging of Chocolate" /><published>2021-04-27T00:00:00+02:00</published><updated>2021-04-27T00:00:00+02:00</updated><id>/articles/2021/04/27/Optimum-Packaging-of-Chocolate</id><content type="html" xml:base="/articles/2021/04/27/Optimum-Packaging-of-Chocolate.html">&lt;p&gt;A small business sells two types of chocolate packs: A and B.&lt;/p&gt;
-
-&lt;p&gt;The pack A has 300 grams of bittersweet chocolate, 500 grams of
-chocolate with walnuts and 200 grams of white chocolate.&lt;/p&gt;
-
-&lt;p&gt;The pack B has 400 grams of bittersweet chocolate, 200 grams of
-chocolate with walnuts and 400 grams of white chocolate.&lt;/p&gt;
-
-&lt;p&gt;The pack A has a price of 120$ while the pack B has a price of 90$.&lt;/p&gt;
-
-&lt;p&gt;Let’s assume that this small business has for today 100 kilograms of
-bittersweet chocolate, 120 kilograms of chocolate with walnuts and 100
-kilograms of while chocolate.&lt;/p&gt;
-
-&lt;p&gt;How many packs of A and B type should be packed to maximize the profits?
-&lt;!--more--&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;of-variables-and-restrictions&quot;&gt;Of variables and restrictions&lt;/h2&gt;
-
-&lt;p&gt;First, we set up a solver that not only will say if a set of
-restrictions are
-satisfiable or not but it will also give us an instance (model) that
-&lt;em&gt;maximizes&lt;/em&gt; a given &lt;em&gt;objective function&lt;/em&gt;.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;z3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Reals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Optimize&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Optimize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Let start defining be the following variables that represent how many packs
-of each type we need to make:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a_cnt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Reals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'a_cnt b_cnt'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then, we have the variables that represent how much chocolate we &lt;em&gt;use&lt;/em&gt; of
-each flavor:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bittersweet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with_walnuts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;white&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Reals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'bittersweet with_walnuts white'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;So now we can relate the amount of A and B packs with the amount of
-chocolate of each flavor:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;mi&quot;&gt;300&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;400&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bittersweet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;mi&quot;&gt;500&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with_walnuts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;400&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;white&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;But the amount of chocolate is limited:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;bittersweet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;with_walnuts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;120&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;white&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;And technically, the amount of packs has also a lower bound&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;a_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;b_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;bittersweet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;with_walnuts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;white&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-e443e681f28524ed57a685ba1b5097eb&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-e443e681f28524ed57a685ba1b5097eb&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;In Python &lt;code class=&quot;highlighter-rouge&quot;&gt;a &amp;lt;= b &amp;lt;= c&lt;/code&gt; is a valid expression but in Z3 it is not
-and you need to define two separated statements &lt;code class=&quot;highlighter-rouge&quot;&gt;a &amp;lt;= b&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;b &amp;lt;= c&lt;/code&gt;.
- &lt;/span&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;the-objective&quot;&gt;The objective&lt;/h2&gt;
-
-&lt;p&gt;And finally, this is the &lt;em&gt;linear&lt;/em&gt; function that we want to maximize:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;objective&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;maximize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;120&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;90&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b_cnt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;sat&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;objective&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;mi&quot;&gt;33000&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;So the optimal income will be 33000$ and the amount of packs and
-chocolate is:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;a_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;white&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;80000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;with_walnuts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;120000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;bittersweet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;As expected the optimal solution is when we use most of the chocolate.&lt;/p&gt;
-
-&lt;h3 id=&quot;slack&quot;&gt;Slack&lt;/h3&gt;
-
-&lt;p&gt;The only one that had some &lt;em&gt;slack&lt;/em&gt; was white chocolate. Having a limit
-of 100 kilograms, the optimal solution required 80 kilograms with 20
-kilograms without use.&lt;/p&gt;
-
-&lt;p&gt;We can let Z3 to calculate that for use redefining the inequalities by
-introducing &lt;em&gt;slack variables&lt;/em&gt; and making them equalities:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bittersweet_slack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with_walnuts_slack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;white_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Reals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'bittersweet_slack with_walnuts_slack white_slack'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;bittersweet_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;with_walnuts_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;white_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;bittersweet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bittersweet_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;with_walnuts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with_walnuts_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;120&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;white&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;white_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;sat&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;a_cnt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;white_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;20000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;with_walnuts_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;bittersweet_slack&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;white&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;80000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;with_walnuts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;120000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
- &lt;span class=&quot;n&quot;&gt;bittersweet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;assumptions&quot;&gt;Assumptions&lt;/h2&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-021db9f39d0b1ca9edb96ffb431eecca&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-021db9f39d0b1ca9edb96ffb431eecca&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Precise values; linear, proportional and additivity relations; and
-variables in &lt;script type=&quot;math/tex&quot;&gt;\mathbb{R}&lt;/script&gt;
- &lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;When we say “the pack A has 300 grams of bittersweet chocolate” we are
-incurring in a huge assumption: that the number 300 is a real and
-&lt;em&gt;precise&lt;/em&gt; thing.&lt;/p&gt;
-
-&lt;p&gt;In the real world is hard or even impossible to operate with precise
-quantities. Think that the manufacturing process has some
-inefficiencies, the balance/scale used to measure has not infinite
-precision and things like that.&lt;/p&gt;
-
-&lt;p&gt;We also said without much thinking that inputs and
-outputs are &lt;em&gt;proportional&lt;/em&gt;: if the outcome of selling 1 pack A is 120$,
-selling 10 packs we should earn 1200$.&lt;/p&gt;
-
-&lt;p&gt;We said that we wanted to maximize &lt;code class=&quot;highlighter-rouge&quot;&gt;120 * a_cnt + 90 * b_cnt&lt;/code&gt;. Under the
-hood we are also making the assumption that we can &lt;em&gt;sell&lt;/em&gt; packs A and
-packs B independently and then &lt;em&gt;add them&lt;/em&gt; together.&lt;/p&gt;
-
-&lt;p&gt;This and the &lt;em&gt;proportional&lt;/em&gt; assumptions are required for &lt;strong&gt;linear&lt;/strong&gt;
-programming.&lt;/p&gt;
-
-&lt;p&gt;A cleaver reader may noticed that I used Z3’s &lt;code class=&quot;highlighter-rouge&quot;&gt;Reals&lt;/code&gt; for creating the
-variables &lt;code class=&quot;highlighter-rouge&quot;&gt;a_cnt&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;b_cnt&lt;/code&gt;. It is obviously wrong because the amount
-of packs is an &lt;strong&gt;integer&lt;/strong&gt; and not a real number.&lt;/p&gt;
-
-&lt;p&gt;We’ve got an integer solution of &lt;code class=&quot;highlighter-rouge&quot;&gt;a_cnt = 200&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;b_cnt = 100&lt;/code&gt; but
-this was pure luck.&lt;/p&gt;
-
-&lt;p&gt;But the same objection can be done for the amount of chocolate: absurd
-tiny amounts like 0.0001 grams of chocolate makes no sense.&lt;/p&gt;
-
-&lt;p&gt;We assumed that all the variables here have the &lt;em&gt;divisibility&lt;/em&gt; property:
-they can be modeled as real numbers – that’s why call it &lt;strong&gt;real&lt;/strong&gt; linear
-programming in opposition to the &lt;strong&gt;integer&lt;/strong&gt; linear programming.&lt;/p&gt;
-
-&lt;p&gt;The former can be solved in polinomial time. while the
-latter is NP-complete.&lt;/p&gt;
-
-&lt;p&gt;Z3 uses the &lt;a href=&quot;https://en.wikipedia.org/wiki/Simplex_algorithm&quot;&gt;Simplex
-algorithm&lt;/a&gt; which has
-exponential time in the worst case but polinomial time in the practice.
-Other solvers can do it better and it had been proved that when we use
-real numbers the algorithm has polinomial time, like the ones based on
-&lt;a href=&quot;https://en.wikipedia.org/wiki/Interior-point_method&quot;&gt;the interior-point method&lt;/a&gt;.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="z3" /><category term="smt" /><category term="sat" /><category term="solver" /><category term="linear" /><category term="optimization" /><summary type="html">A small business sells two types of chocolate packs: A and B. The pack A has 300 grams of bittersweet chocolate, 500 grams of chocolate with walnuts and 200 grams of white chocolate. The pack B has 400 grams of bittersweet chocolate, 200 grams of chocolate with walnuts and 400 grams of white chocolate. The pack A has a price of 120$ while the pack B has a price of 90$. Let’s assume that this small business has for today 100 kilograms of bittersweet chocolate, 120 kilograms of chocolate with walnuts and 100 kilograms of while chocolate. How many packs of A and B type should be packed to maximize the profits?</summary></entry></feed>
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Gehn</name></author><category term="z3" /><category term="smt" /><category term="sat" /><category term="solver" /><category term="linear" /><category term="optimization" /><category term="blending" /><summary type="html">A whisky producer uses three kind of licor to make their whisky: , and . Three kind of whisky can be made using the licor in the following proportions: Whisky Sales Price Recipe No less than 60% of , no more than 20% of No less than 15% of , no more than 80% of No more than 50% of The producer has the following stock and price list from its licor supplier: Licor Stock Price Note: the prices are in $ per liter and the stock are in liters. The goal is to maximize the profit.</summary></entry></feed>

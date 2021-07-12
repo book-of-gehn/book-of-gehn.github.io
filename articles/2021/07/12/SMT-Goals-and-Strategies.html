@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>SMT Goals and Strategies</title>
+  <meta name="description" content="SMT/SAT problems are in general undecidable: basically we cannot knowif we can get even an answer. The search space is in general infinite.But several concre...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
+
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
+
+  <link rel="canonical" href="/articles/2021/07/12/SMT-Goals-and-Strategies.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
+
+    <script src='/js/lunr-2.3.9.js'></script>
+    <script src='/js/search_index.js'></script>
+    <script src='/js/search.js'></script>
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+    
+                <hgroup class="header-group">
+		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li><a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a></li>
+                </ul>
+		
+		
+	
+
+    
+
+    
+</header>
+
+    <article class="group">
+      <h1>SMT Goals and Strategies</h1>
+<p class="subtitle">July 12, 2021</p>
+
+<p>SMT/SAT problems are in general <em>undecidable</em>: basically we cannot know
+if we can get even an answer. The <em>search space</em> is in general infinite.</p>
+
+<p>But several concrete problems have a reduced space and <em>may be tractable</em>:
+while theoritical really hard, we can find a solution in a resonable
+time.</p>
+
+<p>Still, a solver may need some extra help to navigate across the search
+space.</p>
+
+<p>A <em>strategy</em> is a <em>guide</em> that hopefully will lead to a solution
+(<code class="highlighter-rouge">sat</code> or <code class="highlighter-rouge">unsat</code>) in a <em>reasonable time</em> using a
+<em>reasonable amount of resources</em>.</p>
+
+<p>It is quite an art and the concepts were around for more than 30 years.</p>
+
+<p>This post is a quick overview of concepts like <em>strategies</em>, <em>tactics</em>,
+<em>tacticals</em>, <em>merit order</em>, <em>cost functions</em>, <em>heuristic functions</em>,
+<em>goals</em>, <em>approximations</em>, <em>redundancy control</em>, <em>search strategies</em>,
+<em>probes</em> and a few more.</p>
+
+<p>Quite a heavy post I’m afraid.<!--more--></p>
+
+<h2 id="goals">Goals</h2>
+
+<p>A <em>goal</em> is what we want to solve. Depending of the underlying <em>theory</em>
+this can be:</p>
+
+<ul>
+  <li>a set of inequations, and we want to see if there is a solution to them.</li>
+  <li>a set of propositional clauses, and want to see if exist
+propositional variables to make them true.</li>
+  <li>even a combination of theories are possible.</li>
+</ul>
+
+<p>Let be the <em>goal set</em> <script type="math/tex">{G}</script> consisting of a single goal <script type="math/tex">G</script>:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+G: [ a = b + 1, (a < 0 ∨ a > 0), b > 3 ] %]]></script>
+
+<p>The goal is to see if
+there is an <em>assignment</em> for <script type="math/tex">a</script> and <script type="math/tex">b</script> such those inequations hold
+or if there is a <em>contradiction</em> so it doesn’t exist such assignment.</p>
+
+<p>In the first case we say that the such assignment <em>satisfies</em> the goal
+(the solver returned <code class="highlighter-rouge">sat</code>); in the second case the problem is
+<em>unsatisfied</em> (<code class="highlighter-rouge">unsat</code>).</p>
+
+<h2 id="tactics">Tactics</h2>
+
+<p>A <em>tactic</em> tries to solve the goal or at least tries to make it easier
+to solve.</p>
+
+<p>The tactic <code class="highlighter-rouge">elim</code>, for example, eliminates intermedian variables such given
+<script type="math/tex">a = b + 1</script> the tactic can eliminate <script type="math/tex">a</script> and replace it by
+<script type="math/tex">b + 1</script>.</p>
+
+<p>It doesn’t solve the problem, but it makes it a little easier to solve
+later.</p>
+
+<p>A tactic may have 4 possible results:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">sat</code>: the tactic resolved the goal and returned a <em>model</em>, an
+<em>assignment</em> that satisfies the goal.</li>
+  <li><code class="highlighter-rouge">unsat</code>: the tactic found a contradiction and returned a <em>proof</em> of
+why the goal is <code class="highlighter-rouge">unsat</code>.</li>
+  <li><code class="highlighter-rouge">unknown</code>: the tactic returns a set of <em>subgoals</em>,
+hopefully being simpler to solve.</li>
+  <li><code class="highlighter-rouge">fail</code>: the tactic didn’t work.</li>
+</ul>
+
+<p>In this case the tactic <code class="highlighter-rouge">elim</code> returns <code class="highlighter-rouge">unknown</code> and the following
+1-goal set:</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+G_1: [ (b + 1 < 0 ∨ b + 1 > 0), b > 3] %]]></script>
+
+<p>The tactic <code class="highlighter-rouge">split-or</code> takes each goal and <em>splits</em> the disjunctives
+generating a <em>subgoal</em> per case. Like before this tactic returns
+<code class="highlighter-rouge">unknown</code> and the subgoals (an ordered set):</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+G_2: [ b + 1 < 0, b > 3]    \\
+G_3: [ b + 1 > 0, b > 3] %]]></script>
+
+<h3 id="approximations">Approximations</h3>
+
+<p>The tactics may <em>under-approximate</em> by changing the initial goal by
+another, hopeful simpler, which if it is <code class="highlighter-rouge">sat</code> then the initial goal is
+<code class="highlighter-rouge">sat</code> too.</p>
+
+<p>An example could be adding more restrictions or assumptions: if the new
+<em>more restrictive</em> problem is <code class="highlighter-rouge">sat</code> then the initial is <code class="highlighter-rouge">sat</code> too. This
+is known as <em>strengthening</em>.</p>
+
+<p>However, if a <em>under-approximate</em> tactic yields <code class="highlighter-rouge">unsat</code> we cannot say
+anything about the initial goal.</p>
+
+<p>The tactics may also <em>over-approximate</em> by making a new goal <em>less
+restrictive</em>: if the new problem is <code class="highlighter-rouge">unsat</code> then the initial goal is
+<code class="highlighter-rouge">unsat</code> too; if the new problem is <code class="highlighter-rouge">sat</code> however, we cannot say anything
+else.</p>
+
+<p>An example could be removing restrictions or assumptions known as
+<em>weakening</em>.</p>
+
+<h2 id="goals-sets">Goals sets</h2>
+
+<p>In [2] the returned set by a tactic is in fact two: the set of goals <em>added</em> and
+the set of goals <em>deleted</em> from the initial goal set. The <em>deleted</em> set
+not only deletes the goals but also <em>marks</em> them to make sure they are
+not readded later (called <em>redundacy control</em> [1])</p>
+
+<p>In [1] the tactic are categorized as <em>ordering-based</em> if their input
+is a <em>set of objects</em> (all the goals) and <em>subgoal-reduction</em>
+if their input is a <em>single object</em> (a single goal).</p>
+
+<p>The first operates over all the goals in each step and it is where
+it makes possible to <em>add</em> or <em>remove</em> goals from the set.</p>
+
+<p>On the other hand the second operates over each goal at time.</p>
+
+<blockquote>
+  <p>Note: [1] uses <em>ordering-based</em> and <em>subgoal-reduction</em> to categorize
+<em>strategies</em> and not
+<em>tactics</em> but it seems reasonable to stretch a little the definition.</p>
+</blockquote>
+
+<h3 id="tactics-products-models-and-proofs">Tactics’ products: models and proofs</h3>
+
+<p>Note that subgoals <script type="math/tex">G_2</script> and <script type="math/tex">G_3</script> comes from a <em>disjunctive</em>:</p>
+
+<ul>
+  <li>at least one must be true to declare the parent goal <code class="highlighter-rouge">G_1</code> <code class="highlighter-rouge">sat</code></li>
+  <li>all of them must be false to declare the parent goal <code class="highlighter-rouge">G_1</code> <code class="highlighter-rouge">unsat</code></li>
+</ul>
+
+<p>In addition the tactic must build a model from <em>one</em> of the subgoal
+<code class="highlighter-rouge">sat</code> and a proof from <em>all</em> the subgoals when they are <code class="highlighter-rouge">unsat</code>.</p>
+
+<p>This is handled by the tactic’s <em>model converter</em> and <em>proof converter</em>
+functions, <code class="highlighter-rouge">mc</code> and <code class="highlighter-rouge">pc</code> for short.</p>
+
+<h2 id="proof-graphs--search-graphs">Proof graphs / Search graphs</h2>
+
+<p>The successive application of tactics generates subgoals that induce a
+tree structure know as the <em>proof tree</em>:</p>
+
+<figure><figcaption><span></span></figcaption><object align="middle" data="/uml/52637bb5773d16f88f74489bc2ac72c61c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<p>Formally, to say proof <em>tree</em> we need to restrict the tactics to not
+generate repeated goals (so we don’t have cycles).</p>
+
+<p>Having then a <em>single</em> starting goal, the <em>successive application</em> of
+the tactics forms a <em>tree</em>.</p>
+
+<p>We can extend this and have <em>multiple</em> starting goals in which case we
+will have an <em>acyclic graph</em> like described in [3]. (in [3] is more
+specific and refers to <em>goals</em> and <em>tactics</em> as <em>states</em> (of a proof)
+and <em>rules of induction</em> but they are the same idea).</p>
+
+<figure><figcaption><span></span></figcaption><object align="middle" data="/uml/1149eb86deda6112b727afda931840f11c7ac9aa.svg" type="image/svg+xml"></object></figure>
+
+<p>With <em>subgoal-reduction</em> tactics, the graph is generated edge by edge;
+with <em>ordering-based</em> tactics, the graph is generated by multiple edges
+at time.</p>
+
+<p>Note that the generation (or walking) of this graph is
+non-deterministic: why you would the solver choose to explore the
+edge/edges from one node/nodes instead of the other?</p>
+
+<p>To make it deterministic we have a way to <em>choose</em> which exploration do
+and in which <em>order</em>. This is the <em>search strategy</em> based on a <em>merit
+order</em>.</p>
+
+<h2 id="search-strategy">Search strategy</h2>
+
+<p>In [3] it is introduced the notion of <em>merit order</em>, a relationship
+between every pair of nodes in the graph: <script type="math/tex">g_i</script> ≼ <script type="math/tex">g_j</script></p>
+
+<p>This <em>merit order</em> could have different definitions:</p>
+
+<ul>
+  <li><script type="math/tex">g_i</script> ≼ <script type="math/tex">g_j</script> if <script type="math/tex">i</script> ≤ <script type="math/tex">j</script> (a <em>breadth first</em> order)</li>
+  <li><script type="math/tex">g_i</script> ≼ <script type="math/tex">g_j</script> if <script type="math/tex">c(g_i)</script> ≤ <script type="math/tex">c(g_j)</script> for some <em>cost function</em>
+<script type="math/tex">c(n)</script> ≥ <script type="math/tex">0</script>.</li>
+  <li><script type="math/tex">g_i</script> ≼ <script type="math/tex">g_j</script> if <script type="math/tex">g_i</script> is in a predecesor layer or level than
+<script type="math/tex">g_j</script> (<script type="math/tex">g_i</script> is better than <script type="math/tex">g_j</script> because it required less
+applications of tactics)</li>
+  <li><script type="math/tex">g_i</script> ≼ <script type="math/tex">g_j</script> if <script type="math/tex">g_i</script> is in a successor layer than <script type="math/tex">g_j</script>
+(a <em>depth first</em> order).</li>
+</ul>
+
+<p>A <em>search strategy</em> could use the <em>merit order</em> to <em>schedule</em> which
+goal process next:</p>
+
+<ul>
+  <li><script type="math/tex">g_i</script> is processed <em>before</em> than <em>any</em> <script type="math/tex">g_i</script> that has a worse
+merit than <script type="math/tex">g_i</script> (<script type="math/tex">g_i</script> ≼ <script type="math/tex">g_j</script>) <em>and</em> worse than any <em>ancestor</em>
+of <script type="math/tex">g_i</script>.</li>
+  <li>if <script type="math/tex">g_i</script> is generated <em>before</em> than <script type="math/tex">g_j</script> then <script type="math/tex">g_j</script> or any of
+its ancestors has a worse merit than <script type="math/tex">g_i</script>.</li>
+</ul>
+
+<p>A particular case is when the <em>merit order</em> is based on a <em>cost
+function</em> <script type="math/tex">c()</script> and an <em>heuristic function</em> <script type="math/tex">h()</script>.</p>
+
+<p>If <script type="math/tex">c(g_i)</script> is the cost to reach <script type="math/tex">g_i</script>, then <script type="math/tex">h(g_i)</script> <em>estimates</em>
+the additional cost that would take to go from <script type="math/tex">g_i</script> to a <em>trivial
+goal</em>, one that is ⊤ (trivially <code class="highlighter-rouge">sat</code>) or ⊥ (trivially <code class="highlighter-rouge">unsat</code>).</p>
+
+<p>The estimation can be seen as how much more will take to get to a
+final resolution.</p>
+
+<p><script type="math/tex">h()</script> may <em>under-estimate</em> the additional cost or <em>over-estimate</em> it.</p>
+
+<h2 id="tacticals">Tacticals</h2>
+
+<p>While tactics operate at the goal set level, <em>tacticals</em> operate one
+level higher: they operate with the tactics.</p>
+
+<p>Think in tacticals as functions that receive tactics as their arguments.</p>
+
+<p><code class="highlighter-rouge">repeat(t)</code> is a tactical that takes a tactic and applies it several times
+until the tactic <code class="highlighter-rouge">fails</code> so <code class="highlighter-rouge">repeat(elim)</code> applies <code class="highlighter-rouge">elim</code> over and over
+until no other change happens.</p>
+
+<p><code class="highlighter-rouge">then(t1, t2)</code> applies <code class="highlighter-rouge">t1</code> and if it didn’t fail applies <code class="highlighter-rouge">t2</code>.</p>
+
+<p><code class="highlighter-rouge">orelse(t1, t2)</code> applies <code class="highlighter-rouge">t1</code> and if it failed applies <code class="highlighter-rouge">t2</code>.</p>
+
+<p>This is a handy way to build the <em>strategy</em> to solve the problem in
+terms of tacticals and tactics.</p>
+
+<h2 id="probes-or-formula-measures">Probes or formula measures</h2>
+
+<p>A <em>probe</em> or <em>formula measure</em> is a tactic which does not modify the
+goal set but it fails or not based on attributes or properties of the
+current goal set.</p>
+
+<p>A <em>probe</em> could count how many variables a formula has or if the
+inequations follow are written in a particular way.</p>
+
+<p>Based on a <em>probe</em> one tactic or other could be applied next.</p>
+
+<p>For example <code class="highlighter-rouge">orelse(then(c1, t1), t2)</code> applies <code class="highlighter-rouge">t1</code> <em>if</em> the probe (or
+check) <code class="highlighter-rouge">c1</code> didn’t fail otherwise <code class="highlighter-rouge">t2</code> is applied.</p>
+
+<h2 id="reasoning-engines">Reasoning engines</h2>
+
+<p>At the end the goals needs to be translated into a suitable format and
+sent to the <em>reasoning engine</em> for the final resolution.</p>
+
+<p>For example each inequation can be seen as a <em>propositional variable</em>
+and the problem gets reduced to a SAT problem.</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+G_2: [ b + 1 < 0, b > 3]    \\
+G_3: [ b + 1 > 0, b > 3]    \\
+                            \\
+G_2 → C_2: [ p ∧ q]    \\
+G_3 → C_3: [ r ∧ q] %]]></script>
+
+<p>Notice that the conversion was not 1-to-1: <script type="math/tex">p</script> and <script type="math/tex">r</script> could be
+<script type="math/tex">true</script> when the original inequations <script type="math/tex">% <![CDATA[
+b + 1 < 0 %]]></script> and <script type="math/tex">b + 1 > 0</script>
+cannot.</p>
+
+<p>The solver then needs to verify if the solution found by the engine is
+corrects and make the proper changes to the formulation and try again.</p>
+
+<p>And this is expensive. That’s the idea behind the strategy: make the
+search space smaller and try to make the conversion from the
+arbitrary initial <em>theory</em> to the theory supported by the engine.</p>
+
+<h3 id="reasoning-engines-as-tactics">Reasoning engines as tactics</h3>
+
+<p>If the solver supports more than one reasoning engine, the engine
+could be seen as a tactic and which engine to use being determined
+by the strategy like any other tactic.</p>
+
+<h2 id="strategies">Strategies</h2>
+
+<p>Finally!</p>
+
+<p>A <em>strategy</em> is a series of <em>tacticals</em> and <em>tactics</em> (including the
+<em>reasoning engine</em> and possibly <em>probes</em>)
+that combined hope to solve a particular problem: determine if it is
+<code class="highlighter-rouge">sat</code> and get a <em>model</em> of it or it is <code class="highlighter-rouge">unsat</code> and get a <em>proof</em> of why.</p>
+
+<p>The <em>search space</em> is in general infinite so it is not possible to solve
+any arbitrary problem but a strategy may <em>guide</em> the search process into
+the direction that hopefully will lead to a solution (<code class="highlighter-rouge">sat</code> or <code class="highlighter-rouge">unsat</code>)
+in a <em>reasonable time</em> using a <em>reasonable amount of resources</em>.</p>
+
+<p>The search space is generated and explored on each tactic application:
+multiple edges at time when a <em>ordered-based</em> tactic is used, a single
+edge when it is a <em>subgoal-reduction</em> tactic.</p>
+
+<p>Adding new goals <em>expands</em> the <em>active</em> search space; removing goals not
+only <em>reduces</em> the space but also prevents future tactics to readd the
+removed goal offering a <em>redundancy control</em>.</p>
+
+<p>The application of the tactics is nondeterministic and an <em>well founded
+order</em> must prioritize which tactic next.</p>
+
+<p>This is where a <em>merit order</em>, a <em>cost function</em> and a <em>heuristic function</em>
+play a role to prioritize.</p>
+
+<h2 id="references">References</h2>
+
+<p>[0] Moura, L.D., &amp; Passmore, G. (2013). <em>The Strategy Challenge in SMT
+Solving</em>. Automated Reasoning and Mathematics.</p>
+
+<p>[1] Bonacina, Maria Paola. (1999). <em>A Taxonomy of Theorem-Proving Strategies</em>.
+10.1007/3-540-48317-9_3.</p>
+
+<p>[2] Bonacina, Maria Paola &amp; Hsiang, Jieh. (1998). <em>On the Modelling of Search
+in Theorem Proving — Towards a Theory of Strategy Analysis</em>. Information
+and Computation. 147. 171-208. 10.1006/inco.1998.2739.</p>
+
+<p>[3] Kowalski, R. (2012). 10 <em>Search Strategies for Theorem-Proving</em>.</p>
+
+<h2 id="further-readings">Further readings</h2>
+
+<p>[4] Plaisted D.A. (1994) <em>The search efficiency of theorem proving
+strategies</em>. In: Bundy A. (eds) Automated Deduction — CADE-12. CADE 1994.
+Lecture Notes in Computer Science (Lecture Notes in Artificial
+Intelligence (LNAI)), vol 814. Springer, Berlin, Heidelberg.
+https://doi.org/10.1007/3-540-58156-1_5</p>
+
+<p>[5] Bonacina, Maria Paola &amp; Hsiang, Jieh. (1994). <em>Parallelization of
+Deduction Strategies: An Analytical Study</em>. J. Autom. Reasoning. 13.
+1-33. 10.1007/BF00881910.</p>
+
+
+
+
+    </article>
+    <span class="print-footer">SMT Goals and Strategies - July 12, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>
