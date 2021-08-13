@@ -220,6 +220,10 @@ a {
 a > h1, a > h2, a > h3, a > h4, h1 > a, h2 > a, h3 > a, h4 > a {
   color: #111; }
 
+a.raw_link {
+  text-decoration: none;
+  background: none; }
+
 li > a, p > a, cite > a, .sidenote a, .credits a, .marginnote a, footer a {
   background: -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(#333, #333);
   background: linear-gradient(#fffff8, #fffff8), linear-gradient(#fffff8, #fffff8), linear-gradient(#333, #333);

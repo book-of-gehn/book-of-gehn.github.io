@@ -67,14 +67,16 @@
   <body>
     <header>
 	
-    
                 <hgroup class="header-group">
 		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
                 </hgroup>
                 <ul class="header-list">
                     <li><a href="https://byexamples.github.io">byexample</a></li>
                     <li><a href="https://bisturi.github.io">bisturi</a></li>
-                    <li><a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/assets/blog-assets/github.png" /></a>
+                    </li>
                 </ul>
 		
 		
@@ -82,7 +84,21 @@
 
     
 
+    <nav class="group">
     
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+	</nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
 </header>
 
     <article class="group">
@@ -100,7 +116,7 @@ support formatting from the variable in the local context.</p>
 <span class="s">'x=11 y=22'</span>
 </code></pre></div></div>
 
-<p>But with the f-strings we can remove the burocratic call to <code class="highlighter-rouge">format</code>:</p>
+<p>But with the f-strings we can remove the bureaucratic call to <code class="highlighter-rouge">format</code>:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="s">"x={x} y={y}"</span>
 <span class="s">'x=11 y=22'</span>
@@ -154,7 +170,7 @@ each time the parser finds a <code class="highlighter-rouge">"{x}"</code>.</p>
 will not only resolve variables like <code class="highlighter-rouge">x</code> but also expressions like
 <code class="highlighter-rouge">x**2</code>.</p>
 
-<p>Combining all togheter:</p>
+<p>Combining all together:</p>
 
 <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">string</span> <span class="kn">import</span> <span class="n">Formatter</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">LocalsFormatter</span><span class="p">(</span><span class="n">Formatter</span><span class="p">):</span>
