@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Fresh Python Defaults</title>
+  <meta name="description" content="When defining a Python function you can define the default valueof its parameters.The defaults are evaluated once and bound to the function’s signature.That ...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
+
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
+
+  <link rel="canonical" href="/articles/2021/08/14/Fresh-Python-Defaults.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
+
+    <script src='/js/lunr-2.3.9.js'></script>
+    <script src='/js/search_index.js'></script>
+    <script src='/js/search.js'></script>
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+                <hgroup class="header-group">
+		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/assets/blog-assets/github.png" /></a>
+                    </li>
+                </ul>
+		
+		
+	
+
+    
+
+    <nav class="group">
+    
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+	</nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+
+    <article class="group">
+      <h1>Fresh Python Defaults</h1>
+<p class="subtitle">August 14, 2021</p>
+
+<p>When defining a Python function you can define the default value
+of its parameters.</p>
+
+<p>The defaults are evaluated <em>once</em> and bound to the function’s signature.</p>
+
+<p>That means that <em>mutable</em> defaults are a bad idea: if you modify them in
+a call, the modification will persist cross calls because for Python
+its is the same object.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s">'x'</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="p">[]):</span>
+<span class="o">...</span>     <span class="n">b</span> <span class="o">+=</span> <span class="s">'!'</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="o">...</span>     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"a={a} b={b} c={c}"</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses the default list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses the *same* default list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">'z'</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="c1"># uses another list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">z</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses the *same* default list, again
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>A mutable default can be used as the function’s private state
+as an alternative to functional-traditional <em>closures</em> and
+object-oriented classes.</p>
+
+<p>But in general a mutable default is most likely to be a bug.</p>
+
+<p>Could Python have a way to prevent such thing? Or better, could Python
+have a way to <em>restart</em> or <em>refresh</em> the mutable defaults in each
+call?</p>
+
+<p>This question raised up in the <code class="highlighter-rouge">python-list</code>. Let’s see how far we get.<!--more--></p>
+
+<h2 id="signatures">Signatures</h2>
+
+<p>The beauty of most dynamic languages is the ability to reason about
+themselves.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span>
+<span class="o">&lt;</span><span class="n">Signature</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s">'x'</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">inspect.signature</code> does not retrieve the <em>“static”</em> signature of <code class="highlighter-rouge">foo</code>
+but its <em>current-alive</em> signature. That’s why we get <code class="highlighter-rouge">c=[2, 2, 2]</code>
+instead of <code class="highlighter-rouge">c=[]</code>.</p>
+
+<p>While <code class="highlighter-rouge">Signature</code> is an immutable object, <code class="highlighter-rouge">Signature</code> parameters’ defaults
+aren’t:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s">'c'</span><span class="p">]</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span> <span class="c1"># clear c's default list
+</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses the same but "refreshed" default list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s">'c'</span><span class="p">]</span><span class="o">.</span><span class="n">default</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span> <span class="c1"># clear for the next call
+</span></code></pre></div></div>
+
+<p>This is an interesting way to refresh default objects but <code class="highlighter-rouge">clear()</code>
+is not universal: it works for <code class="highlighter-rouge">list</code>, <code class="highlighter-rouge">dict</code> and <code class="highlighter-rouge">set</code> but not for
+user-defined objects.</p>
+
+<p>Still, <code class="highlighter-rouge">inspect.signature</code> gives the name of the parameters that have
+a default and it is a good starting point.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">params</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">params_with_defaults</span> <span class="o">=</span> <span class="p">{</span>
+<span class="o">...</span>     <span class="n">name</span><span class="p">:</span> <span class="n">param</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">param</span><span class="o">.</span><span class="n">empty</span>
+<span class="o">...</span> <span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="mutability">Mutability</h2>
+
+<p>No all the default objects need to be refreshed: immutable ones are
+perfectly safe as their value, by definition, cannot change.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">const_types</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">((</span>
+<span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">()),</span>
+<span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="nb">tuple</span><span class="p">()),</span>
+<span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="bp">None</span><span class="p">),</span>
+<span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="s">""</span><span class="p">),</span>       <span class="c1"># str
+</span><span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="n">b</span><span class="s">""</span><span class="p">),</span>      <span class="c1"># bytes
+</span><span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>        <span class="c1"># int
+</span><span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="mf">1j</span><span class="p">),</span>       <span class="c1"># complex
+</span><span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span>      <span class="c1"># float
+</span><span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="bp">True</span><span class="p">),</span>     <span class="c1"># bool
+</span><span class="o">...</span>     <span class="nb">type</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="c1"># range
+</span><span class="o">...</span>     <span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">params_to_refresh</span> <span class="o">=</span> <span class="p">{</span>
+<span class="o">...</span>     <span class="n">name</span><span class="p">:</span> <span class="n">param</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params_with_defaults</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">default</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">const_types</span>
+<span class="o">...</span> <span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">const_types</code> is not an exhaustive set, only the most common types are
+there.</p>
+
+<p>In fact we don’t need to store the <code class="highlighter-rouge">param</code> objects as they are stored in the
+function’s signature anyways. The parameters’ names are enough.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">params_to_refresh</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">params_to_refresh</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</code></pre></div></div>
+
+<h2 id="call-arguments">Call arguments</h2>
+
+<p>When a function is called the function’s parameters are <em>bound</em> with
+the arguments.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">bound</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s">'z'</span><span class="p">)</span>  <span class="c1"># same as foo(1, b='z')
+</span><span class="o">&gt;&gt;&gt;</span> <span class="n">arguments</span> <span class="o">=</span> <span class="n">bound</span><span class="o">.</span><span class="n">arguments</span>
+</code></pre></div></div>
+
+<p>Python binds only the parameters that have an explicit value:</p>
+
+<ul>
+  <li>if a parameter <em>without</em> a default is not bound, <code class="highlighter-rouge">TypeError</code> is
+raised.</li>
+  <li>if a parameter <em>has</em> a default it is left <em>unbound</em>.</li>
+</ul>
+
+<p>This is perfect because we can know which parameters are not bound yet:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">set</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+<span class="p">{</span><span class="s">'c'</span><span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="bind-a-copy">Bind a copy</h2>
+
+<p>This is the idea: we check the unbound parameters and if they are not
+immutable we copy their default values and <em>bind</em> the copy like if the
+user would passed it <em>explicitly</em>.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">arguments</span><span class="p">[</span><span class="s">'c'</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s">'c'</span><span class="p">]</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">c</code> not longer is unbound:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">set</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span> <span class="c1"># c is bound now
+</span><span class="nb">set</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Because there could be still unbound parameters, we can let Python
+follow the normal path and bind them with the respective defaults.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">bound</span><span class="o">.</span><span class="n">apply_defaults</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Finally we can emulate a function call like this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="o">*</span><span class="n">bound</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">bound</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">z</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>To call it again we need to create another copy from parameter’s
+default:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="n">arguments</span><span class="p">[</span><span class="s">'c'</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s">'c'</span><span class="p">]</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="o">*</span><span class="n">bound</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">bound</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">z</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h2 id="wrap-up">Wrap up</h2>
+
+<p>We can pack all this nicely in a decorator</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">fresh_defaults</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">sig</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">params</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">to_refresh</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+<span class="o">...</span>             <span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="o">...</span>             <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">default</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">const_types</span>
+<span class="o">...</span>             <span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kargs</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">bound</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kargs</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">arguments</span> <span class="o">=</span> <span class="n">bound</span><span class="o">.</span><span class="n">arguments</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">to_refresh</span><span class="p">:</span>
+<span class="o">...</span>             <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
+<span class="o">...</span>                 <span class="n">default</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
+<span class="o">...</span>                 <span class="n">arguments</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">bound</span><span class="o">.</span><span class="n">apply_defaults</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">bound</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">bound</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">wrapped</span>
+</code></pre></div></div>
+
+<p>Enjoy!</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="o">@</span><span class="n">fresh_defaults</span>
+<span class="o">...</span> <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s">'x'</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="p">[]):</span>
+<span class="o">...</span>     <span class="n">b</span> <span class="o">+=</span> <span class="s">'!'</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="o">...</span>     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"a={a} b={b} c={c}"</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses a copy of the default list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses fresh copy of the default list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">'z'</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="c1"># uses another list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">z</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses another fresh default list.
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</code></pre></div></div>
+
+
+
+    </article>
+    <span class="print-footer">Fresh Python Defaults - August 14, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

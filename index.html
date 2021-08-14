@@ -108,6 +108,52 @@
     
        <span class="index-single-post">
           <hr class="slender post-layout">
+          <a href="/articles/2021/08/14/Fresh-Python-Defaults.html"><h2 class="larger">Fresh Python Defaults</h2></a>
+          <br><span class="smaller">August 14, 2021</span>  <br/>
+          <div><p>When defining a Python function you can define the default value
+of its parameters.</p>
+
+<p>The defaults are evaluated <em>once</em> and bound to the function’s signature.</p>
+
+<p>That means that <em>mutable</em> defaults are a bad idea: if you modify them in
+a call, the modification will persist cross calls because for Python
+its is the same object.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s">'x'</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="p">[]):</span>
+<span class="o">...</span>     <span class="n">b</span> <span class="o">+=</span> <span class="s">'!'</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="o">...</span>     <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s">"a={a} b={b} c={c}"</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses the default list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses the *same* default list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">'z'</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="c1"># uses another list
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">z</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># uses the *same* default list, again
+</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span> <span class="n">b</span><span class="o">=</span><span class="n">x</span><span class="err">!</span> <span class="n">c</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>A mutable default can be used as the function’s private state
+as an alternative to functional-traditional <em>closures</em> and
+object-oriented classes.</p>
+
+<p>But in general a mutable default is most likely to be a bug.</p>
+
+<p>Could Python have a way to prevent such thing? Or better, could Python
+have a way to <em>restart</em> or <em>refresh</em> the mutable defaults in each
+call?</p>
+
+<p>This question raised up in the <code class="highlighter-rouge">python-list</code>. Let’s see how far we get.</p>
+
+</div>
+       </span>
+    
+       <span class="index-single-post">
+          <hr class="slender post-layout">
           <a href="/articles/2021/08/12/Difference-of-Two-Squares.html"><h2 class="larger">Difference of two squares</h2></a>
           <br><span class="smaller">August 12, 2021</span>  <br/>
           <div><figure><figcaption><span>Visual proof that <script type="math/tex">b^2 - a^2</script> factorizes into <script type="math/tex">(b - a)(b + 1)</script>.</span></figcaption><img src="/assets/math/b2-a2.svg" /></figure>
