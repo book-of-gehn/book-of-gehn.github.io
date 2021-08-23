@@ -1,4 +1,138 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-08-15T01:04:00+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">Fresh Python Defaults</title><link href="/articles/2021/08/14/Fresh-Python-Defaults.html" rel="alternate" type="text/html" title="Fresh Python Defaults" /><published>2021-08-14T00:00:00+02:00</published><updated>2021-08-14T00:00:00+02:00</updated><id>/articles/2021/08/14/Fresh-Python-Defaults</id><content type="html" xml:base="/articles/2021/08/14/Fresh-Python-Defaults.html">&lt;p&gt;When defining a Python function you can define the default value
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-08-23T02:50:52+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">Rooting Android with a Dirty COW</title><link href="/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW.html" rel="alternate" type="text/html" title="Rooting Android with a Dirty COW" /><published>2021-08-22T00:00:00+02:00</published><updated>2021-08-22T00:00:00+02:00</updated><id>/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW</id><content type="html" xml:base="/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW.html">&lt;p&gt;I’ve recently got a quite old Android phone to play with. I guess the
+first thing to do is getting root, don’t you think?&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;android-sdk&quot;&gt;Android SDK&lt;/h2&gt;
+
+&lt;p&gt;While it is perfectly possible to download the SDK from
+&lt;a href=&quot;https://developer.android.com/ndk/guides&quot;&gt;Android&lt;/a&gt; and install it by
+hand, I liked the idea to use a package from Debian repository.&lt;/p&gt;
+
+&lt;p&gt;To interact with the device we will use &lt;a href=&quot;https://developer.android.com/studio/command-line/adb&quot;&gt;Android Debug
+Bridge&lt;/a&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;adb&lt;/code&gt;
+for short.&lt;/p&gt;
+
+&lt;p&gt;Besides &lt;code class=&quot;highlighter-rouge&quot;&gt;adb&lt;/code&gt; we need to setup a few &lt;code class=&quot;highlighter-rouge&quot;&gt;udev&lt;/code&gt; rules so we can run it without
+root permissions.&lt;/p&gt;
+
+&lt;p&gt;The package &lt;code class=&quot;highlighter-rouge&quot;&gt;android-sdk-platform-tools-common&lt;/code&gt; already does that, we
+only need to add our user to the &lt;code class=&quot;highlighter-rouge&quot;&gt;plugdev&lt;/code&gt; group.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;usermod &lt;span class=&quot;nt&quot;&gt;-aG&lt;/span&gt; plugdev &lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-un&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;adb android-sdk-platform-tools-common
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The compiler and the building tools, however, it wasn’t so easy.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://packages.debian.org/source/bullseye/google-android-ndk-installer&quot;&gt;google-android-ndk-installer&lt;/a&gt;
+is available for Bullseye but not for Buster :|&lt;/p&gt;
+
+&lt;p&gt;I decided to repackage it:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;I downloaded the source package&lt;/li&gt;
+  &lt;li&gt;I edited &lt;code class=&quot;highlighter-rouge&quot;&gt;debian/control&lt;/code&gt; to declare as dependency &lt;code class=&quot;highlighter-rouge&quot;&gt;debhelper-compat&lt;/code&gt;
+version 12 instead of 13 (which it is for Bullseye)&lt;/li&gt;
+  &lt;li&gt;and finally, I built the &lt;code class=&quot;highlighter-rouge&quot;&gt;.deb&lt;/code&gt; package with
+&lt;code class=&quot;highlighter-rouge&quot;&gt;dpkg-buildpackage -rfakeroot -b -uc -us&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dpkg -i *.deb&lt;/code&gt; and we are done.&lt;/p&gt;
+
+&lt;h2 id=&quot;gathering-info&quot;&gt;Gathering info&lt;/h2&gt;
+
+&lt;p&gt;To compile our priv-esc exploit we need to know the architecture
+and SDK version of the phone.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;adb shell getprop ro.product.cpu.abi
+armeabi-nn
+
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;adb shell getprop ro.build.version.sdk
+nn
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;I left the connection details for the &lt;a href=&quot;https://developer.android.com/studio/run/device&quot;&gt;official documentation&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;dirty-cow&quot;&gt;Dirty COW&lt;/h2&gt;
+
+&lt;p&gt;One of the most reliable modern exploits, the
+&lt;a href=&quot;https://security-tracker.debian.org/tracker/CVE-2016-5195&quot;&gt;CVE-2016-5195&lt;/a&gt;
+know as &lt;a href=&quot;https://www.youtube.com/watch?v=kEsshExn7aE&quot;&gt;Dirty COW&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;In short, it exploits a race condition in the Copy-on-Write (COW)
+feature in Linux kernel to write in memory pages that are supposed to be
+read-only.&lt;/p&gt;
+
+&lt;p&gt;This opens a whole set of opportunities to priv-esc:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;we could write a &lt;code class=&quot;highlighter-rouge&quot;&gt;setuid&lt;/code&gt; program with our payload, execute it and
+gain root permissions.&lt;/li&gt;
+  &lt;li&gt;or we could patch &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/passwd&lt;/code&gt; or other sensible file.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The beauty is that the exploit is quite easy to understand and read,
+something that it is crucial: you must &lt;strong&gt;never&lt;/strong&gt; root your phone blindly
+trusting in an unknown apk or exploit. &lt;strong&gt;Never&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;This &lt;a href=&quot;https://github.com/timwr/CVE-2016-5195/tree/f5671399e040a168307058c598d62de64bb441d8&quot;&gt;Github
+repository&lt;/a&gt;
+is a PoC for exploiting Dirty COW on Androids. After a few hours of
+reviewing I was confident that it would be safe to use it.&lt;/p&gt;
+
+&lt;p&gt;The repository has:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dirtycow.c&lt;/code&gt; which implements the exploit&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dcow.c&lt;/code&gt;, a tiny program interface&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;run-as.c&lt;/code&gt; which it uses &lt;code class=&quot;highlighter-rouge&quot;&gt;selinux&lt;/code&gt; to run as root&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I had only modified &lt;code class=&quot;highlighter-rouge&quot;&gt;run-as.c&lt;/code&gt; a little to call the original &lt;em&gt;unpatched&lt;/em&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;run-as&lt;/code&gt; program by default and drop a root shell only under a special
+condition. We don’t want that &lt;em&gt;anyone&lt;/em&gt; can call it and become root!&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pkgname&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;pkgname&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;strcmp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pkgname&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;cookie&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;cm&quot;&gt;/* Rollback to the default run-as . */&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;memset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;memcpy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argv2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;sizeof&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;argc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;execvp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/system/bin/run-as.bck&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argv2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://developer.android.com/ndk/guides/ndk-build&quot;&gt;compilation&lt;/a&gt;
+then went smoothly:&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;:/usr/lib/android-sdk/ndk-bundle/
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ndk-build &lt;span class=&quot;nv&quot;&gt;NDK_PROJECT_PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;APP_BUILD_SCRIPT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;./Android.mk &lt;span class=&quot;nv&quot;&gt;APP_ABI&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;armeabi-nn &lt;span class=&quot;nv&quot;&gt;APP_PLATFORM&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;android-nn
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;patching&quot;&gt;Patching&lt;/h2&gt;
+
+&lt;p&gt;We upload the exploit and our &lt;em&gt;custom&lt;/em&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;run-as&lt;/code&gt; program to the phone:&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;adb push libs/armeabi-nn/dirtycow /storage/sdcard0/dcow
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;adb push libs/armeabi-nn/run-as /storage/sdcard0/run-as
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We make a backup copy of the &lt;em&gt;unpatched&lt;/em&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;run-as&lt;/code&gt; program and trigger
+then the exploit. If everything goes well the &lt;em&gt;read-only&lt;/em&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;/system/bin/run-as&lt;/code&gt;
+will be &lt;em&gt;replaced&lt;/em&gt; with our custom &lt;code class=&quot;highlighter-rouge&quot;&gt;run-as&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;adb shell &lt;span class=&quot;s1&quot;&gt;'cp /system/bin/run-as /storage/sdcard0/run-as.bck'&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;adb shell &lt;span class=&quot;s1&quot;&gt;'/storage/sdcard0/dcow /storage/sdcard0/run-as /system/bin/run-as --no-pad'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We run &lt;code class=&quot;highlighter-rouge&quot;&gt;run-as cookie cookie&lt;/code&gt; and we get a root shell; bypassing
+&lt;a href=&quot;https://www.redhat.com/en/topics/linux/what-is-selinux&quot;&gt;SELinux&lt;/a&gt; will
+be for another post &lt;a href=&quot;https://hernan.de/blog/tailoring-cve-2019-2215-to-achieve-root/&quot;&gt;:D&lt;/a&gt;&lt;/p&gt;</content><author><name>Gehn</name></author><category term="android" /><category term="root" /><category term="privilege" /><category term="priv-esc" /><category term="dirty-cow" /><summary type="html">I’ve recently got a quite old Android phone to play with. I guess the first thing to do is getting root, don’t you think?</summary></entry><entry><title type="html">Fresh Python Defaults</title><link href="/articles/2021/08/14/Fresh-Python-Defaults.html" rel="alternate" type="text/html" title="Fresh Python Defaults" /><published>2021-08-14T00:00:00+02:00</published><updated>2021-08-14T00:00:00+02:00</updated><id>/articles/2021/08/14/Fresh-Python-Defaults</id><content type="html" xml:base="/articles/2021/08/14/Fresh-Python-Defaults.html">&lt;p&gt;When defining a Python function you can define the default value
 of its parameters.&lt;/p&gt;
 
 &lt;p&gt;The defaults are evaluated &lt;em&gt;once&lt;/em&gt; and bound to the function’s signature.&lt;/p&gt;
@@ -2390,249 +2524,4 @@ condition depends on the value of a Z3 variable.&lt;/p&gt;
 &lt;em&gt;promote&lt;/em&gt; or &lt;em&gt;upcast&lt;/em&gt; to wider &lt;code class=&quot;highlighter-rouge&quot;&gt;BitVecs&lt;/code&gt;. This needs to be done by hand.&lt;/p&gt;
 
 &lt;p&gt;And don’t forget that &lt;code class=&quot;highlighter-rouge&quot;&gt;BitVec&lt;/code&gt; is a &lt;strong&gt;signed integer&lt;/strong&gt; so &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;&lt;/code&gt; are signed
-by default.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="z3" /><category term="smt" /><category term="sat" /><category term="solver" /><category term="bitvec" /><category term="verify" /><category term="bithacks" /><summary type="html">We are going to verify some of the bit twiddling hacks made and collected by Sean Eron Anderson and other authors. This is the classical scenario to put on test your Z3 skills.</summary></entry><entry><title type="html">Solving a Murder Case with Z3</title><link href="/articles/2021/05/09/Solving-a-Murder-Case-with-Z3.html" rel="alternate" type="text/html" title="Solving a Murder Case with Z3" /><published>2021-05-09T00:00:00+02:00</published><updated>2021-05-09T00:00:00+02:00</updated><id>/articles/2021/05/09/Solving-a-Murder-Case-with-Z3</id><content type="html" xml:base="/articles/2021/05/09/Solving-a-Murder-Case-with-Z3.html">&lt;p&gt;Victor has been murdered!&lt;/p&gt;
-
-&lt;p&gt;There are strong evidences that point that Victor was murdered by
-a single person. The investigation led to three suspects:
-Art, Bob, and Carl.&lt;/p&gt;
-
-&lt;p&gt;But who is the murder?&lt;!--more--&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-5d705be8de70a13814995b397e42172c&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-5d705be8de70a13814995b397e42172c&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;I took this logic puzzle from a Stanford University course:
-&lt;a href=&quot;http://intrologic.stanford.edu/extras/whodunnit.html&quot;&gt;Introduction to Logic&lt;/a&gt;
- &lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;Art says he did not do it. He says that Bob was the victim’s friend but
-that Carl hated the victim.&lt;/p&gt;
-
-&lt;p&gt;Bob says he was out of town the day of the murder, and besides he didn’t
-even know the guy.&lt;/p&gt;
-
-&lt;p&gt;Carl says he is innocent and he saw Art and Bob with the victim just
-before the murder.&lt;/p&gt;
-
-&lt;h2 id=&quot;propositional-logic&quot;&gt;Propositional logic&lt;/h2&gt;
-
-&lt;p&gt;The proposition “Bob says he was out of town the day of the murder”
-cannot be tested by pure logic.&lt;/p&gt;
-
-&lt;p&gt;It is a statement that is not related with any other statement said
-including his own so it will not be in contradiction.&lt;/p&gt;
-
-&lt;p&gt;Unless we have a camera capturing Bob near the crime scene the day
-of the murder with a validated date and time, we cannot contradict his
-claim.&lt;/p&gt;
-
-&lt;p&gt;The propositions “Art says he did not do it” and “Carl says he is innocent”
-have the same level of useless.&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
-\begin{aligned}
-Art \R claims &amp;= Bob \R friend \R of \R Victor ∧ ¬Carl \R friend \R of \R Victor  \\
-Bob \R claims &amp;= ¬Bob \R knows \R Victor                          \\
-Carl \R claims &amp;= Art \R saw \R with \R Victor ∧ Bob \R saw \R with \R Victor
-\end{aligned} %]]&gt;&lt;/script&gt;
-
-&lt;p&gt;The propositions of above seems to be disconnected. This is a limitation
-of the &lt;em&gt;propositional logic&lt;/em&gt;: we cannot connect “Bob was the victim’s
-friend” with “[Bob] didn’t even know the guy”.&lt;/p&gt;
-
-&lt;p&gt;Those are two separated propositions.&lt;/p&gt;
-
-&lt;p&gt;To connect them we need to use a &lt;em&gt;first order logic&lt;/em&gt; or &lt;em&gt;predicated
-logic&lt;/em&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;first-order-logic&quot;&gt;First order logic&lt;/h2&gt;
-
-&lt;p&gt;A first order logic has more expressive power to capture more subtle
-connections.&lt;/p&gt;
-
-&lt;p&gt;We know that if a person &lt;script type=&quot;math/tex&quot;&gt;s&lt;/script&gt; is a friend of &lt;script type=&quot;math/tex&quot;&gt;v&lt;/script&gt;,
-then &lt;script type=&quot;math/tex&quot;&gt;s&lt;/script&gt; must know &lt;script type=&quot;math/tex&quot;&gt;v&lt;/script&gt; – or at
-least is a reasonable assumption of how human friendship works.&lt;/p&gt;
-
-&lt;p&gt;Then we can have the following two &lt;em&gt;predicates&lt;/em&gt; (think in them as
-functions or parametric propositions).&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;is \R friend(s, v)     \\
-knows(s, v)&lt;/script&gt;
-
-&lt;p&gt;These predicates are not true or false: only when we &lt;em&gt;fix&lt;/em&gt; their inputs
-we can ask about their truthfulness.&lt;/p&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-9a03120bc20ba885cfc74e620e63f4db&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-9a03120bc20ba885cfc74e620e63f4db&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Formally I should add that &lt;script type=&quot;math/tex&quot;&gt;s&lt;/script&gt; belongs to the &lt;em&gt;domain&lt;/em&gt; of
-suspects &lt;script type=&quot;math/tex&quot;&gt;\{Art, Bob, Carl\}&lt;/script&gt; and &lt;script type=&quot;math/tex&quot;&gt;v&lt;/script&gt; belongs to the &lt;em&gt;domain&lt;/em&gt;
-of victims &lt;script type=&quot;math/tex&quot;&gt;\{Victor\}&lt;/script&gt;.
-&lt;br /&gt;
-Without a domain, &lt;script type=&quot;math/tex&quot;&gt;s&lt;/script&gt; and &lt;script type=&quot;math/tex&quot;&gt;v&lt;/script&gt; are just letters and the proposition
-makes no sense.
- &lt;/span&gt;
-However we can build propositions that are true or false on top
-of that:&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;∀ s, ∀ v \; is \R friend(s, v) ⟹  knows(s, v)&lt;/script&gt;
-
-&lt;p&gt;And that proposition is true for all the suspects and victims possible.&lt;/p&gt;
-
-&lt;p&gt;In particular, the following is also true:&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;is \R friend(Bob, Victor) ⟹  knows(Bob, Victor)&lt;/script&gt;
-
-&lt;p&gt;That’s the link, the connection between “Bob was the victim’s
-friend” with “[Bob] didn’t even know the guy”.&lt;/p&gt;
-
-&lt;p&gt;It is a mathematical way to say: “if Bob was the victim’s friend, then
-he knew the guy; if he didn’t know the guy he could not be his friend”.&lt;/p&gt;
-
-&lt;p&gt;The claim “[Carl] saw Art […] with the victim just before the murder”
-is tricky.&lt;/p&gt;
-
-&lt;p&gt;A person &lt;script type=&quot;math/tex&quot;&gt;s&lt;/script&gt; can be in a public place with &lt;script type=&quot;math/tex&quot;&gt;v&lt;/script&gt; and that does not implies
-anything. Even if they are in the same room, &lt;script type=&quot;math/tex&quot;&gt;s&lt;/script&gt; may forget about
-&lt;script type=&quot;math/tex&quot;&gt;v&lt;/script&gt; 5 minutes later.&lt;/p&gt;
-
-&lt;p&gt;For the sake of simplicity we will say that the following is true:&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;∀ s, ∀ v \; be \R with(s, v) ⟹  knows(s, v)&lt;/script&gt;
-
-&lt;p&gt;Using the predicates we can rewrite the suspects’ claims as follows:&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
-\begin{aligned}
-Art \R claims &amp;= is \R friend(Bob, Victor) ∧ ¬is \R friend(Carl, Victor)  \\
-Bob \R claims &amp;= ¬knows(Bob, Victor)                                \\
-Carl \R claims &amp;= be \R with(Art, Victor) ∧ be \R with(Bob, Victor)
-\end{aligned} %]]&gt;&lt;/script&gt;
-
-&lt;h2 id=&quot;z3&quot;&gt;Z3&lt;/h2&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;z3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DeclareSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BoolSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Bools&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;And&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Not&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;                 &lt;span class=&quot;n&quot;&gt;Implies&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ForAll&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Solver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Consts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AtLeast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Suspects&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DeclareSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Suspects'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Art&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Bob&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Carl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Consts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Art Bob Carl s&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Suspects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victims&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DeclareSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Victims'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Consts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Victor v&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Notice how we explicitly declare the &lt;em&gt;domains&lt;/em&gt; or &lt;em&gt;sorts&lt;/em&gt; over we will
-be operating: the domain of suspects and the domain of victims.&lt;/p&gt;
-
-&lt;p&gt;“Bob is a sort of Suspects; Victor is a sort of Victims”. Weird.&lt;/p&gt;
-
-&lt;p&gt;The sort is used to define the &lt;em&gt;predicates&lt;/em&gt; –aka functions:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;is_friend&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'is_friend'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Suspects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BoolSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;knows&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'knows'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Suspects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BoolSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be_with&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'be_with'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Suspects&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BoolSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;All those three functions receives a suspect and a victim as inputs and
-return an element of sort boolean: true or false.&lt;/p&gt;
-
-&lt;p&gt;Note how those functions are either true or false, they are just
-functions.&lt;/p&gt;
-
-&lt;p&gt;In contrast the following relationships are true and they are our first
-two restrictions set:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Solver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;ForAll&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Implies&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;is_friend&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;knows&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))),&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;ForAll&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Implies&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;be_with&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;knows&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;And now the suspects’ claims:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;art_claims&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;And&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;is_friend&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Bob&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Not&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;is_friend&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Carl&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bob_claims&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Not&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;knows&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Bob&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;carl_claims&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;And&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;be_with&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Art&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;be_with&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Bob&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Victor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assert_and_track&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;art_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'art_claims'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assert_and_track&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bob_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'bob_claims'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;assert_and_track&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;carl_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'carl_claims'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Finally, we check if the claims are &lt;em&gt;consistent between&lt;/em&gt; or if there are
-any &lt;em&gt;contradiction&lt;/em&gt;.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;unsat&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Nop! Someone is lying!&lt;/p&gt;
-
-&lt;h2 id=&quot;finding-the-murder&quot;&gt;Finding the murder&lt;/h2&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unsat_core&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;art_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bob_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Z3 can calculate the &lt;em&gt;unsat core&lt;/em&gt; which it is a subset of the &lt;em&gt;tracked&lt;/em&gt;
-restrictions that lead to &lt;em&gt;unsatisfiable&lt;/em&gt; result.&lt;/p&gt;
-
-&lt;p&gt;So Art’s or Bob’s claims is/are producing contradictions.&lt;/p&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-59d6686c2a8eca4e9d9c869e43a4048c&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-59d6686c2a8eca4e9d9c869e43a4048c&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Z3 does not produce the &lt;em&gt;minimum unsat core&lt;/em&gt; by default. We could force
-it to have exactly which claim is false but in my setup I could not make
-it work.
-&lt;br /&gt;
-So we will have to do it by hand.
- &lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;By assumption, only one of the suspects is lying, the rest are telling
-us the truth. But who is lying?&lt;/p&gt;
-
-&lt;p&gt;We restore the solver before anding the claims and this time we will require
-not all but at least 2 claims to be true.
-By assumption the third claim will be false.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AtLeast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;art_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bob_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;carl_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;sat&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now, what suspect is lying?&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;model&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;art_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bob_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;carl_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;So Bob is lying!&lt;/p&gt;
-
-&lt;p&gt;To rule out any other possible solution we will roll back the solver
-again and in this time we use the claims as &lt;em&gt;assumptions&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;For the &lt;code class=&quot;highlighter-rouge&quot;&gt;check()&lt;/code&gt; method an assumption is a restriction like any other but
-it is not added to the solver (like when you call &lt;code class=&quot;highlighter-rouge&quot;&gt;add()&lt;/code&gt;).&lt;/p&gt;
-
-&lt;p&gt;This is handy way to test different claims combinations without rolling
-back the entire solver over and over.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;art_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bob_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;unsat&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bob_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;carl_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;unsat&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;art_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;carl_claims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;sat&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Indeed, only when Bob’s claims are &lt;strong&gt;not&lt;/strong&gt; considered we see a
-consistent scenario.&lt;/p&gt;
-
-&lt;p&gt;Bob was the killer.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="z3" /><category term="smt" /><category term="sat" /><category term="solver" /><category term="propositional" /><category term="logic" /><category term="first" /><category term="order" /><summary type="html">Victor has been murdered! There are strong evidences that point that Victor was murdered by a single person. The investigation led to three suspects: Art, Bob, and Carl. But who is the murder?</summary></entry></feed>
+by default.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="z3" /><category term="smt" /><category term="sat" /><category term="solver" /><category term="bitvec" /><category term="verify" /><category term="bithacks" /><summary type="html">We are going to verify some of the bit twiddling hacks made and collected by Sean Eron Anderson and other authors. This is the classical scenario to put on test your Z3 skills.</summary></entry></feed>

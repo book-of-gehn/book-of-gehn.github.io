@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Rooting Android with a Dirty COW</title>
+  <meta name="description" content="I’ve recently got a quite old Android phone to play with. I guess thefirst thing to do is getting root, don’t you think?">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
+
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
+
+  <link rel="canonical" href="/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
+
+    <script src='/js/lunr-2.3.9.js'></script>
+    <script src='/js/search_index.js'></script>
+    <script src='/js/search.js'></script>
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+                <hgroup class="header-group">
+		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/assets/blog-assets/github.png" /></a>
+                    </li>
+                </ul>
+		
+		
+	
+
+    
+
+    <nav class="group">
+    
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+	</nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+
+    <article class="group">
+      <h1>Rooting Android with a Dirty COW</h1>
+<p class="subtitle">August 22, 2021</p>
+
+<p>I’ve recently got a quite old Android phone to play with. I guess the
+first thing to do is getting root, don’t you think?<!--more--></p>
+
+<h2 id="android-sdk">Android SDK</h2>
+
+<p>While it is perfectly possible to download the SDK from
+<a href="https://developer.android.com/ndk/guides">Android</a> and install it by
+hand, I liked the idea to use a package from Debian repository.</p>
+
+<p>To interact with the device we will use <a href="https://developer.android.com/studio/command-line/adb">Android Debug
+Bridge</a> or <code class="highlighter-rouge">adb</code>
+for short.</p>
+
+<p>Besides <code class="highlighter-rouge">adb</code> we need to setup a few <code class="highlighter-rouge">udev</code> rules so we can run it without
+root permissions.</p>
+
+<p>The package <code class="highlighter-rouge">android-sdk-platform-tools-common</code> already does that, we
+only need to add our user to the <code class="highlighter-rouge">plugdev</code> group.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">sudo </span>usermod <span class="nt">-aG</span> plugdev <span class="si">$(</span><span class="nb">id</span> <span class="nt">-un</span><span class="si">)</span>
+<span class="nv">$ </span><span class="nb">sudo </span>apt-get <span class="nb">install </span>adb android-sdk-platform-tools-common
+</code></pre></div></div>
+
+<p>The compiler and the building tools, however, it wasn’t so easy.</p>
+
+<p><a href="https://packages.debian.org/source/bullseye/google-android-ndk-installer">google-android-ndk-installer</a>
+is available for Bullseye but not for Buster :|</p>
+
+<p>I decided to repackage it:</p>
+
+<ul>
+  <li>I downloaded the source package</li>
+  <li>I edited <code class="highlighter-rouge">debian/control</code> to declare as dependency <code class="highlighter-rouge">debhelper-compat</code>
+version 12 instead of 13 (which it is for Bullseye)</li>
+  <li>and finally, I built the <code class="highlighter-rouge">.deb</code> package with
+<code class="highlighter-rouge">dpkg-buildpackage -rfakeroot -b -uc -us</code></li>
+</ul>
+
+<p><code class="highlighter-rouge">dpkg -i *.deb</code> and we are done.</p>
+
+<h2 id="gathering-info">Gathering info</h2>
+
+<p>To compile our priv-esc exploit we need to know the architecture
+and SDK version of the phone.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>adb shell getprop ro.product.cpu.abi
+armeabi-nn
+
+<span class="nv">$ </span>adb shell getprop ro.build.version.sdk
+nn
+</code></pre></div></div>
+
+<p>I left the connection details for the <a href="https://developer.android.com/studio/run/device">official documentation</a></p>
+
+<h2 id="dirty-cow">Dirty COW</h2>
+
+<p>One of the most reliable modern exploits, the
+<a href="https://security-tracker.debian.org/tracker/CVE-2016-5195">CVE-2016-5195</a>
+know as <a href="https://www.youtube.com/watch?v=kEsshExn7aE">Dirty COW</a>.</p>
+
+<p>In short, it exploits a race condition in the Copy-on-Write (COW)
+feature in Linux kernel to write in memory pages that are supposed to be
+read-only.</p>
+
+<p>This opens a whole set of opportunities to priv-esc:</p>
+
+<ul>
+  <li>we could write a <code class="highlighter-rouge">setuid</code> program with our payload, execute it and
+gain root permissions.</li>
+  <li>or we could patch <code class="highlighter-rouge">/etc/passwd</code> or other sensible file.</li>
+</ul>
+
+<p>The beauty is that the exploit is quite easy to understand and read,
+something that it is crucial: you must <strong>never</strong> root your phone blindly
+trusting in an unknown apk or exploit. <strong>Never</strong>.</p>
+
+<p>This <a href="https://github.com/timwr/CVE-2016-5195/tree/f5671399e040a168307058c598d62de64bb441d8">Github
+repository</a>
+is a PoC for exploiting Dirty COW on Androids. After a few hours of
+reviewing I was confident that it would be safe to use it.</p>
+
+<p>The repository has:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">dirtycow.c</code> which implements the exploit</li>
+  <li><code class="highlighter-rouge">dcow.c</code>, a tiny program interface</li>
+  <li><code class="highlighter-rouge">run-as.c</code> which it uses <code class="highlighter-rouge">selinux</code> to run as root</li>
+</ul>
+
+<p>I had only modified <code class="highlighter-rouge">run-as.c</code> a little to call the original <em>unpatched</em>
+<code class="highlighter-rouge">run-as</code> program by default and drop a root shell only under a special
+condition. We don’t want that <em>anyone</em> can call it and become root!</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">pkgname</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="n">pkgname</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">pkgname</span><span class="p">,</span> <span class="s">"cookie"</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/* Rollback to the default run-as . */</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">argv2</span><span class="p">[</span><span class="n">argc</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+    <span class="n">memset</span><span class="p">(</span><span class="n">argv2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">argc</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span>
+    <span class="n">memcpy</span><span class="p">(</span><span class="n">argv2</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="o">*</span><span class="n">argc</span><span class="p">);</span>
+
+    <span class="n">execvp</span><span class="p">(</span><span class="s">"/system/bin/run-as.bck"</span><span class="p">,</span> <span class="n">argv2</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <a href="https://developer.android.com/ndk/guides/ndk-build">compilation</a>
+then went smoothly:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/usr/lib/android-sdk/ndk-bundle/
+<span class="nv">$ </span>ndk-build <span class="nv">NDK_PROJECT_PATH</span><span class="o">=</span><span class="nb">.</span> <span class="nv">APP_BUILD_SCRIPT</span><span class="o">=</span>./Android.mk <span class="nv">APP_ABI</span><span class="o">=</span>armeabi-nn <span class="nv">APP_PLATFORM</span><span class="o">=</span>android-nn
+</code></pre></div></div>
+
+<h2 id="patching">Patching</h2>
+
+<p>We upload the exploit and our <em>custom</em> <code class="highlighter-rouge">run-as</code> program to the phone:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>adb push libs/armeabi-nn/dirtycow /storage/sdcard0/dcow
+<span class="nv">$ </span>adb push libs/armeabi-nn/run-as /storage/sdcard0/run-as
+</code></pre></div></div>
+
+<p>We make a backup copy of the <em>unpatched</em> <code class="highlighter-rouge">run-as</code> program and trigger
+then the exploit. If everything goes well the <em>read-only</em> <code class="highlighter-rouge">/system/bin/run-as</code>
+will be <em>replaced</em> with our custom <code class="highlighter-rouge">run-as</code>:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>adb shell <span class="s1">'cp /system/bin/run-as /storage/sdcard0/run-as.bck'</span>
+<span class="nv">$ </span>adb shell <span class="s1">'/storage/sdcard0/dcow /storage/sdcard0/run-as /system/bin/run-as --no-pad'</span>
+</code></pre></div></div>
+
+<p>We run <code class="highlighter-rouge">run-as cookie cookie</code> and we get a root shell; bypassing
+<a href="https://www.redhat.com/en/topics/linux/what-is-selinux">SELinux</a> will
+be for another post <a href="https://hernan.de/blog/tailoring-cve-2019-2215-to-achieve-root/">:D</a></p>
+
+
+
+    </article>
+    <span class="print-footer">Rooting Android with a Dirty COW - August 22, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>
