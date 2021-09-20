@@ -108,6 +108,47 @@
     
        <span class="index-single-post">
           <hr class="slender post-layout">
+          <a href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html"><h2 class="larger">IPv4 Scan 2021 - Multiprobes Analysis</h2></a>
+          <br><span class="smaller">September 19, 2021</span>  <br/>
+          <div><p>To my surprise the
+<a href="https://www.kaggle.com/signalspikes/internet-port-scan-1">dataset</a>
+preprocessed in my
+<a href="/book-of-gehn/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">previous post</a>
+<strong>has</strong> duplicated entries. These are scans
+to the same host and port but with a different timestamp.</p>
+
+<p>Questions like “which open port is more likely” will biased
+because the same host-port may be counted more than once.</p>
+
+<p>On the other hand, this opens <em>new questions</em>:</p>
+
+<ul>
+  <li>which is the reason to scan the same port more than once? If it is
+<em>fixed</em> by the scanner we can deduce that ports scanned once <em>were scanned
+more times</em> but the other probes failed and get an estimation of such.</li>
+  <li>is the same port opened due different reasons?</li>
+  <li>could we characterize the scanner based on the timestamps like
+scanning patterns?</li>
+</ul>
+
+<p>The second surprise was that even working with small samples (around
+100MB),
+<a href="https://pandas.pydata.org/">Pandas</a>/<a href="https://dask.org/">Dask</a>
+has <strong>serious performance problems</strong>:</p>
+
+<ul>
+  <li>consumes much more memory (gigas)</li>
+  <li>CPU at 100% all the time</li>
+  <li>simple operations like <code class="highlighter-rouge">groupby</code> take forever.</li>
+</ul>
+
+<p>Goodbye Pandas, hello <a href="https://julialang.org/">Julia</a>?</p>
+
+</div>
+       </span>
+    
+       <span class="index-single-post">
+          <hr class="slender post-layout">
           <a href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html"><h2 class="larger">IPv4 Scan 2021 - Dataset Preprocessing</h2></a>
           <br><span class="smaller">September 10, 2021</span>  <br/>
           <div><p>The <a href="https://www.kaggle.com/signalspikes/internet-port-scan-1">dataset</a>

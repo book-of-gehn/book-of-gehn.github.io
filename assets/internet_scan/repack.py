@@ -103,7 +103,7 @@ def save_df(rows, fileno):
     df = df.astype({
         'ip': np.uint32,
         'port_count': np.uint8,
-        'reason_count': np.uint8
+        'reason_nunique': np.uint8
         })
 
     df.to_parquet(

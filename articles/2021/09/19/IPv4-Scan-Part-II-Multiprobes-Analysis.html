@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>IPv4 Scan 2021 - Multiprobes Analysis</title>
+  <meta name="description" content="To my surprise thedatasetpreprocessed in myprevious posthas duplicated entries. These are scansto the same host and port but with a different timestamp.Quest...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
+
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
+
+  <link rel="canonical" href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
+
+    <script src='/js/lunr-2.3.9.js'></script>
+    <script src='/js/search_index.js'></script>
+    <script src='/js/search.js'></script>
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+                <hgroup class="header-group">
+		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/assets/blog-assets/github.png" /></a>
+                    </li>
+                </ul>
+		
+		
+	
+
+    
+
+    <nav class="group">
+    
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+	</nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+
+    <article class="group">
+      <h1>IPv4 Scan 2021 - Multiprobes Analysis</h1>
+<p class="subtitle">September 19, 2021</p>
+
+<p>To my surprise the
+<a href="https://www.kaggle.com/signalspikes/internet-port-scan-1">dataset</a>
+preprocessed in my
+<a href="/book-of-gehn/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">previous post</a>
+<strong>has</strong> duplicated entries. These are scans
+to the same host and port but with a different timestamp.</p>
+
+<p>Questions like “which open port is more likely” will biased
+because the same host-port may be counted more than once.</p>
+
+<p>On the other hand, this opens <em>new questions</em>:</p>
+
+<ul>
+  <li>which is the reason to scan the same port more than once? If it is
+<em>fixed</em> by the scanner we can deduce that ports scanned once <em>were scanned
+more times</em> but the other probes failed and get an estimation of such.</li>
+  <li>is the same port opened due different reasons?</li>
+  <li>could we characterize the scanner based on the timestamps like
+scanning patterns?</li>
+</ul>
+
+<p>The second surprise was that even working with small samples (around
+100MB),
+<a href="https://pandas.pydata.org/">Pandas</a>/<a href="https://dask.org/">Dask</a>
+has <strong>serious performance problems</strong>:</p>
+
+<ul>
+  <li>consumes much more memory (gigas)</li>
+  <li>CPU at 100% all the time</li>
+  <li>simple operations like <code class="highlighter-rouge">groupby</code> take forever.</li>
+</ul>
+
+<p>Goodbye Pandas, hello <a href="https://julialang.org/">Julia</a>?<!--more--></p>
+
+<h2 id="julias-dataframes">Julia’s DataFrames</h2>
+
+<p>First we need to install a few packages:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="k">import</span> <span class="n">Pkg</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="x">(</span><span class="s">"DataFrames"</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="x">(</span><span class="s">"Parquet"</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="x">(</span><span class="s">"CategoricalArrays"</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="x">(</span><span class="s">"StatsBase"</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="x">(</span><span class="s">"Statistics"</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="x">(</span><span class="s">"StatsPlots"</span><span class="x">)</span>
+</code></pre></div></div>
+
+<p>Then we load the dataframe:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="k">using</span> <span class="n">Parquet</span><span class="x">,</span> <span class="n">DataFrames</span><span class="x">,</span> <span class="n">CategoricalArrays</span><span class="x">,</span> <span class="n">StatsBase</span><span class="x">,</span> <span class="n">Statistics</span><span class="x">,</span> <span class="n">StatsPlots</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">df</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="x">(</span><span class="n">read_parquet</span><span class="x">(</span><span class="s">"scans"</span><span class="x">))</span>
+</code></pre></div></div>
+
+<h3 id="categorical-data">Categorical data</h3>
+
+<p><label for="mn-2acf7f9ccc7be0fe3a1c0b2e9e13ab05" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-2acf7f9ccc7be0fe3a1c0b2e9e13ab05" class="margin-toggle" /><span class="marginnote">The <code class="highlighter-rouge">compress=true</code> is needed so the column will be of the smallest type
+that can represent the categories, in our case, <code class="highlighter-rouge">UInt8</code>; otherwise
+<code class="highlighter-rouge">CategoricalArrays.jl</code> uses <code class="highlighter-rouge">UInt32</code> by default.
+ </span></p>
+
+<p><code class="highlighter-rouge">Parquet.jl</code> does not load the categories (or Pandas’s <code class="highlighter-rouge">to_parquet</code> is
+not writing them). This consumes more RAM because the <code class="highlighter-rouge">reason</code> and <code class="highlighter-rouge">port</code>
+columns are strings.</p>
+
+<p>We can make them <em>categorical</em> back again with:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">df</span><span class="x">[</span><span class="o">!</span><span class="x">,</span> <span class="o">:</span><span class="n">reason</span><span class="x">]</span> <span class="o">=</span> <span class="n">categorical</span><span class="x">(</span><span class="n">df</span><span class="x">[</span><span class="o">:</span><span class="x">,</span> <span class="o">:</span><span class="n">reason</span><span class="x">],</span> <span class="n">compress</span><span class="o">=</span><span class="nb">true</span><span class="x">)</span>
+</code></pre></div></div>
+
+<h3 id="ordinal-data">Ordinal data</h3>
+
+<p>We do the same for <code class="highlighter-rouge">port</code> column but we additionally mark the categorical
+as <em>ordered</em>.</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">df</span><span class="x">[</span><span class="o">!</span><span class="x">,</span> <span class="o">:</span><span class="n">port</span><span class="x">]</span> <span class="o">=</span> <span class="n">categorical</span><span class="x">(</span><span class="n">df</span><span class="x">[</span><span class="o">:</span><span class="x">,</span> <span class="o">:</span><span class="n">port</span><span class="x">],</span> <span class="n">compress</span><span class="o">=</span><span class="nb">true</span><span class="x">,</span> <span class="n">ordered</span><span class="o">=</span><span class="nb">true</span><span class="x">)</span>
+</code></pre></div></div>
+
+<p>As
+<a href="/book-of-gehn/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">explained earlier</a>,
+the ports <strong>don’t</strong> have a natural order however
+I this as an opportunity to explore and document <em>how to work with ordinals</em>.</p>
+
+<p><code class="highlighter-rouge">CategoricalArrays.jl</code> orders lexicographically by default. To change
+the order we need to do it later with <code class="highlighter-rouge">levels!</code>.</p>
+
+<p>First we get ports labels (strings):</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">levels</span><span class="x">(</span><span class="n">df</span><span class="o">.</span><span class="n">port</span><span class="x">)</span>
+</code></pre></div></div>
+
+<p>Then we parse them as integers and sort them numerically:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">sort</span><span class="x">(</span><span class="n">parse</span><span class="o">.</span><span class="x">(</span><span class="kt">UInt16</span><span class="x">,</span> <span class="n">s</span><span class="x">))</span>
+</code></pre></div></div>
+
+<p>We get back the ports labels as strings:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="x">(</span><span class="n">s</span><span class="x">)</span>
+</code></pre></div></div>
+
+<p>Finally we rewrite the levels of the ordinal column:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">levels!</span><span class="x">(</span><span class="n">df</span><span class="o">.</span><span class="n">port</span><span class="x">,</span> <span class="n">s</span><span class="x">)</span>
+</code></pre></div></div>
+
+<p>Now the <code class="highlighter-rouge">port</code> column is an ordinal column and the order is implied by
+the numerical interpretation of its labels.</p>
+
+<!--
+using Parquet, DataFrames, CategoricalArrays, StatsBase, Statistics, StatsPlots
+df = DataFrame(read_parquet("indexed"))
+df[!, :reason] = categorical(df[:, :reason], compress=true)
+df[!, :port] = categorical(df[:, :port], compress=true, ordered=true)
+s = levels(df.port)
+s = sort(parse.(UInt16, s))
+s = string.(s)
+levels!(df.port, s)
+
+
+sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libgdbm-compat-dev
+sudo apt-get install libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
+sudo apt-get install libssl-dev liblzma-dev zlib1g-dev lzma lzma-dev libgdbm-dev
+
+make clean
+./configure --enable-shared --enable-optimizations
+make
+make test
+
+ENV["PYTHON"] = "/home/user/env/bin/python"
+ENV["PYTHONHOME"] = ""
+Pkg.add("PyCall")
+Pkg.build("PyCall")
+<..restart..>
+
+import Pkg; Pkg.add("PyPlot")
+
+-->
+
+<h2 id="is-the-same-port-opened-due-different-reasons">Is the same port opened due different reasons?</h2>
+
+<p><label for="mn-f146557cdf4ac060d459e89c4f506a15" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-f146557cdf4ac060d459e89c4f506a15" class="margin-toggle" /><span class="marginnote">The <code class="highlighter-rouge">:foo</code> are symbols which in our case are the names of the columns. The
+<code class="highlighter-rouge">∘</code> (<code class="highlighter-rouge">\circ</code> in Latex) is the <em>composite operator</em>: <code class="highlighter-rouge">length ∘ unique</code> is
+equivalent to <code class="highlighter-rouge">length(unique(x))</code>.
+The whole <code class="highlighter-rouge">:reason =&gt; length ∘ unique =&gt; :nunique</code> reads as: take the
+<code class="highlighter-rouge">reason</code> column, count how many unique values are in each group and
+store the result (one per group) in the column <code class="highlighter-rouge">nunique</code>.
+ </span></p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">groupby</span><span class="x">(</span><span class="n">df</span><span class="x">,</span> <span class="x">[</span><span class="o">:</span><span class="n">ip</span><span class="x">,</span> <span class="o">:</span><span class="n">port</span><span class="x">])</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">df2</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">g</span><span class="x">,</span>
+                <span class="o">:</span><span class="n">reason</span> <span class="o">=&gt;</span> <span class="n">length</span> <span class="n">∘</span> <span class="n">unique</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">nunique</span><span class="x">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">countmap</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">nunique</span><span class="x">)</span>
+<span class="kt">Dict</span><span class="x">{</span><span class="kt">Int64</span><span class="x">,</span> <span class="kt">Int64</span><span class="x">}</span> <span class="n">with</span> <span class="mi">1</span> <span class="n">entry</span><span class="o">:</span>
+  <span class="mi">1</span> <span class="o">=&gt;</span> <span class="mi">64787998</span>
+</code></pre></div></div>
+
+<p>Nope, for each open port there is only one reason why it is open.</p>
+
+<h2 id="which-is-the-reason-to-scan-the-same-port-more-than-once">Which is the reason to scan the same port more than once?</h2>
+
+<p><code class="highlighter-rouge">masscan</code> supports a <code class="highlighter-rouge">--retries</code> flag. From the
+<a href="https://github.com/robertdavidgraham/masscan/blob/952755771ab8065c052cdf4b6d18041435b2d661/doc/masscan.8.markdown">documentation</a>:</p>
+
+<blockquote>
+  <p><em><code class="highlighter-rouge">--retries</code>: the number of retries to send, at 1 second intervals. Note
+that since this scanner is stateless, retries are sent regardless if
+replies have already been received.</em></p>
+</blockquote>
+
+<p>This means that <code class="highlighter-rouge">masscan</code> will send <script type="math/tex">N</script> probes to each port, always,
+within a second apart.</p>
+
+<p>Let’s check that.</p>
+
+<h2 id="what-is-the-distributions-of-probes-per-open-port">What is the distributions of probes per open port?</h2>
+
+<p><label for="mn-27ecdea00ae0892ca739d087c343b33d" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-27ecdea00ae0892ca739d087c343b33d" class="margin-toggle" /><span class="marginnote"><code class="highlighter-rouge">nrow</code> is a special value that <code class="highlighter-rouge">DataFrame</code>'s <code class="highlighter-rouge">combine</code> will
+interpret as <em>count the rows of each group</em>. The rest follows the usual
+meaning: <code class="highlighter-rouge">nrow =&gt; :count</code> means store the count in a column named <code class="highlighter-rouge">count</code>.
+ </span></p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">groupby</span><span class="x">(</span><span class="n">df</span><span class="x">,</span> <span class="x">[</span><span class="o">:</span><span class="n">ip</span><span class="x">,</span> <span class="o">:</span><span class="n">port</span><span class="x">])</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">df2</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">g</span><span class="x">,</span> <span class="n">nrow</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">count</span><span class="x">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">countmap</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">count</span><span class="x">)</span>
+<span class="kt">Dict</span><span class="x">{</span><span class="kt">Int64</span><span class="x">,</span> <span class="kt">Int64</span><span class="x">}</span> <span class="n">with</span> <span class="mi">5</span> <span class="n">entries</span><span class="o">:</span>
+  <span class="mi">5</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+  <span class="mi">4</span> <span class="o">=&gt;</span> <span class="mi">27</span>
+  <span class="mi">2</span> <span class="o">=&gt;</span> <span class="mi">13038</span>
+  <span class="mi">3</span> <span class="o">=&gt;</span> <span class="mi">750</span>
+  <span class="mi">1</span> <span class="o">=&gt;</span> <span class="mi">64774182</span>
+</code></pre></div></div>
+
+<p>So <code class="highlighter-rouge">masscan</code> didn’t sent <script type="math/tex">N</script> probes to each port <strong>or</strong> it did it but the
+some probes never were answered <em>(why?, who knows)</em>.</p>
+
+<p>This could explain why some ports were scanned twice while others only
+one.</p>
+
+<h2 id="what-is-the-distribution-of-intervals-between-probes-for-each-port">What is the distribution of intervals between probes for each port?</h2>
+
+<p><label for="mn-d545e4498ff3efedd22c1c04afb63aaa" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-d545e4498ff3efedd22c1c04afb63aaa" class="margin-toggle" /><span class="marginnote">Sanity check: from the distribution of probes per port we know that we
+have 13038 ports with 2 probes which will contribute with 13038 rows to
+the difference dataframe; 750 ports with 3 probes which will contribute
+with 750 * 2 rows to the result; 27 ports with 4 probes contributing
+with 27 * 3 rows and finally 1 port with 5 probes contributing with 5 *
+4 rows. The expected total is 14623 which it is exactly the row count
+of <code class="highlighter-rouge">df2</code>.
+ </span></p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">groupby</span><span class="x">(</span><span class="n">df</span><span class="x">,</span> <span class="x">[</span><span class="o">:</span><span class="n">ip</span><span class="x">,</span> <span class="o">:</span><span class="n">port</span><span class="x">])</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">df2</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">g</span><span class="x">,</span>
+                <span class="o">:</span><span class="n">timestamp</span> <span class="o">=&gt;</span> <span class="n">diff</span> <span class="n">∘</span> <span class="n">sort</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">interval</span><span class="x">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">countmap</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">interval</span><span class="x">)</span>
+<span class="kt">Dict</span><span class="x">{</span><span class="kt">Union</span><span class="x">{</span><span class="kt">Missing</span><span class="x">,</span> <span class="kt">Int32</span><span class="x">},</span> <span class="kt">Int64</span><span class="x">}</span> <span class="n">with</span> <span class="mi">30</span> <span class="n">entries</span><span class="o">:</span>
+  <span class="mi">0</span>  <span class="o">=&gt;</span> <span class="mi">320</span>
+  <span class="mi">1</span>  <span class="o">=&gt;</span> <span class="mi">2793</span>
+  <span class="mi">2</span>  <span class="o">=&gt;</span> <span class="mi">585</span>
+  <span class="mi">3</span>  <span class="o">=&gt;</span> <span class="mi">2625</span>
+  <span class="mi">4</span>  <span class="o">=&gt;</span> <span class="mi">843</span>
+  <span class="mi">5</span>  <span class="o">=&gt;</span> <span class="mi">159</span>
+  <span class="mi">6</span>  <span class="o">=&gt;</span> <span class="mi">316</span>
+  <span class="mi">7</span>  <span class="o">=&gt;</span> <span class="mi">1364</span>
+  <span class="mi">8</span>  <span class="o">=&gt;</span> <span class="mi">512</span>
+  <span class="mi">9</span>  <span class="o">=&gt;</span> <span class="mi">1435</span>
+  <span class="mi">10</span> <span class="o">=&gt;</span> <span class="mi">495</span>
+  <span class="mi">11</span> <span class="o">=&gt;</span> <span class="mi">149</span>
+  <span class="mi">12</span> <span class="o">=&gt;</span> <span class="mi">103</span>
+  <span class="mi">13</span> <span class="o">=&gt;</span> <span class="mi">52</span>
+  <span class="mi">14</span> <span class="o">=&gt;</span> <span class="mi">139</span>
+  <span class="mi">15</span> <span class="o">=&gt;</span> <span class="mi">1715</span>
+  <span class="mi">16</span> <span class="o">=&gt;</span> <span class="mi">828</span>
+  <span class="mi">17</span> <span class="o">=&gt;</span> <span class="mi">15</span>
+  <span class="mi">18</span> <span class="o">=&gt;</span> <span class="mi">6</span>
+  <span class="mi">19</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+  <span class="mi">23</span> <span class="o">=&gt;</span> <span class="mi">2</span>
+  <span class="mi">24</span> <span class="o">=&gt;</span> <span class="mi">5</span>
+  <span class="mi">25</span> <span class="o">=&gt;</span> <span class="mi">3</span>
+  <span class="mi">28</span> <span class="o">=&gt;</span> <span class="mi">2</span>
+  <span class="mi">29</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+  <span class="mi">31</span> <span class="o">=&gt;</span> <span class="mi">55</span>
+  <span class="mi">32</span> <span class="o">=&gt;</span> <span class="mi">92</span>
+  <span class="mi">33</span> <span class="o">=&gt;</span> <span class="mi">4</span>
+  <span class="mi">34</span> <span class="o">=&gt;</span> <span class="mi">3</span>
+  <span class="mi">40</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+</code></pre></div></div>
+
+<p>This was more spread than I expected. Most of the intervals are in the
+low range but there is non-negligible count for the 15 secs interval.</p>
+
+<p>A quick statistics for the intervals:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="x">(</span><span class="n">df2</span><span class="x">,</span> <span class="o">:</span><span class="n">mean</span><span class="x">,</span> <span class="o">:</span><span class="n">std</span><span class="x">,</span> <span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">q25</span><span class="x">,</span> <span class="o">:</span><span class="n">median</span><span class="x">,</span> <span class="o">:</span><span class="n">q75</span><span class="x">,</span> <span class="o">:</span><span class="n">max</span><span class="x">,</span> <span class="n">cols</span><span class="o">=:</span><span class="n">interval</span><span class="x">)</span>
+<span class="mi">1</span><span class="n">×8</span> <span class="n">DataFrame</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>  <span class="n">mean</span>     <span class="n">std</span>      <span class="n">min</span>    <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>      <span class="n">max</span>
+     <span class="n">│</span> <span class="kt">Symbol</span>    <span class="kt">Float64</span>  <span class="kt">Float64</span>  <span class="kt">Int32</span>  <span class="kt">Float64</span>  <span class="kt">Float64</span>  <span class="kt">Float64</span>  <span class="kt">Int32</span>
+<span class="n">─────┼─────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">interval</span>   <span class="mf">6.8051</span>  <span class="mf">5.75237</span>      <span class="mi">0</span>      <span class="mf">2.0</span>      <span class="mf">5.0</span>     <span class="mf">10.0</span>  <span class="mi">40</span>
+</code></pre></div></div>
+
+<p>Or, statistic by statistic:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">mean</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">interval</span><span class="x">)</span>
+<span class="mf">6.805101552349039</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">median</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">interval</span><span class="x">)</span>
+<span class="mf">5.0</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">mode</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">interval</span><span class="x">)</span>
+<span class="mi">1</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">std</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">interval</span><span class="x">)</span>
+<span class="mf">5.752370354791699</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">quantile</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">interval</span><span class="x">,</span> <span class="x">[</span><span class="o">.</span><span class="mi">25</span><span class="x">,</span> <span class="o">.</span><span class="mi">5</span><span class="x">,</span> <span class="o">.</span><span class="mi">75</span><span class="x">])</span>
+<span class="mi">3</span><span class="o">-</span><span class="n">element</span> <span class="kt">Vector</span><span class="x">{</span><span class="kt">Float64</span><span class="x">}</span><span class="o">:</span>
+  <span class="mf">2.0</span>
+  <span class="mf">5.0</span>
+ <span class="mf">10.0</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">iqr</span><span class="x">(</span><span class="n">df2</span><span class="o">.</span><span class="n">interval</span><span class="x">)</span>
+<span class="mf">8.0</span>
+</code></pre></div></div>
+
+<p>The median confirms our first analysis: the distribution is right skewed
+<em>(the mean is on the right of the median)</em>.</p>
+
+<h3 id="what-about-the-0-interval">What about the 0 interval?</h3>
+
+<p>We can filter which rows has such in two ways being the second one the
+preferred and fastest:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">filter</span><span class="x">(</span><span class="n">dfrows</span> <span class="o">-&gt;</span> <span class="n">dfrows</span><span class="o">.</span><span class="n">interval</span> <span class="o">==</span> <span class="mi">0</span><span class="x">,</span> <span class="n">df2</span><span class="x">,</span> <span class="n">view</span><span class="o">=</span><span class="nb">true</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">filter</span><span class="x">(</span><span class="o">:</span><span class="n">interval</span> <span class="o">=&gt;</span> <span class="o">==</span><span class="x">(</span><span class="mi">0</span><span class="x">),</span> <span class="n">df2</span><span class="x">,</span> <span class="n">view</span><span class="o">=</span><span class="nb">true</span><span class="x">)</span>
+</code></pre></div></div>
+
+<p>Choosing one of the got IPs we can get the probes:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">filter</span><span class="x">(</span><span class="o">:</span><span class="n">ip</span> <span class="o">=&gt;</span> <span class="o">==</span><span class="x">(</span><span class="mi">22207380</span><span class="x">),</span> <span class="n">df</span><span class="x">,</span> <span class="n">view</span><span class="o">=</span><span class="nb">true</span><span class="x">)</span>
+<span class="mi">2</span><span class="n">×5</span> <span class="n">SubDataFrame</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">timestamp</span>   <span class="n">port</span>   <span class="n">ttl</span>     <span class="n">reason</span>   <span class="n">ip</span>
+     <span class="n">│</span> <span class="kt">Int32</span><span class="o">?</span>      <span class="n">Cat…</span><span class="o">?</span>  <span class="kt">Int32</span><span class="o">?</span>  <span class="n">Cat…</span><span class="o">?</span>    <span class="kt">Int64</span><span class="o">?</span>
+<span class="n">─────┼──────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="mi">1619740697</span>  <span class="mi">80</span>         <span class="mi">42</span>  <span class="n">syn</span><span class="o">-</span><span class="n">ack</span>  <span class="mi">22207380</span>
+   <span class="mi">2</span> <span class="n">│</span> <span class="mi">1619740697</span>  <span class="mi">80</span>         <span class="mi">42</span>  <span class="n">syn</span><span class="o">-</span><span class="n">ack</span>  <span class="mi">22207380</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">timestamp</code> as you see has 1-second resolution
+(<a href="https://github.com/robertdavidgraham/masscan/blob/2895fa0acfe45983a3e9b2bbfadf25934c8d2c65/src/out-binary.c#L131">4 bytes</a>).</p>
+
+<p>We could assume then that these two probes were done with 1-second
+interval apart but due the low resolution of the clock we got the same
+timestamp.</p>
+
+<h2 id="some-thoughts">Some thoughts</h2>
+
+<p>My initial idea was to use this walk-through to learn and practice
+<a href="https://pandas.pydata.org/">Pandas</a>.
+Having a dataset of a non-trivial size, I knew that this was
+going to be a challenge.</p>
+
+<p>But what a better opportunity to work with
+<a href="https://dask.org/">Dask</a> too!</p>
+
+<p>I really tried to make it work but even processing a 10% of the dataset
+made no difference: Pandas and Dask consumed so much memory that I
+couldn’t finish a single group-by + aggregation.</p>
+
+<p>It is obvious that there are too many copies.</p>
+
+<p>Doing a home-made custom aggregation function to sort this <em>bypassed</em>
+the memory problem ended up in a <em>never-finishing</em> problem.</p>
+
+<p>I’m talking of processing a 10% dataset for a whole night.</p>
+
+<p>After a week it was clear that Pandas+Dask need more love.</p>
+
+<p>That’s when I considered
+<a href="https://julialang.org/">Julia</a>.</p>
+
+<p>Julia code is compiled into machine code and because it deduces the types
+(most of the times), it can pack the data in arrays with high-locality
+and generates fast code ala C.</p>
+
+<p>It is not magic and the libraries are designed to work in this way and
+avoid any sort of temporal copies.</p>
+
+<p>On the other hand Julia libraries are much more modest in capabilities
+compared with Python’s ones.</p>
+
+<p>It is a non-trivial trade-of.</p>
+
+
+
+
+    </article>
+    <span class="print-footer">IPv4 Scan 2021 - Multiprobes Analysis - September 19, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

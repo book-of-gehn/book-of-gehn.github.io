@@ -1,4 +1,357 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-09-10T13:13:17+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">IPv4 Scan 2021 - Dataset Preprocessing</title><link href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Dataset Preprocessing" /><published>2021-09-10T00:00:00+02:00</published><updated>2021-09-10T00:00:00+02:00</updated><id>/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing</id><content type="html" xml:base="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">&lt;p&gt;The &lt;a href=&quot;https://www.kaggle.com/signalspikes/internet-port-scan-1&quot;&gt;dataset&lt;/a&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-09-20T04:25:31+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">IPv4 Scan 2021 - Multiprobes Analysis</title><link href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Multiprobes Analysis" /><published>2021-09-19T00:00:00+02:00</published><updated>2021-09-19T00:00:00+02:00</updated><id>/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis</id><content type="html" xml:base="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">&lt;p&gt;To my surprise the
+&lt;a href=&quot;https://www.kaggle.com/signalspikes/internet-port-scan-1&quot;&gt;dataset&lt;/a&gt;
+preprocessed in my
+&lt;a href=&quot;/book-of-gehn/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html&quot;&gt;previous post&lt;/a&gt;
+&lt;strong&gt;has&lt;/strong&gt; duplicated entries. These are scans
+to the same host and port but with a different timestamp.&lt;/p&gt;
+
+&lt;p&gt;Questions like “which open port is more likely” will biased
+because the same host-port may be counted more than once.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, this opens &lt;em&gt;new questions&lt;/em&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;which is the reason to scan the same port more than once? If it is
+&lt;em&gt;fixed&lt;/em&gt; by the scanner we can deduce that ports scanned once &lt;em&gt;were scanned
+more times&lt;/em&gt; but the other probes failed and get an estimation of such.&lt;/li&gt;
+  &lt;li&gt;is the same port opened due different reasons?&lt;/li&gt;
+  &lt;li&gt;could we characterize the scanner based on the timestamps like
+scanning patterns?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The second surprise was that even working with small samples (around
+100MB),
+&lt;a href=&quot;https://pandas.pydata.org/&quot;&gt;Pandas&lt;/a&gt;/&lt;a href=&quot;https://dask.org/&quot;&gt;Dask&lt;/a&gt;
+has &lt;strong&gt;serious performance problems&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;consumes much more memory (gigas)&lt;/li&gt;
+  &lt;li&gt;CPU at 100% all the time&lt;/li&gt;
+  &lt;li&gt;simple operations like &lt;code class=&quot;highlighter-rouge&quot;&gt;groupby&lt;/code&gt; take forever.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Goodbye Pandas, hello &lt;a href=&quot;https://julialang.org/&quot;&gt;Julia&lt;/a&gt;?&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;julias-dataframes&quot;&gt;Julia’s DataFrames&lt;/h2&gt;
+
+&lt;p&gt;First we need to install a few packages:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pkg&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pkg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;DataFrames&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pkg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Parquet&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pkg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;CategoricalArrays&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pkg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;StatsBase&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pkg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Statistics&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Pkg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;StatsPlots&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then we load the dataframe:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;using&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Parquet&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DataFrames&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CategoricalArrays&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StatsBase&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Statistics&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;StatsPlots&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;read_parquet&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;scans&quot;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;categorical-data&quot;&gt;Categorical data&lt;/h3&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-2acf7f9ccc7be0fe3a1c0b2e9e13ab05&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-2acf7f9ccc7be0fe3a1c0b2e9e13ab05&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;compress=true&lt;/code&gt; is needed so the column will be of the smallest type
+that can represent the categories, in our case, &lt;code class=&quot;highlighter-rouge&quot;&gt;UInt8&lt;/code&gt;; otherwise
+&lt;code class=&quot;highlighter-rouge&quot;&gt;CategoricalArrays.jl&lt;/code&gt; uses &lt;code class=&quot;highlighter-rouge&quot;&gt;UInt32&lt;/code&gt; by default.
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Parquet.jl&lt;/code&gt; does not load the categories (or Pandas’s &lt;code class=&quot;highlighter-rouge&quot;&gt;to_parquet&lt;/code&gt; is
+not writing them). This consumes more RAM because the &lt;code class=&quot;highlighter-rouge&quot;&gt;reason&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;port&lt;/code&gt;
+columns are strings.&lt;/p&gt;
+
+&lt;p&gt;We can make them &lt;em&gt;categorical&lt;/em&gt; back again with:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reason&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;categorical&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reason&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compress&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;ordinal-data&quot;&gt;Ordinal data&lt;/h3&gt;
+
+&lt;p&gt;We do the same for &lt;code class=&quot;highlighter-rouge&quot;&gt;port&lt;/code&gt; column but we additionally mark the categorical
+as &lt;em&gt;ordered&lt;/em&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;categorical&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compress&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ordered&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;As
+&lt;a href=&quot;/book-of-gehn/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html&quot;&gt;explained earlier&lt;/a&gt;,
+the ports &lt;strong&gt;don’t&lt;/strong&gt; have a natural order however
+I this as an opportunity to explore and document &lt;em&gt;how to work with ordinals&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;CategoricalArrays.jl&lt;/code&gt; orders lexicographically by default. To change
+the order we need to do it later with &lt;code class=&quot;highlighter-rouge&quot;&gt;levels!&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;First we get ports labels (strings):&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;levels&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then we parse them as integers and sort them numerically:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sort&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;parse&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;UInt16&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We get back the ports labels as strings:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Finally we rewrite the levels of the ordinal column:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;levels!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now the &lt;code class=&quot;highlighter-rouge&quot;&gt;port&lt;/code&gt; column is an ordinal column and the order is implied by
+the numerical interpretation of its labels.&lt;/p&gt;
+
+&lt;!--
+using Parquet, DataFrames, CategoricalArrays, StatsBase, Statistics, StatsPlots
+df = DataFrame(read_parquet(&quot;indexed&quot;))
+df[!, :reason] = categorical(df[:, :reason], compress=true)
+df[!, :port] = categorical(df[:, :port], compress=true, ordered=true)
+s = levels(df.port)
+s = sort(parse.(UInt16, s))
+s = string.(s)
+levels!(df.port, s)
+
+
+sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libgdbm-compat-dev
+sudo apt-get install libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
+sudo apt-get install libssl-dev liblzma-dev zlib1g-dev lzma lzma-dev libgdbm-dev
+
+make clean
+./configure --enable-shared --enable-optimizations
+make
+make test
+
+ENV[&quot;PYTHON&quot;] = &quot;/home/user/env/bin/python&quot;
+ENV[&quot;PYTHONHOME&quot;] = &quot;&quot;
+Pkg.add(&quot;PyCall&quot;)
+Pkg.build(&quot;PyCall&quot;)
+&lt;..restart..&gt;
+
+import Pkg; Pkg.add(&quot;PyPlot&quot;)
+
+--&gt;
+
+&lt;h2 id=&quot;is-the-same-port-opened-due-different-reasons&quot;&gt;Is the same port opened due different reasons?&lt;/h2&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-f146557cdf4ac060d459e89c4f506a15&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-f146557cdf4ac060d459e89c4f506a15&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;:foo&lt;/code&gt; are symbols which in our case are the names of the columns. The
+&lt;code class=&quot;highlighter-rouge&quot;&gt;∘&lt;/code&gt; (&lt;code class=&quot;highlighter-rouge&quot;&gt;\circ&lt;/code&gt; in Latex) is the &lt;em&gt;composite operator&lt;/em&gt;: &lt;code class=&quot;highlighter-rouge&quot;&gt;length ∘ unique&lt;/code&gt; is
+equivalent to &lt;code class=&quot;highlighter-rouge&quot;&gt;length(unique(x))&lt;/code&gt;.
+The whole &lt;code class=&quot;highlighter-rouge&quot;&gt;:reason =&amp;gt; length ∘ unique =&amp;gt; :nunique&lt;/code&gt; reads as: take the
+&lt;code class=&quot;highlighter-rouge&quot;&gt;reason&lt;/code&gt; column, count how many unique values are in each group and
+store the result (one per group) in the column &lt;code class=&quot;highlighter-rouge&quot;&gt;nunique&lt;/code&gt;.
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reason&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;∘&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nunique&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;countmap&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nunique&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entry&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;64787998&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Nope, for each open port there is only one reason why it is open.&lt;/p&gt;
+
+&lt;h2 id=&quot;which-is-the-reason-to-scan-the-same-port-more-than-once&quot;&gt;Which is the reason to scan the same port more than once?&lt;/h2&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; supports a &lt;code class=&quot;highlighter-rouge&quot;&gt;--retries&lt;/code&gt; flag. From the
+&lt;a href=&quot;https://github.com/robertdavidgraham/masscan/blob/952755771ab8065c052cdf4b6d18041435b2d661/doc/masscan.8.markdown&quot;&gt;documentation&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;em&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;--retries&lt;/code&gt;: the number of retries to send, at 1 second intervals. Note
+that since this scanner is stateless, retries are sent regardless if
+replies have already been received.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This means that &lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; will send &lt;script type=&quot;math/tex&quot;&gt;N&lt;/script&gt; probes to each port, always,
+within a second apart.&lt;/p&gt;
+
+&lt;p&gt;Let’s check that.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-is-the-distributions-of-probes-per-open-port&quot;&gt;What is the distributions of probes per open port?&lt;/h2&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-27ecdea00ae0892ca739d087c343b33d&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-27ecdea00ae0892ca739d087c343b33d&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;nrow&lt;/code&gt; is a special value that &lt;code class=&quot;highlighter-rouge&quot;&gt;DataFrame&lt;/code&gt;'s &lt;code class=&quot;highlighter-rouge&quot;&gt;combine&lt;/code&gt; will
+interpret as &lt;em&gt;count the rows of each group&lt;/em&gt;. The rest follows the usual
+meaning: &lt;code class=&quot;highlighter-rouge&quot;&gt;nrow =&amp;gt; :count&lt;/code&gt; means store the count in a column named &lt;code class=&quot;highlighter-rouge&quot;&gt;count&lt;/code&gt;.
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nrow&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;countmap&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;13038&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;750&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;64774182&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So &lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; didn’t sent &lt;script type=&quot;math/tex&quot;&gt;N&lt;/script&gt; probes to each port &lt;strong&gt;or&lt;/strong&gt; it did it but the
+some probes never were answered &lt;em&gt;(why?, who knows)&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;This could explain why some ports were scanned twice while others only
+one.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-is-the-distribution-of-intervals-between-probes-for-each-port&quot;&gt;What is the distribution of intervals between probes for each port?&lt;/h2&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-d545e4498ff3efedd22c1c04afb63aaa&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-d545e4498ff3efedd22c1c04afb63aaa&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Sanity check: from the distribution of probes per port we know that we
+have 13038 ports with 2 probes which will contribute with 13038 rows to
+the difference dataframe; 750 ports with 3 probes which will contribute
+with 750 * 2 rows to the result; 27 ports with 4 probes contributing
+with 27 * 3 rows and finally 1 port with 5 probes contributing with 5 *
+4 rows. The expected total is 14623 which it is exactly the row count
+of &lt;code class=&quot;highlighter-rouge&quot;&gt;df2&lt;/code&gt;.
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timestamp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;diff&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;∘&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sort&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;countmap&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Union&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Missing&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;320&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2793&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;585&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2625&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;843&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;159&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;316&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1364&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;512&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;9&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1435&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;495&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;11&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;149&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;103&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;13&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;52&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;14&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;139&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1715&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;16&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;828&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;17&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;18&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;19&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;23&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;28&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;29&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;31&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;55&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;32&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;92&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;33&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;34&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This was more spread than I expected. Most of the intervals are in the
+low range but there is non-negligible count for the 15 secs interval.&lt;/p&gt;
+
+&lt;p&gt;A quick statistics for the intervals:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cols&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;×8&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;Row&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;variable&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;
+     &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Symbol&lt;/span&gt;    &lt;span class=&quot;kt&quot;&gt;Float64&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Float64&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Float64&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Float64&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Float64&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;─────┼─────────────────────────────────────────────────────────────────────&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;   &lt;span class=&quot;mf&quot;&gt;6.8051&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;5.75237&lt;/span&gt;      &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;2.0&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;5.0&lt;/span&gt;     &lt;span class=&quot;mf&quot;&gt;10.0&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Or, statistic by statistic:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mf&quot;&gt;6.805101552349039&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mf&quot;&gt;5.0&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mf&quot;&gt;5.752370354791699&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;quantile&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;25&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;75&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;element&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Vector&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Float64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;mf&quot;&gt;2.0&lt;/span&gt;
+  &lt;span class=&quot;mf&quot;&gt;5.0&lt;/span&gt;
+ &lt;span class=&quot;mf&quot;&gt;10.0&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;iqr&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mf&quot;&gt;8.0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The median confirms our first analysis: the distribution is right skewed
+&lt;em&gt;(the mean is on the right of the median)&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;what-about-the-0-interval&quot;&gt;What about the 0 interval?&lt;/h3&gt;
+
+&lt;p&gt;We can filter which rows has such in two ways being the second one the
+preferred and fastest:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dfrows&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dfrows&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;view&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df2&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;view&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Choosing one of the got IPs we can get the probes:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;22207380&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;view&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;×5&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SubDataFrame&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;Row&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timestamp&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;reason&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;
+     &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;?&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;Cat…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;?&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;?&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;Cat…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;?&lt;/span&gt;    &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;?&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;─────┼──────────────────────────────────────────────&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1619740697&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;80&lt;/span&gt;         &lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;syn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ack&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;22207380&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1619740697&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;80&lt;/span&gt;         &lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;syn&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ack&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;22207380&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;timestamp&lt;/code&gt; as you see has 1-second resolution
+(&lt;a href=&quot;https://github.com/robertdavidgraham/masscan/blob/2895fa0acfe45983a3e9b2bbfadf25934c8d2c65/src/out-binary.c#L131&quot;&gt;4 bytes&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;We could assume then that these two probes were done with 1-second
+interval apart but due the low resolution of the clock we got the same
+timestamp.&lt;/p&gt;
+
+&lt;h2 id=&quot;some-thoughts&quot;&gt;Some thoughts&lt;/h2&gt;
+
+&lt;p&gt;My initial idea was to use this walk-through to learn and practice
+&lt;a href=&quot;https://pandas.pydata.org/&quot;&gt;Pandas&lt;/a&gt;.
+Having a dataset of a non-trivial size, I knew that this was
+going to be a challenge.&lt;/p&gt;
+
+&lt;p&gt;But what a better opportunity to work with
+&lt;a href=&quot;https://dask.org/&quot;&gt;Dask&lt;/a&gt; too!&lt;/p&gt;
+
+&lt;p&gt;I really tried to make it work but even processing a 10% of the dataset
+made no difference: Pandas and Dask consumed so much memory that I
+couldn’t finish a single group-by + aggregation.&lt;/p&gt;
+
+&lt;p&gt;It is obvious that there are too many copies.&lt;/p&gt;
+
+&lt;p&gt;Doing a home-made custom aggregation function to sort this &lt;em&gt;bypassed&lt;/em&gt;
+the memory problem ended up in a &lt;em&gt;never-finishing&lt;/em&gt; problem.&lt;/p&gt;
+
+&lt;p&gt;I’m talking of processing a 10% dataset for a whole night.&lt;/p&gt;
+
+&lt;p&gt;After a week it was clear that Pandas+Dask need more love.&lt;/p&gt;
+
+&lt;p&gt;That’s when I considered
+&lt;a href=&quot;https://julialang.org/&quot;&gt;Julia&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Julia code is compiled into machine code and because it deduces the types
+(most of the times), it can pack the data in arrays with high-locality
+and generates fast code ala C.&lt;/p&gt;
+
+&lt;p&gt;It is not magic and the libraries are designed to work in this way and
+avoid any sort of temporal copies.&lt;/p&gt;
+
+&lt;p&gt;On the other hand Julia libraries are much more modest in capabilities
+compared with Python’s ones.&lt;/p&gt;
+
+&lt;p&gt;It is a non-trivial trade-of.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="julia" /><category term="categorical" /><category term="ordinal" /><category term="parquet" /><category term="statistics" /><summary type="html">To my surprise the dataset preprocessed in my previous post has duplicated entries. These are scans to the same host and port but with a different timestamp. Questions like “which open port is more likely” will biased because the same host-port may be counted more than once. On the other hand, this opens new questions: which is the reason to scan the same port more than once? If it is fixed by the scanner we can deduce that ports scanned once were scanned more times but the other probes failed and get an estimation of such. is the same port opened due different reasons? could we characterize the scanner based on the timestamps like scanning patterns? The second surprise was that even working with small samples (around 100MB), Pandas/Dask has serious performance problems: consumes much more memory (gigas) CPU at 100% all the time simple operations like groupby take forever. Goodbye Pandas, hello Julia?</summary></entry><entry><title type="html">IPv4 Scan 2021 - Dataset Preprocessing</title><link href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Dataset Preprocessing" /><published>2021-09-10T00:00:00+02:00</published><updated>2021-09-10T00:00:00+02:00</updated><id>/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing</id><content type="html" xml:base="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">&lt;p&gt;The &lt;a href=&quot;https://www.kaggle.com/signalspikes/internet-port-scan-1&quot;&gt;dataset&lt;/a&gt;
 is a survey or port scan of the whole IPv4 range made
 with &lt;a href=&quot;https://github.com/robertdavidgraham/masscan&quot;&gt;masscan&lt;/a&gt;.&lt;/p&gt;
 
@@ -1944,279 +2297,4 @@ based on the &lt;code class=&quot;highlighter-rouge&quot;&gt;kind=&lt;/code&gt; 
 distribution within categories plots (&lt;code class=&quot;highlighter-rouge&quot;&gt;catplot&lt;/code&gt;).&lt;/p&gt;
 
 &lt;p&gt;The violet group is for regressions and does not follow exactly the
-pattern above.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="seaborn" /><category term="matplotlib" /><category term="pandas" /><category term="plotting" /><category term="cheatsheet" /><summary type="html">Plotting data was always for me a weak point: it always took me a lot of time to make the plots and graphs, reading the documentation, googling how to do one particular tweak and things like that. So I challenge myself: could I build a cheatsheet about plotting? Yes, yes I could. Seaborn is a very simple but powerful plotting library on top of matplotlib designed for statistical analysis. Quick links: PDF (no bg), PDF (bg), SVG (no bg), SVG (bg) .</summary></entry><entry><title type="html">Casting, broadcasting, LUT and bitwise ops</title><link href="/articles/2021/05/26/Casting-Broadcasting-LUT-and-Bitwise-Ops.html" rel="alternate" type="text/html" title="Casting, broadcasting, LUT and bitwise ops" /><published>2021-05-26T00:00:00+02:00</published><updated>2021-05-26T00:00:00+02:00</updated><id>/articles/2021/05/26/Casting-Broadcasting-LUT-and-Bitwise-Ops</id><content type="html" xml:base="/articles/2021/05/26/Casting-Broadcasting-LUT-and-Bitwise-Ops.html">&lt;p&gt;Z3 has a few basic symbolic operation over bit vectors.&lt;/p&gt;
-
-&lt;p&gt;But some others are missing (or at least I couldn’t find them).&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;Cast&lt;/em&gt; bit vectors to change the vector width, like when you want to
-&lt;em&gt;upcast&lt;/em&gt; or &lt;em&gt;promote&lt;/em&gt; a &lt;code class=&quot;highlighter-rouge&quot;&gt;uint8_t&lt;/code&gt; to &lt;code class=&quot;highlighter-rouge&quot;&gt;uint16_t&lt;/code&gt;, is one of them.&lt;/p&gt;
-
-&lt;p&gt;Arbitrary &lt;em&gt;bitwise operations&lt;/em&gt; is another one. Z3 provides the basic
-&lt;code class=&quot;highlighter-rouge&quot;&gt;And&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;Or&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;Xor&lt;/code&gt; but arbitrary functions needs to be defined and
-applied by hand.&lt;/p&gt;
-
-&lt;p&gt;And about function definitions, Z3 does not have a simple way to &lt;em&gt;define
-a function from a lookup table (LUT) or truth table&lt;/em&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;&lt;em&gt;A much tricker that I thought!&lt;/em&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;This post is a kind-of sequel of
-&lt;a href=&quot;/articles/2021/05/17/Verifying-Some-Bithacks.html&quot;&gt;Verifying some Bithacks post&lt;/a&gt;
-and prequel of some future posts.&lt;!--more--&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;casting&quot;&gt;Casting&lt;/h2&gt;
-
-&lt;p&gt;Z3 does not provide a mechanism to change the size of a bit vector (or
-at least I didn’t find one).&lt;/p&gt;
-
-&lt;p&gt;The following is a quite simple &lt;code class=&quot;highlighter-rouge&quot;&gt;cast&lt;/code&gt; function &lt;em&gt;ala C&lt;/em&gt; – however it is
-&lt;strong&gt;far&lt;/strong&gt; from
-&lt;a href=&quot;https://en.cppreference.com/w/c/language/conversion&quot;&gt;being&lt;/a&gt;
-a fully C/C++ compliance
-&lt;a href=&quot;https://en.cppreference.com/w/c/language/cast&quot;&gt;&lt;em&gt;cast&lt;/em&gt;&lt;/a&gt;
-including its UBs.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;z3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'i'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'u'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;         &lt;span class=&quot;k&quot;&gt;raise&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;ValueError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Not supported cast type '{type}'&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;signed&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'i'&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;new_sz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:])&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;new_sz&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;         &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;signed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;             &lt;span class=&quot;n&quot;&gt;sign_bit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;             &lt;span class=&quot;n&quot;&gt;high&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sign_bit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_sz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;         &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;             &lt;span class=&quot;c1&quot;&gt;# zero extended
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;             &lt;span class=&quot;n&quot;&gt;high&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_sz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;         &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;high&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;         &lt;span class=&quot;c1&quot;&gt;# downcast
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;         &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_sz&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Casting to a larger bit vector may be done zero-extended (for unsigned)
-or sign-extended (for signed):&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mb&quot;&gt;0b1011&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i4&lt;/span&gt;
-&lt;span class=&quot;mi&quot;&gt;11&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'u8'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;mi&quot;&gt;11&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'i8'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;mi&quot;&gt;251&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;251&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;'0b11111011'&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;When the target size is smaller, it is a down-cast and the higher bits
-are lost:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'u2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'i2'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Not other casting are implemented:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cast&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'foo'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;lt;...&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;ValueError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;supported&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cast&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'foo'&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;broadcasting&quot;&gt;Broadcasting&lt;/h2&gt;
-
-&lt;p&gt;For the signed upper-cast, the &lt;code class=&quot;highlighter-rouge&quot;&gt;cast&lt;/code&gt; function does a &lt;em&gt;broadcasting&lt;/em&gt;: it
-takes the most significant bit, the sign bit, and extends it to fulfill
-the wider bit vector.&lt;/p&gt;
-
-&lt;p&gt;The sign bit is repeated N times – it is &lt;em&gt;broadcasted&lt;/em&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;sign_bit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;high&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sign_bit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_sz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;bitwise-operation&quot;&gt;Bitwise operation&lt;/h2&gt;
-
-&lt;p&gt;Another handy algorithm consists in applying a function bit by bit:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;bitwise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bvs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bvs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;         &lt;span class=&quot;k&quot;&gt;raise&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;ValueError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;No bit vector was provided&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bvs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;any&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bvs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;         &lt;span class=&quot;k&quot;&gt;raise&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;TypeError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Bit vector size mismatch, not all are {sz} bits.&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sz&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# from MSB to LSB
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;applied&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bv&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bvs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;applied&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;bitwise&lt;/code&gt; can operate over &lt;em&gt;symbolic functions&lt;/em&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;z3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecSort&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BSort&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'zor'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BSort&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bitwise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mb&quot;&gt;0b1011&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mb&quot;&gt;0b0010&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;But it can operate over &lt;em&gt;concrete (Python) functions&lt;/em&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;concrete-function-definition&quot;&gt;Concrete function definition&lt;/h2&gt;
-
-&lt;p&gt;If the function is known, we will have to add a constrain per
-input/output pair to &lt;em&gt;constrain&lt;/em&gt; the symbolic function.&lt;/p&gt;
-
-&lt;p&gt;Something like:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;But that requires an exponential amount of constrains, &lt;script type=&quot;math/tex&quot;&gt;2^{arity}&lt;/script&gt; to
-be precise.&lt;/p&gt;
-
-&lt;p&gt;A more compact representation would be a &lt;em&gt;lookup table (LUT)&lt;/em&gt; or &lt;em&gt;truth
-table&lt;/em&gt;.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;zor LUT:
-    0 0 -&amp;gt; 1
-    1 0 -&amp;gt; 1
-    0 1 -&amp;gt; 0
-    1 1 -&amp;gt; 1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;From there we can build a &lt;em&gt;product of sums&lt;/em&gt; or a &lt;em&gt;sums of products&lt;/em&gt;
-using a &lt;a href=&quot;https://en.wikipedia.org/wiki/Karnaugh_map&quot;&gt;Karnaugh map&lt;/a&gt;: a
-graphical representation of the truth table from where we can derive a
-&lt;strong&gt;single&lt;/strong&gt; boolean expression made of a minimum amount of &lt;code class=&quot;highlighter-rouge&quot;&gt;Or&lt;/code&gt; and
-&lt;code class=&quot;highlighter-rouge&quot;&gt;And&lt;/code&gt; instructions that represents it.&lt;/p&gt;
-
-&lt;p&gt;Karnaugh maps relays in humans’ ability to detect patterns but the
-maps gets too complicated for 5 and more inputs so they are not
-practical for large functions.&lt;/p&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-a9b27311a820e82bcc25ec6184226f03&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-a9b27311a820e82bcc25ec6184226f03&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;However, this problem is NP-complete in general.
- &lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;The non-human counterpart is the &lt;a href=&quot;https://en.wikipedia.org/wiki/Quine%E2%80%93McCluskey_algorithm&quot;&gt;Quine-McCluskey algorithm&lt;/a&gt;
-which can handle much more inputs.&lt;/p&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-9e9741f0dc572bcb7e94c1cd893402b2&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-9e9741f0dc572bcb7e94c1cd893402b2&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Z3 &lt;a href=&quot;https://github.com/Z3Prover/z3/issues/4822&quot;&gt;could do it too&lt;/a&gt;
-but the solution is perhaps more hand-crafted.
- &lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;And &lt;a href=&quot;https://www.sympy.org/en/index.html&quot;&gt;SymPy&lt;/a&gt; has a nice
-implementation.&lt;/p&gt;
-
-&lt;p&gt;From the LUT we need to specify which combination of inputs yields &lt;code class=&quot;highlighter-rouge&quot;&gt;True&lt;/code&gt;
-and the rest of the combinations will be assumed as &lt;code class=&quot;highlighter-rouge&quot;&gt;False&lt;/code&gt;.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;zor LUT:
-    0 0 -&amp;gt; 1    --&amp;gt;   0 0
-    1 0 -&amp;gt; 1    --&amp;gt;   1 0
-    0 1 -&amp;gt; 0    x
-    1 1 -&amp;gt; 1    --&amp;gt;   1 1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;These are called &lt;em&gt;minterms&lt;/em&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zor_minterms&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;label for=&quot;mn-ca0519e36f43ff66dfb4059f06e25a74&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-ca0519e36f43ff66dfb4059f06e25a74&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;With support for &lt;em&gt;don't cares&lt;/em&gt;: combination of inputs for which
-don't care the output.
- &lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;SymPy can build a simplified boolean expression in terms of &lt;em&gt;product of
-sums&lt;/em&gt; (&lt;code class=&quot;highlighter-rouge&quot;&gt;or&lt;/code&gt; subterms joined with &lt;code class=&quot;highlighter-rouge&quot;&gt;and&lt;/code&gt;s) and &lt;em&gt;sum of products&lt;/em&gt; (&lt;code class=&quot;highlighter-rouge&quot;&gt;and&lt;/code&gt;
-subterms joined with &lt;code class=&quot;highlighter-rouge&quot;&gt;or&lt;/code&gt;s)&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;sympy.logic&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;POSform&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;# byexample: +timeout=10
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;sympy&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;symbols&lt;/span&gt;           &lt;span class=&quot;c1&quot;&gt;# byexample: +timeout=10
-&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;POSform&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;symbols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'x y'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zor_minterms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;There is no elegant way to map SymPy expressions to Z3 expressions
-but we can do &lt;strong&gt;a hack&lt;/strong&gt; with &lt;code class=&quot;highlighter-rouge&quot;&gt;eval&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;sympy&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;truth_table_to_fun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;minterms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dontcares&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;form&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'POS'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;assert&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;form&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'POS'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'SOP'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;arity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arity&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;minterms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# num of args of our function
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;# create on the fly a SymPy variable per argument
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;varnames&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'A&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;i'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arity&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sympy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;symbols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;' '&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;varnames&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;# simplify as a Product of Sums or as a Sum of Products and get
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;# an expression as a string
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sympy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;POSform&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;form&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'POS'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sympy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SOPform&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;expr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minterms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dontcares&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;# make the SymPy expression suitable as a Python function definition
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;expr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'lambda {&quot;,&quot;.join(varnames)}: ({expr})'&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;c1&quot;&gt;# evaluate the expression and return the Python function
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;With &lt;code class=&quot;highlighter-rouge&quot;&gt;truth_table_to_fun&lt;/code&gt; we can build a &lt;em&gt;Python function&lt;/em&gt; that it will
-take &lt;em&gt;Z3 bit vectors&lt;/em&gt; and it will return a &lt;em&gt;bit vector expression&lt;/em&gt; that
-encodes the &lt;em&gt;minterms&lt;/em&gt; specified.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;z3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecs&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;truth_table_to_fun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zor_minterms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'A B'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;B&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;expr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bitwise&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mb&quot;&gt;0b1001&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVecVal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mb&quot;&gt;0b0010&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;expr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;as_long&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;'0b1101'&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;&lt;em&gt;Quick and dirty. Don’t blame me.&lt;/em&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&quot;further-things&quot;&gt;Further things&lt;/h2&gt;
-
-&lt;p&gt;Quite a lot.&lt;/p&gt;
-
-&lt;p&gt;Some
-&lt;a href=&quot;https://graphics.stanford.edu/~seander/bithacks.html&quot;&gt;bithacks&lt;/a&gt; could
-be used to simplify Z3 expressions and speedup the model solving.&lt;/p&gt;
-
-&lt;p&gt;When &lt;a href=&quot;/articles/2021/05/17/Verifying-Some-Bithacks.html&quot;&gt;verifying the rank
-bit&lt;/a&gt; I
-tested different approaches and only the &lt;em&gt;branchless&lt;/em&gt; implementation
-gave me a result in a reasonable time.&lt;/p&gt;
-
-&lt;p&gt;Testing the performance is something to explore. Soon.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="z3" /><category term="smt" /><category term="sat" /><category term="solver" /><category term="bitvec" /><category term="bithacks" /><summary type="html">Z3 has a few basic symbolic operation over bit vectors. But some others are missing (or at least I couldn’t find them). Cast bit vectors to change the vector width, like when you want to upcast or promote a uint8_t to uint16_t, is one of them. Arbitrary bitwise operations is another one. Z3 provides the basic And, Or and Xor but arbitrary functions needs to be defined and applied by hand. And about function definitions, Z3 does not have a simple way to define a function from a lookup table (LUT) or truth table. A much tricker that I thought! This post is a kind-of sequel of Verifying some Bithacks post and prequel of some future posts.</summary></entry></feed>
+pattern above.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="seaborn" /><category term="matplotlib" /><category term="pandas" /><category term="plotting" /><category term="cheatsheet" /><summary type="html">Plotting data was always for me a weak point: it always took me a lot of time to make the plots and graphs, reading the documentation, googling how to do one particular tweak and things like that. So I challenge myself: could I build a cheatsheet about plotting? Yes, yes I could. Seaborn is a very simple but powerful plotting library on top of matplotlib designed for statistical analysis. Quick links: PDF (no bg), PDF (bg), SVG (no bg), SVG (bg) .</summary></entry></feed>
