@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>IPv4 Scan 2021 - Hop-Count Route Stability</title>
+  <meta name="description" content="masscan tracks thetime to live of each packet coming from the host under scan. ⊕Yes and no: they should not but some network devices will mangle the packetsa...">
+
+  
+    <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
+  
+
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX","output/HTML-CSS"],
+        tex2jax: {inlineMath: [["$$","$$"],["\\(","\\)"]]},
+	TeX: {
+	  Macros: {
+            
+	  }
+	}
+      });
+    </script>
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js' async></script>
+    
+  
+
+  
+    <script
+       src="https://code.jquery.com/jquery-3.4.1.min.js"
+       integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+       crossorigin="anonymous"></script>
+  
+
+  
+
+    
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js' ></script>
+    
+
+    
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+    
+
+    <script src='/js/venn/venn.min.js'></script>
+    <script src='/js/venn/helper.js'></script>
+
+    <script src='/js/fix_syntax_highlight.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.css">
+
+  <link rel="canonical" href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/all.min.css">
+
+    <script src='/js/lunr-2.3.9.js'></script>
+    <script src='/js/search_index.js'></script>
+    <script src='/js/search.js'></script>
+  <link type="application/atom+xml" rel="alternate" href="/feed.xml" title="The Book of Gehn" />
+</head>
+
+  <body>
+    <header>
+	
+                <hgroup class="header-group">
+		<h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/assets/blog-assets/github.png" /></a>
+                    </li>
+                </ul>
+		
+		
+	
+
+    
+
+    <nav class="group">
+    
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+	</nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+
+    <article class="group">
+      <h1>IPv4 Scan 2021 - Hop-Count Route Stability</h1>
+<p class="subtitle">October 16, 2021</p>
+
+<p><a href="https://github.com/robertdavidgraham/masscan/">masscan</a> tracks the
+<em>time to live</em> of each packet coming from the host under scan.</p>
+
+<p><label for="mn-be8723c0bff6d30bd5aa810117818af0" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-be8723c0bff6d30bd5aa810117818af0" class="margin-toggle" /><span class="marginnote">Yes and no: they should not but some network devices will <em>mangle the packets
+as they want</em>, including setting arbitrary TTLs.
+ </span></p>
+
+<p>These time to live (TTL) are numbers between 0 and 255
+set by the host. In its journey, the packet goes through different
+routers which each decrements by one the TTL.</p>
+
+<p>Once a packet has a TTL of zero, the router will discard it.</p>
+
+<p><label for="mn-d8e7d1911f3bb4a6d104232f8fe1521c" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-d8e7d1911f3bb4a6d104232f8fe1521c" class="margin-toggle" /><span class="marginnote">Assuming that the packet goes straight-forward to us. If there are
+<em>loops</em> in the routing systems, the packet will loop between the devices
+going nowhere.
+<br />
+That's the point of the TTL: to catch and drop packets looping around.
+ </span></p>
+
+<p>Of course the host set the TTL to some reasonable high number so the
+packet should reach to its destination (us) before reaching to zero.</p>
+
+<p>We cannot know exactly which route/s the packets taken but we can
+<em>count for how many hops they went</em>: any change in the <em>hop-count</em> and we will get
+different TTLs and that’s evidence that they taken different routes.</p>
+
+<p>The inverse is not true: a constant hop-count does not imply that
+the route taken is the same, only the route/s have the same hops.</p>
+
+<p>In this post I will
+<a href="/book-of-gehn/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">continue exploring</a>
+how much a <em>route</em> is <em>stable</em> in terms of
+<em>hop-counts</em>.<!--more--></p>
+
+<h2 id="how-much-stable-is-a-route-in-a-burst">How much stable is a route in a <em>burst</em>?</h2>
+
+<p><a href="https://github.com/robertdavidgraham/masscan/">masscan</a> scans the same
+host sending several probes at the <em>same time</em> in a <em>burst</em>.</p>
+
+<p>As saw in a
+<a href="/book-of-gehn/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">previous post</a>,
+<code class="highlighter-rouge">masscan</code> may scan the same host more than once. We will call these
+<em>rounds of bursts</em> or just <em>rounds</em>.</p>
+
+<p>Let’s focus in the firsts which we know they happen roughly at the same
+time.</p>
+
+<h3 id="ttls-extrema-values-for-each-short-burst">TTLs extrema values for each short burst</h3>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts_g</span> <span class="o">=</span> <span class="n">groupby</span><span class="x">(</span><span class="n">df</span><span class="x">,</span> <span class="x">[</span><span class="o">:</span><span class="n">ip</span><span class="x">,</span> <span class="o">:</span><span class="n">timestamp</span><span class="x">])</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">short_bursts_g</span><span class="x">,</span> <span class="o">:</span><span class="n">ttl</span> <span class="o">=&gt;</span> <span class="n">minimum</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">ttl</span> <span class="o">=&gt;</span> <span class="n">maximum</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">max</span><span class="x">)</span>
+</code></pre></div></div>
+
+<p>Alternatively:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">short_bursts_g</span><span class="x">,</span> <span class="o">:</span><span class="n">ttl</span> <span class="o">=&gt;</span> <span class="x">(</span><span class="n">x</span> <span class="o">-&gt;</span> <span class="x">[</span><span class="n">extrema</span><span class="x">(</span><span class="n">x</span><span class="x">)])</span> <span class="o">=&gt;</span> <span class="x">[</span><span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">max</span><span class="x">])</span>
+</code></pre></div></div>
+
+<p>The latter walks over the samples once calling the <code class="highlighter-rouge">extrema</code> function.
+However <code class="highlighter-rouge">extrema</code> is not compatible with <code class="highlighter-rouge">DataFrames</code> as is so we need
+to wrap it in an anonymous function <code class="highlighter-rouge">(x -&gt; [extrema(x)])</code>.</p>
+
+<p>This makes the latter much slower than the former, even if the former
+may walk over the samples twice.</p>
+
+<h3 id="hop-stability-in-short-bursts">Hop stability in short bursts</h3>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">countmap</span><span class="x">(</span><span class="n">short_bursts</span><span class="x">[</span><span class="o">:</span><span class="x">,</span><span class="o">:</span><span class="n">max</span><span class="x">]</span> <span class="o">-</span> <span class="n">short_bursts</span><span class="x">[</span><span class="o">:</span><span class="x">,</span><span class="o">:</span><span class="n">min</span><span class="x">])</span>
+<span class="kt">Dict</span><span class="x">{</span><span class="kt">Int32</span><span class="x">,</span> <span class="kt">Int64</span><span class="x">}</span> <span class="n">with</span> <span class="mi">6</span> <span class="n">entries</span><span class="o">:</span>
+  <span class="mi">0</span> <span class="o">=&gt;</span> <span class="mi">64801995</span>
+  <span class="mi">1</span> <span class="o">=&gt;</span> <span class="mi">68</span>
+  <span class="mi">2</span> <span class="o">=&gt;</span> <span class="mi">16</span>
+  <span class="mi">3</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+  <span class="mi">4</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+  <span class="mi">7</span> <span class="o">=&gt;</span> <span class="mi">4</span>
+</code></pre></div></div>
+
+<p>The difference between the <em>extremes</em>, called the <em>range</em>, shows that
+the routes are quite stable, at least during the scan for a particular
+host.</p>
+
+<p>The histogram shows that only a few cases the difference was up to 7.</p>
+
+<p>Keep in mind that the scans for a particular host <em>in a particular time</em>
+are like <strong>bursts</strong>: so it is reasonable that the routes didn’t change
+in such short period.</p>
+
+<h2 id="how-much-stable-is-a-route-in-a-longer-period">How much stable is a route in a longer period?</h2>
+
+<p>The dataset has scans to the same host at different time, what we call
+<em>rounds</em>.</p>
+
+<p>We can do a second <code class="highlighter-rouge">groupby</code> + <code class="highlighter-rouge">combine</code> taking the minimum of the
+minimum TTLs and the maximum of the maximum TTLs to have the <em>range</em>
+per host, regardless of the <code class="highlighter-rouge">timestamp</code>, hence capturing some statistics
+for each round.</p>
+
+<p>However we need to <em>filter out</em> the groups of scans to the same host
+that have only one timestamps: we want to compare rounds at different
+time and having a single round defeats the purpose.</p>
+
+<p>These are scans to a host that were done
+in a <em>single burst</em> and we don’t have different burst at different time
+to compare with!</p>
+
+<p><label for="mmkd-877d3122fdf357bdaa1673139e3c30e8" class="margin-toggle"> ⊕</label><input type="checkbox" id="mmkd-877d3122fdf357bdaa1673139e3c30e8" class="margin-toggle" /></p>
+<div id="mk-mmkd-877d3122fdf357bdaa1673139e3c30e8"><span class="marginnote marginmarkdowncode"><div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">hist_biased</span><span class="x">[</span><span class="mi">0</span><span class="x">]</span> <span class="o">-</span> <span class="n">hist_unbiased</span><span class="x">[</span><span class="mi">0</span><span class="x">]</span>
+<span class="mi">29349509</span>
+</code></pre></div></div>To give you an idea of how much the bias
+towards stable routes is (aka range of 0).</span></div>
+<div><script>$(document).ready(function () {$('#mk-mmkd-877d3122fdf357bdaa1673139e3c30e8 > span').insertAfter($('#mmkd-877d3122fdf357bdaa1673139e3c30e8'))});</script></div>
+
+<p>If we left those, our analysis will be biased toward stable routes
+(range of 0).</p>
+
+<h3 id="rounds-of-bursts">Rounds of bursts</h3>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">all_rounds_g</span> <span class="o">=</span> <span class="n">groupby</span><span class="x">(</span><span class="n">short_bursts</span><span class="x">,</span> <span class="o">:</span><span class="n">ip</span><span class="x">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rounds_g</span> <span class="o">=</span> <span class="n">filter</span><span class="x">(</span><span class="n">sdf</span> <span class="o">-&gt;</span> <span class="n">nrow</span><span class="x">(</span><span class="n">sdf</span><span class="x">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="x">,</span> <span class="n">all_rounds_g</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rounds_ttl</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">rounds_g</span><span class="x">,</span> <span class="o">:</span><span class="n">min</span> <span class="o">=&gt;</span> <span class="n">minimum</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">max</span> <span class="o">=&gt;</span> <span class="n">maximum</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">max</span><span class="x">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">hist_unbiased</span> <span class="o">=</span> <span class="n">countmap</span><span class="x">(</span><span class="n">rounds_ttl</span><span class="x">[</span><span class="o">:</span><span class="x">,</span><span class="o">:</span><span class="n">max</span><span class="x">]</span> <span class="o">-</span> <span class="n">rounds_ttl</span><span class="x">[</span><span class="o">:</span><span class="x">,</span><span class="o">:</span><span class="n">min</span><span class="x">])</span>
+<span class="kt">Dict</span><span class="x">{</span><span class="kt">Int32</span><span class="x">,</span> <span class="kt">Int64</span><span class="x">}</span> <span class="n">with</span> <span class="mi">217</span> <span class="n">entries</span><span class="o">:</span>
+  <span class="mi">56</span>  <span class="o">=&gt;</span> <span class="mi">50</span>
+  <span class="mi">35</span>  <span class="o">=&gt;</span> <span class="mi">221</span>
+  <span class="mi">60</span>  <span class="o">=&gt;</span> <span class="mi">597</span>
+  <span class="mi">220</span> <span class="o">=&gt;</span> <span class="mi">4</span>
+  <span class="mi">67</span>  <span class="o">=&gt;</span> <span class="mi">5813</span>
+  <span class="mi">73</span>  <span class="o">=&gt;</span> <span class="mi">75</span>
+  <span class="mi">115</span> <span class="o">=&gt;</span> <span class="mi">3</span>
+  <span class="mi">112</span> <span class="o">=&gt;</span> <span class="mi">4</span>
+  <span class="mi">185</span> <span class="o">=&gt;</span> <span class="mi">85</span>
+  <span class="n">⋮</span>   <span class="o">=&gt;</span> <span class="n">⋮</span>
+</code></pre></div></div>
+
+<p><label for="mn-558f60c64a2a238d30da53a716e2c134" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-558f60c64a2a238d30da53a716e2c134" class="margin-toggle" /><span class="marginnote">Yes, the <code class="highlighter-rouge">(-)</code> is the binary operator <em>minus</em> or subtraction which is
+applied row by row to the maximum and minimum values (<code class="highlighter-rouge">:max</code> and <code class="highlighter-rouge">:min</code>
+columns).
+ </span></p>
+
+<h3 id="hop-stability-in-longer-periods">Hop stability in longer periods</h3>
+
+<p>Okay, the situation is quite different!</p>
+
+<!--
+multirounds_range -> groupedby_ip_timestamp__filterby_count.pq
+-->
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">multirounds_range</span> <span class="o">=</span> <span class="n">select</span><span class="x">(</span><span class="n">rounds_ttl</span><span class="x">,</span> <span class="o">:</span><span class="n">ip</span><span class="x">,</span> <span class="x">[</span><span class="o">:</span><span class="n">max</span><span class="x">,</span> <span class="o">:</span><span class="n">min</span><span class="x">]</span> <span class="o">=&gt;</span> <span class="x">(</span><span class="o">-</span><span class="x">)</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">range</span><span class="x">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="x">(</span><span class="n">multirounds_range</span><span class="x">,</span> <span class="o">:</span><span class="n">mean</span><span class="x">,</span> <span class="o">:</span><span class="n">std</span><span class="x">,</span> <span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">q25</span><span class="x">,</span> <span class="o">:</span><span class="n">median</span><span class="x">,</span> <span class="o">:</span><span class="n">q75</span><span class="x">,</span> <span class="o">:</span><span class="n">max</span><span class="x">,</span> <span class="n">cols</span><span class="o">=:</span><span class="n">range</span><span class="x">)</span>
+<span class="mi">1</span><span class="n">×8</span> <span class="n">DataFrame</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>  <span class="n">mean</span>      <span class="n">std</span>      <span class="n">min</span>    <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>     <span class="n">max</span>
+<span class="n">─────┼──────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">range</span>     <span class="mf">0.634406</span>  <span class="mf">6.73528</span>      <span class="mi">0</span>      <span class="mf">0.0</span>      <span class="mf">0.0</span>      <span class="mf">0.0</span>   <span class="mi">239</span>
+</code></pre></div></div>
+
+<p>So 75% of the samples have a range of 0. Let’s analyze the dataset
+without them:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">not_perfectly_stable</span> <span class="o">=</span> <span class="n">filter</span><span class="x">(</span><span class="o">:</span><span class="n">range</span> <span class="o">=&gt;</span> <span class="o">!=</span><span class="x">(</span><span class="mi">0</span><span class="x">),</span> <span class="n">multirounds_range</span><span class="x">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">quite_stable</span> <span class="o">=</span> <span class="n">filter</span><span class="x">(</span><span class="o">:</span><span class="n">range</span> <span class="o">=&gt;</span> <span class="o">&lt;=</span><span class="x">(</span><span class="mi">7</span><span class="x">),</span> <span class="n">not_perfectly_stable</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="x">(</span><span class="n">quite_stable</span><span class="x">,</span> <span class="o">:</span><span class="n">mean</span><span class="x">,</span> <span class="o">:</span><span class="n">std</span><span class="x">,</span> <span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">q25</span><span class="x">,</span> <span class="o">:</span><span class="n">median</span><span class="x">,</span> <span class="o">:</span><span class="n">q75</span><span class="x">,</span> <span class="o">:</span><span class="n">max</span><span class="x">,</span> <span class="n">cols</span><span class="o">=:</span><span class="n">range</span><span class="x">)</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>  <span class="n">mean</span>     <span class="n">std</span>      <span class="n">min</span>    <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>      <span class="n">max</span>
+<span class="n">─────┼─────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">range</span>     <span class="mf">1.77117</span>  <span class="mf">1.39118</span>      <span class="mi">1</span>      <span class="mf">1.0</span>      <span class="mf">1.0</span>      <span class="mf">2.0</span>    <span class="mi">7</span>
+
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">unstable</span> <span class="o">=</span> <span class="n">filter</span><span class="x">(</span><span class="o">:</span><span class="n">range</span> <span class="o">=&gt;</span> <span class="o">&gt;</span><span class="x">(</span><span class="mi">7</span><span class="x">),</span> <span class="n">not_perfectly_stable</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="x">(</span><span class="n">unstable</span><span class="x">,</span> <span class="o">:</span><span class="n">mean</span><span class="x">,</span> <span class="o">:</span><span class="n">std</span><span class="x">,</span> <span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">q25</span><span class="x">,</span> <span class="o">:</span><span class="n">median</span><span class="x">,</span> <span class="o">:</span><span class="n">q75</span><span class="x">,</span> <span class="o">:</span><span class="n">max</span><span class="x">,</span> <span class="n">cols</span><span class="o">=:</span><span class="n">range</span><span class="x">)</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>  <span class="n">mean</span>     <span class="n">std</span>      <span class="n">min</span>    <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>      <span class="n">max</span>
+<span class="n">─────┼─────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">range</span>     <span class="mf">85.5505</span>  <span class="mf">62.5483</span>      <span class="mi">8</span>     <span class="mf">62.0</span>     <span class="mf">64.0</span>    <span class="mf">127.0</span>   <span class="mi">239</span>
+</code></pre></div></div>
+
+<p>So it seems that the difference between TTLs for the same host is quite
+concentrated on 0 and closer, up to 7, as the mean 1.77117 and the
+standard deviation 1.39118 shows.</p>
+
+<p>From there the differences are spread over the 8 to 239 range. The mean
+is around the middle of the range and the standard deviation is approx
+one quarter so the values are really spread.</p>
+
+<p>There are only 172217 samples of 43056567 so the <em>unstable</em> represents
+only 0.39998%.</p>
+
+<h3 id="bursts-over-longer-periods-but-for-how-long">Bursts over longer periods but for how long?</h3>
+
+<p>Can we conclude that the routes are 99% of the time <em>stable</em>?</p>
+
+<p>Well, yes but we are making an assumption: when we have two or more
+bursts to the same host we are assuming that those happen at different
+moments but… what do we mean by <em>different moments</em>?</p>
+
+<p>Certainly difference of a few seconds does not change anything by real.</p>
+
+<p>What we want is to measure the changes in the TTLs between bursts that
+happen at <strong>hours</strong> of difference.</p>
+
+<p>So, let’s check how <em>spread</em> are the timestamps of the grouped by <code class="highlighter-rouge">:ip</code>,
+aka how <em>spread</em> are the <em>bursts</em>:</p>
+
+<div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">rounds_spread</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">rounds_g</span><span class="x">,</span> <span class="o">:</span><span class="n">timestamp</span> <span class="o">=&gt;</span> <span class="n">std</span><span class="x">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="x">(</span><span class="n">rounds_spread</span><span class="x">,</span> <span class="o">:</span><span class="n">mean</span><span class="x">,</span> <span class="o">:</span><span class="n">std</span><span class="x">,</span> <span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">q25</span><span class="x">,</span> <span class="o">:</span><span class="n">median</span><span class="x">,</span> <span class="o">:</span><span class="n">q75</span><span class="x">,</span> <span class="o">:</span><span class="n">max</span><span class="x">,</span> <span class="n">cols</span><span class="o">=:</span><span class="n">timestamp_std</span><span class="x">)</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>       <span class="n">mean</span>     <span class="n">std</span>      <span class="n">min</span>       <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>      <span class="n">max</span>
+<span class="n">─────┼─────────────────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">timestamp_std</span>  <span class="mf">51768.5</span>  <span class="mf">32284.3</span>  <span class="mf">0.707107</span>  <span class="mf">25612.8</span>  <span class="mf">49328.5</span>  <span class="mf">73464.1</span>  <span class="mf">1.52706e5</span>
+</code></pre></div></div>
+
+<p>So we have bursts that happen one after the other, roughly with <code class="highlighter-rouge">0.707</code>
+seconds of difference.</p>
+
+<p>But most of the burst happen with several minutes, even <strong>hours</strong> of
+difference.</p>
+
+<p>The 25-quantile, that represents the value of the first quarter of the
+samples, is of 25612.8 seconds, a little more than 7 hours.</p>
+
+<h2 id="conclusions">Conclusions</h2>
+
+<p>So with these so-spread bursts and the so-little changed difference in
+the TTLs we can conclude that most of the hop-count routes are <em>stable</em>.</p>
+
+<p>We cannot say anything about the real routes that the packets taken but
+we can know that the count of hops that they passed through remained
+constant.</p>
+
+
+
+    </article>
+    <span class="print-footer">IPv4 Scan 2021 - Hop-Count Route Stability - October 16, 2021 - Gehn</span>
+    <footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy; 2021
+            
+            Gehn
+        </span></br>
+            <a style="text-decoration: none;" href="/feed.xml"><img height="16px" width="16px" src="/assets/blog-assets/rss-32px.png" /></a>
+        <br>
+        
+
+    
+    </div>
+</footer>
+
+  </body>
+</html>

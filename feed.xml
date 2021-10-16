@@ -1,4 +1,232 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-09-20T04:25:31+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">IPv4 Scan 2021 - Multiprobes Analysis</title><link href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Multiprobes Analysis" /><published>2021-09-19T00:00:00+02:00</published><updated>2021-09-19T00:00:00+02:00</updated><id>/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis</id><content type="html" xml:base="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">&lt;p&gt;To my surprise the
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-10-16T21:30:19+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">IPv4 Scan 2021 - Hop-Count Route Stability</title><link href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Hop-Count Route Stability" /><published>2021-10-16T00:00:00+02:00</published><updated>2021-10-16T00:00:00+02:00</updated><id>/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability</id><content type="html" xml:base="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">&lt;p&gt;&lt;a href=&quot;https://github.com/robertdavidgraham/masscan/&quot;&gt;masscan&lt;/a&gt; tracks the
+&lt;em&gt;time to live&lt;/em&gt; of each packet coming from the host under scan.&lt;/p&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-be8723c0bff6d30bd5aa810117818af0&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-be8723c0bff6d30bd5aa810117818af0&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Yes and no: they should not but some network devices will &lt;em&gt;mangle the packets
+as they want&lt;/em&gt;, including setting arbitrary TTLs.
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;These time to live (TTL) are numbers between 0 and 255
+set by the host. In its journey, the packet goes through different
+routers which each decrements by one the TTL.&lt;/p&gt;
+
+&lt;p&gt;Once a packet has a TTL of zero, the router will discard it.&lt;/p&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-d8e7d1911f3bb4a6d104232f8fe1521c&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-d8e7d1911f3bb4a6d104232f8fe1521c&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Assuming that the packet goes straight-forward to us. If there are
+&lt;em&gt;loops&lt;/em&gt; in the routing systems, the packet will loop between the devices
+going nowhere.
+&lt;br /&gt;
+That's the point of the TTL: to catch and drop packets looping around.
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;Of course the host set the TTL to some reasonable high number so the
+packet should reach to its destination (us) before reaching to zero.&lt;/p&gt;
+
+&lt;p&gt;We cannot know exactly which route/s the packets taken but we can
+&lt;em&gt;count for how many hops they went&lt;/em&gt;: any change in the &lt;em&gt;hop-count&lt;/em&gt; and we will get
+different TTLs and that’s evidence that they taken different routes.&lt;/p&gt;
+
+&lt;p&gt;The inverse is not true: a constant hop-count does not imply that
+the route taken is the same, only the route/s have the same hops.&lt;/p&gt;
+
+&lt;p&gt;In this post I will
+&lt;a href=&quot;/book-of-gehn/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html&quot;&gt;continue exploring&lt;/a&gt;
+how much a &lt;em&gt;route&lt;/em&gt; is &lt;em&gt;stable&lt;/em&gt; in terms of
+&lt;em&gt;hop-counts&lt;/em&gt;.&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;how-much-stable-is-a-route-in-a-burst&quot;&gt;How much stable is a route in a &lt;em&gt;burst&lt;/em&gt;?&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/robertdavidgraham/masscan/&quot;&gt;masscan&lt;/a&gt; scans the same
+host sending several probes at the &lt;em&gt;same time&lt;/em&gt; in a &lt;em&gt;burst&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;As saw in a
+&lt;a href=&quot;/book-of-gehn/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html&quot;&gt;previous post&lt;/a&gt;,
+&lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; may scan the same host more than once. We will call these
+&lt;em&gt;rounds of bursts&lt;/em&gt; or just &lt;em&gt;rounds&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Let’s focus in the firsts which we know they happen roughly at the same
+time.&lt;/p&gt;
+
+&lt;h3 id=&quot;ttls-extrema-values-for-each-short-burst&quot;&gt;TTLs extrema values for each short burst&lt;/h3&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;short_bursts_g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timestamp&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;short_bursts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;short_bursts_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minimum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;maximum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Alternatively:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;short_bursts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;short_bursts_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;extrema&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The latter walks over the samples once calling the &lt;code class=&quot;highlighter-rouge&quot;&gt;extrema&lt;/code&gt; function.
+However &lt;code class=&quot;highlighter-rouge&quot;&gt;extrema&lt;/code&gt; is not compatible with &lt;code class=&quot;highlighter-rouge&quot;&gt;DataFrames&lt;/code&gt; as is so we need
+to wrap it in an anonymous function &lt;code class=&quot;highlighter-rouge&quot;&gt;(x -&amp;gt; [extrema(x)])&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This makes the latter much slower than the former, even if the former
+may walk over the samples twice.&lt;/p&gt;
+
+&lt;h3 id=&quot;hop-stability-in-short-bursts&quot;&gt;Hop stability in short bursts&lt;/h3&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;countmap&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;short_bursts&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;short_bursts&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;64801995&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;68&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;16&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The difference between the &lt;em&gt;extremes&lt;/em&gt;, called the &lt;em&gt;range&lt;/em&gt;, shows that
+the routes are quite stable, at least during the scan for a particular
+host.&lt;/p&gt;
+
+&lt;p&gt;The histogram shows that only a few cases the difference was up to 7.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that the scans for a particular host &lt;em&gt;in a particular time&lt;/em&gt;
+are like &lt;strong&gt;bursts&lt;/strong&gt;: so it is reasonable that the routes didn’t change
+in such short period.&lt;/p&gt;
+
+&lt;h2 id=&quot;how-much-stable-is-a-route-in-a-longer-period&quot;&gt;How much stable is a route in a longer period?&lt;/h2&gt;
+
+&lt;p&gt;The dataset has scans to the same host at different time, what we call
+&lt;em&gt;rounds&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;We can do a second &lt;code class=&quot;highlighter-rouge&quot;&gt;groupby&lt;/code&gt; + &lt;code class=&quot;highlighter-rouge&quot;&gt;combine&lt;/code&gt; taking the minimum of the
+minimum TTLs and the maximum of the maximum TTLs to have the &lt;em&gt;range&lt;/em&gt;
+per host, regardless of the &lt;code class=&quot;highlighter-rouge&quot;&gt;timestamp&lt;/code&gt;, hence capturing some statistics
+for each round.&lt;/p&gt;
+
+&lt;p&gt;However we need to &lt;em&gt;filter out&lt;/em&gt; the groups of scans to the same host
+that have only one timestamps: we want to compare rounds at different
+time and having a single round defeats the purpose.&lt;/p&gt;
+
+&lt;p&gt;These are scans to a host that were done
+in a &lt;em&gt;single burst&lt;/em&gt; and we don’t have different burst at different time
+to compare with!&lt;/p&gt;
+
+&lt;p&gt;&lt;label for=&quot;mmkd-877d3122fdf357bdaa1673139e3c30e8&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mmkd-877d3122fdf357bdaa1673139e3c30e8&quot; class=&quot;margin-toggle&quot; /&gt;&lt;/p&gt;
+&lt;div id=&quot;mk-mmkd-877d3122fdf357bdaa1673139e3c30e8&quot;&gt;&lt;span class=&quot;marginnote marginmarkdowncode&quot;&gt;&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hist_biased&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hist_unbiased&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;29349509&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;To give you an idea of how much the bias
+towards stable routes is (aka range of 0).&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;script&gt;$(document).ready(function () {$('#mk-mmkd-877d3122fdf357bdaa1673139e3c30e8 &gt; span').insertAfter($('#mmkd-877d3122fdf357bdaa1673139e3c30e8'))});&lt;/script&gt;&lt;/div&gt;
+
+&lt;p&gt;If we left those, our analysis will be biased toward stable routes
+(range of 0).&lt;/p&gt;
+
+&lt;h3 id=&quot;rounds-of-bursts&quot;&gt;Rounds of bursts&lt;/h3&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;all_rounds_g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;short_bursts&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rounds_g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sdf&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nrow&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sdf&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;all_rounds_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rounds_ttl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rounds_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minimum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;maximum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hist_unbiased&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;countmap&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rounds_ttl&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rounds_ttl&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;Dict&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;217&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;entries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;56&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;50&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;35&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;221&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;60&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;597&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;220&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;67&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5813&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;73&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;75&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;115&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;112&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;185&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;85&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;⋮&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;⋮&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-558f60c64a2a238d30da53a716e2c134&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-558f60c64a2a238d30da53a716e2c134&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Yes, the &lt;code class=&quot;highlighter-rouge&quot;&gt;(-)&lt;/code&gt; is the binary operator &lt;em&gt;minus&lt;/em&gt; or subtraction which is
+applied row by row to the maximum and minimum values (&lt;code class=&quot;highlighter-rouge&quot;&gt;:max&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;:min&lt;/code&gt;
+columns).
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;hop-stability-in-longer-periods&quot;&gt;Hop stability in longer periods&lt;/h3&gt;
+
+&lt;p&gt;Okay, the situation is quite different!&lt;/p&gt;
+
+&lt;!--
+multirounds_range -&gt; groupedby_ip_timestamp__filterby_count.pq
+--&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;multirounds_range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;select&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rounds_ttl&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;multirounds_range&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cols&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;×8&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;Row&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;variable&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;─────┼──────────────────────────────────────────────────────────────────────&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;     &lt;span class=&quot;mf&quot;&gt;0.634406&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;6.73528&lt;/span&gt;      &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;0.0&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;0.0&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;0.0&lt;/span&gt;   &lt;span class=&quot;mi&quot;&gt;239&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So 75% of the samples have a range of 0. Let’s analyze the dataset
+without them:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;not_perfectly_stable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;multirounds_range&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;quite_stable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;not_perfectly_stable&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;quite_stable&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cols&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;Row&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;variable&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;─────┼─────────────────────────────────────────────────────────────────────&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;     &lt;span class=&quot;mf&quot;&gt;1.77117&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;1.39118&lt;/span&gt;      &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;2.0&lt;/span&gt;    &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;
+
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unstable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;not_perfectly_stable&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unstable&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cols&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;Row&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;variable&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;─────┼─────────────────────────────────────────────────────────────────────&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;     &lt;span class=&quot;mf&quot;&gt;85.5505&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;62.5483&lt;/span&gt;      &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;     &lt;span class=&quot;mf&quot;&gt;62.0&lt;/span&gt;     &lt;span class=&quot;mf&quot;&gt;64.0&lt;/span&gt;    &lt;span class=&quot;mf&quot;&gt;127.0&lt;/span&gt;   &lt;span class=&quot;mi&quot;&gt;239&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So it seems that the difference between TTLs for the same host is quite
+concentrated on 0 and closer, up to 7, as the mean 1.77117 and the
+standard deviation 1.39118 shows.&lt;/p&gt;
+
+&lt;p&gt;From there the differences are spread over the 8 to 239 range. The mean
+is around the middle of the range and the standard deviation is approx
+one quarter so the values are really spread.&lt;/p&gt;
+
+&lt;p&gt;There are only 172217 samples of 43056567 so the &lt;em&gt;unstable&lt;/em&gt; represents
+only 0.39998%.&lt;/p&gt;
+
+&lt;h3 id=&quot;bursts-over-longer-periods-but-for-how-long&quot;&gt;Bursts over longer periods but for how long?&lt;/h3&gt;
+
+&lt;p&gt;Can we conclude that the routes are 99% of the time &lt;em&gt;stable&lt;/em&gt;?&lt;/p&gt;
+
+&lt;p&gt;Well, yes but we are making an assumption: when we have two or more
+bursts to the same host we are assuming that those happen at different
+moments but… what do we mean by &lt;em&gt;different moments&lt;/em&gt;?&lt;/p&gt;
+
+&lt;p&gt;Certainly difference of a few seconds does not change anything by real.&lt;/p&gt;
+
+&lt;p&gt;What we want is to measure the changes in the TTLs between bursts that
+happen at &lt;strong&gt;hours&lt;/strong&gt; of difference.&lt;/p&gt;
+
+&lt;p&gt;So, let’s check how &lt;em&gt;spread&lt;/em&gt; are the timestamps of the grouped by &lt;code class=&quot;highlighter-rouge&quot;&gt;:ip&lt;/code&gt;,
+aka how &lt;em&gt;spread&lt;/em&gt; are the &lt;em&gt;bursts&lt;/em&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rounds_spread&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rounds_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timestamp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rounds_spread&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cols&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timestamp_std&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;Row&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;variable&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;q25&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;q75&lt;/span&gt;      &lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;─────┼─────────────────────────────────────────────────────────────────────────────────&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timestamp_std&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;51768.5&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;32284.3&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;0.707107&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;25612.8&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;49328.5&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;73464.1&lt;/span&gt;  &lt;span class=&quot;mf&quot;&gt;1.52706e5&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So we have bursts that happen one after the other, roughly with &lt;code class=&quot;highlighter-rouge&quot;&gt;0.707&lt;/code&gt;
+seconds of difference.&lt;/p&gt;
+
+&lt;p&gt;But most of the burst happen with several minutes, even &lt;strong&gt;hours&lt;/strong&gt; of
+difference.&lt;/p&gt;
+
+&lt;p&gt;The 25-quantile, that represents the value of the first quarter of the
+samples, is of 25612.8 seconds, a little more than 7 hours.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusions&quot;&gt;Conclusions&lt;/h2&gt;
+
+&lt;p&gt;So with these so-spread bursts and the so-little changed difference in
+the TTLs we can conclude that most of the hop-count routes are &lt;em&gt;stable&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;We cannot say anything about the real routes that the packets taken but
+we can know that the count of hops that they passed through remained
+constant.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="julia" /><category term="statistics" /><summary type="html">masscan tracks the time to live of each packet coming from the host under scan. ⊕Yes and no: they should not but some network devices will mangle the packets as they want, including setting arbitrary TTLs. These time to live (TTL) are numbers between 0 and 255 set by the host. In its journey, the packet goes through different routers which each decrements by one the TTL. Once a packet has a TTL of zero, the router will discard it. ⊕Assuming that the packet goes straight-forward to us. If there are loops in the routing systems, the packet will loop between the devices going nowhere. That's the point of the TTL: to catch and drop packets looping around. Of course the host set the TTL to some reasonable high number so the packet should reach to its destination (us) before reaching to zero. We cannot know exactly which route/s the packets taken but we can count for how many hops they went: any change in the hop-count and we will get different TTLs and that’s evidence that they taken different routes. The inverse is not true: a constant hop-count does not imply that the route taken is the same, only the route/s have the same hops. In this post I will continue exploring how much a route is stable in terms of hop-counts.</summary></entry><entry><title type="html">IPv4 Scan 2021 - Multiprobes Analysis</title><link href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Multiprobes Analysis" /><published>2021-09-19T00:00:00+02:00</published><updated>2021-09-19T00:00:00+02:00</updated><id>/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis</id><content type="html" xml:base="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">&lt;p&gt;To my surprise the
 &lt;a href=&quot;https://www.kaggle.com/signalspikes/internet-port-scan-1&quot;&gt;dataset&lt;/a&gt;
 preprocessed in my
 &lt;a href=&quot;/book-of-gehn/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html&quot;&gt;previous post&lt;/a&gt;
@@ -2206,95 +2434,4 @@ this is going to improve my workflow.&lt;/p&gt;
 
 &lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;&lt;/span&gt;&lt;/figcaption&gt;&lt;object align=&quot;middle&quot; data=&quot;/uml/e3d4801595e03eed8ca3488fce8b4c511c7ac9aa.svg&quot; type=&quot;image/svg+xml&quot;&gt;&lt;/object&gt;&lt;/figure&gt;
 
-&lt;p&gt;Fingers crossed.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="blog" /><category term="latex" /><summary type="html">I’ve being writing for a long time. I’m far from being a good writer but having the consistency to write at least a blog post every month gave me more expressive power. Being a non-English native speaker, that also put me in an uncomfortable position –out of the confort zone– but looking back, even with all my mistakes, I really improved. I’m using a bunch of different technologies to assist me: the blog site is written in Markdown and turned into a static web site with Jekyll. the C/C++ lectures that I give are made with Latex/Beamer. the C/C++ textbook is also in Markdown but it’s compiled into a PDF using Pandoc and Foliant. And while those have been incredible powerful, I hit the limitations of them in time to time. This writeup is meant to brainstorm and design a new way to work.</summary></entry><entry><title type="html">Seaborn Cheatsheet</title><link href="/articles/2021/06/05/Seaborn-Cheatsheet.html" rel="alternate" type="text/html" title="Seaborn Cheatsheet" /><published>2021-06-05T00:00:00+02:00</published><updated>2021-06-05T00:00:00+02:00</updated><id>/articles/2021/06/05/Seaborn-Cheatsheet</id><content type="html" xml:base="/articles/2021/06/05/Seaborn-Cheatsheet.html">&lt;p&gt;Plotting data was always for me a weak point: it always took me a lot of
-time to make the plots and graphs, reading the documentation, &lt;em&gt;googling&lt;/em&gt;
-how to do one particular tweak and things like that.&lt;/p&gt;
-
-&lt;p&gt;So I challenge myself: could I build a &lt;em&gt;cheatsheet&lt;/em&gt; about plotting?&lt;/p&gt;
-
-&lt;p&gt;Yes, yes I could.&lt;/p&gt;
-
-&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;&lt;/span&gt;&lt;/figcaption&gt;&lt;img src=&quot;/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-v1.svg&quot; /&gt;&lt;/figure&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://seaborn.pydata.org/&quot;&gt;Seaborn&lt;/a&gt; is a very simple but powerful
-plotting library on top of &lt;a href=&quot;https://matplotlib.org/&quot;&gt;matplotlib&lt;/a&gt; designed
-for statistical analysis.&lt;/p&gt;
-
-&lt;p&gt;Quick links:
-&lt;a href=&quot;/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-v1.pdf&quot;&gt;PDF (no bg)&lt;/a&gt;,
-&lt;a href=&quot;/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-bg-v1.pdf&quot;&gt;PDF (bg)&lt;/a&gt;,
-&lt;a href=&quot;/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-v1.svg&quot;&gt;SVG (no bg)&lt;/a&gt;,
-&lt;a href=&quot;/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-bg-v1.svg&quot;&gt;SVG (bg)&lt;/a&gt;
-.&lt;!--more--&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;instructions&quot;&gt;Instructions&lt;/h2&gt;
-
-&lt;p&gt;Each rectangle list the parameters that take the plot functions.
-The bold labels inside, like &lt;strong&gt;hist&lt;/strong&gt; and &lt;strong&gt;violin&lt;/strong&gt;, are the names
-of the plots.&lt;/p&gt;
-
-&lt;p&gt;The names are followed by a list of &lt;strong&gt;data parameter&lt;/strong&gt;, also in bold.
-These are used to tell the function from &lt;strong&gt;where&lt;/strong&gt; take the data. Some
-functions may take more parameters additionally, so they are in between
-&lt;strong&gt;square brakets&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;The rest of the parameters listed are optional. Sometimes the
-cheatsheet shows the &lt;em&gt;type&lt;/em&gt; of the parameter, sometimes the &lt;em&gt;range&lt;/em&gt; and
-in others just a few possible values.&lt;/p&gt;
-
-&lt;p&gt;From all of that you can write Python code like the following that plots
-a histogram for the univariate &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;age&quot;&lt;/code&gt; in the given Pandas data frame.
-The extra &lt;code class=&quot;highlighter-rouge&quot;&gt;kde=True&lt;/code&gt; plots a &lt;em&gt;kernel density estimation&lt;/em&gt; on top.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;seaborn&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sns&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sns&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;histplot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;age&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;kde&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Nested rectangles means that the outer rectangle &lt;strong&gt;includes&lt;/strong&gt; the parameters
-listed in the inner rectangle but not the other way around.&lt;/p&gt;
-
-&lt;p&gt;The &lt;strong&gt;dashed&lt;/strong&gt; rectangles means the &lt;strong&gt;union of&lt;/strong&gt;: the parameters are
-shared across.&lt;/p&gt;
-
-&lt;p&gt;For example &lt;code class=&quot;highlighter-rouge&quot;&gt;bar&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;point&lt;/code&gt; accepts the parameters of &lt;code class=&quot;highlighter-rouge&quot;&gt;box&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;line&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Some parameters are followed by a &lt;em&gt;comment in italics&lt;/em&gt; for a quick
-explanation of the parameters.&lt;/p&gt;
-
-&lt;p&gt;The cheatsheet has a lot of small plots as visual examples. Some of them
-are &lt;strong&gt;linked with a line&lt;/strong&gt; with a plot function (rectangle) and some of them are
-&lt;strong&gt;linked with a dashed line&lt;/strong&gt; to a particular setting.&lt;/p&gt;
-
-&lt;p&gt;For example in the cheatsheet there are 4 examples of &lt;code class=&quot;highlighter-rouge&quot;&gt;hist&lt;/code&gt; showing the
-different results based on &lt;code class=&quot;highlighter-rouge&quot;&gt;element='step'&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;multiple='stack'&lt;/code&gt; and
-&lt;code class=&quot;highlighter-rouge&quot;&gt;multiple='dodge'&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;The fourth example is linked to the rectangle for the &lt;code class=&quot;highlighter-rouge&quot;&gt;hist&lt;/code&gt; function
-(bivariate) and not linked to a particular setting.&lt;/p&gt;
-
-&lt;p&gt;The colors also have a meaning: plot functions of the same color belongs
-to the same &lt;em&gt;Seaborn module&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;Seaborn has –broadly speaking– 2 groups of functions:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;the ones that work at the &lt;strong&gt;axes level&lt;/strong&gt;.&lt;/li&gt;
-  &lt;li&gt;the ones that creates their own figure and axes, the &lt;strong&gt;figure level&lt;/strong&gt;
-(or module level)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;The former are the core of Seaborn. Call them on the same axes to do a
-combination (an overlay) of different plots.&lt;/p&gt;
-
-&lt;p&gt;The latter are however simpler. They just call the axes level function
-based on the &lt;code class=&quot;highlighter-rouge&quot;&gt;kind=&lt;/code&gt; parameter.&lt;/p&gt;
-
-&lt;p&gt;The advantage of the figure level functions is that they can create a
-&lt;strong&gt;matrix of plots&lt;/strong&gt; with the &lt;code class=&quot;highlighter-rouge&quot;&gt;row=&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;col=&lt;/code&gt; parameters.&lt;/p&gt;
-
-&lt;p&gt;The colors represent these: red for uni/bivariate distribution plots
-(&lt;code class=&quot;highlighter-rouge&quot;&gt;displot&lt;/code&gt;), blue for relationship plots (&lt;code class=&quot;highlighter-rouge&quot;&gt;relplot&lt;/code&gt;) and green for
-distribution within categories plots (&lt;code class=&quot;highlighter-rouge&quot;&gt;catplot&lt;/code&gt;).&lt;/p&gt;
-
-&lt;p&gt;The violet group is for regressions and does not follow exactly the
-pattern above.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="seaborn" /><category term="matplotlib" /><category term="pandas" /><category term="plotting" /><category term="cheatsheet" /><summary type="html">Plotting data was always for me a weak point: it always took me a lot of time to make the plots and graphs, reading the documentation, googling how to do one particular tweak and things like that. So I challenge myself: could I build a cheatsheet about plotting? Yes, yes I could. Seaborn is a very simple but powerful plotting library on top of matplotlib designed for statistical analysis. Quick links: PDF (no bg), PDF (bg), SVG (no bg), SVG (bg) .</summary></entry></feed>
+&lt;p&gt;Fingers crossed.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="blog" /><category term="latex" /><summary type="html">I’ve being writing for a long time. I’m far from being a good writer but having the consistency to write at least a blog post every month gave me more expressive power. Being a non-English native speaker, that also put me in an uncomfortable position –out of the confort zone– but looking back, even with all my mistakes, I really improved. I’m using a bunch of different technologies to assist me: the blog site is written in Markdown and turned into a static web site with Jekyll. the C/C++ lectures that I give are made with Latex/Beamer. the C/C++ textbook is also in Markdown but it’s compiled into a PDF using Pandoc and Foliant. And while those have been incredible powerful, I hit the limitations of them in time to time. This writeup is meant to brainstorm and design a new way to work.</summary></entry></feed>

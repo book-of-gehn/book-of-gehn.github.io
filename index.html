@@ -108,6 +108,48 @@
     
        <span class="index-single-post">
           <hr class="slender post-layout">
+          <a href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html"><h2 class="larger">IPv4 Scan 2021 - Hop-Count Route Stability</h2></a>
+          <br><span class="smaller">October 16, 2021</span>  <br/>
+          <div><p><a href="https://github.com/robertdavidgraham/masscan/">masscan</a> tracks the
+<em>time to live</em> of each packet coming from the host under scan.</p>
+
+<p><label for="mn-be8723c0bff6d30bd5aa810117818af0" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-be8723c0bff6d30bd5aa810117818af0" class="margin-toggle" /><span class="marginnote">Yes and no: they should not but some network devices will <em>mangle the packets
+as they want</em>, including setting arbitrary TTLs.
+ </span></p>
+
+<p>These time to live (TTL) are numbers between 0 and 255
+set by the host. In its journey, the packet goes through different
+routers which each decrements by one the TTL.</p>
+
+<p>Once a packet has a TTL of zero, the router will discard it.</p>
+
+<p><label for="mn-d8e7d1911f3bb4a6d104232f8fe1521c" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-d8e7d1911f3bb4a6d104232f8fe1521c" class="margin-toggle" /><span class="marginnote">Assuming that the packet goes straight-forward to us. If there are
+<em>loops</em> in the routing systems, the packet will loop between the devices
+going nowhere.
+<br />
+That's the point of the TTL: to catch and drop packets looping around.
+ </span></p>
+
+<p>Of course the host set the TTL to some reasonable high number so the
+packet should reach to its destination (us) before reaching to zero.</p>
+
+<p>We cannot know exactly which route/s the packets taken but we can
+<em>count for how many hops they went</em>: any change in the <em>hop-count</em> and we will get
+different TTLs and that’s evidence that they taken different routes.</p>
+
+<p>The inverse is not true: a constant hop-count does not imply that
+the route taken is the same, only the route/s have the same hops.</p>
+
+<p>In this post I will
+<a href="/book-of-gehn/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">continue exploring</a>
+how much a <em>route</em> is <em>stable</em> in terms of
+<em>hop-counts</em>.</p>
+
+</div>
+       </span>
+    
+       <span class="index-single-post">
+          <hr class="slender post-layout">
           <a href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html"><h2 class="larger">IPv4 Scan 2021 - Multiprobes Analysis</h2></a>
           <br><span class="smaller">September 19, 2021</span>  <br/>
           <div><p>To my surprise the
