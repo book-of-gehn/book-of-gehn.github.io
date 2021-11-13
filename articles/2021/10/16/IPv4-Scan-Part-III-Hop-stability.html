@@ -108,8 +108,11 @@
 <p><a href="https://github.com/robertdavidgraham/masscan/">masscan</a> tracks the
 <em>time to live</em> of each packet coming from the host under scan.</p>
 
-<p><label for="mn-be8723c0bff6d30bd5aa810117818af0" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-be8723c0bff6d30bd5aa810117818af0" class="margin-toggle" /><span class="marginnote">Yes and no: they should not but some network devices will <em>mangle the packets
+<p><label for="mn-3da50bcbb516be34a6ada00019b562b0" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-3da50bcbb516be34a6ada00019b562b0" class="margin-toggle" /><span class="marginnote">Yes and no: they should not but some network devices will <em>mangle the packets
 as they want</em>, including setting arbitrary TTLs.
+<br />
+See the observations done in the
+<a href="/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html">TTL Boost post</a>.
  </span></p>
 
 <p>These time to live (TTL) are numbers between 0 and 255
@@ -128,9 +131,12 @@ That's the point of the TTL: to catch and drop packets looping around.
 <p>Of course the host set the TTL to some reasonable high number so the
 packet should reach to its destination (us) before reaching to zero.</p>
 
+<p><label for="mf-2c913b204d4c3c78805288c58cf2d3b9" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-2c913b204d4c3c78805288c58cf2d3b9" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="" src="/assets/internet_scan/ip-ttl-range-and-time.png" />  <br /></span></p>
+
 <p>We cannot know exactly which route/s the packets taken but we can
-<em>count for how many hops they went</em>: any change in the <em>hop-count</em> and we will get
-different TTLs and that’s evidence that they taken different routes.</p>
+<em>count for how many hops they went through</em>: any change in the <em>hop-count</em>
+and we will get different TTLs and that’s evidence that they taken
+different routes.</p>
 
 <p>The inverse is not true: a constant hop-count does not imply that
 the route taken is the same, only the route/s have the same hops.</p>
@@ -150,10 +156,22 @@ host sending several probes at the <em>same time</em> in a <em>burst</em>.</p>
 <code class="highlighter-rouge">masscan</code> may scan the same host more than once. We will call these
 <em>rounds of bursts</em> or just <em>rounds</em>.</p>
 
-<p>Let’s focus in the firsts which we know they happen roughly at the same
-time.</p>
+<figure><figcaption><span><code class="highlighter-rouge">masscan</code> sends multiple packets (<em>probes</em>) to test the hosts'
+ports.
+<br />
+<br />
+It sends <em>at the same time</em> the probes to <em>the same host</em> in a
+<strong>burst</strong>.
+<br />
+<br />
+Some time later it <em>may</em> scan the same host <em>again</em>. The collection of
+bursts to <em>the same host</em> are the <strong>rounds</strong> for that host.
+</span></figcaption><img style="max-width:80%;" alt="Bursts and Rounds" src="/assets/internet_scan/ip-burst-rounds.png" /></figure>
 
 <h3 id="ttls-extrema-values-for-each-short-burst">TTLs extrema values for each short burst</h3>
+
+<p>Let’s review the short bursts first, the probes sent to a host at the
+same time:</p>
 
 <div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts_g</span> <span class="o">=</span> <span class="n">groupby</span><span class="x">(</span><span class="n">df</span><span class="x">,</span> <span class="x">[</span><span class="o">:</span><span class="n">ip</span><span class="x">,</span> <span class="o">:</span><span class="n">timestamp</span><span class="x">])</span>
 <span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">short_bursts_g</span><span class="x">,</span> <span class="o">:</span><span class="n">ttl</span> <span class="o">=&gt;</span> <span class="n">minimum</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">ttl</span> <span class="o">=&gt;</span> <span class="n">maximum</span> <span class="o">=&gt;</span> <span class="o">:</span><span class="n">max</span><span class="x">)</span>
@@ -163,6 +181,12 @@ time.</p>
 
 <div class="language-julia highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts</span> <span class="o">=</span> <span class="n">combine</span><span class="x">(</span><span class="n">short_bursts_g</span><span class="x">,</span> <span class="o">:</span><span class="n">ttl</span> <span class="o">=&gt;</span> <span class="x">(</span><span class="n">x</span> <span class="o">-&gt;</span> <span class="x">[</span><span class="n">extrema</span><span class="x">(</span><span class="n">x</span><span class="x">)])</span> <span class="o">=&gt;</span> <span class="x">[</span><span class="o">:</span><span class="n">min</span><span class="x">,</span> <span class="o">:</span><span class="n">max</span><span class="x">])</span>
 </code></pre></div></div>
+
+<p><label for="mf-d0732524f82cd3566aa908b14eaa494f" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-d0732524f82cd3566aa908b14eaa494f" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/assets/internet_scan/ip-short-burst-ttls.png" />  <br />For each response, the TTL is read and the minimum and maximum
+values are calculated for each burst.
+<br />
+This gives an idea of how different the TTL can be for probes sent
+in a <em>short-elapsed burst</em>.</span></p>
 
 <p>The latter walks over the samples once calling the <code class="highlighter-rouge">extrema</code> function.
 However <code class="highlighter-rouge">extrema</code> is not compatible with <code class="highlighter-rouge">DataFrames</code> as is so we need
@@ -187,11 +211,16 @@ may walk over the samples twice.</p>
 the routes are quite stable, at least during the scan for a particular
 host.</p>
 
-<p>The histogram shows that only a few cases the difference was up to 7.</p>
+<p>The histogram shows that all the bursts have a TTL range of 0
+except very few cases.</p>
+
+<p>This means that the routes are <strong>stable</strong> but…</p>
 
 <p>Keep in mind that the scans for a particular host <em>in a particular time</em>
 are like <strong>bursts</strong>: so it is reasonable that the routes didn’t change
 in such short period.</p>
+
+<p>What would happen if we analyze now the stability for a longer period?</p>
 
 <h2 id="how-much-stable-is-a-route-in-a-longer-period">How much stable is a route in a longer period?</h2>
 
@@ -291,10 +320,21 @@ standard deviation 1.39118 shows.</p>
 is around the middle of the range and the standard deviation is approx
 one quarter so the values are really spread.</p>
 
-<p>There are only 172217 samples of 43056567 so the <em>unstable</em> represents
-only 0.39998%.</p>
+<p><label for="mn-db4f2185f6466f659f0b88d1b045e731" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-db4f2185f6466f659f0b88d1b045e731" class="margin-toggle" /><span class="marginnote">In the dataset we have a slightly more unique hosts: 43056596.
+The difference is due the filtering that we did above but it does
+not change the results.
+ </span></p>
+
+<p>There are only 172217 samples of 43056567 unique hosts
+so the <em>unstable</em> represents only 0.39998%.</p>
 
 <h3 id="bursts-over-longer-periods-but-for-how-long">Bursts over longer periods but for how long?</h3>
+
+<p><label for="mf-edce0dd3d5dea57bd6ac390574b7cbaf" class="margin-toggle ">⊕</label><input type="checkbox" id="mf-edce0dd3d5dea57bd6ac390574b7cbaf" class="margin-toggle " /><span class="marginnote "><img class="fullwidth" alt="" src="/assets/internet_scan/ip-ttl-range-and-time.png" />  <br />For each burst we calculate its TTL range.
+<br />
+From there, a bunch of statistics can be calculated about the TTL ranges
+for the <em>same hosts</em> giving us an idea of the stability of the route
+to it.</span></p>
 
 <p>Can we conclude that the routes are 99% of the time <em>stable</em>?</p>
 
@@ -302,7 +342,7 @@ only 0.39998%.</p>
 bursts to the same host we are assuming that those happen at different
 moments but… what do we mean by <em>different moments</em>?</p>
 
-<p>Certainly difference of a few seconds does not change anything by real.</p>
+<p>Certainly, a difference of a few seconds does not change anything by real.</p>
 
 <p>What we want is to measure the changes in the TTLs between bursts that
 happen at <strong>hours</strong> of difference.</p>
@@ -331,9 +371,10 @@ samples, is of 25612.8 seconds, a little more than 7 hours.</p>
 <p>So with these so-spread bursts and the so-little changed difference in
 the TTLs we can conclude that most of the hop-count routes are <em>stable</em>.</p>
 
-<p>We cannot say anything about the real routes that the packets taken but
+<p>We cannot say anything about the real routes that the packets took but
 we can know that the count of hops that they passed through remained
 constant.</p>
+
 
 
 

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>IPv4 Scan 2021 - Multiprobes Analysis</title>
-  <meta name="description" content="To my surprise thedatasetpreprocessed in myprevious posthas duplicated entries. These are scansto the same host and port but with a different timestamp.Quest...">
+  <meta name="description" content="To my surprise thedatasetpreprocessed in myprevious posthas duplicated entries. These are scansto the same host and port but with a different timestamp.⊕  Hi...">
 
   
     <link href='//fonts.googleapis.com/css?family=Lato:400,400italic' rel='stylesheet' type='text/css'>
@@ -111,6 +111,8 @@ preprocessed in my
 <a href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">previous post</a>
 <strong>has</strong> duplicated entries. These are scans
 to the same host and port but with a different timestamp.</p>
+
+<p><label for="mf-ce239ea884cb4ce6c69f512f59220250" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-ce239ea884cb4ce6c69f512f59220250" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="Hist" src="/assets/internet_scan/time_interval_hist.svg" />  <br />Histogram of the interval between probes to the same host-port in seconds.</span></p>
 
 <p>Questions like “which open port is more likely” will biased
 because the same host-port may be counted more than once.</p>
@@ -300,7 +302,9 @@ meaning: <code class="highlighter-rouge">nrow =&gt; :count</code> means store th
   <span class="mi">1</span> <span class="o">=&gt;</span> <span class="mi">64774182</span>
 </code></pre></div></div>
 
-<p>So <code class="highlighter-rouge">masscan</code> didn’t sent <script type="math/tex">N</script> probes to each port <strong>or</strong> it did it but the
+<p>Notice how most of ip-port tuples were scanned once.</p>
+
+<p>So <code class="highlighter-rouge">masscan</code> didn’t send <script type="math/tex">N</script> probes to each port <strong>or</strong> it did it but the
 some probes never were answered <em>(why?, who knows)</em>.</p>
 
 <p>This could explain why some ports were scanned twice while others only
@@ -308,12 +312,16 @@ one.</p>
 
 <h2 id="what-is-the-distribution-of-intervals-between-probes-for-each-port">What is the distribution of intervals between probes for each port?</h2>
 
-<p><label for="mn-d545e4498ff3efedd22c1c04afb63aaa" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-d545e4498ff3efedd22c1c04afb63aaa" class="margin-toggle" /><span class="marginnote">Sanity check: from the distribution of probes per port we know that we
+<p><label for="mn-d2350500b68de647dec03517cf2f1a7e" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-d2350500b68de647dec03517cf2f1a7e" class="margin-toggle" /><span class="marginnote">Sanity check: from the distribution of probes per port we know that we
 have 13038 ports with 2 probes which will contribute with 13038 rows to
-the difference dataframe; 750 ports with 3 probes which will contribute
+the difference dataframe;
+<br />
+750 ports with 3 probes which will contribute
 with 750 * 2 rows to the result; 27 ports with 4 probes contributing
 with 27 * 3 rows and finally 1 port with 5 probes contributing with 5 *
-4 rows. The expected total is 14623 which it is exactly the row count
+4 rows.
+<br />
+The expected total is 14623 which it is exactly the row count
 of <code class="highlighter-rouge">df2</code>.
  </span></p>
 
@@ -355,6 +363,13 @@ of <code class="highlighter-rouge">df2</code>.
   <span class="mi">40</span> <span class="o">=&gt;</span> <span class="mi">1</span>
 </code></pre></div></div>
 
+<p>Certainly a histogram is better for this case:</p>
+
+<figure><figcaption><span>Histogram of intervals between probes to the same host-port in seconds.
+<br />
+The median (5.0) and the mean (6.89) are labeled. The vertical axis is
+in logarithmic scale.</span></figcaption><img src="/assets/internet_scan/time_interval_hist.svg" /></figure>
+
 <p>This was more spread than I expected. Most of the intervals are in the
 low range but there is non-negligible count for the 15 secs interval.</p>
 
@@ -395,7 +410,7 @@ low range but there is non-negligible count for the 15 secs interval.</p>
 <p>The median confirms our first analysis: the distribution is right skewed
 <em>(the mean is on the right of the median)</em>.</p>
 
-<h3 id="what-about-the-0-interval">What about the 0 interval?</h3>
+<h3 id="what-about-the-zero-interval">What about the zero interval?</h3>
 
 <p>We can filter which rows has such in two ways being the second one the
 preferred and fastest:</p>
@@ -438,12 +453,20 @@ couldn’t finish a single group-by + aggregation.</p>
 
 <p>It is obvious that there are too many copies.</p>
 
-<p>Doing a home-made custom aggregation function to sort this <em>bypassed</em>
-the memory problem ended up in a <em>never-finishing</em> problem.</p>
+<p>Doing a home-made custom aggregation function to sort this,
+I successfully <em>bypassed</em> the memory problem but I ended up in
+another one: <em>CPU 100% never-finishing</em> execution problem.</p>
 
-<p>I’m talking of processing a 10% dataset for a whole night.</p>
+<p>The custom aggregation function was written in Python, of course, but
+calling Python code for each row is incredible slow.</p>
 
-<p>After a week it was clear that Pandas+Dask need more love.</p>
+<p>And all of this for a reduced dataset!</p>
+
+<p>I’m talking of processing a 10% dataset and it didn’t finish after
+running for a whole night.</p>
+
+<p>After a week of trying and failing, it was clear that Pandas+Dask need
+more love.</p>
 
 <p>That’s when I considered
 <a href="https://julialang.org/">Julia</a>.</p>

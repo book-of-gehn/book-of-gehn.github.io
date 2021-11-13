@@ -108,13 +108,61 @@
     
        <span class="index-single-post">
           <hr class="slender post-layout">
+          <a href="/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html"><h2 class="larger">IPv4 Scan 2021 - TTL Boost (or reset)</h2></a>
+          <br><span class="smaller">November 13, 2021</span>  <br/>
+          <div><p>In <a href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">the post about Hop-Stability</a>
+we analyzed the TTL of the responses from all the scanned hosts.</p>
+
+<p>In particular we used the TTL range: the difference between
+the smallest and the greatest TTL seen per host.</p>
+
+<p><label for="mf-a935a041a2a67de2cab15bacdac56127" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-a935a041a2a67de2cab15bacdac56127" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="Hist" src="/assets/internet_scan/multirounds_ttl_range_unbiased__hist.svg" />  <br />Histogram of TTL range between rounds of scans to the same host showing how much stable the routes are.</span></p>
+
+<p>With a range of 0 or very close we claimed that the route to the host was
+stable; with range larger than 7 we said the contrary.</p>
+
+<p>The analysis shown that only 0.39998% of 43056567 unique hosts had
+unstable routes.</p>
+
+<p>However the analysis was only using a few statistics, when we plot the
+<em>histogram of TTL ranges</em> we see much more <strong>mysteries to solve</strong>.</p>
+
+</div>
+       </span>
+    
+       <span class="index-single-post">
+          <hr class="slender post-layout">
+          <a href="/articles/2021/11/13/IPv4-Scan-Part-IV-Hop-Distance-and-IP-Distribution.html"><h2 class="larger">IPv4 Scan 2021 - Hop-Distance Average and IP Distribution</h2></a>
+          <br><span class="smaller">November 13, 2021</span>  <br/>
+          <div><p><label for="mf-02dd92f6a0bec898c2baa73ef813cdb3" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-02dd92f6a0bec898c2baa73ef813cdb3" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="Hist" src="/assets/internet_scan/ttl_hist_log_scale.svg" />  <br />Histogram of TTL observed: the peaks indicate the different operative systems and their relative position respect the expected positions estimate the mean distance between the hosts and the scanner in hop count.</span></p>
+
+<p>In the <a href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">Multiprobes Analysis</a>,
+we explored the statistics of the hosts and the communication to them.</p>
+
+<p>This is a follow up to keep exploring the data:</p>
+
+<ul>
+  <li>which is the average distance between a host and the scanner in term
+of hop count?</li>
+  <li>which OS are running?</li>
+  <li>how are the hosts distributed?</li>
+</ul>
+
+</div>
+       </span>
+    
+       <span class="index-single-post">
+          <hr class="slender post-layout">
           <a href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html"><h2 class="larger">IPv4 Scan 2021 - Hop-Count Route Stability</h2></a>
           <br><span class="smaller">October 16, 2021</span>  <br/>
           <div><p><a href="https://github.com/robertdavidgraham/masscan/">masscan</a> tracks the
 <em>time to live</em> of each packet coming from the host under scan.</p>
 
-<p><label for="mn-be8723c0bff6d30bd5aa810117818af0" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-be8723c0bff6d30bd5aa810117818af0" class="margin-toggle" /><span class="marginnote">Yes and no: they should not but some network devices will <em>mangle the packets
+<p><label for="mn-3da50bcbb516be34a6ada00019b562b0" class="margin-toggle"> ⊕</label><input type="checkbox" id="mn-3da50bcbb516be34a6ada00019b562b0" class="margin-toggle" /><span class="marginnote">Yes and no: they should not but some network devices will <em>mangle the packets
 as they want</em>, including setting arbitrary TTLs.
+<br />
+See the observations done in the
+<a href="/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html">TTL Boost post</a>.
  </span></p>
 
 <p>These time to live (TTL) are numbers between 0 and 255
@@ -133,9 +181,12 @@ That's the point of the TTL: to catch and drop packets looping around.
 <p>Of course the host set the TTL to some reasonable high number so the
 packet should reach to its destination (us) before reaching to zero.</p>
 
+<p><label for="mf-2c913b204d4c3c78805288c58cf2d3b9" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-2c913b204d4c3c78805288c58cf2d3b9" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="" src="/assets/internet_scan/ip-ttl-range-and-time.png" />  <br /></span></p>
+
 <p>We cannot know exactly which route/s the packets taken but we can
-<em>count for how many hops they went</em>: any change in the <em>hop-count</em> and we will get
-different TTLs and that’s evidence that they taken different routes.</p>
+<em>count for how many hops they went through</em>: any change in the <em>hop-count</em>
+and we will get different TTLs and that’s evidence that they taken
+different routes.</p>
 
 <p>The inverse is not true: a constant hop-count does not imply that
 the route taken is the same, only the route/s have the same hops.</p>
@@ -158,6 +209,8 @@ preprocessed in my
 <a href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">previous post</a>
 <strong>has</strong> duplicated entries. These are scans
 to the same host and port but with a different timestamp.</p>
+
+<p><label for="mf-ce239ea884cb4ce6c69f512f59220250" class="margin-toggle  in-index-only">⊕</label><input type="checkbox" id="mf-ce239ea884cb4ce6c69f512f59220250" class="margin-toggle  in-index-only" /><span class="marginnote  in-index-only"><img style="" class="fullwidth" alt="Hist" src="/assets/internet_scan/time_interval_hist.svg" />  <br />Histogram of the interval between probes to the same host-port in seconds.</span></p>
 
 <p>Questions like “which open port is more likely” will biased
 because the same host-port may be counted more than once.</p>
@@ -198,7 +251,7 @@ is a survey or port scan of the whole IPv4 range made
 with <a href="https://github.com/robertdavidgraham/masscan">masscan</a>.</p>
 
 <p>The dataset however is much smaller than the expected mostly because
-most of the host didn’t response and/or it had all the scanned ports
+most of the hosts didn’t response and/or they had all the scanned ports
 closed.</p>
 
 <p>Only open ports were registered.</p>

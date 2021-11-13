@@ -1,8 +1,454 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-10-16T21:47:28+02:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">IPv4 Scan 2021 - Hop-Count Route Stability</title><link href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Hop-Count Route Stability" /><published>2021-10-16T00:00:00+02:00</published><updated>2021-10-16T00:00:00+02:00</updated><id>/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability</id><content type="html" xml:base="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">&lt;p&gt;&lt;a href=&quot;https://github.com/robertdavidgraham/masscan/&quot;&gt;masscan&lt;/a&gt; tracks the
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-11-13T16:01:39+01:00</updated><id>/feed.xml</id><title type="html">The Book of Gehn</title><subtitle></subtitle><author><name>Gehn</name></author><entry><title type="html">IPv4 Scan 2021 - TTL Boost (or reset)</title><link href="/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - TTL Boost (or reset)" /><published>2021-11-13T00:00:00+01:00</published><updated>2021-11-13T00:00:00+01:00</updated><id>/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost</id><content type="html" xml:base="/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html">&lt;p&gt;In &lt;a href=&quot;/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html&quot;&gt;the post about Hop-Stability&lt;/a&gt;
+we analyzed the TTL of the responses from all the scanned hosts.&lt;/p&gt;
+
+&lt;p&gt;In particular we used the TTL range: the difference between
+the smallest and the greatest TTL seen per host.&lt;/p&gt;
+
+&lt;p&gt;&lt;label for=&quot;mf-a935a041a2a67de2cab15bacdac56127&quot; class=&quot;margin-toggle  in-index-only&quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-a935a041a2a67de2cab15bacdac56127&quot; class=&quot;margin-toggle  in-index-only&quot; /&gt;&lt;span class=&quot;marginnote  in-index-only&quot;&gt;&lt;img style=&quot;&quot; class=&quot;fullwidth&quot; alt=&quot;Hist&quot; src=&quot;/assets/internet_scan/multirounds_ttl_range_unbiased__hist.svg&quot; /&gt;  &lt;br /&gt;Histogram of TTL range between rounds of scans to the same host showing how much stable the routes are.&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;With a range of 0 or very close we claimed that the route to the host was
+stable; with range larger than 7 we said the contrary.&lt;/p&gt;
+
+&lt;p&gt;The analysis shown that only 0.39998% of 43056567 unique hosts had
+unstable routes.&lt;/p&gt;
+
+&lt;p&gt;However the analysis was only using a few statistics, when we plot the
+&lt;em&gt;histogram of TTL ranges&lt;/em&gt; we see much more &lt;strong&gt;mysteries to solve&lt;/strong&gt;.&lt;!--more--&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;ttl-range-histogram-how-much-stable-is-a-route-in-a-longer-period---revised&quot;&gt;TTL range histogram (how much stable is a route in a longer period? - revised)&lt;/h2&gt;
+
+&lt;p&gt;We can plot &lt;code class=&quot;highlighter-rouge&quot;&gt;multirounds_range&lt;/code&gt; in a histogram. Recap that &lt;code class=&quot;highlighter-rouge&quot;&gt;multirounds_range&lt;/code&gt;
+is the range of TTLs, that means &lt;code class=&quot;highlighter-rouge&quot;&gt;rounds_ttl[:,:max] - rounds_ttl[:,:min]&lt;/code&gt;; a quick
+histogram was shown before as &lt;code class=&quot;highlighter-rouge&quot;&gt;hist_biased&lt;/code&gt;.&lt;/p&gt;
+
+&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;Histogram of TTL range between rounds of scans to the same host showing how much stable the routes are.
+&lt;br /&gt;
+The dataset does not include hosts scanned only once.
+The vertical axis is in logarithmic scale.&lt;/span&gt;&lt;/figcaption&gt;&lt;img src=&quot;/assets/internet_scan/multirounds_ttl_range_unbiased__hist.svg&quot; /&gt;&lt;/figure&gt;
+
+&lt;p&gt;The histogram may be misleading at first but remember that the vertical
+axis is in &lt;em&gt;logarithmic scale&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;That means that the main peak at 0 is almost 3 orders of magnitude
+larger than the three secondary peaks on the right.&lt;/p&gt;
+
+&lt;p&gt;This is compatible with the analysis made previously: the routes are
+highly stable and only a small fraction (0.39998%) are unstable with
+a large variance (represented by the right side of the histogram).&lt;/p&gt;
+
+&lt;p&gt;But the histogram shows some interesting features.&lt;/p&gt;
+
+&lt;h3 id=&quot;peaks&quot;&gt;Peaks&lt;/h3&gt;
+
+&lt;p&gt;Now we find where the local maxima are. We use a window of 40 to filter
+any peak that it is not high enough.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;strict=false&lt;/code&gt; is crucial because &lt;code class=&quot;highlighter-rouge&quot;&gt;argmaxima&lt;/code&gt; ignores any peak that it
+is too close on the edges (for which a full window cannot be computed).
+Without this, the peak at 0 would be lost.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hist&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fit&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Histogram&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;convert&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Vector&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;multirounds_range&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nbins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argmaxima&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hist&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;weights&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strict&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;element&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Vector&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;63&lt;/span&gt;
+ &lt;span class=&quot;mi&quot;&gt;127&lt;/span&gt;
+ &lt;span class=&quot;mi&quot;&gt;191&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;argmaxima&lt;/code&gt; returns the indexes where the peaks were found in
+the &lt;code class=&quot;highlighter-rouge&quot;&gt;bins&lt;/code&gt; vector created.&lt;/p&gt;
+
+&lt;p&gt;Julia’s vectors are 1-based indexed but those indexes also represent the
+TTL range values where the peak were found &lt;strong&gt;except&lt;/strong&gt; that they are
+shifted by 1.&lt;/p&gt;
+
+&lt;p&gt;In short, a peak at index &lt;code class=&quot;highlighter-rouge&quot;&gt;n&lt;/code&gt; means a peak for the TTL range of &lt;code class=&quot;highlighter-rouge&quot;&gt;n-1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;That’s why we do a &lt;code class=&quot;highlighter-rouge&quot;&gt;.- 1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Back to the numbers, &lt;em&gt;what the hell do those peaks mean?&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;analysis-of-the-3-secondary-peaks&quot;&gt;Analysis of the 3 secondary peaks&lt;/h2&gt;
+
+&lt;p&gt;&lt;label for=&quot;mf-7f0c061bb96213d6f31a57175f17375a&quot; class=&quot;margin-toggle &quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-7f0c061bb96213d6f31a57175f17375a&quot; class=&quot;margin-toggle &quot; /&gt;&lt;span class=&quot;marginnote &quot;&gt;&lt;img class=&quot;fullwidth&quot; alt=&quot;&quot; src=&quot;/assets/internet_scan/multirounds_ttl_range_unbiased__hist.svg&quot; /&gt;  &lt;br /&gt;&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;Let’s ignore the peak at 0 (those are the stable routes). Why do we have
+3 secondary peaks?&lt;/p&gt;
+
+&lt;p&gt;Focus on the peak at TTL range of 191 (the right most).&lt;/p&gt;
+
+&lt;p&gt;That means that we have a host that in
+some moment had a TTL of &lt;script type=&quot;math/tex&quot;&gt;m&lt;/script&gt; and later it had a TTL of &lt;script type=&quot;math/tex&quot;&gt;M&lt;/script&gt;.&lt;/p&gt;
+
+&lt;p&gt;Then, the range for
+that host is &lt;script type=&quot;math/tex&quot;&gt;M-m = 191&lt;/script&gt;.&lt;/p&gt;
+
+&lt;p&gt;That happen for several hosts, probably each having a &lt;strong&gt;different&lt;/strong&gt; &lt;script type=&quot;math/tex&quot;&gt;M&lt;/script&gt; and
+&lt;script type=&quot;math/tex&quot;&gt;m&lt;/script&gt; but all ended up having the &lt;strong&gt;same&lt;/strong&gt; range of 191.&lt;/p&gt;
+
+&lt;p&gt;Let’s assume that one of those hosts is a Windows with a default TTL of
+128.&lt;/p&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-a219ccc71cc77431057c081f13a94dbd&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-a219ccc71cc77431057c081f13a94dbd&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;The &lt;em&gt;15&lt;/em&gt; comes from our estimation of the &lt;em&gt;average distance in hop counts&lt;/em&gt;
+made in the &lt;a href=&quot;/articles/2021/11/13/IPv4-Scan-Part-IV-Hop-Distance-and-Clusters.html&quot;&gt;Hop-Distance and Clusters post&lt;/a&gt;
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;We know that the scanner will receive the packets from it with an
+expected TTL of &lt;script type=&quot;math/tex&quot;&gt;128-15=113&lt;/script&gt;. This of course will depend of how far is
+the host but it is expected to be at a distance of 15 hops.&lt;/p&gt;
+
+&lt;p&gt;So, we have two scenarios for this Windows host:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;m=113,  M=304       (ttl=128, hops=15)
+m=-78,  M=113
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And none of those makes sense…&lt;/p&gt;
+
+&lt;h3 id=&quot;revising-the-assumptions&quot;&gt;Revising the assumptions&lt;/h3&gt;
+
+&lt;p&gt;To have a difference of 191, or we need &lt;script type=&quot;math/tex&quot;&gt;M=304&lt;/script&gt; or we need &lt;script type=&quot;math/tex&quot;&gt;m=-78&lt;/script&gt; which it
+is impossible: TTL must be between 0 and 255!&lt;/p&gt;
+
+&lt;p&gt;Let’s review the assumptions so far:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;the host is a Windows with a default TTL of 128&lt;/li&gt;
+  &lt;li&gt;the are 15 hops between the host and the scanner&lt;/li&gt;
+  &lt;li&gt;the hops between the host and the scanner always decrement the TTL by 1&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We could explain those numbers assuming that the hosts that contributed
+to form the peak at 191 are not Windows, or their default TTL are not
+128.&lt;/p&gt;
+
+&lt;p&gt;A TTL of 64, with a distance of 15 hops, yields&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;m=49,    M=240       (ttl=64, hops=15)
+m=-142,  M=49
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We could also explain the peak if the hops between the hosts  and the
+scanner is larger than 15.&lt;/p&gt;
+
+&lt;p&gt;For example, Windows hosts at a 64 hops yields:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;m=63,    M=254       (ttl=128, hops=64)
+m=-128,  M=63
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So, the only way to explain the peak at 191 without falling
+in the cases &lt;script type=&quot;math/tex&quot;&gt;M=304&lt;/script&gt; or &lt;script type=&quot;math/tex&quot;&gt;m=-78&lt;/script&gt; is that the peak
+at 191 is formed by non-Windows hosts &lt;em&gt;and/or&lt;/em&gt; really far Windows hosts.&lt;/p&gt;
+
+&lt;p&gt;But if that it is true, it is also true that are &lt;strong&gt;more hosts that can
+contribute&lt;/strong&gt; to the first two secondary peaks at 63 and 127.&lt;/p&gt;
+
+&lt;p&gt;In other words, it is more likely to have a random host to fall in one
+of those two peaks (63 and 127); it is more &lt;strong&gt;unlikely&lt;/strong&gt; to fall
+in the third one because –and this is also another assumption–
+it is more &lt;strong&gt;unlikely&lt;/strong&gt; to pick a non-Windows host and/or a far Windows host.&lt;/p&gt;
+
+&lt;p&gt;Perhaps it is a wild idea but the fact that the peak at 191
+is the &lt;strong&gt;same height and shape&lt;/strong&gt; that the peaks at 63 and 127
+is just weird.&lt;/p&gt;
+
+&lt;p&gt;We would be expecting the third peak at 191 to be &lt;strong&gt;smaller&lt;/strong&gt; (less hosts
+matching the conditions). Right?&lt;/p&gt;
+
+&lt;p&gt;What if we drop our third assumption: the hops decrement the TTL
+by 1?&lt;/p&gt;
+
+&lt;p&gt;Could be possible that some hops instead of decrementing the TTL,
+increment it, like a TTL boost?&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Perhaps.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;ttl-boost&quot;&gt;TTL boost&lt;/h2&gt;
+
+&lt;p&gt;Let’s assume that in some cases the packets coming from a host pass
+through a hop that does not decrement the TTL but &lt;strong&gt;resets it&lt;/strong&gt; to 255.&lt;/p&gt;
+
+&lt;p&gt;Some kind of TTL boost.&lt;/p&gt;
+
+&lt;p&gt;Let’s see what would we see if a reset or a boost happen. What would be
+the observed range by us?&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;default_ttls&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;expected_hops&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;default_ttls&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Default TTL={ttl} =&amp;gt; m={ttl-expected_hops}, M={255-expected_hops} =&amp;gt; Range=M-m={255-ttl}&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Default&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TTL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;49&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;240&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Range&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;191&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Default&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TTL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;113&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;240&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Range&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;127&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Default&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TTL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;255&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;240&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;240&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Range&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That’s interesting! We would get peaks at 127 and 191 as we saw earlier.&lt;/p&gt;
+
+&lt;h2 id=&quot;further-research&quot;&gt;Further research&lt;/h2&gt;
+
+&lt;p&gt;The histogram shows more features that could be explained with the
+&lt;em&gt;boost&lt;/em&gt; theory but it is required to have a more precise model about the
+internet.&lt;/p&gt;
+
+&lt;p&gt;Saying that there are 15 hops between any two machines is a too
+simplistic model.&lt;/p&gt;
+
+&lt;p&gt;Also, what have in common these hosts that gained a boost in their TTLs?
+May be there is a geographic reason. Again, we need a richer model to
+explore this.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="julia" /><category term="statistics" /><category term="seaborn" /><summary type="html">In the post about Hop-Stability we analyzed the TTL of the responses from all the scanned hosts. In particular we used the TTL range: the difference between the smallest and the greatest TTL seen per host. ⊕ Histogram of TTL range between rounds of scans to the same host showing how much stable the routes are. With a range of 0 or very close we claimed that the route to the host was stable; with range larger than 7 we said the contrary. The analysis shown that only 0.39998% of 43056567 unique hosts had unstable routes. However the analysis was only using a few statistics, when we plot the histogram of TTL ranges we see much more mysteries to solve.</summary></entry><entry><title type="html">IPv4 Scan 2021 - Hop-Distance Average and IP Distribution</title><link href="/articles/2021/11/13/IPv4-Scan-Part-IV-Hop-Distance-and-IP-Distribution.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Hop-Distance Average and IP Distribution" /><published>2021-11-13T00:00:00+01:00</published><updated>2021-11-13T00:00:00+01:00</updated><id>/articles/2021/11/13/IPv4-Scan-Part-IV-Hop-Distance-and-IP-Distribution</id><content type="html" xml:base="/articles/2021/11/13/IPv4-Scan-Part-IV-Hop-Distance-and-IP-Distribution.html">&lt;p&gt;&lt;label for=&quot;mf-02dd92f6a0bec898c2baa73ef813cdb3&quot; class=&quot;margin-toggle  in-index-only&quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-02dd92f6a0bec898c2baa73ef813cdb3&quot; class=&quot;margin-toggle  in-index-only&quot; /&gt;&lt;span class=&quot;marginnote  in-index-only&quot;&gt;&lt;img style=&quot;&quot; class=&quot;fullwidth&quot; alt=&quot;Hist&quot; src=&quot;/assets/internet_scan/ttl_hist_log_scale.svg&quot; /&gt;  &lt;br /&gt;Histogram of TTL observed: the peaks indicate the different operative systems and their relative position respect the expected positions estimate the mean distance between the hosts and the scanner in hop count.&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;In the &lt;a href=&quot;/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html&quot;&gt;Multiprobes Analysis&lt;/a&gt;,
+we explored the statistics of the hosts and the communication to them.&lt;/p&gt;
+
+&lt;p&gt;This is a follow up to keep exploring the data:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;which is the average distance between a host and the scanner in term
+of hop count?&lt;/li&gt;
+  &lt;li&gt;which OS are running?&lt;/li&gt;
+  &lt;li&gt;how are the hosts distributed?
+&lt;!--more--&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;setup&quot;&gt;Setup&lt;/h2&gt;
+
+&lt;p&gt;Following the
+&lt;a href=&quot;/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html&quot;&gt;terms defined in Hop-Stability post&lt;/a&gt;,
+&lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; sends multiple probes
+to the same host at the same time: we call these &lt;em&gt;short bursts&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; may also scan the same host multiple times, at different
+moments: we call these &lt;em&gt;rounds of short bursts&lt;/em&gt; or just &lt;em&gt;rounds&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;As we saw
+&lt;a href=&quot;/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html&quot;&gt;earlier&lt;/a&gt;,
+for a given host the &lt;em&gt;time to live&lt;/em&gt; (TTL) read
+from every probe/packet remains constant within a short burst
+and relatively constant between rounds.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;all_rounds_g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The TTL changes between rounds only by 1 or 2; changes of 8 or greater
+happen only in a very small fraction of the dataset, around 0.39998%.&lt;/p&gt;
+
+&lt;p&gt;For this reason we are going to work with the &lt;em&gt;mode&lt;/em&gt;: the most common TTL
+value per host.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;all_rounds&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;all_rounds_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mode&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;histogram&quot;&gt;Histogram&lt;/h2&gt;
+
+&lt;p&gt;Now we plot the histogram of &lt;code class=&quot;highlighter-rouge&quot;&gt;all_rounds&lt;/code&gt;.&lt;/p&gt;
+
+&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;Histogram of TTL observed: the peaks indicate the different operative systems
+and their relative position respect the expected positions estimate
+the mean distance between the hosts and the scanner in hop count.&lt;/span&gt;&lt;/figcaption&gt;&lt;img src=&quot;/assets/internet_scan/ttl_hist_log_scale.svg&quot; /&gt;&lt;/figure&gt;
+
+&lt;p&gt;There are three really high peaks with &lt;script type=&quot;math/tex&quot;&gt;~10^6&lt;/script&gt; count
+with one secondary peak at the left of each main peaks.&lt;/p&gt;
+
+&lt;p&gt;In the &lt;em&gt;x-axis&lt;/em&gt; are marked the typical TTLs values that the operative systems
+set by default. For some operative systems this may different depending
+of the version of the OS and the protocol of the packet.&lt;/p&gt;
+
+&lt;p&gt;We cannot do anything about the version of the OS but we can ignore the
+protocol because all the probes sent were TCP.&lt;/p&gt;
+
+&lt;p&gt;Notice however that the peaks are &lt;strong&gt;left-shifted&lt;/strong&gt; from the expected default
+TTLs.&lt;/p&gt;
+
+&lt;p&gt;This is because the packets received had travelled through the network and in
+each hop the TTL is decremented by one.&lt;/p&gt;
+
+&lt;h2 id=&quot;peak-estimation&quot;&gt;Peak estimation&lt;/h2&gt;
+
+&lt;p&gt;First we compute the histogram. We cannot plug in &lt;code class=&quot;highlighter-rouge&quot;&gt;df[:, :ttl]&lt;/code&gt;
+directly because its type is &lt;code class=&quot;highlighter-rouge&quot;&gt;Vector{Union{Missing, Int32}}&lt;/code&gt; and
+&lt;code class=&quot;highlighter-rouge&quot;&gt;Histogram&lt;/code&gt; does not work with &lt;code class=&quot;highlighter-rouge&quot;&gt;Missing&lt;/code&gt; values, even if there are no
+missing there.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;convert&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Vector&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int32&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hist&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fit&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Histogram&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vec&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nbins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now we find where the local maxima ares. We use a window of 40, quite
+large, to filter out the secondary peaks.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;strict=false&lt;/code&gt; is crucial because while scanning, if the search window
+gets slightly out of the range, no peak is detected. So peaks near the
+ends, like the around 235, wouldn’t be detected.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;argmaxima&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hist&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;weights&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;strict&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;element&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Vector&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;mi&quot;&gt;49&lt;/span&gt;
+ &lt;span class=&quot;mi&quot;&gt;112&lt;/span&gt;
+ &lt;span class=&quot;mi&quot;&gt;239&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;hop-distance-average&quot;&gt;Hop-distance average&lt;/h2&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-620e8642fd822901e3678024c295b9ee&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-620e8642fd822901e3678024c295b9ee&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;30, 32, 60, 64, 128, 200, 254 and 255 are the most common default TTLs;
+the 64, 128 and 254 correspond roughly to Unix, Windows and Solaris/AIX.
+&lt;br /&gt;
+Reference: &lt;a href=&quot;https://subinsb.com/default-device-ttl-values/&quot;&gt;Subin's Default TTLs&lt;/a&gt;
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;Comparing these with the expected default TTLs we can know by how much
+the histogram was left-shifted:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;254&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;49&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;112&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;239&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;element&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Vector&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+ &lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;
+ &lt;span class=&quot;mi&quot;&gt;16&lt;/span&gt;
+ &lt;span class=&quot;mi&quot;&gt;15&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So the scanner is at 15 - 16 hops of distance, on average, from any
+other host in the network.&lt;/p&gt;
+
+&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;Histogram of TTL observed but with the values shifted to the right
+to compensate the fact that the TTLs are decremented during their travel
+through the network.
+&lt;/span&gt;&lt;/figcaption&gt;&lt;img src=&quot;/assets/internet_scan/ttl_hist_log_scale_shifted.svg&quot; /&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;ip-distribution&quot;&gt;IP distribution&lt;/h2&gt;
+
+&lt;p&gt;We can get an idea of how the hosts scanned are distributed in the IP
+space.&lt;/p&gt;
+
+&lt;p&gt;Sorted by IP address, we can compute the first order difference (aka
+&lt;code class=&quot;highlighter-rouge&quot;&gt;df[i+1, :ip] - df[i, :ip]&lt;/code&gt;: hosts in the same subnetwork will have very
+small differences.&lt;/p&gt;
+
+&lt;p&gt;This &lt;strong&gt;crude model&lt;/strong&gt; is not free of misinterpretations: two hosts
+at the end and at the begin of two large subnets, like &lt;code class=&quot;highlighter-rouge&quot;&gt;1.255.255.254&lt;/code&gt;
+and &lt;code class=&quot;highlighter-rouge&quot;&gt;2.0.0.1&lt;/code&gt; and you will get a difference of 2 but clearly they are at
+two different subnets.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sort!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df_diff&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;diff&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;diff&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]))&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df_diff&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;×7&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;Row&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;variable&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;mean&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;median&lt;/span&gt;   &lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;nmissing&lt;/span&gt;  &lt;span class=&quot;n&quot;&gt;eltype&lt;/span&gt;
+     &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Symbol&lt;/span&gt;    &lt;span class=&quot;kt&quot;&gt;Float64&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Float64&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;     &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;     &lt;span class=&quot;kt&quot;&gt;DataType&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;─────┼─────────────────────────────────────────────────────────────────&lt;/span&gt;
+   &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;│&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;diff&lt;/span&gt;       &lt;span class=&quot;mf&quot;&gt;86.893&lt;/span&gt;      &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;      &lt;span class=&quot;mf&quot;&gt;2.0&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;50359752&lt;/span&gt;         &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The median tells us that half of the hosts’ IPs differ by 1 or 2 at
+most. &lt;strong&gt;They are far from being uniformely distributed&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;The mean of &lt;code class=&quot;highlighter-rouge&quot;&gt;86.893&lt;/code&gt; tells us that despite being highly non-uniform,
+clusters are quite separated each other, generating larger differences in the
+IP (so the mean moves towards the right).&lt;/p&gt;
+
+&lt;h2 id=&quot;rough-estimation-for-cluster-density&quot;&gt;Rough estimation for cluster density&lt;/h2&gt;
+
+&lt;p&gt;We can integrate the difference back to the dataframe as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;diff&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;insert!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;diff&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]),&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Arbitrarily, I chose 0 as the difference for the first IP, that’s why
+I did a &lt;code class=&quot;highlighter-rouge&quot;&gt;insert!(..., 1, 0)&lt;/code&gt;. Reasonable, I guess.&lt;/p&gt;
+
+&lt;p&gt;If we define that the maximum difference per cluster to 8, we can count
+how many clusters do we have:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df_cluster_leaders&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;diff&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;10822514&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;×6&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once again we need to take into account the first cluster that it is
+counted above because its first host has a difference of 0 so obviously
+it is not part of the &lt;code class=&quot;highlighter-rouge&quot;&gt;df_cluster_leaders&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cluster_leaders&lt;/span&gt;  &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;insert!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df_cluster_leaders&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;label for=&quot;mn-0bff876845df23f46b56c57cb09e9f67&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-0bff876845df23f46b56c57cb09e9f67&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Do not laugh. This is my first time coding a function in Julia, trying
+to do some closure-thing.
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;We can tag then each host of &lt;code class=&quot;highlighter-rouge&quot;&gt;df&lt;/code&gt; with the first IP of its cluster,
+its leader.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ix&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;next_ix&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt; assign_leader&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+           &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cluster_leaders&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;next_ix&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]]&lt;/span&gt;
+                 &lt;span class=&quot;n&quot;&gt;ix&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;next_ix&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt;
+                 &lt;span class=&quot;n&quot;&gt;next_ix&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+           &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+           &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cluster_leaders&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ix&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]]&lt;/span&gt;
+       &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;leader&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assign_leader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now we can group by leader and count how many rows do we have. Remember
+that we filtered out duplicated IPs so counting the rows effectively is
+the same that counting how many hosts we have in each cluster.&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clusters_g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;leader&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;GroupedDataFrame&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10822515&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groups&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;based&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;leader&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;From there, we can estimate the clusters’ density:&lt;/p&gt;
+
+&lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clusters_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clusters_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nrow&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;describe&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clusters_size&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Summary&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Stats&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;         &lt;span class=&quot;mi&quot;&gt;10822515&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;Missing&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;  &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Mean&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;           &lt;span class=&quot;mf&quot;&gt;3.978428&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Minimum&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;        &lt;span class=&quot;mf&quot;&gt;1.000000&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;st&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Quartile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;mf&quot;&gt;1.000000&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Median&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;         &lt;span class=&quot;mf&quot;&gt;1.000000&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rd&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Quartile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;   &lt;span class=&quot;mf&quot;&gt;2.000000&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Maximum&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;        &lt;span class=&quot;mf&quot;&gt;212730.000000&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;Type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;           &lt;span class=&quot;kt&quot;&gt;Int64&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Keep in mind that we defined arbitrary the cluster as hosts that do not
+differ by more than 8 IPs.&lt;/p&gt;
+
+&lt;p&gt;The maximum is also, at least, suspicious. Again, the model used is
+probably too simplistic.&lt;/p&gt;
+
+&lt;h2 id=&quot;further-research&quot;&gt;Further research&lt;/h2&gt;
+
+&lt;p&gt;Indeed, the estimation of the clusters’ density is too &lt;em&gt;coarse&lt;/em&gt; and the
+numbers are hard to interpret and make compatible with the estimation of
+the IP distribution.&lt;/p&gt;
+
+&lt;p&gt;Augmenting the dataset with the geolocalization of each host may
+help.&lt;/p&gt;
+
+&lt;p&gt;Using the TTLs to group the hosts is also possible: even hosts running
+different OS (and therefore with different default TTLs), the scanner
+should observe their TTLs decremented by the same factor if the hosts are
+in the same &lt;em&gt;physical&lt;/em&gt; network.&lt;/p&gt;
+
+&lt;p&gt;Combining this with routing information it would be also helpful.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="julia" /><category term="categorical" /><category term="ordinal" /><category term="parquet" /><category term="statistics" /><category term="seaborn" /><summary type="html">⊕ Histogram of TTL observed: the peaks indicate the different operative systems and their relative position respect the expected positions estimate the mean distance between the hosts and the scanner in hop count. In the Multiprobes Analysis, we explored the statistics of the hosts and the communication to them. This is a follow up to keep exploring the data: which is the average distance between a host and the scanner in term of hop count? which OS are running? how are the hosts distributed?</summary></entry><entry><title type="html">IPv4 Scan 2021 - Hop-Count Route Stability</title><link href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Hop-Count Route Stability" /><published>2021-10-16T00:00:00+02:00</published><updated>2021-10-16T00:00:00+02:00</updated><id>/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability</id><content type="html" xml:base="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">&lt;p&gt;&lt;a href=&quot;https://github.com/robertdavidgraham/masscan/&quot;&gt;masscan&lt;/a&gt; tracks the
 &lt;em&gt;time to live&lt;/em&gt; of each packet coming from the host under scan.&lt;/p&gt;
 
-&lt;p&gt;&lt;label for=&quot;mn-be8723c0bff6d30bd5aa810117818af0&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-be8723c0bff6d30bd5aa810117818af0&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Yes and no: they should not but some network devices will &lt;em&gt;mangle the packets
+&lt;p&gt;&lt;label for=&quot;mn-3da50bcbb516be34a6ada00019b562b0&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-3da50bcbb516be34a6ada00019b562b0&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Yes and no: they should not but some network devices will &lt;em&gt;mangle the packets
 as they want&lt;/em&gt;, including setting arbitrary TTLs.
+&lt;br /&gt;
+See the observations done in the
+&lt;a href=&quot;/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html&quot;&gt;TTL Boost post&lt;/a&gt;.
  &lt;/span&gt;&lt;/p&gt;
 
 &lt;p&gt;These time to live (TTL) are numbers between 0 and 255
@@ -21,9 +467,12 @@ That's the point of the TTL: to catch and drop packets looping around.
 &lt;p&gt;Of course the host set the TTL to some reasonable high number so the
 packet should reach to its destination (us) before reaching to zero.&lt;/p&gt;
 
+&lt;p&gt;&lt;label for=&quot;mf-2c913b204d4c3c78805288c58cf2d3b9&quot; class=&quot;margin-toggle  in-index-only&quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-2c913b204d4c3c78805288c58cf2d3b9&quot; class=&quot;margin-toggle  in-index-only&quot; /&gt;&lt;span class=&quot;marginnote  in-index-only&quot;&gt;&lt;img style=&quot;&quot; class=&quot;fullwidth&quot; alt=&quot;&quot; src=&quot;/assets/internet_scan/ip-ttl-range-and-time.png&quot; /&gt;  &lt;br /&gt;&lt;/span&gt;&lt;/p&gt;
+
 &lt;p&gt;We cannot know exactly which route/s the packets taken but we can
-&lt;em&gt;count for how many hops they went&lt;/em&gt;: any change in the &lt;em&gt;hop-count&lt;/em&gt; and we will get
-different TTLs and that’s evidence that they taken different routes.&lt;/p&gt;
+&lt;em&gt;count for how many hops they went through&lt;/em&gt;: any change in the &lt;em&gt;hop-count&lt;/em&gt;
+and we will get different TTLs and that’s evidence that they taken
+different routes.&lt;/p&gt;
 
 &lt;p&gt;The inverse is not true: a constant hop-count does not imply that
 the route taken is the same, only the route/s have the same hops.&lt;/p&gt;
@@ -43,10 +492,22 @@ host sending several probes at the &lt;em&gt;same time&lt;/em&gt; in a &lt;em&gt
 &lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; may scan the same host more than once. We will call these
 &lt;em&gt;rounds of bursts&lt;/em&gt; or just &lt;em&gt;rounds&lt;/em&gt;.&lt;/p&gt;
 
-&lt;p&gt;Let’s focus in the firsts which we know they happen roughly at the same
-time.&lt;/p&gt;
+&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; sends multiple packets (&lt;em&gt;probes&lt;/em&gt;) to test the hosts'
+ports.
+&lt;br /&gt;
+&lt;br /&gt;
+It sends &lt;em&gt;at the same time&lt;/em&gt; the probes to &lt;em&gt;the same host&lt;/em&gt; in a
+&lt;strong&gt;burst&lt;/strong&gt;.
+&lt;br /&gt;
+&lt;br /&gt;
+Some time later it &lt;em&gt;may&lt;/em&gt; scan the same host &lt;em&gt;again&lt;/em&gt;. The collection of
+bursts to &lt;em&gt;the same host&lt;/em&gt; are the &lt;strong&gt;rounds&lt;/strong&gt; for that host.
+&lt;/span&gt;&lt;/figcaption&gt;&lt;img style=&quot;max-width:80%;&quot; alt=&quot;Bursts and Rounds&quot; src=&quot;/assets/internet_scan/ip-burst-rounds.png&quot; /&gt;&lt;/figure&gt;
 
 &lt;h3 id=&quot;ttls-extrema-values-for-each-short-burst&quot;&gt;TTLs extrema values for each short burst&lt;/h3&gt;
+
+&lt;p&gt;Let’s review the short bursts first, the probes sent to a host at the
+same time:&lt;/p&gt;
 
 &lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;short_bursts_g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;groupby&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;df&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ip&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timestamp&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;short_bursts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;short_bursts_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minimum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;maximum&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)&lt;/span&gt;
@@ -56,6 +517,12 @@ time.&lt;/p&gt;
 
 &lt;div class=&quot;language-julia highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;julia&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;short_bursts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;combine&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;short_bursts_g&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ttl&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;extrema&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;)])&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;x&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;x&quot;&gt;])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;label for=&quot;mf-d0732524f82cd3566aa908b14eaa494f&quot; class=&quot;margin-toggle &quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-d0732524f82cd3566aa908b14eaa494f&quot; class=&quot;margin-toggle &quot; /&gt;&lt;span class=&quot;marginnote &quot;&gt;&lt;img class=&quot;fullwidth&quot; alt=&quot;&quot; src=&quot;/assets/internet_scan/ip-short-burst-ttls.png&quot; /&gt;  &lt;br /&gt;For each response, the TTL is read and the minimum and maximum
+values are calculated for each burst.
+&lt;br /&gt;
+This gives an idea of how different the TTL can be for probes sent
+in a &lt;em&gt;short-elapsed burst&lt;/em&gt;.&lt;/span&gt;&lt;/p&gt;
 
 &lt;p&gt;The latter walks over the samples once calling the &lt;code class=&quot;highlighter-rouge&quot;&gt;extrema&lt;/code&gt; function.
 However &lt;code class=&quot;highlighter-rouge&quot;&gt;extrema&lt;/code&gt; is not compatible with &lt;code class=&quot;highlighter-rouge&quot;&gt;DataFrames&lt;/code&gt; as is so we need
@@ -80,11 +547,16 @@ may walk over the samples twice.&lt;/p&gt;
 the routes are quite stable, at least during the scan for a particular
 host.&lt;/p&gt;
 
-&lt;p&gt;The histogram shows that only a few cases the difference was up to 7.&lt;/p&gt;
+&lt;p&gt;The histogram shows that all the bursts have a TTL range of 0
+except very few cases.&lt;/p&gt;
+
+&lt;p&gt;This means that the routes are &lt;strong&gt;stable&lt;/strong&gt; but…&lt;/p&gt;
 
 &lt;p&gt;Keep in mind that the scans for a particular host &lt;em&gt;in a particular time&lt;/em&gt;
 are like &lt;strong&gt;bursts&lt;/strong&gt;: so it is reasonable that the routes didn’t change
 in such short period.&lt;/p&gt;
+
+&lt;p&gt;What would happen if we analyze now the stability for a longer period?&lt;/p&gt;
 
 &lt;h2 id=&quot;how-much-stable-is-a-route-in-a-longer-period&quot;&gt;How much stable is a route in a longer period?&lt;/h2&gt;
 
@@ -184,10 +656,21 @@ standard deviation 1.39118 shows.&lt;/p&gt;
 is around the middle of the range and the standard deviation is approx
 one quarter so the values are really spread.&lt;/p&gt;
 
-&lt;p&gt;There are only 172217 samples of 43056567 so the &lt;em&gt;unstable&lt;/em&gt; represents
-only 0.39998%.&lt;/p&gt;
+&lt;p&gt;&lt;label for=&quot;mn-db4f2185f6466f659f0b88d1b045e731&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-db4f2185f6466f659f0b88d1b045e731&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;In the dataset we have a slightly more unique hosts: 43056596.
+The difference is due the filtering that we did above but it does
+not change the results.
+ &lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;There are only 172217 samples of 43056567 unique hosts
+so the &lt;em&gt;unstable&lt;/em&gt; represents only 0.39998%.&lt;/p&gt;
 
 &lt;h3 id=&quot;bursts-over-longer-periods-but-for-how-long&quot;&gt;Bursts over longer periods but for how long?&lt;/h3&gt;
+
+&lt;p&gt;&lt;label for=&quot;mf-edce0dd3d5dea57bd6ac390574b7cbaf&quot; class=&quot;margin-toggle &quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-edce0dd3d5dea57bd6ac390574b7cbaf&quot; class=&quot;margin-toggle &quot; /&gt;&lt;span class=&quot;marginnote &quot;&gt;&lt;img class=&quot;fullwidth&quot; alt=&quot;&quot; src=&quot;/assets/internet_scan/ip-ttl-range-and-time.png&quot; /&gt;  &lt;br /&gt;For each burst we calculate its TTL range.
+&lt;br /&gt;
+From there, a bunch of statistics can be calculated about the TTL ranges
+for the &lt;em&gt;same hosts&lt;/em&gt; giving us an idea of the stability of the route
+to it.&lt;/span&gt;&lt;/p&gt;
 
 &lt;p&gt;Can we conclude that the routes are 99% of the time &lt;em&gt;stable&lt;/em&gt;?&lt;/p&gt;
 
@@ -195,7 +678,7 @@ only 0.39998%.&lt;/p&gt;
 bursts to the same host we are assuming that those happen at different
 moments but… what do we mean by &lt;em&gt;different moments&lt;/em&gt;?&lt;/p&gt;
 
-&lt;p&gt;Certainly difference of a few seconds does not change anything by real.&lt;/p&gt;
+&lt;p&gt;Certainly, a difference of a few seconds does not change anything by real.&lt;/p&gt;
 
 &lt;p&gt;What we want is to measure the changes in the TTLs between bursts that
 happen at &lt;strong&gt;hours&lt;/strong&gt; of difference.&lt;/p&gt;
@@ -224,14 +707,16 @@ samples, is of 25612.8 seconds, a little more than 7 hours.&lt;/p&gt;
 &lt;p&gt;So with these so-spread bursts and the so-little changed difference in
 the TTLs we can conclude that most of the hop-count routes are &lt;em&gt;stable&lt;/em&gt;.&lt;/p&gt;
 
-&lt;p&gt;We cannot say anything about the real routes that the packets taken but
+&lt;p&gt;We cannot say anything about the real routes that the packets took but
 we can know that the count of hops that they passed through remained
-constant.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="julia" /><category term="statistics" /><summary type="html">masscan tracks the time to live of each packet coming from the host under scan. ⊕Yes and no: they should not but some network devices will mangle the packets as they want, including setting arbitrary TTLs. These time to live (TTL) are numbers between 0 and 255 set by the host. In its journey, the packet goes through different routers which each decrements by one the TTL. Once a packet has a TTL of zero, the router will discard it. ⊕Assuming that the packet goes straight-forward to us. If there are loops in the routing systems, the packet will loop between the devices going nowhere. That's the point of the TTL: to catch and drop packets looping around. Of course the host set the TTL to some reasonable high number so the packet should reach to its destination (us) before reaching to zero. We cannot know exactly which route/s the packets taken but we can count for how many hops they went: any change in the hop-count and we will get different TTLs and that’s evidence that they taken different routes. The inverse is not true: a constant hop-count does not imply that the route taken is the same, only the route/s have the same hops. In this post I will continue exploring how much a route is stable in terms of hop-counts.</summary></entry><entry><title type="html">IPv4 Scan 2021 - Multiprobes Analysis</title><link href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Multiprobes Analysis" /><published>2021-09-19T00:00:00+02:00</published><updated>2021-09-19T00:00:00+02:00</updated><id>/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis</id><content type="html" xml:base="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">&lt;p&gt;To my surprise the
+constant.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="julia" /><category term="statistics" /><category term="seaborn" /><summary type="html">masscan tracks the time to live of each packet coming from the host under scan. ⊕Yes and no: they should not but some network devices will mangle the packets as they want, including setting arbitrary TTLs. See the observations done in the TTL Boost post. These time to live (TTL) are numbers between 0 and 255 set by the host. In its journey, the packet goes through different routers which each decrements by one the TTL. Once a packet has a TTL of zero, the router will discard it. ⊕Assuming that the packet goes straight-forward to us. If there are loops in the routing systems, the packet will loop between the devices going nowhere. That's the point of the TTL: to catch and drop packets looping around. Of course the host set the TTL to some reasonable high number so the packet should reach to its destination (us) before reaching to zero. ⊕ We cannot know exactly which route/s the packets taken but we can count for how many hops they went through: any change in the hop-count and we will get different TTLs and that’s evidence that they taken different routes. The inverse is not true: a constant hop-count does not imply that the route taken is the same, only the route/s have the same hops. In this post I will continue exploring how much a route is stable in terms of hop-counts.</summary></entry><entry><title type="html">IPv4 Scan 2021 - Multiprobes Analysis</title><link href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Multiprobes Analysis" /><published>2021-09-19T00:00:00+02:00</published><updated>2021-09-19T00:00:00+02:00</updated><id>/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis</id><content type="html" xml:base="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">&lt;p&gt;To my surprise the
 &lt;a href=&quot;https://www.kaggle.com/signalspikes/internet-port-scan-1&quot;&gt;dataset&lt;/a&gt;
 preprocessed in my
 &lt;a href=&quot;/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html&quot;&gt;previous post&lt;/a&gt;
 &lt;strong&gt;has&lt;/strong&gt; duplicated entries. These are scans
 to the same host and port but with a different timestamp.&lt;/p&gt;
+
+&lt;p&gt;&lt;label for=&quot;mf-ce239ea884cb4ce6c69f512f59220250&quot; class=&quot;margin-toggle  in-index-only&quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-ce239ea884cb4ce6c69f512f59220250&quot; class=&quot;margin-toggle  in-index-only&quot; /&gt;&lt;span class=&quot;marginnote  in-index-only&quot;&gt;&lt;img style=&quot;&quot; class=&quot;fullwidth&quot; alt=&quot;Hist&quot; src=&quot;/assets/internet_scan/time_interval_hist.svg&quot; /&gt;  &lt;br /&gt;Histogram of the interval between probes to the same host-port in seconds.&lt;/span&gt;&lt;/p&gt;
 
 &lt;p&gt;Questions like “which open port is more likely” will biased
 because the same host-port may be counted more than once.&lt;/p&gt;
@@ -421,7 +906,9 @@ meaning: &lt;code class=&quot;highlighter-rouge&quot;&gt;nrow =&amp;gt; :count&l
   &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;64774182&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;So &lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; didn’t sent &lt;script type=&quot;math/tex&quot;&gt;N&lt;/script&gt; probes to each port &lt;strong&gt;or&lt;/strong&gt; it did it but the
+&lt;p&gt;Notice how most of ip-port tuples were scanned once.&lt;/p&gt;
+
+&lt;p&gt;So &lt;code class=&quot;highlighter-rouge&quot;&gt;masscan&lt;/code&gt; didn’t send &lt;script type=&quot;math/tex&quot;&gt;N&lt;/script&gt; probes to each port &lt;strong&gt;or&lt;/strong&gt; it did it but the
 some probes never were answered &lt;em&gt;(why?, who knows)&lt;/em&gt;.&lt;/p&gt;
 
 &lt;p&gt;This could explain why some ports were scanned twice while others only
@@ -429,12 +916,16 @@ one.&lt;/p&gt;
 
 &lt;h2 id=&quot;what-is-the-distribution-of-intervals-between-probes-for-each-port&quot;&gt;What is the distribution of intervals between probes for each port?&lt;/h2&gt;
 
-&lt;p&gt;&lt;label for=&quot;mn-d545e4498ff3efedd22c1c04afb63aaa&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-d545e4498ff3efedd22c1c04afb63aaa&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Sanity check: from the distribution of probes per port we know that we
+&lt;p&gt;&lt;label for=&quot;mn-d2350500b68de647dec03517cf2f1a7e&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mn-d2350500b68de647dec03517cf2f1a7e&quot; class=&quot;margin-toggle&quot; /&gt;&lt;span class=&quot;marginnote&quot;&gt;Sanity check: from the distribution of probes per port we know that we
 have 13038 ports with 2 probes which will contribute with 13038 rows to
-the difference dataframe; 750 ports with 3 probes which will contribute
+the difference dataframe;
+&lt;br /&gt;
+750 ports with 3 probes which will contribute
 with 750 * 2 rows to the result; 27 ports with 4 probes contributing
 with 27 * 3 rows and finally 1 port with 5 probes contributing with 5 *
-4 rows. The expected total is 14623 which it is exactly the row count
+4 rows.
+&lt;br /&gt;
+The expected total is 14623 which it is exactly the row count
 of &lt;code class=&quot;highlighter-rouge&quot;&gt;df2&lt;/code&gt;.
  &lt;/span&gt;&lt;/p&gt;
 
@@ -476,6 +967,13 @@ of &lt;code class=&quot;highlighter-rouge&quot;&gt;df2&lt;/code&gt;.
   &lt;span class=&quot;mi&quot;&gt;40&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
+&lt;p&gt;Certainly a histogram is better for this case:&lt;/p&gt;
+
+&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;Histogram of intervals between probes to the same host-port in seconds.
+&lt;br /&gt;
+The median (5.0) and the mean (6.89) are labeled. The vertical axis is
+in logarithmic scale.&lt;/span&gt;&lt;/figcaption&gt;&lt;img src=&quot;/assets/internet_scan/time_interval_hist.svg&quot; /&gt;&lt;/figure&gt;
+
 &lt;p&gt;This was more spread than I expected. Most of the intervals are in the
 low range but there is non-negligible count for the 15 secs interval.&lt;/p&gt;
 
@@ -516,7 +1014,7 @@ low range but there is non-negligible count for the 15 secs interval.&lt;/p&gt;
 &lt;p&gt;The median confirms our first analysis: the distribution is right skewed
 &lt;em&gt;(the mean is on the right of the median)&lt;/em&gt;.&lt;/p&gt;
 
-&lt;h3 id=&quot;what-about-the-0-interval&quot;&gt;What about the 0 interval?&lt;/h3&gt;
+&lt;h3 id=&quot;what-about-the-zero-interval&quot;&gt;What about the zero interval?&lt;/h3&gt;
 
 &lt;p&gt;We can filter which rows has such in two ways being the second one the
 preferred and fastest:&lt;/p&gt;
@@ -559,12 +1057,20 @@ couldn’t finish a single group-by + aggregation.&lt;/p&gt;
 
 &lt;p&gt;It is obvious that there are too many copies.&lt;/p&gt;
 
-&lt;p&gt;Doing a home-made custom aggregation function to sort this &lt;em&gt;bypassed&lt;/em&gt;
-the memory problem ended up in a &lt;em&gt;never-finishing&lt;/em&gt; problem.&lt;/p&gt;
+&lt;p&gt;Doing a home-made custom aggregation function to sort this,
+I successfully &lt;em&gt;bypassed&lt;/em&gt; the memory problem but I ended up in
+another one: &lt;em&gt;CPU 100% never-finishing&lt;/em&gt; execution problem.&lt;/p&gt;
 
-&lt;p&gt;I’m talking of processing a 10% dataset for a whole night.&lt;/p&gt;
+&lt;p&gt;The custom aggregation function was written in Python, of course, but
+calling Python code for each row is incredible slow.&lt;/p&gt;
 
-&lt;p&gt;After a week it was clear that Pandas+Dask need more love.&lt;/p&gt;
+&lt;p&gt;And all of this for a reduced dataset!&lt;/p&gt;
+
+&lt;p&gt;I’m talking of processing a 10% dataset and it didn’t finish after
+running for a whole night.&lt;/p&gt;
+
+&lt;p&gt;After a week of trying and failing, it was clear that Pandas+Dask need
+more love.&lt;/p&gt;
 
 &lt;p&gt;That’s when I considered
 &lt;a href=&quot;https://julialang.org/&quot;&gt;Julia&lt;/a&gt;.&lt;/p&gt;
@@ -579,12 +1085,12 @@ avoid any sort of temporal copies.&lt;/p&gt;
 &lt;p&gt;On the other hand Julia libraries are much more modest in capabilities
 compared with Python’s ones.&lt;/p&gt;
 
-&lt;p&gt;It is a non-trivial trade-of.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="julia" /><category term="categorical" /><category term="ordinal" /><category term="parquet" /><category term="statistics" /><summary type="html">To my surprise the dataset preprocessed in my previous post has duplicated entries. These are scans to the same host and port but with a different timestamp. Questions like “which open port is more likely” will biased because the same host-port may be counted more than once. On the other hand, this opens new questions: which is the reason to scan the same port more than once? If it is fixed by the scanner we can deduce that ports scanned once were scanned more times but the other probes failed and get an estimation of such. is the same port opened due different reasons? could we characterize the scanner based on the timestamps like scanning patterns? The second surprise was that even working with small samples (around 100MB), Pandas/Dask has serious performance problems: consumes much more memory (gigas) CPU at 100% all the time simple operations like groupby take forever. Goodbye Pandas, hello Julia?</summary></entry><entry><title type="html">IPv4 Scan 2021 - Dataset Preprocessing</title><link href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Dataset Preprocessing" /><published>2021-09-10T00:00:00+02:00</published><updated>2021-09-10T00:00:00+02:00</updated><id>/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing</id><content type="html" xml:base="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">&lt;p&gt;The &lt;a href=&quot;https://www.kaggle.com/signalspikes/internet-port-scan-1&quot;&gt;dataset&lt;/a&gt;
+&lt;p&gt;It is a non-trivial trade-of.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="julia" /><category term="categorical" /><category term="ordinal" /><category term="parquet" /><category term="statistics" /><category term="seaborn" /><summary type="html">To my surprise the dataset preprocessed in my previous post has duplicated entries. These are scans to the same host and port but with a different timestamp. ⊕ Histogram of the interval between probes to the same host-port in seconds. Questions like “which open port is more likely” will biased because the same host-port may be counted more than once. On the other hand, this opens new questions: which is the reason to scan the same port more than once? If it is fixed by the scanner we can deduce that ports scanned once were scanned more times but the other probes failed and get an estimation of such. is the same port opened due different reasons? could we characterize the scanner based on the timestamps like scanning patterns? The second surprise was that even working with small samples (around 100MB), Pandas/Dask has serious performance problems: consumes much more memory (gigas) CPU at 100% all the time simple operations like groupby take forever. Goodbye Pandas, hello Julia?</summary></entry><entry><title type="html">IPv4 Scan 2021 - Dataset Preprocessing</title><link href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html" rel="alternate" type="text/html" title="IPv4 Scan 2021 - Dataset Preprocessing" /><published>2021-09-10T00:00:00+02:00</published><updated>2021-09-10T00:00:00+02:00</updated><id>/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing</id><content type="html" xml:base="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">&lt;p&gt;The &lt;a href=&quot;https://www.kaggle.com/signalspikes/internet-port-scan-1&quot;&gt;dataset&lt;/a&gt;
 is a survey or port scan of the whole IPv4 range made
 with &lt;a href=&quot;https://github.com/robertdavidgraham/masscan&quot;&gt;masscan&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;The dataset however is much smaller than the expected mostly because
-most of the host didn’t response and/or it had all the scanned ports
+most of the hosts didn’t response and/or they had all the scanned ports
 closed.&lt;/p&gt;
 
 &lt;p&gt;Only open ports were registered.&lt;/p&gt;
@@ -835,7 +1341,7 @@ access the minimum of the TTL we will write &lt;code class=&quot;highlighter-rou
 and presto!&lt;/p&gt;
 
 &lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;unzip &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; archive.zip | python repack.py
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="reset_index" /><category term="json" /><category term="categorical" /><category term="parquet" /><summary type="html">The dataset is a survey or port scan of the whole IPv4 range made with masscan. The dataset however is much smaller than the expected mostly because most of the host didn’t response and/or it had all the scanned ports closed. Only open ports were registered. More over, of the 65536 available ports only a few were scanned and only for the TCP protocol. Even with such reduced scope the dataset occupies around 9 GB. This post is a walk-through for loading and preprocessing it.</summary></entry><entry><title type="html">Rooting Android with a Dirty COW</title><link href="/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW.html" rel="alternate" type="text/html" title="Rooting Android with a Dirty COW" /><published>2021-08-22T00:00:00+02:00</published><updated>2021-08-22T00:00:00+02:00</updated><id>/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW</id><content type="html" xml:base="/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW.html">&lt;p&gt;I’ve recently got a quite old Android phone to play with. I guess the
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Gehn</name></author><category term="pandas" /><category term="reset_index" /><category term="json" /><category term="categorical" /><category term="parquet" /><summary type="html">The dataset is a survey or port scan of the whole IPv4 range made with masscan. The dataset however is much smaller than the expected mostly because most of the hosts didn’t response and/or they had all the scanned ports closed. Only open ports were registered. More over, of the 65536 available ports only a few were scanned and only for the TCP protocol. Even with such reduced scope the dataset occupies around 9 GB. This post is a walk-through for loading and preprocessing it.</summary></entry><entry><title type="html">Rooting Android with a Dirty COW</title><link href="/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW.html" rel="alternate" type="text/html" title="Rooting Android with a Dirty COW" /><published>2021-08-22T00:00:00+02:00</published><updated>2021-08-22T00:00:00+02:00</updated><id>/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW</id><content type="html" xml:base="/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW.html">&lt;p&gt;I’ve recently got a quite old Android phone to play with. I guess the
 first thing to do is getting root, don’t you think?&lt;!--more--&gt;&lt;/p&gt;
 
 &lt;h2 id=&quot;android-sdk&quot;&gt;Android SDK&lt;/h2&gt;
@@ -1709,729 +2215,4 @@ which will take precedence:&lt;/p&gt;
 &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;&amp;lt;...&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;nb&quot;&gt;NameError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'outter_y'&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;defined&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Gehn</name></author><category term="Python" /><summary type="html">Python 3.6 introduced the so called f-strings: literal strings that support formatting from the variable in the local context. Before 3.6 you would to do something like this: &amp;gt;&amp;gt;&amp;gt; x = 11 &amp;gt;&amp;gt;&amp;gt; y = 22 &amp;gt;&amp;gt;&amp;gt; &quot;x={x} y={y}&quot;.format(x=x, y=y) 'x=11 y=22' But with the f-strings we can remove the bureaucratic call to format: &amp;gt;&amp;gt;&amp;gt; f&quot;x={x} y={y}&quot; 'x=11 y=22' A few days ago Yurichev posted: could we achieve a similar feature but without using the f-strings?. Challenge accepted.</summary></entry><entry><title type="html">Performance of ITE Expressions (incomplete)</title><link href="/articles/2021/06/14/Performance-of-ITE-Expressions.html" rel="alternate" type="text/html" title="Performance of ITE Expressions (incomplete)" /><published>2021-06-14T00:00:00+02:00</published><updated>2021-06-14T00:00:00+02:00</updated><id>/articles/2021/06/14/Performance-of-ITE-Expressions</id><content type="html" xml:base="/articles/2021/06/14/Performance-of-ITE-Expressions.html">&lt;p&gt;A &lt;em&gt;branch&lt;/em&gt; is an expensive operation even in modern CPUs because the
-computer will know which of the paths is taken only in the latest stages
-of the CPU pipeline.&lt;/p&gt;
-
-&lt;p&gt;In the meantime, the CPU &lt;em&gt;stalls&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;Modern CPUs use branch prediction, speculative execution and instruction
-reordering to minimize the impact of a branch.&lt;/p&gt;
-
-&lt;p&gt;They do a good job but still a &lt;em&gt;branch&lt;/em&gt; is potentially expensive so they
-are replaced by &lt;em&gt;branchless&lt;/em&gt; variants.&lt;/p&gt;
-
-&lt;p&gt;&lt;label for=&quot;mf-4c1937e8b17cd3ed5a6b2730036f8828&quot; class=&quot;margin-toggle  in-index-only&quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-4c1937e8b17cd3ed5a6b2730036f8828&quot; class=&quot;margin-toggle  in-index-only&quot; /&gt;&lt;span class=&quot;marginnote  in-index-only&quot;&gt;&lt;img style=&quot;&quot; class=&quot;fullwidth&quot; alt=&quot;&quot; src=&quot;/assets/performance-ite-expr/min-check-elapsed-per-func-in-encrypt-experiment.svg&quot; /&gt;  &lt;br /&gt;Minimum  &lt;code class=&quot;highlighter-rouge&quot;&gt;check-elapsed&lt;/code&gt; time (y axis) per branch/branchless function (x axis).&lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;If-Then-Else&lt;/code&gt; or ITE for short, are symbolic expression that denotes
-a value chosen from two possible values based on a condition. These are
-the &lt;em&gt;symbolic branch&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;Naturally we could rewrite a symbolic ITE with a symbolic &lt;em&gt;branchless&lt;/em&gt;
-expression.&lt;/p&gt;
-
-&lt;p&gt;The question is: which is better for a solver like Z3? Which makes the
-SMT/SAT solver faster?&lt;/p&gt;
-
-&lt;p&gt;After two weeks working on this post &lt;strong&gt;I still don’t have an answer but at
-least I know some unknowns.&lt;/strong&gt;&lt;!--more--&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;z3-if-then-else&quot;&gt;Z3 &lt;code class=&quot;highlighter-rouge&quot;&gt;If-Then-Else&lt;/code&gt;&lt;/h2&gt;
-
-&lt;p&gt;In Z3 we use &lt;code class=&quot;highlighter-rouge&quot;&gt;z3.If&lt;/code&gt; to build such symbolic expressions.&lt;/p&gt;
-
-&lt;p&gt;Take for example the following Python function &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;xtime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0xFF&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;condval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x80&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;condval&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Symbolically, we could rewrite it as follows:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;z3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;If&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;xtime_branch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0xFF&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;condval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x80&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;If&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;condval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Remember that in Python, the &lt;code class=&quot;highlighter-rouge&quot;&gt;(thenval) if (condval) else (elseval)&lt;/code&gt; is
-&lt;strong&gt;evaluated&lt;/strong&gt; at runtime but in Z3 we cannot evaluate anything.&lt;/p&gt;
-
-&lt;p&gt;So we need to model the fact that the output of &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime&lt;/code&gt; it may be
-&lt;code class=&quot;highlighter-rouge&quot;&gt;thenval&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;elseval&lt;/code&gt;, depending of the condition.&lt;/p&gt;
-
-&lt;p&gt;Let’s see what is the result of &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_branch&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'T'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_branch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;If&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;xtime_branch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;If&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-   &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-   &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-          &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-          &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-          &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-          &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Before continuing, I would like to simplify &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_branch&lt;/code&gt; a little:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;the input are always an 8 bits, so the &lt;code class=&quot;highlighter-rouge&quot;&gt;x &amp;amp; 0xFF&lt;/code&gt; mask is not needed&lt;/li&gt;
-  &lt;li&gt;the &lt;code class=&quot;highlighter-rouge&quot;&gt;thenval&lt;/code&gt; can reuse the &lt;code class=&quot;highlighter-rouge&quot;&gt;elseval&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;xtime_branch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;condval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x80&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;If&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;condval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_branch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;If&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;xtime_branch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;If&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-   &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-   &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-          &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-          &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-          &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-          &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;As you see, this &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_branch&lt;/code&gt; and the previous one yield the &lt;strong&gt;same
-result&lt;/strong&gt; after applying &lt;code class=&quot;highlighter-rouge&quot;&gt;z3.simplify&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;However I’m going to keep those simplifications explicit in
-&lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_branch&lt;/code&gt; for further optimizations later.&lt;/p&gt;
-
-&lt;h2 id=&quot;branchless-ite&quot;&gt;Branchless ITE&lt;/h2&gt;
-
-&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;(a &amp;amp; 0x80) != 0&lt;/code&gt; condition is equivalent to &lt;code class=&quot;highlighter-rouge&quot;&gt;(a &amp;gt;&amp;gt; 7) != 0&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;The key point to notice is that when &lt;code class=&quot;highlighter-rouge&quot;&gt;(a &amp;amp; 0x80) != 0&lt;/code&gt; then &lt;code class=&quot;highlighter-rouge&quot;&gt;a &amp;gt;&amp;gt; 7 == 1&lt;/code&gt;; when
-&lt;code class=&quot;highlighter-rouge&quot;&gt;(a &amp;amp; 0x80) == 0&lt;/code&gt; then &lt;code class=&quot;highlighter-rouge&quot;&gt;a &amp;gt;&amp;gt; 7 == 0&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;With this &lt;em&gt;single bit boolean&lt;/em&gt; we can get rid of the &lt;code class=&quot;highlighter-rouge&quot;&gt;If&lt;/code&gt; doing a &lt;strong&gt;branchless&lt;/strong&gt;
-&lt;a href=&quot;https://graphics.stanford.edu/~seander/bithacks.html#IntegerMinOrMax&quot;&gt;bithack&lt;/a&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;xtime_branchless&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;condval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# it can be 0 or 1
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;condval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_branchless&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;xtime_branchless&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;255&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We don’t longer have an ITE expression!&lt;/p&gt;
-
-&lt;p&gt;But there is a catch…&lt;/p&gt;
-
-&lt;h2 id=&quot;bit-broadcasting&quot;&gt;Bit broadcasting&lt;/h2&gt;
-
-&lt;p&gt;The catch is that we have some multiplications:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;255*(T &amp;gt;&amp;gt; 7)&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;3*Extract(1, 0, T &amp;gt;&amp;gt; 7)&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;These come from &lt;code class=&quot;highlighter-rouge&quot;&gt;-(condval)&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;When &lt;code class=&quot;highlighter-rouge&quot;&gt;condval&lt;/code&gt; is 0, then &lt;code class=&quot;highlighter-rouge&quot;&gt;-(condval)&lt;/code&gt; is 0, represented as eight &lt;code class=&quot;highlighter-rouge&quot;&gt;0&lt;/code&gt; bits,
-the &lt;code class=&quot;highlighter-rouge&quot;&gt;((thenval ^ elseval) &amp;amp; -(condval))&lt;/code&gt; goes to 0 and the expression
-reduces to the left part of the main xor: &lt;code class=&quot;highlighter-rouge&quot;&gt;elseval&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;When &lt;code class=&quot;highlighter-rouge&quot;&gt;condval&lt;/code&gt; is 1, then &lt;code class=&quot;highlighter-rouge&quot;&gt;-(condval)&lt;/code&gt; is 1, represented as eight &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt;
-bits because in Z3 (and it a lot of other languages), the negative
-numbers are in 2-complement representation.&lt;/p&gt;
-
-&lt;p&gt;This &lt;code class=&quot;highlighter-rouge&quot;&gt;1&lt;/code&gt; bits mask &lt;em&gt;allows&lt;/em&gt; the right side to be xor’d with the left
-side &lt;code class=&quot;highlighter-rouge&quot;&gt;elseval ^ thenval ^ elseval&lt;/code&gt; which reduces to &lt;code class=&quot;highlighter-rouge&quot;&gt;thenval&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;This why the &lt;strong&gt;branchless&lt;/strong&gt; bithack works and more over, from &lt;em&gt;where&lt;/em&gt;
-those multiplications come: from the 2-complement.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;z3.simplify&lt;/code&gt; was &lt;strong&gt;not&lt;/strong&gt; smart enough to &lt;em&gt;broadcasting&lt;/em&gt; the least
-significant bit of &lt;code class=&quot;highlighter-rouge&quot;&gt;a &amp;gt;&amp;gt; 7&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;We could do it better &lt;em&gt;broadcasting&lt;/em&gt; the most significant bit
-of &lt;code class=&quot;highlighter-rouge&quot;&gt;a&lt;/code&gt; and build the &lt;em&gt;condition mask&lt;/em&gt; directly:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;z3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;xtime_broadcasted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1B&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;msb&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;condmask&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# broadcast a single bit to 8 bits
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;thenval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;condmask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_broadcasted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                                        &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                                        &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-                                        &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-                                        &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-                                   &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-                            &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-                     &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-              &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;xtime_broadcasted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ugly but once simplified with &lt;code class=&quot;highlighter-rouge&quot;&gt;z3.simplify&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_broadcasted&lt;/code&gt; seems to
-be quite simple: only bit picking and xor.&lt;/p&gt;
-
-&lt;h2 id=&quot;one-last-hack&quot;&gt;One last hack&lt;/h2&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_broadcasted&lt;/code&gt; can be simplified further &lt;em&gt;canceling&lt;/em&gt; the &lt;code class=&quot;highlighter-rouge&quot;&gt;elseval&lt;/code&gt;
-from &lt;code class=&quot;highlighter-rouge&quot;&gt;thenval ^ elseval&lt;/code&gt; because &lt;code class=&quot;highlighter-rouge&quot;&gt;thenval == elseval &amp;amp; 0x1B&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;So &lt;code class=&quot;highlighter-rouge&quot;&gt;elseval ^ ((thenval ^ elseval) &amp;amp; condmask)&lt;/code&gt; reduces to
-&lt;code class=&quot;highlighter-rouge&quot;&gt;elseval ^ (0x1B &amp;amp; condmask)&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;xtime_cancelled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;msb&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;condmask&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;msb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# broadcast a single bit to 8 bits
-&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;...&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elseval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x1B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;condmask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_cancelled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt;
-&lt;span class=&quot;mi&quot;&gt;27&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                                        &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-                                        &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-                                        &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-                                        &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-                                   &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-                            &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-                     &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-              &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;simplify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;xtime_cancelled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;Concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;n&quot;&gt;Extract&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Note how &lt;code class=&quot;highlighter-rouge&quot;&gt;z3.simplify&lt;/code&gt; was &lt;strong&gt;smart&lt;/strong&gt; enough to do the &lt;em&gt;cancellation&lt;/em&gt;
-automatically by itself: once simplified by Z3, &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_broadcasted&lt;/code&gt; and
-&lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_cancelled&lt;/code&gt; are the same.&lt;/p&gt;
-
-&lt;h2 id=&quot;correctness-of-xtime&quot;&gt;Correctness of &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt;&lt;/h2&gt;
-
-&lt;p&gt;Let’s verify that we didn’t screw up.&lt;/p&gt;
-
-&lt;p&gt;The search space is only &lt;script type=&quot;math/tex&quot;&gt;2^8&lt;/script&gt; so we can prove if the
-&lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_X&lt;/code&gt; works comparing it with the original &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime&lt;/code&gt; &lt;strong&gt;for all the
-possible inputs&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;z3&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Solver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;And&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Or&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVec&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BitVec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'a'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Solver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;full_search&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;And&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_branch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Or&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;full_search&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;sat&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;full_search&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;And&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_branchless&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Or&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;full_search&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;sat&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;full_search&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;And&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_cancelled&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Or&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;full_search&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;sat&lt;/span&gt;
-
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;full_search&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;And&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime_broadcasted&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xtime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Or&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;full_search&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;sat&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Everything is in order.&lt;/p&gt;
-
-&lt;h2 id=&quot;experiments-setup&quot;&gt;Experiments setup&lt;/h2&gt;
-
-&lt;p&gt;The 4 functions were tested in &lt;a href=&quot;/assets/performance-ite-expr/performance-ite-expr.py&quot;&gt;4 different
-experiments&lt;/a&gt;
- or scenarios:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;null_experiment&lt;/code&gt;: an 8-bit vector and a simple bitmask operation on it
-&lt;strong&gt;without&lt;/strong&gt; using &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt;. Intended to see the performance of Z3 in a
-trivial case.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;single_bitvec_experiment&lt;/code&gt;: a call to &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; on an 8-bit vector
-and the verification of the results testing 256 possible values.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mix_two_bitvec_experiment&lt;/code&gt;: call &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; twice on two 8-bit vectors,
-perform a few bitmask operations on them and verify the correctness doing
-a full search of the 65536 possible values.&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;encrypt_rounds_experiment&lt;/code&gt;: call &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; several times doing
-several bitmask and shift operations on 32 8-bit vectors. This
-represents a simplified version of a single round of the AES cipher.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;For each experiment, each &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; function was tested using the
-simplified and not-simplified variants.&lt;/p&gt;
-
-&lt;p&gt;Each experiment consisted in create and setup a new &lt;code class=&quot;highlighter-rouge&quot;&gt;z3.Solver&lt;/code&gt; with its
-&lt;em&gt;own&lt;/em&gt; &lt;code class=&quot;highlighter-rouge&quot;&gt;z3.Context&lt;/code&gt; and &lt;a href=&quot;/assets/performance-ite-expr/perf-results.pq&quot;&gt;measure the time&lt;/a&gt;
-that it took checking the model:
-the &lt;code class=&quot;highlighter-rouge&quot;&gt;check-elapsed&lt;/code&gt; time.&lt;/p&gt;
-
-&lt;p&gt;Because Z3 is &lt;strong&gt;not&lt;/strong&gt; deterministic, we ran each experiment at least 20
-times with a maximum of 100 times and collected not only the
-&lt;code class=&quot;highlighter-rouge&quot;&gt;check-elapsed&lt;/code&gt; time but also the &lt;a href=&quot;/assets/performance-ite-expr/z3-stats-results.pq&quot;&gt;statistics of the
-solver&lt;/a&gt; provided by
-Z3 with &lt;code class=&quot;highlighter-rouge&quot;&gt;solver.statistics()&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;null_experiment&lt;/code&gt; actually does &lt;strong&gt;not&lt;/strong&gt; use the &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; function and
-it is used to have an idea of how small the  &lt;code class=&quot;highlighter-rouge&quot;&gt;check-elapsed&lt;/code&gt; time can
-be.&lt;/p&gt;
-
-&lt;h2 id=&quot;experiments-results&quot;&gt;Experiments results&lt;/h2&gt;
-
-&lt;p&gt;The first thing that we can see is how each &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; performed in each
-experiment.&lt;/p&gt;
-
-&lt;figure class=&quot;fullwidth&quot;&gt;&lt;img src=&quot;/assets/performance-ite-expr/mean-check-elapsed-per-func-experiment.svg&quot; /&gt;&lt;figcaption&gt;Mean  `check-elapsed` time (y axis) per `xtime*` function (x axis).
-Each subplot corresponds to a different experiment.&lt;/figcaption&gt;&lt;/figure&gt;
-
-&lt;p&gt;A few remarks:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;null_experiment&lt;/code&gt; shows a quite stable plot regardless of the
-&lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; used as expected.&lt;/li&gt;
-  &lt;li&gt;For &lt;code class=&quot;highlighter-rouge&quot;&gt;single_bitvec_experiment&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;mix_two_bitvec_experiment&lt;/code&gt; there
-is little difference if &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; was simplified or not but it &lt;strong&gt;really
-made a difference&lt;/strong&gt; for the &lt;code class=&quot;highlighter-rouge&quot;&gt;encrypt_rounds_experiment&lt;/code&gt;.&lt;/li&gt;
-  &lt;li&gt;The ITE expression of &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_branch&lt;/code&gt; performed better than the others
-in &lt;code class=&quot;highlighter-rouge&quot;&gt;single_bitvec_experiment&lt;/code&gt; but it was as twice as slow in
-&lt;code class=&quot;highlighter-rouge&quot;&gt;mix_two_bitvec_experiment&lt;/code&gt;. &lt;em&gt;Why?&lt;/em&gt;&lt;/li&gt;
-  &lt;li&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;encrypt_rounds_experiment&lt;/code&gt; shows some weird results: a
-simplified &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_branchless&lt;/code&gt; is incredibly slow while the
-non-simplified version is incredibly fast, even faster than the rest.&lt;/li&gt;
-  &lt;li&gt;Moreover, in &lt;code class=&quot;highlighter-rouge&quot;&gt;encrypt_rounds_experiment&lt;/code&gt; the simplified &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_broadcasted&lt;/code&gt;
-and &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_cancelled&lt;/code&gt; have different performance but as we shown before,
-they are the same!&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;This last item makes me thing, are we seeing an outlier affecting the
-mean?&lt;/p&gt;
-
-&lt;p&gt;We can rule that out measuring the &lt;em&gt;minimum&lt;/em&gt; instead of the &lt;em&gt;mean&lt;/em&gt;.&lt;/p&gt;
-
-&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;Minimum  &lt;code class=&quot;highlighter-rouge&quot;&gt;check-elapsed&lt;/code&gt; time (y axis) per &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; function (x axis).
-Each subplot corresponds to a different experiment. Note how the plot
-has the same shape than before.&lt;/span&gt;&lt;/figcaption&gt;&lt;img src=&quot;/assets/performance-ite-expr/min-check-elapsed-per-func-in-encrypt-experiment.svg&quot; /&gt;&lt;/figure&gt;
-
-&lt;p&gt;Nope, same thing.&lt;/p&gt;
-
-&lt;p&gt;Could be this discrepancy be just by luck? We need a measure independent
-from the time and Z3 tracks several statistics for that.&lt;/p&gt;
-
-&lt;p&gt;It’s unclear what they mean however.&lt;/p&gt;
-
-&lt;p&gt;Exploring a little it seems that there is a relationship between &lt;code class=&quot;highlighter-rouge&quot;&gt;'added
-eqs'&lt;/code&gt; and the elapsed time.&lt;/p&gt;
-
-&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;Relation and linear regression between the time that &lt;code class=&quot;highlighter-rouge&quot;&gt;check()&lt;/code&gt; took and
-the amount of &lt;code class=&quot;highlighter-rouge&quot;&gt;added eqs&lt;/code&gt;. They follow almost a perfect linear
-relationship.&lt;/span&gt;&lt;/figcaption&gt;&lt;img src=&quot;/assets/performance-ite-expr/rel-check-elapsed-and-added-eqs.svg&quot; /&gt;&lt;/figure&gt;
-
-&lt;p&gt;Let’s see how many &lt;code class=&quot;highlighter-rouge&quot;&gt;eqs&lt;/code&gt; were &lt;code class=&quot;highlighter-rouge&quot;&gt;added&lt;/code&gt; in the
-&lt;code class=&quot;highlighter-rouge&quot;&gt;encrypt_rounds_experiment&lt;/code&gt;:&lt;/p&gt;
-
-&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;Mean &lt;code class=&quot;highlighter-rouge&quot;&gt;added eqs&lt;/code&gt; (y axis) per &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime*&lt;/code&gt; function (x axis).
-Each subplot corresponds to a different experiment. Note how the plot
-has the same shape than before showing a strong relationship between
-&lt;code class=&quot;highlighter-rouge&quot;&gt;added eqs&lt;/code&gt; and the &lt;code class=&quot;highlighter-rouge&quot;&gt;check-elapsed&lt;/code&gt; time.&lt;/span&gt;&lt;/figcaption&gt;&lt;img src=&quot;/assets/performance-ite-expr/mean-added-eqs-per-func-in-encrypt-experiment.svg&quot; /&gt;&lt;/figure&gt;
-
-&lt;p&gt;Same shape that before: for some reason Z3 added more eqs in
-&lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_broadcasted&lt;/code&gt; than in &lt;code class=&quot;highlighter-rouge&quot;&gt;xtime_cancelled&lt;/code&gt;
-(both simplified) even if both are the same Z3 expressions.&lt;/p&gt;
-
-&lt;p&gt;So the discrepancy is not due the noise: Z3 indeed saw these two as
-different things.&lt;/p&gt;
-
-&lt;h3 id=&quot;code-and-results&quot;&gt;Code and results&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;/assets/performance-ite-expr/performance-ite-expr.py&quot;&gt;Experiments (Python code)&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;/assets/performance-ite-expr/plot.py&quot;&gt;Plotting (Python code)&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;/assets/performance-ite-expr/perf-results.pq&quot;&gt;Runtime results (Pandas DataFrame in Parquet format)&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;/assets/performance-ite-expr/z3-stats-results.pq&quot;&gt;Z3 stats (Pandas DataFrame in Parquet format)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;conclusions&quot;&gt;Conclusions&lt;/h2&gt;
-
-&lt;p&gt;None.&lt;/p&gt;
-
-&lt;p&gt;I’m still missing a lot of pieces of this puzzle.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="z3" /><category term="smt" /><category term="sat" /><category term="solver" /><category term="if" /><category term="ITE" /><category term="bithack" /><category term="performance" /><summary type="html">A branch is an expensive operation even in modern CPUs because the computer will know which of the paths is taken only in the latest stages of the CPU pipeline. In the meantime, the CPU stalls. Modern CPUs use branch prediction, speculative execution and instruction reordering to minimize the impact of a branch. They do a good job but still a branch is potentially expensive so they are replaced by branchless variants. ⊕ Minimum check-elapsed time (y axis) per branch/branchless function (x axis). If-Then-Else or ITE for short, are symbolic expression that denotes a value chosen from two possible values based on a condition. These are the symbolic branch. Naturally we could rewrite a symbolic ITE with a symbolic branchless expression. The question is: which is better for a solver like Z3? Which makes the SMT/SAT solver faster? After two weeks working on this post I still don’t have an answer but at least I know some unknowns.</summary></entry><entry><title type="html">Document Building: from static web blogs to textbooks</title><link href="/articles/2021/06/12/Document-building-from-static-blog-to-textbook.html" rel="alternate" type="text/html" title="Document Building: from static web blogs to textbooks" /><published>2021-06-12T00:00:00+02:00</published><updated>2021-06-12T00:00:00+02:00</updated><id>/articles/2021/06/12/Document-building-from-static-blog-to-textbook</id><content type="html" xml:base="/articles/2021/06/12/Document-building-from-static-blog-to-textbook.html">&lt;p&gt;I’ve being writing for a long time. I’m far from being a good writer but
-having the consistency to write at least a blog post every month gave me
-more expressive power.&lt;/p&gt;
-
-&lt;p&gt;Being a non-English native speaker, that also put me in an uncomfortable
-position –out of the confort zone– but looking back, even with all my
-mistakes, I really improved.&lt;/p&gt;
-
-&lt;p&gt;I’m using a bunch of different technologies to assist me:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;the &lt;a href=&quot;https://book-of-gehn.github.io&quot;&gt;blog site&lt;/a&gt; is written in
-&lt;a href=&quot;https://guides.github.com/features/mastering-markdown/&quot;&gt;Markdown&lt;/a&gt; and
-turned into a static web site with &lt;a href=&quot;https://jekyllrb.com/&quot;&gt;Jekyll&lt;/a&gt;.&lt;/li&gt;
-  &lt;li&gt;the &lt;a href=&quot;https://github.com/eldipa/taller-clases/&quot;&gt;C/C++ lectures&lt;/a&gt; that I
-give are made with &lt;a href=&quot;https://ctan.org/pkg/beamer&quot;&gt;Latex/Beamer&lt;/a&gt;.&lt;/li&gt;
-  &lt;li&gt;the &lt;a href=&quot;https://github.com/eldipa/guia-taller&quot;&gt;C/C++ textbook&lt;/a&gt; is also
-in Markdown but it’s compiled into a PDF using
-&lt;a href=&quot;https://pandoc.org/&quot;&gt;Pandoc&lt;/a&gt; and
-&lt;a href=&quot;https://pypi.org/project/foliant/&quot;&gt;Foliant&lt;/a&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;And while those have been incredible powerful, I hit the limitations of them
-in time to time.&lt;/p&gt;
-
-&lt;p&gt;This writeup is meant to brainstorm and design a new way to work.&lt;!--more--&gt;&lt;/p&gt;
-
-&lt;p&gt;I don’t want to have a single tool to do everything. I want to be more
-humble and less ambitious and diagram a &lt;em&gt;pipeline&lt;/em&gt; flexible enough to
-help me to simplify and speed up my writings.&lt;/p&gt;
-
-&lt;h2 id=&quot;mathematics&quot;&gt;Mathematics&lt;/h2&gt;
-
-&lt;p&gt;Some of my posts are about cryptography, some about logic and certainly
-I’m going to explore more related fields in the future like quantum computing,
-mathematics and physics.&lt;/p&gt;
-
-&lt;p&gt;All of these posts have mathematical formulas and symbols.&lt;/p&gt;
-
-&lt;p&gt;Having the ability to write formulas in Markdown is super helpful (for me).
-I use &lt;em&gt;inline&lt;/em&gt; formulas, like &lt;script type=&quot;math/tex&quot;&gt;E = mc^2&lt;/script&gt;, and &lt;em&gt;block-level&lt;/em&gt; formulas:&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
-K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
-K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
-K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\&lt;/script&gt;
-
-&lt;p&gt;Behind the scenes these are written as:&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$$
-K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
-K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
-K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
-K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\
-$$
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The downside is that my Markdown editor believes that those pieces of
-text are in Markdown notation so the highlighted syntax goes crazy.&lt;/p&gt;
-
-&lt;p&gt;It would be nicer to use Markdown’s code-fenced blocks to make the
-Markdown engine (and editor) aware of them and turn them into beautiful
-math symbols later.&lt;/p&gt;
-
-&lt;p&gt;Something like:&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;`` `{.math}
-K_{1,1} p_{1,1} + K_{1,2} p_{1,2} = c_{1,1} \quad(\textrm{mod } m) \\
-K_{2,1} p_{1,1} + K_{2,2} p_{1,2} = c_{1,2} \quad(\textrm{mod } m) \\
-K_{1,1} p_{2,1} + K_{1,2} p_{2,2} = c_{2,1} \quad(\textrm{mod } m) \\
-K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\
-`` `
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Neither Jekyll or Pandoc have something like this, but in Pandoc I could
-write some &lt;a href=&quot;https://pandoc.org/filters.html&quot;&gt;Pandoc filter&lt;/a&gt; to turn a
-Markdown code-fenced block tagged as &lt;code class=&quot;highlighter-rouge&quot;&gt;{.math}&lt;/code&gt; into Tex/Latex.&lt;/p&gt;
-
-&lt;p&gt;And what it means &lt;em&gt;into Tex/Latex&lt;/em&gt; exactly is not trivial.&lt;/p&gt;
-
-&lt;p&gt;For my blog I use &lt;a href=&quot;https://www.mathjax.org/&quot;&gt;MathJax&lt;/a&gt; to render
-Tex/Latex in the browser; for my lectures/textbook, I use a Tex/Latex
-engine like &lt;a href=&quot;https://linux.die.net/man/1/pdflatex&quot;&gt;pdflatex&lt;/a&gt; to get a
-PDF.&lt;/p&gt;
-
-&lt;p&gt;But how to do it using a single pipeline, &lt;em&gt;I dunno&lt;/em&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;macros&quot;&gt;Macros&lt;/h2&gt;
-
-&lt;p&gt;While Tex/Latex makes beautiful documents, it is not the best language.&lt;/p&gt;
-
-&lt;p&gt;Typing &lt;code class=&quot;highlighter-rouge&quot;&gt;\hat{R}&lt;/code&gt; to get &lt;script type=&quot;math/tex&quot;&gt;\hat{R}&lt;/script&gt; gets quickly annoying if
-you have to write &lt;script type=&quot;math/tex&quot;&gt;\hat{R}&lt;/script&gt; several times.&lt;/p&gt;
-
-&lt;p&gt;In this case I use Tex/Latex &lt;em&gt;macros&lt;/em&gt; to write &lt;code class=&quot;highlighter-rouge&quot;&gt;\R&lt;/code&gt; instead of &lt;code class=&quot;highlighter-rouge&quot;&gt;\hat{R}&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;But what about other non-Tex stuff?&lt;/p&gt;
-
-&lt;p&gt;I write a lot about programming and it’s handy to show code with
-highlighted syntax:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;pass&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Those were made with Markdown’s &lt;em&gt;fenced-code blocks&lt;/em&gt; where
-you &lt;em&gt;tag&lt;/em&gt; the block with the language to you are writing.&lt;/p&gt;
-
-&lt;p&gt;Jekyll doesn’t, but Pandoc supports &lt;em&gt;tagged inline code&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;Just type &lt;code class=&quot;highlighter-rouge&quot;&gt;{.python}&lt;/code&gt; after an inline and that’s it but as you
-may imagine, doing it for each inline code is tedious.&lt;/p&gt;
-
-&lt;p&gt;Most of my posts talks about a single language and my textbook is mostly
-about C/C++ so why not make all the inline code highlighted with a
-particular syntax by default?&lt;/p&gt;
-
-&lt;p&gt;Once again, Pandoc’s filters fit perfect for the job.&lt;/p&gt;
-
-&lt;h2 id=&quot;fixing-syntax-highlighting&quot;&gt;Fixing syntax highlighting&lt;/h2&gt;
-
-&lt;p&gt;&lt;label for=&quot;mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb&quot; class=&quot;margin-toggle&quot;&gt; ⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb&quot; class=&quot;margin-toggle&quot; /&gt;&lt;/p&gt;
-&lt;div id=&quot;mk-mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb&quot;&gt;&lt;span class=&quot;marginnote marginmarkdowncode&quot;&gt;&lt;div class=&quot;language-nasm highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;pwndbg&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pdisass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;
- &lt;span class=&quot;err&quot;&gt;►&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1044c&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;       &lt;span class=&quot;k&quot;&gt;push&lt;/span&gt;   &lt;span class=&quot;err&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lr&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;}&lt;/span&gt;
-   &lt;span class=&quot;mh&quot;&gt;0x10450&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;add&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;fp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
-   &lt;span class=&quot;mh&quot;&gt;0x10454&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;sub&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x50&lt;/span&gt;
-   &lt;span class=&quot;mh&quot;&gt;0x10470&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;36&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;bl&lt;/span&gt;     &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gets&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;plt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;/span&gt;&lt;/div&gt;
-&lt;div&gt;&lt;script&gt;$(document).ready(function () {$('#mk-mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb &gt; span').insertAfter($('#mmkd-020e3dfd7fb62b9c9d1761ed5442c6fb'))});&lt;/script&gt;&lt;/div&gt;
-
-&lt;p&gt;For the blog, the code is highlighted with
-&lt;a href=&quot;https://github.com/rouge-ruby/rouge&quot;&gt;Rouge&lt;/a&gt;. It works like a charm but
-no without some sharp corners.&lt;/p&gt;
-
-&lt;p&gt;Its support for assembly is limited. I cannot blame it, there are a lot
-of assembly syntaxes out there!&lt;/p&gt;
-
-&lt;p&gt;A hack that I did was to run some Javascript to patch the HTML in
-runtime and add the missing CSS classes to the unrecognized mnemonics.&lt;/p&gt;
-
-&lt;div class=&quot;language-javascript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;xpath&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;.//div[contains(@class,'language-nasm')]//span[(((text() = 'blt') or (text() = 'b'))]&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems_iter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;evaluate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;xpath&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;XPathResult&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ANY_TYPE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[];&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;iterateNext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;elems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems_iter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;iterateNext&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;elems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;classList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// keyword&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;el&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;classList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;remove&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// noun&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;I could do the same with Pandoc which uses
-&lt;a href=&quot;https://pygments.org/&quot;&gt;Pygments&lt;/a&gt; for the highlighting. I’ve already
-have some experience with it from my &lt;a href=&quot;https://github.com/bad-address/iasm&quot;&gt;interactive assembler
-&lt;em&gt;iasm&lt;/em&gt;&lt;/a&gt; so it is factible.&lt;/p&gt;
-
-&lt;p&gt;Certainly is going to be useful for the textbook.&lt;/p&gt;
-
-&lt;h2 id=&quot;preprocessing&quot;&gt;Preprocessing&lt;/h2&gt;
-
-&lt;p&gt;You cannot set any layout in Markdown: put some image in the
-right margin, make a text an epigraph or a side-note.&lt;/p&gt;
-
-&lt;p&gt;It’s on purpose: Markdown wants to be simple, in contrast with HTML. But
-in some cases it too simple.&lt;/p&gt;
-
-&lt;p&gt;Jekyll allows you to pass HTML code along the Markdown. In my blog I use instead
-&lt;a href=&quot;https://jekyllrb.com/docs/liquid/&quot;&gt;Liquid&lt;/a&gt; tags to make my live a
-little easier.&lt;/p&gt;
-
-&lt;p&gt;This allows me not only to avoid writing HTML but also performing
-arbitrary operations like creating images on the fly (see more later).&lt;/p&gt;
-
-&lt;p&gt;In my C/C++ lectures written in Tex/Latex, I required to generate
-different &lt;em&gt;flavors&lt;/em&gt; of slides.&lt;/p&gt;
-
-&lt;p&gt;Slides for presenting in class with little text but a lot of diagrams;
-slides for reading with a lot of text, the &lt;em&gt;handout&lt;/em&gt; for the students.&lt;/p&gt;
-
-&lt;p&gt;With the pandemic, I switched to virtual classes (no news here). Sharing
-my screen allowed me to &lt;em&gt;draw&lt;/em&gt; over the slides. They have incomplete
-diagrams that I complete interactively with the students during the lecture.&lt;/p&gt;
-
-&lt;p&gt;Make this within Tex/Latex is possible but it is a pain.&lt;/p&gt;
-
-&lt;p&gt;So I resorted to use a preprocessor. Similar to Liquid I used
-&lt;a href=&quot;https://jinja.palletsprojects.com/en/3.0.x/&quot;&gt;Jinja2&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;While all of these could be done, in theory, with Pandoc filters, I
-think that having a preprocessor and &lt;em&gt;template engine&lt;/em&gt; like Jinja2 can
-be quite handy.&lt;/p&gt;
-
-&lt;h2 id=&quot;images-and-diagrams&quot;&gt;Images and diagrams&lt;/h2&gt;
-
-&lt;p&gt;&lt;label for=&quot;mf-8c43495893bc436c757e27a698704351&quot; class=&quot;margin-toggle  &quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-8c43495893bc436c757e27a698704351&quot; class=&quot;margin-toggle  &quot; /&gt;&lt;span class=&quot;marginnote  &quot;&gt;&lt;img style=&quot;&quot; class=&quot;fullwidth&quot; alt=&quot;&quot; src=&quot;/assets/statistics/seaborn-cheatsheet/seaborn-cheatsheet-v1.svg&quot; /&gt;  &lt;br /&gt;&lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;I make a lot of diagrams, state machines and plots but I try to not make
-them by hand.&lt;/p&gt;
-
-&lt;p&gt;Tools that requires a human to do the layout are a waste of time (there
-are exceptions like me &lt;a href=&quot;/articles/2021/06/05/Seaborn-Cheatsheet.html&quot;&gt;Seaborn Cheatsheet&lt;/a&gt;).&lt;/p&gt;
-
-&lt;p&gt;Instead I prefer to &lt;em&gt;describe&lt;/em&gt; the diagram in text and let a
-program to do the image and layout for me.&lt;/p&gt;
-
-&lt;p&gt;For a lot of them I use &lt;a href=&quot;https://plantuml.com&quot;&gt;PlantUML&lt;/a&gt;. Despite the
-name, it is for more than UML.&lt;/p&gt;
-
-&lt;p&gt;For simpler block diagrams I use &lt;a href=&quot;http://ditaa.sourceforge.net/&quot;&gt;Ditaa&lt;/a&gt;
-and for graph-like I have the good old &lt;a href=&quot;https://graphviz.org/&quot;&gt;Graphviz&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;label for=&quot;mf-029d41dcf8a97a3b1b6bb5e45d9af0d2&quot; class=&quot;margin-toggle &quot;&gt;⊕&lt;/label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;mf-029d41dcf8a97a3b1b6bb5e45d9af0d2&quot; class=&quot;margin-toggle &quot; /&gt;&lt;span class=&quot;marginnote &quot;&gt;&lt;object align=&quot;middle&quot; data=&quot;/uml/399c03db9497f365d6e048da0696cae61c7ac9aa.svg&quot; type=&quot;image/svg+xml&quot;&gt;&lt;/object&gt;  &lt;br /&gt;&lt;/span&gt;&lt;/p&gt;
-
-&lt;p&gt;So far I’m using these tools for by blog so I write the
-PlantUML/Ditaa/Graphviz diagrams (text) inside a Liquid tag in the same
-Markdown.&lt;/p&gt;
-
-&lt;p&gt;During the building, the correct tool is called and the image is
-generated while the Liquid tag is replaced by some HTML &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;img&amp;gt;&lt;/code&gt; link.&lt;/p&gt;
-
-&lt;p&gt;For my C/C++ textbook, I use a Foliant plugin that does the same but
-instead of Liquid tags, Foliant uses HTML tags as &lt;em&gt;hook points&lt;/em&gt; to call
-third party plugins.&lt;/p&gt;
-
-&lt;p&gt;Probably I’m going to use Jinja2 for these too. I’m not convinced of
-using HTML tags/hooks or Pandoc filters here.&lt;/p&gt;
-
-&lt;p&gt;Related to this, make &lt;a href=&quot;https://seaborn.pydata.org/&quot;&gt;Seaborn&lt;/a&gt; and
-&lt;a href=&quot;https://matplotlib.org/&quot;&gt;Matplotlib&lt;/a&gt; plots from the Markdown directly
-would be nice too.&lt;/p&gt;
-
-&lt;h2 id=&quot;interactive-diagrams&quot;&gt;Interactive diagrams&lt;/h2&gt;
-
-&lt;p&gt;This applies only to my blog and Javascript is the thing that brings
-life anything. From simple &lt;a href=&quot;https://github.com/benfred/venn.js/&quot;&gt;Venn
-diagrams&lt;/a&gt; to arbitrary complex
-&lt;a href=&quot;https://d3js.org/&quot;&gt;D3 diagrams&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;But I want those beautiful diagrams be part of my non-interactive
-lectures and textbook.&lt;/p&gt;
-
-&lt;p&gt;How to do it is still an open question.&lt;/p&gt;
-
-&lt;h2 id=&quot;assembly&quot;&gt;Assembly&lt;/h2&gt;
-
-&lt;p&gt;And not, I’m not talking about ARM.&lt;/p&gt;
-
-&lt;p&gt;All the Markdown files are meant to be integrated in some meaningful
-way. Assembled. Linked.&lt;/p&gt;
-
-&lt;p&gt;For the blog, Jekyll generates an independent web page for each post. It
-just put each in a file that follows the &lt;code class=&quot;highlighter-rouge&quot;&gt;year/month/day/post-name.html&lt;/code&gt;
-pattern name.&lt;/p&gt;
-
-&lt;p&gt;A textbook is more complicated however.&lt;/p&gt;
-
-&lt;p&gt;Foliant joins together all the Markdown files and call Pandoc &lt;em&gt;once&lt;/em&gt; to
-generate a single Tex/Latex file and from there, a &lt;em&gt;single&lt;/em&gt; PDF.&lt;/p&gt;
-
-&lt;p&gt;This doesn’t scale.&lt;/p&gt;
-
-&lt;p&gt;It would be much efficient to generate a Tex/Latex per Markdown file, a
-PDF per file and join them together at the end.&lt;/p&gt;
-
-&lt;p&gt;Like in a C/C++ compilation schema, you compile each unit separately and
-link them at the end: if you have to modify a single file, you just need
-to compile that one only and not the whole thing.&lt;/p&gt;
-
-&lt;p&gt;Foliant does this on purpose and for a good reason: when you write a
-textbook you want to have links and references to other parts including
-parts of &lt;em&gt;other&lt;/em&gt; Markdown files.&lt;/p&gt;
-
-&lt;p&gt;To &lt;em&gt;resolve&lt;/em&gt; them, all the Markdown files need to be processed as a
-single unit.&lt;/p&gt;
-
-&lt;p&gt;To have a separated unit compilation, I’m going to figure out how to
-&lt;em&gt;resolve the links and references&lt;/em&gt; at the Tex/Latex level.&lt;/p&gt;
-
-&lt;p&gt;A simple &lt;code class=&quot;highlighter-rouge&quot;&gt;cat *.pdf &amp;gt; final.pdf&lt;/code&gt; will not work.&lt;/p&gt;
-
-&lt;h2 id=&quot;post-processing&quot;&gt;Post-processing&lt;/h2&gt;
-
-&lt;p&gt;A few things that I do manually:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;optimize the size of the PNG files with
-&lt;a href=&quot;https://linux.die.net/man/1/optipng&quot;&gt;optipng&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;check the grammar with &lt;a href=&quot;https://languagetool.org/&quot;&gt;LanguageTool&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;review broken links (this is not even automated!)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Some will still be manual (like checking the grammar) but the rest
-should be part of the pipeline.&lt;/p&gt;
-
-&lt;p&gt;The review of any broken link could be done at the Pandoc filter level
-for example.&lt;/p&gt;
-
-&lt;h2 id=&quot;pipeline&quot;&gt;Pipeline&lt;/h2&gt;
-
-&lt;p&gt;There are a lot of tools to call in sequence and to avoid recompilation,
-a tool should not be called if its input didn’t change since the last
-time it was called.&lt;/p&gt;
-
-&lt;p&gt;I don’t want to generate the same HTML page if the Markdown didn’t
-change.&lt;/p&gt;
-
-&lt;p&gt;Jekyll does a relative good thing here but Foliant doesn’t.&lt;/p&gt;
-
-&lt;p&gt;I think that a plain &lt;a href=&quot;https://www.gnu.org/software/make/&quot;&gt;Makefile&lt;/a&gt;
-should work. May be something on top to &lt;em&gt;visualize&lt;/em&gt; the pipeline?&lt;/p&gt;
-
-&lt;p&gt;And the &lt;em&gt;toolchain&lt;/em&gt; should be in its own
-&lt;a href=&quot;https://www.docker.com/&quot;&gt;Docker&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;final-thoughts&quot;&gt;Final thoughts&lt;/h2&gt;
-
-&lt;p&gt;Rewrite my blog, lectures and the work-in-progress textbook is not going
-to be trivial.&lt;/p&gt;
-
-&lt;p&gt;There are a lot of gaps and problems without solution but I bet that
-this is going to improve my workflow.&lt;/p&gt;
-
-&lt;p&gt;So far, this is want I think it may work:&lt;/p&gt;
-
-&lt;figure&gt;&lt;figcaption&gt;&lt;span&gt;&lt;/span&gt;&lt;/figcaption&gt;&lt;object align=&quot;middle&quot; data=&quot;/uml/e3d4801595e03eed8ca3488fce8b4c511c7ac9aa.svg&quot; type=&quot;image/svg+xml&quot;&gt;&lt;/object&gt;&lt;/figure&gt;
-
-&lt;p&gt;Fingers crossed.&lt;/p&gt;</content><author><name>Gehn</name></author><category term="blog" /><category term="latex" /><summary type="html">I’ve being writing for a long time. I’m far from being a good writer but having the consistency to write at least a blog post every month gave me more expressive power. Being a non-English native speaker, that also put me in an uncomfortable position –out of the confort zone– but looking back, even with all my mistakes, I really improved. I’m using a bunch of different technologies to assist me: the blog site is written in Markdown and turned into a static web site with Jekyll. the C/C++ lectures that I give are made with Latex/Beamer. the C/C++ textbook is also in Markdown but it’s compiled into a PDF using Pandoc and Foliant. And while those have been incredible powerful, I hit the limitations of them in time to time. This writeup is meant to brainstorm and design a new way to work.</summary></entry></feed>
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Gehn</name></author><category term="Python" /><summary type="html">Python 3.6 introduced the so called f-strings: literal strings that support formatting from the variable in the local context. Before 3.6 you would to do something like this: &amp;gt;&amp;gt;&amp;gt; x = 11 &amp;gt;&amp;gt;&amp;gt; y = 22 &amp;gt;&amp;gt;&amp;gt; &quot;x={x} y={y}&quot;.format(x=x, y=y) 'x=11 y=22' But with the f-strings we can remove the bureaucratic call to format: &amp;gt;&amp;gt;&amp;gt; f&quot;x={x} y={y}&quot; 'x=11 y=22' A few days ago Yurichev posted: could we achieve a similar feature but without using the f-strings?. Challenge accepted.</summary></entry></feed>
