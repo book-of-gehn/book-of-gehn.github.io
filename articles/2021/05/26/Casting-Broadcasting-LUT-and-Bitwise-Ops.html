@@ -1,0 +1,304 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Casting, broadcasting, LUT and bitwise ops</title>
+  <meta name="description" content="Casting, broadcasting, LUT and bitwise ops">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/05/26/Casting-Broadcasting-LUT-and-Bitwise-Ops.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Casting, broadcasting, LUT and bitwise ops
+</h1>
+<p class="subtitle">
+May 26, 2021
+</p>
+<p>Z3 has a few basic symbolic operation over bit vectors.</p>
+<p>But some others are missing (or at least I couldn’t find them).</p>
+<p><em>Cast</em> bit vectors to change the vector width, like when you want to <em>upcast</em> or <em>promote</em> a <code><span class="highlight-candombe-inline"><span class="n">uint8_t</span></span></code> to <code><span class="highlight-candombe-inline"><span class="n">uint16_t</span></span></code>, is one of them.</p>
+<p>Arbitrary <em>bitwise operations</em> is another one. Z3 provides the basic <code><span class="highlight-candombe-inline"><span class="n">And</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">Or</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Xor</span></span></code> but arbitrary functions needs to be defined and applied by hand.</p>
+<p>And about function definitions, Z3 does not have a simple way to <em>define a function from a lookup table (LUT) or truth table</em>.</p>
+<blockquote>
+<p><em>A much tricker that I thought!</em></p>
+</blockquote>
+<p>This post is a kind-of sequel of <a href="/articles/2021/05/17/Verifying-Some-Bithacks.html">Verifying some Bithacks post</a> and prequel of some future posts.<!--more--></p>
+<h2 id="casting">Casting</h2>
+<p>Z3 does not provide a mechanism to change the size of a bit vector (or at least I didn’t find one).</p>
+<p>The following is a quite simple <code><span class="highlight-candombe-inline"><span class="n">cast</span></span></code> function <em>ala C</em> – however it is <strong>far</strong> from <a href="https://en.cppreference.com/w/c/language/conversion">being</a> a fully C/C++ compliance <a href="https://en.cppreference.com/w/c/language/cast"><em>cast</em></a> including its UBs.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">BitVecVal</span><span class="p">,</span> <span class="n">Concat</span><span class="p">,</span> <span class="n">Extract</span><span class="p">,</span> <span class="n">simplify</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">cast</span><span class="p">(</span><span class="n">bv</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="nb">type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">):</span>
+<span class="o">...</span>         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not supported cast type &#39;</span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">signed</span> <span class="o">=</span> <span class="nb">type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;i&#39;</span>
+<span class="o">...</span>     <span class="n">new_sz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">type</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">sz</span> <span class="o">=</span> <span class="n">bv</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="n">sz</span> <span class="o">&lt;</span> <span class="n">new_sz</span><span class="p">:</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">signed</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">sign_bit</span> <span class="o">=</span> <span class="n">Extract</span><span class="p">(</span><span class="n">sz</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">sz</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">bv</span><span class="p">)</span>
+<span class="o">...</span>             <span class="n">high</span> <span class="o">=</span> <span class="n">Concat</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">sign_bit</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">new_sz</span> <span class="o">-</span> <span class="n">sz</span><span class="p">))</span>
+<span class="o">...</span>         <span class="k">else</span><span class="p">:</span>
+<span class="o">...</span>             <span class="c1"># zero extended</span>
+<span class="o">...</span>             <span class="n">high</span> <span class="o">=</span> <span class="n">BitVecVal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">new_sz</span> <span class="o">-</span> <span class="n">sz</span><span class="p">))</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="n">Concat</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="n">bv</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">else</span><span class="p">:</span>
+<span class="o">...</span>         <span class="c1"># downcast</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="n">Extract</span><span class="p">(</span><span class="n">new_sz</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bv</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Casting to a larger bit vector may be done zero-extended (for unsigned) or sign-extended (for signed):</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">i4</span> <span class="o">=</span> <span class="n">BitVecVal</span><span class="p">(</span><span class="mb">0b1011</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">i4</span>
+<span class="mi">11</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">i4</span><span class="p">,</span> <span class="s1">&#39;u8&#39;</span><span class="p">))</span>
+<span class="mi">11</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">i4</span><span class="p">,</span> <span class="s1">&#39;i8&#39;</span><span class="p">))</span>
+<span class="mi">251</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">bin</span><span class="p">(</span><span class="mi">251</span><span class="p">)</span>
+<span class="s1">&#39;0b11111011&#39;</span>
+</code></pre></div>
+
+<p>When the target size is smaller, it is a down-cast and the higher bits are lost:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">i4</span><span class="p">,</span> <span class="s1">&#39;u2&#39;</span><span class="p">))</span>
+<span class="mi">3</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">i4</span><span class="p">,</span> <span class="s1">&#39;i2&#39;</span><span class="p">))</span>
+<span class="mi">3</span>
+</code></pre></div>
+
+<p>Not other casting are implemented:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">i4</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">))</span>
+<span class="o">&lt;...&gt;</span>
+<span class="ne">ValueError</span><span class="p">:</span> <span class="n">Not</span> <span class="n">supported</span> <span class="n">cast</span> <span class="nb">type</span> <span class="s1">&#39;foo&#39;</span>
+</code></pre></div>
+
+<h2 id="broadcasting">Broadcasting</h2>
+<p>For the signed upper-cast, the <code><span class="highlight-candombe-inline"><span class="n">cast</span></span></code> function does a <em>broadcasting</em>: it takes the most significant bit, the sign bit, and extends it to fulfill the wider bit vector.</p>
+<p>The sign bit is repeated N times – it is <em>broadcasted</em>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">...</span>    <span class="n">sign_bit</span> <span class="o">=</span> <span class="n">Extract</span><span class="p">(</span><span class="n">sz</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">sz</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">bv</span><span class="p">)</span>
+<span class="o">...</span>    <span class="n">high</span> <span class="o">=</span> <span class="n">Concat</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">sign_bit</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">new_sz</span> <span class="o">-</span> <span class="n">sz</span><span class="p">))</span>
+</code></pre></div>
+
+<h2 id="bitwise-operation">Bitwise operation</h2>
+<p>Another handy algorithm consists in applying a function bit by bit:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">bitwise</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="o">*</span><span class="n">bvs</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="ow">not</span> <span class="n">bvs</span><span class="p">:</span>
+<span class="o">...</span>         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No bit vector was provided&quot;</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">sz</span> <span class="o">=</span> <span class="n">bvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">bv</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">!=</span> <span class="n">sz</span> <span class="k">for</span> <span class="n">bv</span> <span class="ow">in</span> <span class="n">bvs</span><span class="p">):</span>
+<span class="o">...</span>         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bit vector size mismatch, not all are </span><span class="si">{</span><span class="n">sz</span><span class="si">}</span><span class="s2"> bits.&quot;</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">sz</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># from MSB to LSB</span>
+<span class="o">...</span>     <span class="n">applied</span> <span class="o">=</span> <span class="p">[</span><span class="n">fun</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">Extract</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">bv</span><span class="p">)</span> <span class="k">for</span> <span class="n">bv</span> <span class="ow">in</span> <span class="n">bvs</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">index</span><span class="p">]</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">Concat</span><span class="p">(</span><span class="o">*</span><span class="n">applied</span><span class="p">)</span>
+</code></pre></div>
+
+<p><code><span class="highlight-candombe-inline"><span class="n">bitwise</span></span></code> can operate over <em>symbolic functions</em>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">BitVecSort</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">BSort</span> <span class="o">=</span> <span class="n">BitVecSort</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">zor</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s1">&#39;zor&#39;</span><span class="p">,</span> <span class="n">BSort</span><span class="p">,</span> <span class="n">BSort</span><span class="p">,</span> <span class="n">BSort</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">simplify</span><span class="p">(</span><span class="n">bitwise</span><span class="p">(</span><span class="n">zor</span><span class="p">,</span> <span class="n">BitVecVal</span><span class="p">(</span><span class="mb">0b1011</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">BitVecVal</span><span class="p">(</span><span class="mb">0b0010</span><span class="p">,</span> <span class="mi">4</span><span class="p">)))</span>
+<span class="n">Concat</span><span class="p">(</span><span class="n">zor</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">zor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">zor</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">zor</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</code></pre></div>
+
+<p>But it can operate over <em>concrete (Python) functions</em>.</p>
+<h2 id="concrete-function-definition">Concrete function definition</h2>
+<p>If the function is known, we will have to add a constrain per input/output pair to <em>constrain</em> the symbolic function.</p>
+<p>Something like:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">...</span> <span class="n">solver</span><span class="o">.</span><span class="n">add</span><span class="p">([</span>
+<span class="o">...</span>     <span class="n">zor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+<span class="o">...</span>     <span class="n">zor</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+<span class="o">...</span>     <span class="n">zor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+<span class="o">...</span>     <span class="n">zor</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+<span class="o">...</span> <span class="p">])</span>
+</code></pre></div>
+
+<p>But that requires an exponential amount of constrains, \(2^{arity}\) to be precise.</p>
+<p>A more compact representation would be a <em>lookup table (LUT)</em> or <em>truth table</em>.</p>
+<pre><code>zor LUT:
+    0 0 -&gt; 1
+    1 0 -&gt; 1
+    0 1 -&gt; 0
+    1 1 -&gt; 1</code></pre>
+<p>From there we can build a <em>product of sums</em> or a <em>sums of products</em> using a <a href="https://en.wikipedia.org/wiki/Karnaugh_map">Karnaugh map</a>: a graphical representation of the truth table from where we can derive a <strong>single</strong> boolean expression made of a minimum amount of <code><span class="highlight-candombe-inline"><span class="n">Or</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">And</span></span></code> instructions that represents it.</p>
+<p>Karnaugh maps relays in humans’ ability to detect patterns but the maps gets too complicated for 5 and more inputs so they are not practical for large functions.</p>
+<p><label for='Ckhvd2V2ZXIsIHRoaXMgcHJvYmxlbSBpcyBOUC1jb21wbGV0ZSBpbiBnZW5lcmFsLgogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='Ckhvd2V2ZXIsIHRoaXMgcHJvYmxlbSBpcyBOUC1jb21wbGV0ZSBpbiBnZW5lcmFsLgogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+However, this problem is NP-complete in general.
+</span></p>
+<p>The non-human counterpart is the <a href="https://en.wikipedia.org/wiki/Quine%E2%80%93McCluskey_algorithm">Quine-McCluskey algorithm</a> which can handle much more inputs.</p>
+<p><label for='ClozIFtjb3VsZCBkbyBpdCB0b29dKGh0dHBzOi8vZ2l0aHViLmNvbS9aM1Byb3Zlci96My9pc3N1ZXMvNDgyMikKYnV0IHRoZSBzb2x1dGlvbiBpcyBwZXJoYXBzIG1vcmUgaGFuZC1jcmFmdGVkLgogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClozIFtjb3VsZCBkbyBpdCB0b29dKGh0dHBzOi8vZ2l0aHViLmNvbS9aM1Byb3Zlci96My9pc3N1ZXMvNDgyMikKYnV0IHRoZSBzb2x1dGlvbiBpcyBwZXJoYXBzIG1vcmUgaGFuZC1jcmFmdGVkLgogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+Z3 <a href="https://github.com/Z3Prover/z3/issues/4822">could do it too</a> but the solution is perhaps more hand-crafted.
+</span></p>
+<p>And <a href="https://www.sympy.org/en/index.html">SymPy</a> has a nice implementation.</p>
+<p>From the LUT we need to specify which combination of inputs yields <code><span class="highlight-candombe-inline"><span class="kc">True</span></span></code> and the rest of the combinations will be assumed as <code><span class="highlight-candombe-inline"><span class="kc">False</span></span></code>.</p>
+<pre><code>zor LUT:
+    0 0 -&gt; 1    --&gt;   0 0
+    1 0 -&gt; 1    --&gt;   1 0
+    0 1 -&gt; 0    x
+    1 1 -&gt; 1    --&gt;   1 1</code></pre>
+<p>These are called <em>minterms</em>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">zor_minterms</span> <span class="o">=</span> <span class="p">[</span>
+<span class="o">...</span>     <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="o">...</span>     <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="o">...</span>     <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="o">...</span> <span class="p">]</span>
+</code></pre></div>
+
+<p><label for='CldpdGggc3VwcG9ydCBmb3IgKmRvbiZhcG9zO3QgY2FyZXMqOiBjb21iaW5hdGlvbiBvZiBpbnB1dHMgZm9yIHdoaWNoCmRvbid0IGNhcmUgdGhlIG91dHB1dC4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldpdGggc3VwcG9ydCBmb3IgKmRvbiZhcG9zO3QgY2FyZXMqOiBjb21iaW5hdGlvbiBvZiBpbnB1dHMgZm9yIHdoaWNoCmRvbid0IGNhcmUgdGhlIG91dHB1dC4KIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+With support for <em>don't cares</em>: combination of inputs for which don’t care the output.
+</span></p>
+<p>SymPy can build a simplified boolean expression in terms of <em>product of sums</em> (<code><span class="highlight-candombe-inline"><span class="ow">or</span></span></code> subterms joined with <code><span class="highlight-candombe-inline"><span class="ow">and</span></span></code>s) and <em>sum of products</em> (<code><span class="highlight-candombe-inline"><span class="ow">and</span></span></code> subterms joined with <code><span class="highlight-candombe-inline"><span class="ow">or</span></span></code>s)</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">sympy.logic</span> <span class="kn">import</span> <span class="n">POSform</span>     <span class="c1"># byexample: +timeout=10</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>           <span class="c1"># byexample: +timeout=10</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">POSform</span><span class="p">(</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39;x y&#39;</span><span class="p">),</span> <span class="n">zor_minterms</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">|</span> <span class="o">~</span><span class="n">y</span>
+</code></pre></div>
+
+<p>There is no elegant way to map SymPy expressions to Z3 expressions but we can do <strong>a hack</strong> with <code><span class="highlight-candombe-inline"><span class="nb">eval</span></span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sympy</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">truth_table_to_fun</span><span class="p">(</span><span class="n">minterms</span><span class="p">,</span> <span class="n">dontcares</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="s1">&#39;POS&#39;</span><span class="p">,</span> <span class="n">arity</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">assert</span> <span class="n">form</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;POS&#39;</span><span class="p">,</span> <span class="s1">&#39;SOP&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">arity</span> <span class="o">=</span> <span class="n">arity</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">minterms</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># num of args of our function</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># create on the fly a SymPy variable per argument</span>
+<span class="o">...</span>     <span class="n">varnames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;A</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arity</span><span class="p">)]</span>
+<span class="o">...</span>     <span class="n">s</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">varnames</span><span class="p">))</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># simplify as a Product of Sums or as a Sum of Products and get</span>
+<span class="o">...</span>     <span class="c1"># an expression as a string</span>
+<span class="o">...</span>     <span class="n">fun</span> <span class="o">=</span> <span class="p">(</span><span class="n">sympy</span><span class="o">.</span><span class="n">POSform</span> <span class="k">if</span> <span class="n">form</span> <span class="o">==</span> <span class="s1">&#39;POS&#39;</span> <span class="k">else</span> <span class="n">sympy</span><span class="o">.</span><span class="n">SOPform</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">expr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fun</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">minterms</span><span class="p">,</span> <span class="n">dontcares</span><span class="p">))</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># make the SymPy expression suitable as a Python function definition</span>
+<span class="o">...</span>     <span class="n">expr</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;lambda </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">varnames</span><span class="p">)</span><span class="si">}</span><span class="s1">: (</span><span class="si">{</span><span class="n">expr</span><span class="si">}</span><span class="s1">)&#39;</span>
+<span class="o">...</span>     <span class="c1"># evaluate the expression and return the Python function</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">{})</span>
+</code></pre></div>
+
+<p>With <code><span class="highlight-candombe-inline"><span class="n">truth_table_to_fun</span></span></code> we can build a <em>Python function</em> that it will take <em>Z3 bit vectors</em> and it will return a <em>bit vector expression</em> that encodes the <em>minterms</em> specified.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">BitVecs</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">zor</span> <span class="o">=</span> <span class="n">truth_table_to_fun</span><span class="p">(</span><span class="n">zor_minterms</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">BitVecs</span><span class="p">(</span><span class="s1">&#39;A B&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">zor</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">|</span> <span class="o">~</span><span class="n">B</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">bitwise</span><span class="p">(</span><span class="n">zor</span><span class="p">,</span> <span class="n">BitVecVal</span><span class="p">(</span><span class="mb">0b1001</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">BitVecVal</span><span class="p">(</span><span class="mb">0b0010</span><span class="p">,</span> <span class="mi">4</span><span class="p">)))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">bin</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">as_long</span><span class="p">())</span>
+<span class="s1">&#39;0b1101&#39;</span>
+</code></pre></div>
+
+<blockquote>
+<p><em>Quick and dirty. Don’t blame me.</em></p>
+</blockquote>
+<h2 id="further-things">Further things</h2>
+<p>Quite a lot.</p>
+<p>Some <a href="https://graphics.stanford.edu/~seander/bithacks.html">bithacks</a> could be used to simplify Z3 expressions and speedup the model solving.</p>
+<p>When <a href="/articles/2021/05/17/Verifying-Some-Bithacks.html">verifying the rank bit</a> I tested different approaches and only the <em>branchless</em> implementation gave me a result in a reasonable time.</p>
+<p>Testing the performance is something to explore. Soon.</p>
+</article>
+<span class="print-footer">Casting, broadcasting, LUT and bitwise ops - May 26, 2021 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

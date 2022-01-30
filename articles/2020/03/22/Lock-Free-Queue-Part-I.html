@@ -1,0 +1,404 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lock-Free Queue - Part I</title>
+  <meta name="description" content="Lock-Free Queue - Part I">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/03/22/Lock-Free-Queue-Part-I.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Lock-Free Queue - Part I
+</h1>
+<p class="subtitle">
+March 22, 2020
+</p>
+<p>While implementing a bounded queue or <em>ring buffer</em> in a single-thread universe is relatively easy, doing the same when you have two threads, the implementation of a lock-free queue is <em>more challenging</em>.</p>
+<p>In this first part will analyse and implement a lock-free single-producer single-consumer queue. A multi-producer multi-consumer queue is described in the <a href="/articles/2020/04/28/Lock-Free-Queue-Part-II.html">second part</a>.<!--more--></p>
+<p>In a traditional queue we have two pointers: the <em>head</em>, that points to the next free entry to write and the <em>tail</em>, which points to the next entry ready to be read.</p>
+<p><figure><figcaption><span markdown='1'>
+When a producer pushes a new data to the queue, she moves forward the <em>head</em> and writes the data; meanwhile the consumer reads the data and moves forward the <em>tail</em>.
+</span></figcaption>
+<img  class='' alt='' src='/img/threading/lock-free/queue/queue-data.png' /></figure></p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3F1ZXVlLWZ1bGwucG5nJyAvPgpGdWxsIHF1ZXVlLiBPbmUgZW50cnkgaXMgYWx3YXlzIGxlZnQgZW1wdHkgdG8gZGlmZmVyZW50aWF0ZSBhCmZ1bGwgcXVldWUgZnJvbSBhbiBlbXB0eSBxdWV1ZS4KCltPdGhlciBpbXBsZW1lbnRhdGlvbnNdKC9hcnRpY2xlcy8yMDE4LzA5LzE2L091cm9ib3Jvcy1DaXJjdWxhci1CdWZmZXIuaHRtbCkKZG8gbm90IHdhc3RlIHRoaXMgZW50cnkuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3F1ZXVlLWZ1bGwucG5nJyAvPgpGdWxsIHF1ZXVlLiBPbmUgZW50cnkgaXMgYWx3YXlzIGxlZnQgZW1wdHkgdG8gZGlmZmVyZW50aWF0ZSBhCmZ1bGwgcXVldWUgZnJvbSBhbiBlbXB0eSBxdWV1ZS4KCltPdGhlciBpbXBsZW1lbnRhdGlvbnNdKC9hcnRpY2xlcy8yMDE4LzA5LzE2L091cm9ib3Jvcy1DaXJjdWxhci1CdWZmZXIuaHRtbCkKZG8gbm90IHdhc3RlIHRoaXMgZW50cnkuCm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/threading/lock-free/queue/queue-full.png' />
+Full queue. One entry is always left empty to differentiate a full queue from an empty queue.
+<br /><br />
+<a href="/articles/2018/09/16/Ouroboros-Circular-Buffer.html">Other implementations</a> do not waste this entry.
+</span></p>
+<p>The pointers serve as stop-markers: the producer will not write if the head points to an entry that is immediately before the entry pointed by the head; the consumer will not read if the tail and the head are pointing to the same entry.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3F1ZXVlLWVtcHR5LnBuZycgLz4KRW1wdHkgcXVldWUuIFdoZW4gaGVhZCBhbmQgdGFpbCBwb2ludGVycyBhcmUgdGhlIHNhbWUgdGhlcmUKaXMgbm90IGFtYmlndWl0eS4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3F1ZXVlLWVtcHR5LnBuZycgLz4KRW1wdHkgcXVldWUuIFdoZW4gaGVhZCBhbmQgdGFpbCBwb2ludGVycyBhcmUgdGhlIHNhbWUgdGhlcmUKaXMgbm90IGFtYmlndWl0eS4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/threading/lock-free/queue/queue-empty.png' />
+Empty queue. When head and tail pointers are the same there is not ambiguity.
+</span></p>
+<p>In the first case we say that the queue is full; in the second, the queue is empty.</p>
+<p>But if we want to make the queue thread safe without using locks we need to make the push and the pop atomic.</p>
+<p>And here is the problem: if a producer store the data <em>and later</em> moves the head, another producer will see the <em>old</em> head in between and store <em>her</em> data in the same place overwriting the first one.</p>
+<p><label for='CllvdSBtYXkgdGhpbmsgdGhhdCB0aGlzIGNhbm5vdCBoYXBwZW4gYmVjYXVzZSB3ZSBoYXZlIG9ubHkgb25lIHByb2R1Y2VyLgoKQW5kIHlvdSBhcmUgY29ycmVjdCBleGNlcHQgZm9yIHRoZSBtZW1vcnkgcmVvcmRlcnMuCgpXZSBjYW5ub3QgbG9uZ2VyIGd1YXJhbnRlZSB0aGF0IHRoZSBoZWFkIHdhcyBtb3ZlZCAqYWZ0ZXIqIHdyaXRpbmcKdGhlIGRhdGEgZXZlbiBpZiB0aGUgY29kZSBzYXkgc28uIEtlZXAgcmVhZGluZy4gbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CllvdSBtYXkgdGhpbmsgdGhhdCB0aGlzIGNhbm5vdCBoYXBwZW4gYmVjYXVzZSB3ZSBoYXZlIG9ubHkgb25lIHByb2R1Y2VyLgoKQW5kIHlvdSBhcmUgY29ycmVjdCBleGNlcHQgZm9yIHRoZSBtZW1vcnkgcmVvcmRlcnMuCgpXZSBjYW5ub3QgbG9uZ2VyIGd1YXJhbnRlZSB0aGF0IHRoZSBoZWFkIHdhcyBtb3ZlZCAqYWZ0ZXIqIHdyaXRpbmcKdGhlIGRhdGEgZXZlbiBpZiB0aGUgY29kZSBzYXkgc28uIEtlZXAgcmVhZGluZy4gbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+You may think that this cannot happen because we have only one producer.
+<br /><br />
+And you are correct except for the memory reorders.
+<br /><br />
+We cannot longer guarantee that the head was moved <em>after</em> writing the data even if the code say so. Keep reading.
+</span></p>
+<p>Changing the order doesn’t fix the problem: a producer may move the head before writing, trying to <em>reserver</em> the space but now a consumer may forward the tail before the data was actually written reading entries that are empty.</p>
+<p>The problem is that the write <strong>and</strong> the move of the head is not a single atomic action.</p>
+<p>The same happen for reading.</p>
+<p>The key to resolve this is to have two heads and two tails.</p>
+<h2 id="reserve-commit">Reserve-Commit</h2>
+<p>Both the producer and the consumer need their own head and tail.</p>
+<p>The producer moves her head to <em>reserve</em> the space so other writers will begin to write starting from <em>that</em> point.</p>
+<p>At the same time the consumer will not forward beyond the <em>producer’s tail</em>.</p>
+<p>Only when the producer finishes, she will move forward her <em>tail</em>, <em>commiting</em> the change and allowing the readers to proceed.</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<img  class='' alt='' src='/img/threading/lock-free/queue/queue-sp-sc.png' /></figure></p>
+<p>The consumer does something similar: moving the consumer’s head <em>reserves</em> the entries to read so other readers will not pop the same data; and the consumer’s tail serves as a stop-marker for the writers.</p>
+<p>Now, the trick is in how to move those pointers atomically.</p>
+<h2 id="single-consumer-single-producer-queue-buggy-version">Single-consumer single-producer queue (buggy version)</h2>
+<p><label for='ClBzZXVkby1DIGNvZGUsIGZvciBzaW1wbGlmaWNhdGlvbi4KVGhlIGZ1bGwgY29kZSBjYW4gYmUgZm91bmQgaW4gdGhlCltsb2tpIGxpYnJhcnldKGh0dHBzOi8vZ2l0aHViLmNvbS9lbGRpcGEvbG9raSkuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClBzZXVkby1DIGNvZGUsIGZvciBzaW1wbGlmaWNhdGlvbi4KVGhlIGZ1bGwgY29kZSBjYW4gYmUgZm91bmQgaW4gdGhlCltsb2tpIGxpYnJhcnldKGh0dHBzOi8vZ2l0aHViLmNvbS9lbGRpcGEvbG9raSkuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Pseudo-C code, for simplification. The full code can be found in the <a href="https://github.com/eldipa/loki">loki library</a>.
+</span></p>
+<p>Let’s draft the <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code> function:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">capacity</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">free_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EAGAIN</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">new_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">// write the data</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>As we said before we have the producer’s head and the consumer’s tail pointers.</p>
+<p>We load them and check that if there are enough free entries for pushing <code><span class="highlight-candombe-inline"><span class="n">len</span><span class="w"></span></span></code> data. <code><span class="highlight-candombe-inline"><span class="n">capacity</span><span class="w"></span></span></code> here is the size of the queue minus one ensuring that a producer’s head will never reach the consumer’s tail in a push.</p>
+<p>If we have room, we update the producer’s head to the new value: now the consumer had reserved the space between her tail and head pointers to write the data.</p>
+<p>After the write, the producer update her tail pointer so the consumer can move forward and consume the new available data.</p>
+<h2 id="atomic-loads-and-stores">Atomic loads and stores</h2>
+<p>In a single-producer, the head is only modified by a single thread but now, it can be modified by multiple producers.</p>
+<p>To ensure a consistent value, the producer’s tail must be updated (<em>store</em>) atomically so the consumer will not read an incomplete value.</p>
+<p>This applies for consumer’s head too: the producer must <em>load</em> it atomically.</p>
+<p><label for='ClRoZSBjb21waWxlciBtYXkgYXNzdW1lIHRoYXQgYHEtPnByb2RfdGFpbGAgaXMgbmV2ZXIgcmVhZApzbyBpdCBjb3VsZCBzdHJpcCB0aGUgc3RvcmUgb2ZmLiBVbmRlciBhIHNpbmdsZSB0aHJlYWQgc2NlbmFyaW8KdGhpcyBpcyBjb3JyZWN0OyBpbiBhIG11bHRpdGhyZWFkaW5nIHNjZW5hcmlvIHRoaXMgaXMgYSBkaXNhc3Rlci4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBjb21waWxlciBtYXkgYXNzdW1lIHRoYXQgYHEtPnByb2RfdGFpbGAgaXMgbmV2ZXIgcmVhZApzbyBpdCBjb3VsZCBzdHJpcCB0aGUgc3RvcmUgb2ZmLiBVbmRlciBhIHNpbmdsZSB0aHJlYWQgc2NlbmFyaW8KdGhpcyBpcyBjb3JyZWN0OyBpbiBhIG11bHRpdGhyZWFkaW5nIHNjZW5hcmlvIHRoaXMgaXMgYSBkaXNhc3Rlci4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+The compiler may assume that <code><span class="highlight-candombe-inline"><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="w"></span></span></code> is never read so it could strip the store off. Under a single thread scenario this is correct; in a multithreading scenario this is a disaster.
+</span></p>
+<p>In some processors the loads and stores to <code><span class="highlight-candombe-inline"><span class="kt">uint32_t</span><span class="w"></span></span></code> are atomic, however that’s not enough: we also need to prevent the <em>compiler</em> from optimize them.</p>
+<p>We <em>really need</em> that those loads and stores happen even if the compiler thinks that they are not needed.</p>
+<p><label for='CltUYWtlIGF0IGxvb2tdKC9hcnRpY2xlcy8yMDIwLzAyLzA3L0NvbXBpbGVyLU9wdGltaXphdGlvbnMtdW5kZXItUkMuaHRtbCkKb2Ygd2hhdCBgdm9sYXRpbGVgIGRvZXMuCgpTZWUgYWxzbyB0aGUgY29tbWVudHMgYWJvdXQgdGhpcyBpbgpbY3BwcmVmZXJlbmNlXShodHRwczovL2VuLmNwcHJlZmVyZW5jZS5jb20vdy9jcHAvYXRvbWljL21lbW9yeV9vcmRlciNSZWxhdGlvbnNoaXBfd2l0aF92b2xhdGlsZSkgbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CltUYWtlIGF0IGxvb2tdKC9hcnRpY2xlcy8yMDIwLzAyLzA3L0NvbXBpbGVyLU9wdGltaXphdGlvbnMtdW5kZXItUkMuaHRtbCkKb2Ygd2hhdCBgdm9sYXRpbGVgIGRvZXMuCgpTZWUgYWxzbyB0aGUgY29tbWVudHMgYWJvdXQgdGhpcyBpbgpbY3BwcmVmZXJlbmNlXShodHRwczovL2VuLmNwcHJlZmVyZW5jZS5jb20vdy9jcHAvYXRvbWljL21lbW9yeV9vcmRlciNSZWxhdGlvbnNoaXBfd2l0aF92b2xhdGlsZSkgbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+<a href="/articles/2020/02/07/Compiler-Optimizations-under-RC.html">Take at look</a> of what <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> does.
+<br /><br />
+See also the comments about this in <a href="https://en.cppreference.com/w/cpp/atomic/memory_order#Relationship_with_volatile">cppreference</a>
+</span></p>
+<p>For that reason we declare them as <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">volatile</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">prod_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">volatile</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">prod_tail</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">volatile</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cons_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">volatile</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cons_tail</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span>
+</code></pre></div>
+
+<p><label for='ClRoaXMgaXMgd2hhdApbRFBES10oaHR0cDovL2dpdC5kcGRrLm9yZy9kcGRrL3RyZWUvbGliL2xpYnJ0ZV9yaW5nL3J0ZV9yaW5nX2MxMV9tZW0uaCkgZG9lcwp3aGlsZSB0aGUKW0ZyZWVCU0QgdmVyc2lvbl0oaHR0cHM6Ly9zdm53ZWIuZnJlZWJzZC5vcmcvYmFzZS9yZWxlYXNlLzguMC4wL3N5cy9zeXMvYnVmX3JpbmcuaD9yZXZpc2lvbj0xOTk2MjUmYW1wKQphc3N1bWVzIGxvYWRzIGFuZCBzdG9yZXMgYXJlIGF0b21pYy4gbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoaXMgaXMgd2hhdApbRFBES10oaHR0cDovL2dpdC5kcGRrLm9yZy9kcGRrL3RyZWUvbGliL2xpYnJ0ZV9yaW5nL3J0ZV9yaW5nX2MxMV9tZW0uaCkgZG9lcwp3aGlsZSB0aGUKW0ZyZWVCU0QgdmVyc2lvbl0oaHR0cHM6Ly9zdm53ZWIuZnJlZWJzZC5vcmcvYmFzZS9yZWxlYXNlLzguMC4wL3N5cy9zeXMvYnVmX3JpbmcuaD9yZXZpc2lvbj0xOTk2MjUmYW1wKQphc3N1bWVzIGxvYWRzIGFuZCBzdG9yZXMgYXJlIGF0b21pYy4gbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+This is what <a href="http://git.dpdk.org/dpdk/tree/lib/librte_ring/rte_ring_c11_mem.h">DPDK</a> does while the <a href="https://svnweb.freebsd.org/base/release/8.0.0/sys/sys/buf_ring.h?revision=199625&amp;amp">FreeBSD version</a> assumes loads and stores are atomic.
+</span></p>
+<p>If the processor cannot guarantee atomic loads and stores, we can instruct the compiler to generate code for that:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELAXED</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="c1">//....</span>
+<span class="w">    </span><span class="n">__atomic_store_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELAXED</span><span class="p">);</span><span class="w"></span>
+</code></pre></div>
+
+<h2 id="load-and-store-reorder">Load and store reorder</h2>
+<p>Review the following:</p>
+<p><label for='CldlIHJlcXVpcmUgdGhlIHNpemUgb2YgdGhlIHF1ZXVlCnRvIGJlIGEgcG93ZXIgb2YgMjogZW50cnkgYWNjZXNzIHRocm91Z2ggdGhlIGhlYWQvdGFpbCBwb2ludGVyCmlzIG1hc2tlZCBgc2l6ZS0xYCBpbnN0ZWFkIHdpdGggbW9kdWxlIG9mIGBzaXplYC4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldlIHJlcXVpcmUgdGhlIHNpemUgb2YgdGhlIHF1ZXVlCnRvIGJlIGEgcG93ZXIgb2YgMjogZW50cnkgYWNjZXNzIHRocm91Z2ggdGhlIGhlYWQvdGFpbCBwb2ludGVyCmlzIG1hc2tlZCBgc2l6ZS0xYCBpbnN0ZWFkIHdpdGggbW9kdWxlIG9mIGBzaXplYC4KIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+We require the size of the queue to be a power of 2: entry access through the head/tail pointer is masked <code><span class="highlight-candombe-inline"><span class="n">size</span><span class="mi">-1</span><span class="w"></span></span></code> instead with module of <code><span class="highlight-candombe-inline"><span class="n">size</span><span class="w"></span></span></code>.
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">;</span><span class="w"></span>
+</code></pre></div>
+
+<p>What’s wrong?</p>
+<p>The compiler may reorder the store of the tail to <em>happen before</em> the actual write of the data. Even if the compiler does not do that, the CPU may do it.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3Jlb3JkZXItMnN0b3Jlcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3Jlb3JkZXItMnN0b3Jlcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/threading/lock-free/queue/reorder-2stores.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>This is a <em>store reorder</em>. A store is typically much expensive than a load and they are moved <em>upwards</em> to start them sooner or <em>downwards</em> to be delayed hoping to be merged with a further store.</p>
+<p>Loads are subject of similar optimizations and the <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> keyword will not prevent that: <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> works at the compiler level, has no effect on the reorder made by the CPU.</p>
+<p><label for='CkJld2FyZSB0aGF0IHNvbWUgYmFycmllcnMgYXJlIGF0IHRoZSBjb21waWxlciBsZXZlbCBvbmx5IGFuZCBoZXJlIHdlCm5lZWQgdG8gZW5zdXJlIHRoYXQgbmVpdGhlciB0aGUgY29tcGlsZXIgbm9yIHRoZSBDUFUgZG8gc29tZXRoaW5nCip0b28gc21hcnRpc2gqLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkJld2FyZSB0aGF0IHNvbWUgYmFycmllcnMgYXJlIGF0IHRoZSBjb21waWxlciBsZXZlbCBvbmx5IGFuZCBoZXJlIHdlCm5lZWQgdG8gZW5zdXJlIHRoYXQgbmVpdGhlciB0aGUgY29tcGlsZXIgbm9yIHRoZSBDUFUgZG8gc29tZXRoaW5nCip0b28gc21hcnRpc2gqLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Beware that some barriers are at the compiler level only and here we need to ensure that neither the compiler nor the CPU do something <em>too smartish</em>.
+</span></p>
+<p>We have the option to use a <em>full write barrier</em> in the middle so all the stores that <em>happen before</em> of the tail update are <em>perceived</em> by other threads as if they happen before the update</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="c1">// write the data</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">wmb</span><span class="p">();</span><span class="w">  </span><span class="c1">// write memory barrier</span>
+
+<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">;</span><span class="w"></span>
+</code></pre></div>
+
+<p>Nobody is saying that everything will happen in the same <em>sequential</em> order, just that the notion of <code><span class="highlight-candombe-inline"><span class="n">A1</span><span class="p">,</span><span class="w"> </span><span class="n">A2</span><span class="w"></span></span></code>, … happen before <code><span class="highlight-candombe-inline"><span class="n">B1</span><span class="p">,</span><span class="w"> </span><span class="n">B2</span><span class="w"></span></span></code>, … is preserved.</p>
+<p><figure><figcaption><span markdown='1'>
+<code><span class="highlight-candombe-inline"><span class="n">A1</span><span class="p">,</span><span class="w"> </span><span class="n">A2</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">barrier</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">B1</span><span class="p">,</span><span class="w"> </span><span class="n">B2</span><span class="w"></span></span></code> <em>and</em> <code><span class="highlight-candombe-inline"><span class="n">A2</span><span class="p">,</span><span class="w"> </span><span class="n">A1</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">barrier</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">B2</span><span class="p">,</span><span class="w"> </span><span class="n">B1</span><span class="w"></span></span></code> are two valid outcomes: reorder on each side of the barrier are perfectly valid (left).
+<br /><br />
+Reorder across the barrier are not (right).
+</span></figcaption>
+<img  class='' alt='' src='/img/threading/lock-free/queue/reorder-barrier.png' /></figure></p>
+<p>A full write barrier is the nuke option as it prevents <em>any</em> store reorder across that point for all the threads.</p>
+<p>A more precise and efficient solution is possible in these days however.</p>
+<h2 id="acquire---release-memory-model">Acquire - Release memory model</h2>
+<p>Consider the last part of the <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="w"></span></span></code> and the first part of the <code><span class="highlight-candombe-inline"><span class="n">pop</span><span class="w"></span></span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// write the data</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">pop</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">old_cons_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">prod_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prod_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_cons_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ready_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ready_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EINVAL</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ...</span>
+</code></pre></div>
+
+<p>The producer updates (stores) her tail to <em>signal</em> the consumer that can move forward.</p>
+<p>The consumer is <em>waiting until</em> the producer’s tail is moved forward so there are entries ready for reading.</p>
+<p>There is no a real wait: the <code><span class="highlight-candombe-inline"><span class="n">pop</span><span class="p">()</span><span class="w"></span></span></code> just fails if there is nothing to read but conceptually there is a <em>signal</em> and <em>wait</em> relationship between the producer and the consumer on the producer’s tail pointer.</p>
+<p>This is the same that happens when a thread <em>acquires</em> a mutex: other thread will wait on it until the first thread <em>release</em> it.</p>
+<p>The modern processors and compilers introduced this concept in the Acquire - Release memory model.</p>
+<p>We say that the consumer <em>acquires</em> the producer’s tail and the producer <em>release</em> it.</p>
+<p><label for='Cgo8aW1nIGNsYXNzPSJmdWxsd2lkdGgiIHN0eWxlPSJmbG9hdDogcmlnaHQ7IG1hcmdpbi1sZWZ0OiAxMHB4OyIgc3JjPSIvaW1nL3RocmVhZGluZy9sb2NrLWZyZWUvcXVldWUvcmVvcmRlci13aGF0LnBuZyIgLz4KKiJObyByZWFkcyBvciB3cml0ZXMgaW4gdGhlIGN1cnJlbnQgdGhyZWFkIGNhbiBiZSByZW9yZGVyZWQKYWZ0ZXIgdGhpcyBgUkVMRUFTRWAgc3RvcmUuIEFsbCB3cml0ZXMgaW4gdGhlIGN1cnJlbnQgdGhyZWFkIGFyZSB2aXNpYmxlCmluIG90aGVyIHRocmVhZHMgdGhhdCBgQUNRVUlSRWAgKGxvYWQpIHRoZSBzYW1lIGF0b21pYyB2YXJpYWJsZS4KTm8gcmVhZHMgb3Igd3JpdGVzIGluIHRob3NlIHRocmVhZHMgY2FuIGJlIHJlb3JkZXJlZCAKYmVmb3JlIHRoYXQgbG9hZCBlaXRoZXIuIioKCkZyb20gYHN0ZDo6bWVtb3J5X29yZGVyYCwgW2NwcHJlZmVyZW5jZS5jb21dKGh0dHBzOi8vZW4uY3BwcmVmZXJlbmNlLmNvbS93L2NwcC9hdG9taWMvbWVtb3J5X29yZGVyI1JlbGVhc2UtQWNxdWlyZV9vcmRlcmluZykKbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='Cgo8aW1nIGNsYXNzPSJmdWxsd2lkdGgiIHN0eWxlPSJmbG9hdDogcmlnaHQ7IG1hcmdpbi1sZWZ0OiAxMHB4OyIgc3JjPSIvaW1nL3RocmVhZGluZy9sb2NrLWZyZWUvcXVldWUvcmVvcmRlci13aGF0LnBuZyIgLz4KKiJObyByZWFkcyBvciB3cml0ZXMgaW4gdGhlIGN1cnJlbnQgdGhyZWFkIGNhbiBiZSByZW9yZGVyZWQKYWZ0ZXIgdGhpcyBgUkVMRUFTRWAgc3RvcmUuIEFsbCB3cml0ZXMgaW4gdGhlIGN1cnJlbnQgdGhyZWFkIGFyZSB2aXNpYmxlCmluIG90aGVyIHRocmVhZHMgdGhhdCBgQUNRVUlSRWAgKGxvYWQpIHRoZSBzYW1lIGF0b21pYyB2YXJpYWJsZS4KTm8gcmVhZHMgb3Igd3JpdGVzIGluIHRob3NlIHRocmVhZHMgY2FuIGJlIHJlb3JkZXJlZCAKYmVmb3JlIHRoYXQgbG9hZCBlaXRoZXIuIioKCkZyb20gYHN0ZDo6bWVtb3J5X29yZGVyYCwgW2NwcHJlZmVyZW5jZS5jb21dKGh0dHBzOi8vZW4uY3BwcmVmZXJlbmNlLmNvbS93L2NwcC9hdG9taWMvbWVtb3J5X29yZGVyI1JlbGVhc2UtQWNxdWlyZV9vcmRlcmluZykKbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+<img class="fullwidth" style="float: right; margin-left: 10px;" src="/img/threading/lock-free/queue/reorder-what.png" /> <em>“No reads or writes in the current thread can be reordered after this <code><span class="highlight-candombe-inline"><span class="n">RELEASE</span><span class="w"></span></span></code> store. All writes in the current thread are visible in other threads that <code><span class="highlight-candombe-inline"><span class="n">ACQUIRE</span><span class="w"></span></span></code> (load) the same atomic variable. No reads or writes in those threads can be reordered before that load either.”</em>
+<br /><br />
+From <code><span class="highlight-candombe-inline"><span class="n">std</span><span class="o">::</span><span class="n">memory_order</span><span class="w"></span></span></code>, <a href="https://en.cppreference.com/w/cpp/atomic/memory_order#Release-Acquire_ordering">cppreference.com</a>
+</span></p>
+<p>While a full barrier ensures a “happen before” <em>across all the threads</em>, the <code><span class="highlight-candombe-inline"><span class="n">ACQUIRE</span><span class="w"></span></span></code> ensures that all the stores of <em>that</em> thread that happen before the <code><span class="highlight-candombe-inline"><span class="n">ACQUIRE</span><span class="w"></span></span></code> will be perceived than <em>happen before</em> by <em>only</em> the thread that is doing the <code><span class="highlight-candombe-inline"><span class="n">RELEASE</span><span class="w"></span></span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ....</span>
+<span class="w">    </span><span class="c1">// write the data</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">__atomic_store_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELEASE</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">pop</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">old_cons_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">prod_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prod_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_cons_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ready_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ready_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EINVAL</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// ....</span>
+</code></pre></div>
+
+<p><label for='CltEUERLXShodHRwOi8vZ2l0LmRwZGsub3JnL2RwZGsvdHJlZS9saWIvbGlicnRlX3JpbmcvcnRlX3JpbmdfYzExX21lbS5oKSB1c2VzCnRoaXMgd2hpbGUgdGhlCltGcmVlQlNEIHZlcnNpb25dKGh0dHBzOi8vc3Zud2ViLmZyZWVic2Qub3JnL2Jhc2UvcmVsZWFzZS84LjAuMC9zeXMvc3lzL2J1Zl9yaW5nLmg/cmV2aXNpb249MTk5NjI1JmFtcCkKdXNlcyBhIGZ1bGwgbWVtb3J5IGJhcnJpZXIuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CltEUERLXShodHRwOi8vZ2l0LmRwZGsub3JnL2RwZGsvdHJlZS9saWIvbGlicnRlX3JpbmcvcnRlX3JpbmdfYzExX21lbS5oKSB1c2VzCnRoaXMgd2hpbGUgdGhlCltGcmVlQlNEIHZlcnNpb25dKGh0dHBzOi8vc3Zud2ViLmZyZWVic2Qub3JnL2Jhc2UvcmVsZWFzZS84LjAuMC9zeXMvc3lzL2J1Zl9yaW5nLmg/cmV2aXNpb249MTk5NjI1JmFtcCkKdXNlcyBhIGZ1bGwgbWVtb3J5IGJhcnJpZXIuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+<a href="http://git.dpdk.org/dpdk/tree/lib/librte_ring/rte_ring_c11_mem.h">DPDK</a> uses this while the <a href="https://svnweb.freebsd.org/base/release/8.0.0/sys/sys/buf_ring.h?revision=199625&amp;amp">FreeBSD version</a> uses a full memory barrier.
+</span></p>
+<p>Indeed the <code><span class="highlight-candombe-inline"><span class="n">RELEASE</span><span class="w"></span></span></code> ensures that the producer’s writes will be visible by the consumer once she <code><span class="highlight-candombe-inline"><span class="n">ACQUIRE</span><span class="w"></span></span></code> the updated producer’s tail pointer in a much efficient way that a full barrier</p>
+<h2 id="single-producer-single-consumer-queue-final-version">Single-producer single-consumer queue (final version)</h2>
+<p>This is the wrap up: a not only lock-free but a wait-free single-producer single-consumer queue (or ring).</p>
+<p>For those how want something compilable, the final bits are in <a href="https://github.com/eldipa/loki">the loki library</a>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">capacity</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">free_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ENOBUFS</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">new_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">__atomic_store_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELEASE</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">pop</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">old_cons_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">prod_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prod_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_cons_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ready_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ready_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">ready_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EINVAL</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">new_cons_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">old_cons_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_cons_head</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_cons_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">];</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">__atomic_store_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">,</span><span class="w"> </span><span class="n">new_cons_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELEASE</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<h2 id="open-questions">Open questions</h2>
+<p>In the <a href="https://svnweb.freebsd.org/base/release/8.0.0/sys/sys/buf_ring.h?revision=199625&amp;amp">FreeBSD queue</a> the <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">pop</span><span class="p">()</span><span class="w"></span></span></code> are wrapped with <code><span class="highlight-candombe-inline"><span class="n">critical_enter</span><span class="p">()</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">critical_exit</span><span class="p">()</span><span class="w"></span></span></code>. I’m not sure exactly why. From the thread safety point of view, they should not be necessary but they may be there for some reason.</p>
+<h2 id="references">References</h2>
+<p>Kip Macy implemented a <a href="https://svnweb.freebsd.org/base/release/8.0.0/sys/sys/buf_ring.h?revision=199625&amp;amp">buffer ring</a> for FreeBSD. It was the base foundation for DPDK’s <a href="http://git.dpdk.org/dpdk/tree/lib/librte_ring/rte_ring_c11_mem.h">rte_ring</a>.</p>
+<p>Both were used as references along with</p>
+<ul>
+<li><a href="https://en.cppreference.com/w/cpp/atomic/memory_order#Release-Acquire_ordering">Release-Acquire ordering, cppreference.com</a></li>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html">GCC Atomics, gcc.gnu.org</a></li>
+<li><a href="https://doc.dpdk.org/guides-19.05/prog_guide/ring_lib.html">Ring library, doc.dpdk.org</a></li>
+<li><a href="https://www.youtube.com/watch?v=A8eCGOqgvH4">C++ and Beyond 2012: Herb Sutter - Atomic Weapons - Part 1</a></li>
+<li><a href="https://www.youtube.com/watch?v=KeLBd2EJLOU">C++ and Beyond 2012: Herb Sutter - Atomic Weapons - Part 2</a></li>
+</ul>
+<p>References at March 2020.</p>
+</article>
+<span class="print-footer">Lock-Free Queue - Part I - March 22, 2020 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

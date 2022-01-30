@@ -1,0 +1,468 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Verifying some bithacks</title>
+  <meta name="description" content="Verifying some bithacks">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/05/17/Verifying-Some-Bithacks.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Verifying some bithacks
+</h1>
+<p class="subtitle">
+May 17, 2021
+</p>
+<p>We are going to verify some of the <a href="https://graphics.stanford.edu/~seander/bithacks.html">bit twiddling hacks</a> made and collected by Sean Eron Anderson and other authors.</p>
+<p>This is <em>the</em> classical scenario to put on test your Z3 skills.<!--more--></p>
+<p>The plan is to pick 4 <em>bithacks</em> and verify them with Z3. Who knows, we may find a bug.</p>
+<h2 id="detect-if-two-integers-have-opposite-signs">Detect if two integers have opposite signs</h2>
+<p>This is a simple <a href="https://graphics.stanford.edu/~seander/bithacks.html#DetectOppositeSigns">bithack</a> suggested by Manfred Weis.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">;</span><span class="w">               </span><span class="c1">// input values to compare signs</span>
+
+<span class="kt">bool</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">x</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="c1">// true iff x and y have opposite signs</span>
+</code></pre></div>
+
+<p>It has an immediate translation to Z3 using <code><span class="highlight-candombe-inline"><span class="n">BitVecs</span></span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">BitVecs</span><span class="p">,</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">If</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">BitVecs</span><span class="p">(</span><span class="s1">&#39;x y&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">^</span> <span class="n">y</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span>
+</code></pre></div>
+
+<p>To verify this we will set an <em>assumption</em> that contradicts the expected (and correct) value: if we find it satisfiable it means that the model found by Z3 is a <em>counterexample</em> and then a bug.</p>
+<p>An unsatisfiable means that the code is correct.</p>
+<p>In this case the assumption is simple:</p>
+<ul>
+<li>we say that <code><span class="highlight-candombe-inline"><span class="n">f</span></span></code> is true (the inputs have <em>opposite</em> signs) <strong>and</strong> the inputs have the <em>same</em> signs;</li>
+<li><em>and</em> we say that <code><span class="highlight-candombe-inline"><span class="n">f</span></span></code> is false <strong>and</strong> the inputs have the <em>opposite</em> signs.</li>
+</ul>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">same_sign</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">),</span> <span class="n">And</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">If</span><span class="p">(</span><span class="n">same_sign</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="o">!=</span> <span class="n">f</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+<span class="n">unsat</span>
+</code></pre></div>
+
+<p>Verified.</p>
+<h2 id="conditionally-negate-a-value-without-branching">Conditionally negate a value without branching</h2>
+<p>The following <a href="https://graphics.stanford.edu/~seander/bithacks.html#ConditionalNegate">bithack</a> suggested by Avraham Plotnitzky.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">bool</span><span class="w"> </span><span class="n">fDontNegate</span><span class="p">;</span><span class="w">  </span><span class="c1">// Flag indicating we should not negate v.</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w">             </span><span class="c1">// Input value to negate if fDontNegate is false.</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">             </span><span class="c1">// result = fDontNegate ? v : -v;</span>
+
+<span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fDontNegate</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">fDontNegate</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
+</code></pre></div>
+
+<p>Its translation to Z3 is <em>almost</em> immediate:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">BitVecs</span><span class="p">,</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">If</span><span class="p">,</span> <span class="n">Or</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">fDontNegate</span><span class="p">,</span> <span class="o">=</span> <span class="n">BitVecs</span><span class="p">(</span><span class="s1">&#39;fDontNegate&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">v</span><span class="p">,</span> <span class="o">=</span> <span class="n">BitVecs</span><span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">fDontNegate</span> <span class="o">^</span> <span class="p">(</span><span class="n">fDontNegate</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">v</span>
+</code></pre></div>
+
+<p>The C code uses a <code><span class="highlight-candombe-inline"><span class="nb">bool</span></span></code> for the <code><span class="highlight-candombe-inline"><span class="n">fDontNegate</span></span></code> variable but in Z3 we use a <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code> of the same width than the input.</p>
+<p>Z3 does not know how to <em>upcast</em> a <code><span class="highlight-candombe-inline"><span class="nb">bool</span></span></code> to a <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code> and mixing variables of <em>different sort</em> leads to error.</p>
+<p>Instead we just see the boolean as an <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code>.</p>
+<p>The C99 and C++11 specifications say that a boolean can be seen as a <code><span class="highlight-candombe-inline"><span class="mi">0</span></span></code> (<code><span class="highlight-candombe-inline"><span class="n">false</span></span></code>) or as a <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> (<code><span class="highlight-candombe-inline"><span class="n">true</span></span></code>).</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Or</span><span class="p">(</span><span class="n">fDontNegate</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">fDontNegate</span> <span class="o">==</span> <span class="mi">1</span><span class="p">))</span>   <span class="c1"># force a boolean value</span>
+</code></pre></div>
+
+<p>Now, we assume the contradiction.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">If</span><span class="p">(</span><span class="n">fDontNegate</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="o">-</span><span class="n">v</span><span class="p">)</span> <span class="o">!=</span> <span class="n">f</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+<span class="n">unsat</span>
+</code></pre></div>
+
+<p>And nope, no counterexample was found: the bithack is correct.</p>
+<h2 id="merge-bits-from-two-values-according-to-a-mask">Merge bits from two values according to a mask</h2>
+<p>This <a href="https://graphics.stanford.edu/~seander/bithacks.html#MaskedMerge">bithack</a> was suggested by Ron Jeffery.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w">    </span><span class="c1">// value to merge in non-masked bits</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w">    </span><span class="c1">// value to merge in masked bits</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">mask</span><span class="p">;</span><span class="w"> </span><span class="c1">// 1 where bits from b should be selected; 0 where from a.</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">    </span><span class="c1">// result of (a &amp; ~mask) | (b &amp; mask) goes here</span>
+
+<span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">((</span><span class="n">a</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">);</span><span class="w"></span>
+</code></pre></div>
+
+<p>The verification steps are the same, nothing new around here.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">BitVecs</span><span class="p">,</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">If</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">Bools</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">BitVecs</span><span class="p">(</span><span class="s1">&#39;a b mask&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">r</span> <span class="o">=</span> <span class="n">a</span> <span class="o">^</span> <span class="p">((</span><span class="n">a</span> <span class="o">^</span> <span class="n">b</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">mask</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(((</span><span class="n">a</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">mask</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">b</span> <span class="o">&amp;</span> <span class="n">mask</span><span class="p">))</span> <span class="o">!=</span> <span class="n">r</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+<span class="n">unsat</span>
+</code></pre></div>
+
+<h2 id="select-the-bit-position-from-the-most-significant-bit-with-the-given-count-rank">Select the bit position (from the most-significant bit) with the given count (rank)</h2>
+<p><em>This is a long one.</em></p>
+<p>This <a href="https://graphics.stanford.edu/~seander/bithacks.html#SelectPosFromMSBRank">bithack</a> was suggested by Juha Järvi and it is much more complex than the others bithacks.</p>
+<p>Given an <code><span class="highlight-candombe-inline"><span class="n">uint64_t</span></span></code> number <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> and a rank <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> (a number between 1 and 64), the bithack returns the <em>position</em> <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code> of the bit that it is the <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code>th <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bit counting from the left.</p>
+<p>The following 64-bit code selects the position of the <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code>th <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bit when counting from the left.</p>
+<p>The C code is quite large so we are going to go to the Z3 code directly, step by step.</p>
+<p>The bithack uses <code><span class="highlight-candombe-inline"><span class="n">a</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">b</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">c</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">d</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">t</span></span></code> as intermediate and temporal values. These are not <em>variables</em> of the model so we don’t need to create a <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code> for them.</p>
+<p>On the other hand, <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> are. In the C code <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> is 32 bits integer and <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> is 64 bits but in the following setup both will have the same width of 64 bits.</p>
+<p>This is required because Z3 does not know how to <em>upper cast</em> or <em>promote</em> a 32 bits integer to 64 bits.</p>
+<p>It is easier to use 64 bits and <em>constraint</em> its range.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">BitVecs</span><span class="p">,</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">If</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">Bools</span><span class="p">,</span> <span class="n">ULT</span><span class="p">,</span> <span class="n">Not</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">v</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">BitVecs</span><span class="p">(</span><span class="s1">&#39;v r&#39;</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="p">,</span> <span class="n">r</span> <span class="o">&lt;=</span> <span class="mi">64</span><span class="p">)</span> <span class="c1"># rank valid range [1-64]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">UL3</span> <span class="o">=</span> <span class="mh">0x5555555555555555</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">UL5</span> <span class="o">=</span> <span class="mh">0x3333333333333333</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">UL11</span> <span class="o">=</span> <span class="mh">0xf0f0f0f0f0f0f0f</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">UL101</span> <span class="o">=</span> <span class="mh">0xff00ff00ff00ff</span>
+</code></pre></div>
+
+<p>This is the first setup. Notice how <code><span class="highlight-candombe-inline"><span class="n">a</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">b</span></span></code> and others are just <em>expressions</em> and not Z3’s variables.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="p">((</span><span class="n">v</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">UL3</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&amp;</span> <span class="n">UL5</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span><span class="n">a</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">UL5</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="p">(</span><span class="n">b</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">UL11</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="p">(</span><span class="n">c</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">UL101</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">&gt;&gt;</span> <span class="mi">32</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">d</span> <span class="o">&gt;&gt;</span> <span class="mi">48</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">64</span>
+</code></pre></div>
+
+<p>In C <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> is a <em>variable</em>: a piece of memory which value can change.</p>
+<p>But in Z3 we want to preserve the variables and <strong>don’t change them</strong>. Their should be <em>constants</em>.</p>
+<p>Instead we will use a simple Python variable <code><span class="highlight-candombe-inline"><span class="n">q</span></span></code> to hold the intermediate expressions.</p>
+<p>In C we have:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">r</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="p">(</span><span class="n">t</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="p">((</span><span class="n">t</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">8</span><span class="p">))</span><span class="w">   </span><span class="c1">// note the -= modifier</span>
+</code></pre></div>
+
+<p>But in Python we introduce <code><span class="highlight-candombe-inline"><span class="n">q</span></span></code> instead</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">q</span>  <span class="o">=</span> <span class="n">r</span> <span class="o">-</span> <span class="p">(</span><span class="n">t</span> <span class="o">&amp;</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">))</span>   <span class="c1"># changed from -= to a plain =</span>
+</code></pre></div>
+
+<p>Now <code><span class="highlight-candombe-inline"><span class="n">q</span></span></code> is a Z3 expression and we can replace it by another like in C we replace one value by other for the <em>same</em> variable.</p>
+<p>The rest are just a copy-and-paste from the bithack.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">-=</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">256</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">3</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">t</span>  <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="mi">16</span><span class="p">))</span> <span class="o">&amp;</span> <span class="mh">0xff</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">-=</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">256</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">-=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&amp;</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">t</span>  <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="mi">8</span><span class="p">))</span> <span class="o">&amp;</span> <span class="mh">0xf</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">-=</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">256</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">-=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&amp;</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">t</span>  <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="mi">4</span><span class="p">))</span> <span class="o">&amp;</span> <span class="mh">0x7</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">-=</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">256</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">-=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&amp;</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">t</span>  <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span> <span class="o">&amp;</span> <span class="mh">0x3</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">-=</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">256</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">7</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">q</span> <span class="o">-=</span> <span class="p">(</span><span class="n">t</span> <span class="o">&amp;</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">t</span>  <span class="o">=</span> <span class="p">(</span><span class="n">v</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">&amp;</span> <span class="mh">0x1</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">-=</span> <span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">256</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">65</span> <span class="o">-</span> <span class="n">s</span>
+</code></pre></div>
+
+<h3 id="verification---when-s-64">Verification - when <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">!=</span> <span class="mi">64</span></span></code></h3>
+<p>Now, the funny part. How to verify this?</p>
+<p>First a sanity check: <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code> must always to be between 1 and 64 – it is the position of a bit in a 64 bits width number after all.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">Or</span><span class="p">(</span><span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">64</span> <span class="o">&lt;</span> <span class="n">s</span><span class="p">))</span> <span class="c1"># check out of range for selected bit</span>
+<span class="n">unsat</span>
+</code></pre></div>
+
+<p>Ok, let’s see what <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code> value we have for some values of <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="c1"># The 60th bit is the first 1 counting from the left (rank 1)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="mb">0b00010001</span><span class="p">,</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">sat</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="mi">60</span>
+
+<span class="c1"># The 64th bit is the second 1 counting from the left (rank 2)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="mb">0b00010001</span><span class="p">,</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">sat</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">model</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="mi">64</span>
+</code></pre></div>
+
+<p>Verifying that <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code> is correct for <em>every</em> possible value of <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> <strong>by enumerating each possible case is not feasible</strong>.</p>
+<p>It’s just too expensive, in time, memory and brain power.</p>
+<p>So the plan is build a set of constraints that lead to a contradiction against <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code>: if it is satisfiable, the model (solution) found will be a counterexample and we’ll know that <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code> is wrong.</p>
+<p>Assume that we fix <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> to <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">=</span> <span class="mi">60</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">r</span> <span class="o">=</span> <span class="mi">2</span></span></code>. What we know about <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code>?</p>
+<p>We know that <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> has one <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bit set at position 60 (reading from left), which it is the <em>rank bit</em> and on the left of it it has one and only one <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bit more.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> could be one of these to name a few:</p>
+<pre><code>MSB  rank bit  LSB
+   \     V    /
+    ::10010000      (the :: means a bunch of zero
+    ::01010000       to fill the 64 bits bit vector)
+    ::00110011
+ /------|
+one and only one
+    1 bit</code></pre>
+<p>From the picture we can think, what value <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> is the <em>lowest</em> of all the possible <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> values that satisfy <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">=</span> <span class="mi">60</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">r</span> <span class="o">=</span> <span class="mi">2</span></span></code>?</p>
+<p>A number is lower than other than another if it has fewer <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits and those are in the right side (lesser significant bits).</p>
+<p>We cannot reduce the count of <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits on the left side of the rank bit: we are forced to have <code><span class="highlight-candombe-inline"><span class="n">r</span> <span class="o">-</span> <span class="mi">1</span></span></code> bits otherwise we would violate the <code><span class="highlight-candombe-inline"><span class="n">r</span> <span class="o">=</span> <span class="mi">2</span></span></code> condition. But we have no restriction on the right side.</p>
+<p>The <em>minimum</em> <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> value has all zeros on the right and it has all the <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits <em>“pushed”</em> to the left of the rank bit as possible.</p>
+<p>In short:</p>
+<pre><code>     rank bit
+         V
+    ::00110000 ← the minimum
+    ::10010000
+    ::01010000
+    ::00110011
+ /------|
+a single 1</code></pre>
+<p>Given <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> we can write the <code><span class="highlight-candombe-inline"><span class="n">minimum</span></span></code> value in two steps:</p>
+<ul>
+<li>build the <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits sequence including the rank bit</li>
+<li>shift the sequence to the left filling the right bits with 0s</li>
+</ul>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">minimum</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">r</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">64</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The next question is, what are the <em>greatest</em> <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> of all the possible <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> that satisfy <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code>?</p>
+<p>The <em>maximum</em> <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> value has all the <code><span class="highlight-candombe-inline"><span class="n">r</span> <span class="o">-</span> <span class="mi">1</span></span></code> <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits on the left (most significant bits) and the bits on the right of the rank bits are all <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code>.</p>
+<p>It is basically the same reasoning for the minimum but in the opposite direction.</p>
+<p>In short:</p>
+<pre><code>     rank bit
+         V
+    ::00110000 ← the minimum
+    ::10010000
+    ::01010000
+    ::00110011
+   1::00011111 ← the maximum
+ /------|
+a single 1</code></pre>
+<p>The maximum has two parts.</p>
+<ul>
+<li>the high part which are the <code><span class="highlight-candombe-inline"><span class="n">r</span> <span class="o">-</span> <span class="mi">1</span></span></code> bits pushed to the left</li>
+</ul>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">highpart</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">r</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">64</span> <span class="o">-</span> <span class="p">(</span><span class="n">r</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</code></pre></div>
+
+<ul>
+<li>and the lower part which it is the rank bit and all the bits on its right being <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code></li>
+</ul>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">lowerpart</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">64</span> <span class="o">-</span> <span class="n">s</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p>Trivially, the maximum is:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">maximum</span> <span class="o">=</span> <span class="n">highpart</span> <span class="o">|</span> <span class="n">lowerpart</span>
+</code></pre></div>
+
+<p>Now, let’s try to find a counterexample: a number <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> that does <strong>not</strong> satisfy the minimum/maximum range for <em>some valid</em> <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">s</span></span></code>.</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">BitVecs</span></span></code> are <strong>signed</strong> integers and they use <strong>signed</strong> comparisons. In our definition of <code><span class="highlight-candombe-inline"><span class="n">minimum</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">maximum</span></span></code> we though them as <strong>unsigned</strong> so we need to use Z3’s <code><span class="highlight-candombe-inline"><span class="n">ULT</span></span></code> functions (unsigned less than).</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">not_in_range</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="n">ULT</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">minimum</span><span class="p">),</span> <span class="n">ULT</span><span class="p">(</span><span class="n">maximum</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">s</span> <span class="o">!=</span> <span class="mi">64</span><span class="p">,</span> <span class="n">not_in_range</span><span class="p">)</span> <span class="c1"># byexample: +timeout=120 +skip</span>
+<span class="n">unsat</span>
+</code></pre></div>
+
+<p>The extra assumption <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">!=</span> <span class="mi">64</span></span></code> is because while 64 is a valid position, it is <em>also</em> used as an error.</p>
+<p>A trivial error settings which <em>violates</em> the minimum/maximum range could be:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="mi">64</span><span class="p">,</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">not_in_range</span><span class="p">)</span>
+<span class="n">sat</span>
+</code></pre></div>
+
+<h3 id="verification---when-s-64-first-try">Verification - when <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">==</span> <span class="mi">64</span></span></code> (first try)</h3>
+<p>Because <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">=</span> <span class="mi">64</span></span></code> means that the rank bit is the LSB, we know that we must have <code><span class="highlight-candombe-inline"><span class="n">r</span> <span class="o">-</span> <span class="mi">1</span></span></code> bits in the rest of the bit vector.</p>
+<p>In particular we must have exactly <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits in <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> – no more, no less.</p>
+<p>So we have two scenarios:</p>
+<ul>
+<li>when we have <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> with its LSB set to <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> <em>and</em> with exactly <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits in total</li>
+<li>when <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> has less than <code><span class="highlight-candombe-inline"><span class="n">r</span></span></code> <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits and therefore it is an expected error case</li>
+</ul>
+<p>For the bit-count we can use a <a href="https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetNaive">naive bithack</a></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">count</span> <span class="o">+=</span> <span class="n">v</span> <span class="o">&amp;</span> <span class="mi">1</span>
+<span class="o">...</span>         <span class="n">v</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span> <span class="c1"># we can override v here &#39;cause it won&#39;t affect the outer v</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">count</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">good_cases</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">v</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">bad_cases</span> <span class="o">=</span> <span class="n">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">r</span>
+</code></pre></div>
+
+<p>Finally we check the negation of it. Sadly the check takes <strong>too much time</strong> and I don’t know the result</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="mi">64</span><span class="p">,</span> <span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">good_cases</span><span class="p">),</span> <span class="n">Not</span><span class="p">(</span><span class="n">bad_cases</span><span class="p">)))</span>     <span class="c1"># byexample: +skip</span>
+<span class="s2">&quot;i don&#39;t know bro&quot;</span>
+</code></pre></div>
+
+<h3 id="verification---when-s-64-second-try">Verification - when <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">==</span> <span class="mi">64</span></span></code> (second try)</h3>
+<p>The naive approach iterates 64 times, perhaps we could use the <a href="https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan">Kernighan’s way</a>.</p>
+<p>In C, it goes through as many iterations as <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits are in <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"> </span><span class="c1">// count the number of bits set in v</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w"> </span><span class="c1">// c accumulates the total bits set in v</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"> </span><span class="n">c</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">v</span><span class="w"> </span><span class="o">&amp;=</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">// clear the least significant bit set</span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>However in Z3 we must go through all the 64 iterations because in the Kernighan’s code, the loops ends when the variable <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> is zero.</p>
+<p>In C, you are <em>evaluating</em> the code in each instruction; in Z3 you are <em>defining</em> code but <strong>no evaluation is taking place</strong>.</p>
+<p>This makes an iteration dependent of the previous one: when <em>checking</em> (evaluation) the model yields <code><span class="highlight-candombe-inline"><span class="n">v</span> <span class="o">=</span> <span class="mi">0</span></span></code> for some iteration, <em>then</em> the rest of the iteration should be no-ops.</p>
+<p>So we <em>must</em> express this in Z3, we must stablish the relation between one iteration and the next one for all the 64 iterations:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">z3</span> <span class="kn">import</span> <span class="n">BitVecVal</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="n">BitVecVal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">):</span>
+<span class="o">...</span>         <span class="c1"># Create a &quot;new generation&quot; expression for &#39;c&#39;</span>
+<span class="o">...</span>         <span class="c1"># based if v != 0 or not</span>
+<span class="o">...</span>         <span class="n">c</span> <span class="o">=</span> <span class="n">If</span><span class="p">(</span><span class="n">v</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="c1"># Only the last instruction can &quot;update&quot; &#39;v&#39;</span>
+<span class="o">...</span>         <span class="n">v</span> <span class="o">=</span> <span class="n">If</span><span class="p">(</span><span class="n">v</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">v</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">v</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">c</span>
+</code></pre></div>
+
+<p>In the code above I introduced an auxiliary <code><span class="highlight-candombe-inline"><span class="n">c</span></span></code> variable. This is because the C variable <code><span class="highlight-candombe-inline"><span class="n">c</span> <span class="o">=</span> <span class="mi">0</span></span></code> will be interpreted by Z3’s <code><span class="highlight-candombe-inline"><span class="n">If</span></span></code> as a boolean (<code><span class="highlight-candombe-inline"><span class="n">false</span></span></code>) which cannot be promoted later to a <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code>.</p>
+<p>To enforce the correct type, we use a <code><span class="highlight-candombe-inline"><span class="n">BitVecVal</span></span></code> value initialized to 0.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">good_cases</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">v</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">bad_cases</span> <span class="o">=</span> <span class="n">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">r</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="mi">64</span><span class="p">,</span> <span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">good_cases</span><span class="p">),</span> <span class="n">Not</span><span class="p">(</span><span class="n">bad_cases</span><span class="p">)))</span>     <span class="c1"># byexample: +skip</span>
+<span class="s2">&quot;i don&#39;t know bro&quot;</span>
+</code></pre></div>
+
+<p>Unfortunately, it didn’t work either.</p>
+<h3 id="verification---when-s-64-third-try---the-good-one">Verification - when <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">==</span> <span class="mi">64</span></span></code> (third try - the good one)</h3>
+<p>In both cases, the naive and the Kernighan’s way of counting bits created 64 restrictions.</p>
+<p>In particular they are <em>nested</em> or <em>entangled</em> restrictions: one restriction depends on a previous one.</p>
+<p>Moreover, we use arithmetic addition (<code><span class="highlight-candombe-inline"><span class="o">+</span></span></code>). When we perform a bit operation like <em>and</em> (<code><span class="highlight-candombe-inline"><span class="o">&amp;</span></span></code>), each output bit is calculated based on its two input bits and <em>independently</em> from the rest.</p>
+<p>But when we add two bit vectors, the <em>carry bit</em> is propagated from the LSB to the MSB making the output bit <strong>dependant</strong> of the input bits on its right (LSBs).</p>
+<p>The arithmetic addition <em>entangles</em> the bits.</p>
+<p>Long story short: it will be slow.</p>
+<p><em>The key is to operate in parallel.</em></p>
+<p>And this <a href="https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel">bithack</a> suggested by Andrew Shapira, improved later by Charlie Gordon and Don Clugston, Eric Cole, Al Williams and Sean Eron Anderson will do the trick.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">UL3</span> <span class="o">=</span> <span class="mh">0x5555555555555555</span>
+<span class="o">...</span>     <span class="n">UL15</span> <span class="o">=</span> <span class="mh">0x3333333333333333</span>
+<span class="o">...</span>     <span class="n">UL255a</span> <span class="o">=</span> <span class="mh">0xf0f0f0f0f0f0f0f</span>
+<span class="o">...</span>     <span class="n">UL255b</span> <span class="o">=</span> <span class="mh">0x101010101010101</span>
+<span class="o">...</span>     <span class="n">S</span> <span class="o">=</span> <span class="p">(</span><span class="mi">8</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span>
+<span class="o">...</span>     <span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="p">((</span><span class="n">v</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">UL3</span><span class="p">)</span>            <span class="c1"># temp</span>
+<span class="o">...</span>     <span class="n">v</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span> <span class="o">&amp;</span> <span class="n">UL15</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span><span class="n">v</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">UL15</span><span class="p">)</span>  <span class="c1"># temp</span>
+<span class="o">...</span>     <span class="n">v</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span> <span class="o">+</span> <span class="p">(</span><span class="n">v</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">UL255a</span>         <span class="c1"># temp</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span> <span class="o">*</span> <span class="n">UL255b</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">S</span>               <span class="c1"># count</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">c</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">z</span> <span class="o">=</span> <span class="n">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>    <span class="c1"># compute this once</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">good_cases</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">z</span> <span class="o">==</span> <span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">v</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">bad_cases</span> <span class="o">=</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="n">r</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="mi">64</span><span class="p">,</span> <span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">good_cases</span><span class="p">),</span> <span class="n">Not</span><span class="p">(</span><span class="n">bad_cases</span><span class="p">)))</span> <span class="c1"># byexample: +timeout=600</span>
+<span class="n">unsat</span>
+</code></pre></div>
+
+<p><em>Victory!</em></p>
+<h2 id="the-hidden-bug">The hidden bug</h2>
+<p>The link in the index to the last bithack is broken.</p>
+<p>Not very exciting bug though.</p>
+<h2 id="final-thoughts">Final thoughts</h2>
+<p>Verification is hard.</p>
+<p>Thinking in a way to build a set of restrictions and assumptions that could lead to a contradiction <strong>without</strong> leading to an exponential search is not trivial.</p>
+<p>Working with shifts, masks and binary operations is not a problem but when we do arithmetics the bits not longer are independent.</p>
+<p>Arithmetic operations <em>entangle</em> the bits.</p>
+<p><code><span class="highlight-candombe-inline"><span class="k">for</span></span></code>-loops are also another way to entangle the bits when the loop condition depends on the value of a Z3 variable.</p>
+<p><code><span class="highlight-candombe-inline"><span class="k">for</span></span></code>-loops like those forces us to model <strong>all</strong> the iterations.</p>
+<p>With respect to Z3, <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code> works pretty well but it lacks of a way to <em>promote</em> or <em>upcast</em> to wider <code><span class="highlight-candombe-inline"><span class="n">BitVecs</span></span></code>. This needs to be done by hand.</p>
+<p>And don’t forget that <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code> is a <strong>signed integer</strong> so <code><span class="highlight-candombe-inline"><span class="o">&lt;</span></span></code> are signed by default.</p>
+</article>
+<span class="print-footer">Verifying some bithacks - May 17, 2021 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

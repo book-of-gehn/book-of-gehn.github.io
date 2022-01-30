@@ -1,0 +1,376 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>TL;DR Stylometrics</title>
+  <meta name="description" content="TL;DR Stylometrics">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/11/12/TLDR-Stylometrics.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+TL;DR Stylometrics
+</h1>
+<p class="subtitle">
+November 12, 2020
+</p>
+<p>A ghost writer is a person that writes a document, essay or paper but the work is presented by other person who <em>claims</em> to be the author.</p>
+<p><a href="https://thebestschools.org/resources/detecting-deterring-ghostwritten-papers-best-practices/">Detecting deterring ghostwritten papers</a> is an article written by a (ex)ghost writer and explains what happens behind the scene when a student pays for this <em>dark</em> service.</p>
+<p>Would be possible to detect this in an automated way?</p>
+<p>Given a set of documents, could we determine of they were written or not by the person or people who claim to be the authors?</p>
+<p>This problem is known as <em>authorship attribution</em> and I will show a few papers that I read about this, in particular around the concept of <em>stylometric</em>, fingerprints that the real author leaves when he or she writes.<!--more--></p>
+<h2 id="application-papers">Application papers</h2>
+<h3 id="who-wrote-the-15th-book-of-oz-an-application-of-multivariate-analysis-to-authorship-attribution"><em>Who Wrote the 15th Book of Oz? An Application of Multivariate Analysis to Authorship Attribution</em></h3>
+<p><label for='CkF1dGhvcnM6Ckpvc8OpIE5pbG8gRy4gQmlub25nbwogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6Ckpvc8OpIE5pbG8gRy4gQmlub25nbwogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: José Nilo G. Binongo
+</span></p>
+<p>An application case for authorship attribution called also <em>a non-traditional method of attibuting authorship</em>.</p>
+<p>The author categories several writings of the universe of Oz to determine the author of “The Royal Book of Oz” among two options: Lyman Frank Baum, the creator of the Oz universe and Ruth Plumly Thompson, a children’s writer that continued the work of Baum.</p>
+<p>The feature selected was the frequency of the <em>functional words</em>.</p>
+<p><em>“Among the parts of speech, function words are made up of pronouns, auxiliary verbs, prepositions, conjunctions, determiners, and degree adverbs. These parts of speech have a more grammatical than lexical function.”</em></p>
+<p>Some functional words are more specific and inherent has more meaning (content). Depending of the book these may appear more or less.</p>
+<p>Because the frequency depends of the content and not on the author, these “more specific” functional words are removed.</p>
+<p>The author of the paper takes the top 50 of the most frequency functional words to remove these “too specific” words.</p>
+<p>The 50 dimensionality is then mapped (reduced) to 2 using principal component analysis (PCA).</p>
+<blockquote>
+<p>A very good paper.</p>
+</blockquote>
+<h3 id="delta-for-middle-dutchauthor-and-copyist-distinction-in-walewein"><em>Delta for Middle DutchAuthor and Copyist Distinction in Walewein</em></h3>
+<p><label for='CkF1dGhvcnM6CkthcmluYSB2YW4gRGFsZW4tT3NrYW0gYW5kIEpvcmlzIHZhbiBadW5kZXJ0CgpIdXlnZW5zIEluc3RpdHV1dCwgVGhlIEhhZ3VlLCBUaGUgTmV0aGVybGFuZHMKIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6CkthcmluYSB2YW4gRGFsZW4tT3NrYW0gYW5kIEpvcmlzIHZhbiBadW5kZXJ0CgpIdXlnZW5zIEluc3RpdHV1dCwgVGhlIEhhZ3VlLCBUaGUgTmV0aGVybGFuZHMKIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Karina van Dalen-Oskam and Joris van Zundert
+<br /><br />
+Huygens Instituut, The Hague, The Netherlands
+</span></p>
+<p>The Walewein text is known to be written by one author and then continued by a second author.</p>
+<p>The authors of the paper used stylometric to determine where one author picked and continued the work of the former.</p>
+<p>The authors decided to lemmatize the text.</p>
+<p>Lemmatize a text means to take the words and rewrite them in a normalized way. For example words like “play, playing, played” are mapped to a single “play” verb.</p>
+<p>Then they used Yule’s K and Burrows’ Delta metrics over a rolling window of 2000 lines of text.</p>
+<p>Yule’s Characteristic K is a estimation of the richness of a text: text with a lot of repeated words are said to be less rich while the text with less repeated words <em>has more vocabulary</em>.</p>
+<p>K is defines as:</p>
+$$ K = 10^4 \left( -\frac{1}{N} + \sum_{i = 1}^{N} V_i \left( \frac{i}{N} \right)^2 \right) $$
+<p>where \(N\) is the count of words in a text and \(V_i\) the number of words that appeared \(i\) times.</p>
+<p>Burrows’ Delta models a set of documents as a matrix.</p>
+<p>Each document is modeled as a algebraic vector where each position represent a word and contains the frequency of that word.</p>
+<p>The frequencies per document are normalizes so they sum up 1.</p>
+<p>The vectors are then stacked forming a matrix having in each column the frequencies of a particular word in all the documents.</p>
+<p>Each column is normalized such the mean or average of them is 0 and the standard deviation is 1. A procedure common in ML.</p>
+<p>The Delta between to documents is then the Manhattan distance between their two vectors.</p>
+<blockquote>
+<p>Interesting reading.</p>
+</blockquote>
+<h2 id="survey-papers">Survey Papers</h2>
+<h3 id="a-framework-for-authorship-identification-of-online-messages-writing-style-features-and-classification-techniques"><em>A Framework for Authorship Identification of Online Messages: Writing-Style Features and Classification Techniques</em></h3>
+<p><label for='CkF1dGhvcnM6ClJvbmcgWmhlbmcsIEppZXh1biBMaSwgSHNpbmNodW4gQ2hlbiwgYW5kIFphbiBIdWFuZwoKTmV3IFlvcmsgVW5pdmVyc2l0eSwgVW5pdmVyc2l0eSBvZiBBcml6b25hCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6ClJvbmcgWmhlbmcsIEppZXh1biBMaSwgSHNpbmNodW4gQ2hlbiwgYW5kIFphbiBIdWFuZwoKTmV3IFlvcmsgVW5pdmVyc2l0eSwgVW5pdmVyc2l0eSBvZiBBcml6b25hCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Rong Zheng, Jiexun Li, Hsinchun Chen, and Zan Huang
+<br /><br />
+New York University, University of Arizona
+</span></p>
+<p><em>“key-word-based features are widely accepted to be ineffective in author identification in multiple- topic corpora”</em> But there are exception if the content-words denotes a particular knowledge about a topic that could be correlated with the author.</p>
+<blockquote>
+<p>An example of this is the “Walewein” paper where the 100-150 most common words which are principally composed of content-words were able to distinguish the two authors of a text while the 1-50 most common words, principally function-words, were able to detect the scribes that also modified the text.</p>
+</blockquote>
+<p>The paper summarizes the features used by several papers (2006):</p>
+<ul>
+<li>lexical: average word/sentence length, vocabulary richness</li>
+<li>syntactic: freq of words, use of punctuation</li>
+<li>structural: paragraph length, indentation, greeting/farewell statements</li>
+<li>content-specific: freq of keywords</li>
+</ul>
+<blockquote>
+<p>The structural seems very interesting. Opening phrases (like “In my opinion I …”) could be very characteristic of the author. The use of listing (the ones that begin with <code>'-'</code> or <code>'*'</code>) also.</p>
+</blockquote>
+<p>Table 3 describes more of these in details.</p>
+<p><em>“Structural features and content-specific features showed particular discriminating capabilities for authorship identification on online messages. SVM and neural networks outperformed C4.5 and neural networks significantly for the authorship-identification task.”</em></p>
+<p>Most of the cited papers analyze very small set of documents (~80) and a very small set of authors (~4).</p>
+<p>Some exceptions have 300 or even 1200 documents and 7, 10 and 45 authors.</p>
+<blockquote>
+<p>Quite small</p>
+</blockquote>
+<p><em>“Content-specific features improved the performance of the three classifiers signifi- cantly for the English datasets […] e.g., some people preferred check as a payment method; some people mostly sell Microsoft products).”</em></p>
+<blockquote>
+<p>I don’t think that this is true in general (like a characteristic of the author). The dataset used in the paper has a very broad topic so it is possible that some people wrote only about a sub topic and other people about another hence having the discriminant.</p>
+</blockquote>
+<blockquote>
+<p>Very good paper to read it again.</p>
+</blockquote>
+<h3 id="a-prototype-for-authorship-attribution-studies"><em>A Prototype for Authorship Attribution Studies</em></h3>
+<p><label for='CkF1dGhvcnM6ClBhdHJpY2sgSnVvbGEsIEpvaG4gU29ma28sIFBhdHJpY2sgQnJlbm5hbgoKRHVxdWVzbmUgVW5pdmVyc2l0eQogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6ClBhdHJpY2sgSnVvbGEsIEpvaG4gU29ma28sIFBhdHJpY2sgQnJlbm5hbgoKRHVxdWVzbmUgVW5pdmVyc2l0eQogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Patrick Juola, John Sofko, Patrick Brennan
+<br /><br />
+Duquesne University
+</span></p>
+<p>A survey of the current state of the art. It points to some other resources and shows some results but nothing concrete.</p>
+<p>The authors proposes a three-phases “framework” to develop/research stylometrics: canonization, determination of the event set and statistical inference.</p>
+<p>In short: extract text from the media, remove spurious noise and apply other kind of filtering/normalization (canonization); from there select the features to analyze and possible eliminate uninteresting events (determination) and finally perform a machine learning technique (inference).</p>
+<p>A current practice these days.</p>
+<p>The <em>Java Graphical Authorship Attribution Program</em> or JGAAP program is mentioned.</p>
+<p>A substantial part of the paper focus in uninteresting parts of JGAAP like the Graphical User Interface (GUI), saving/loading files and high level code description.</p>
+<h2 id="more-theoretical-like-papers">More Theoretical-like Papers</h2>
+<h3 id="computational-constancy-measures-of-textsyules-k-and-rényis-entropy"><em>Computational Constancy Measures of TextsYule’s K and Rényi’s Entropy</em></h3>
+<p><label for='CkF1dGhvcnM6Ckt1bWlrbyBUYW5ha2EtSXNoaWksIFNodW5zdWtlIEFpaGFyYQoKS3l1c2h1IFVuaXZlcnNpdHksIEpTVC1QUkVTVE8sIEd1bm9zeSBJbmMuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6Ckt1bWlrbyBUYW5ha2EtSXNoaWksIFNodW5zdWtlIEFpaGFyYQoKS3l1c2h1IFVuaXZlcnNpdHksIEpTVC1QUkVTVE8sIEd1bm9zeSBJbmMuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Kumiko Tanaka-Ishii, Shunsuke Aihara
+<br /><br />
+Kyushu University, JST-PRESTO, Gunosy Inc.
+</span></p>
+<p><em>“A constancy measure for a natural language text is […] a computational measure that converges to a value for a certain amount of text and remains invariant for any larger size […], its value could be considered as a text characteristic.”</em></p>
+<p>Yule’s K is defined as</p>
+$$ K = C \left( -\frac{1}{N} + \sum_{i = 1}^{imax} V(i,N) \left( \frac{i}{N} \right)^2 \right) $$
+<p>where \(N\) is the total number of words in the text, \(V(N)\) the number of distinct words, \(V(i,N)\) the number of words that appear \(i\) times and \(imax\) the largest frequency of a word.</p>
+<blockquote>
+<p>We could use \(N\) as \(imax\) because for the \(i\) that \(imax < i <= N\) the value of \(V(i,N)\) is zero but using \(imax\) directly is faster.</p>
+</blockquote>
+<p>The constant \(C\) was defined by Yule to \(10^4\).</p>
+<p>Golcher’s V is defines as \(k/N\) where \(N\) is the length of the string and \(k\) the number of inner nodes of a Patricia suffix tree of the text.</p>
+<p>The paper describes other metrics including \(H_a\), the Renyi Entropy, a generalization of the Shannon entropy defined as:</p>
+$$ H_a(X) = \frac{1}{1-a} \textrm{log} \left( \sum_{\forall X} P(X)^a \right) $$
+<p>Where \(a ≥ 0\), \(a ≠ 1\), \(P(X)\) the probability function of \(X\).</p>
+<p>When \(a = 0\), it reduces to \(H_0(X) = 1 \textrm{log} \left( \sum_{\forall X} 1 \right)\), then \(H_0(X) = \textrm{log} ( |X| )\) (aka indicates the number of distinct occurrences of \(X\))</p>
+<p>When a approximates to 1 (limit), \(H\) reduces to Shannon entropy.</p>
+<p>For \(H_2(X)\) the authors shown that <em>“[\(H_2\)] immediately shows the essential equivalence to Yule’s K</em>”</p>
+<p>The authors shown empirically that \(H_2\) converges to a value for texts of between \(10^2\) and \(10^4\) words/characters depending of \(H_2\) was defined for words or characters respectively.</p>
+<p>The authors also shown that \(H_2\) is not a good discriminant for authorship: <em>“Examining the nature of the convergent values revealed that K does not possess the discriminatory power of author identification as Yule had hoped.”</em></p>
+<blockquote>
+<p>\(H_2\) or Yule’s Y converges fast so it could be applied to short terms. Defined as it was in the paper (for words and characters) it will not work for authorship attribution but it may work under a different feature set (input) instead of words/characters.</p>
+</blockquote>
+<h3 id="cross-entropy-and-linguistic-typology"><em>Cross-entropy and linguistic typology</em></h3>
+<p><label for='CkF1dGhvcnM6ClBhdHJpY2sgSnVvbGEKClVuaXZlcnNpdHkgb2YgT3hmb3JkCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6ClBhdHJpY2sgSnVvbGEKClVuaXZlcnNpdHkgb2YgT3hmb3JkCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Patrick Juola
+<br /><br />
+University of Oxford
+</span></p>
+<p>Describes briefly the application of the <em>cross-entroy</em> for language categorization.</p>
+<p><em>“Cross-entropy appears to be a meaningful and easy to measure method of determining”linguistic distance” that is more sensitive to variances in lexical choice, word usage, style, and syntax than conventional methods.”</em></p>
+<h3 id="understanding-and-explaining-delta-measures-for-authorship-attribution"><em>Understanding and explaining Delta measures for authorship attribution</em></h3>
+<p><label for='CkF1dGhvcnM6ClN0ZWZhbiBFdmVydCwgVGhvbWFzIFByb2lzbCwgRm90aXMgSmFubmlkaXMsIElzYWJlbGxhIFJlZ2VyLCBTdGVmZmVuIFBpZWxzdHLDtm0sIENocmlzdG9mIFNjaMO2Y2ggYW5kIFRob3JzdGVuIFZpdHQKCkZyaWVkcmljaC1BbGV4YW5kZXItVW5pdmVyc2l0w6R0IEVybGFuZ2VuLU7DvHJuYmVyZyBhbmQgSnVsaXVzLU1heGltaWxpYW5zLVVuaXZlcnNpdMOkdCBXw7xyemJ1cmcKIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6ClN0ZWZhbiBFdmVydCwgVGhvbWFzIFByb2lzbCwgRm90aXMgSmFubmlkaXMsIElzYWJlbGxhIFJlZ2VyLCBTdGVmZmVuIFBpZWxzdHLDtm0sIENocmlzdG9mIFNjaMO2Y2ggYW5kIFRob3JzdGVuIFZpdHQKCkZyaWVkcmljaC1BbGV4YW5kZXItVW5pdmVyc2l0w6R0IEVybGFuZ2VuLU7DvHJuYmVyZyBhbmQgSnVsaXVzLU1heGltaWxpYW5zLVVuaXZlcnNpdMOkdCBXw7xyemJ1cmcKIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Stefan Evert, Thomas Proisl, Fotis Jannidis, Isabella Reger, Steffen Pielström, Christof Schöch and Thorsten Vitt
+<br /><br />
+Friedrich-Alexander-Universität Erlangen-Nürnberg and Julius-Maximilians-Universität Würzburg
+</span></p>
+<p>Describes and analyzes Burrows’ Delta distance based on the Manhattan distance and different variations of it including Euclidean, Linear and Cosine distances.</p>
+<blockquote>
+<p>A paper to review later if required.</p>
+</blockquote>
+<h2 id="good-but-no-so-good-papers">Good but no so good papers</h2>
+<h3 id="whos-at-the-keyboard-authorship-attribution-in-digital-evidence-investigations"><em>Who’s At The Keyboard? Authorship Attribution in Digital Evidence Investigations</em></h3>
+<p><label for='CkF1dGhvcnM6CkNhcm9sZSBFLiBDaGFza2kuCgpJbnN0aXR1dGUgZm9yIExpbmd1aXN0aWMgRXZpZGVuY2UsIEluYwogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6CkNhcm9sZSBFLiBDaGFza2kuCgpJbnN0aXR1dGUgZm9yIExpbmd1aXN0aWMgRXZpZGVuY2UsIEluYwogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Carole E. Chaski.
+<br /><br />
+Institute for Linguistic Evidence, Inc
+</span></p>
+<p>The paper presents the results of some other researches. The one that scored the highest authorship attribution was:</p>
+<p><em>“counting particular errors or idiosyncrasies and inputting this into a statistical classification procedure <a href="using">…</a> supported vector machines (SVM) and C4.5 analysis”</em></p>
+<p>The paper names these as <em>“stylemarkers”</em>.</p>
+<p>For stylometrics, the paper mentions references to other papers where they used <em>“word length, phrase length, sentence length, vocabulary frequency, distribution of words of different lengths”</em> as features and SVM (with accuracy that oscillated between 46% and 100%), discriminant function analysis (accuracy between 87% and 89%) and using neural networks (accuracy 84%).</p>
+<p>The dataset for the paper consisted on several writings from several authors about 10 different topics.</p>
+<p>While the paper takes into consideration some biases like age and gender the 10 topics are to my opinion biased to “personal topics”.</p>
+<p><em>“Describe a traumatic or terrifying event in your life and how you overcame it.”</em> is an example.</p>
+<p>The paper uses the ALIAS software and restricts the analysis of the samples to only <em>“punctuation, syntactic and lexical”</em> features.</p>
+<p>The punctuation consists of counting the <em>placement</em> of the punctuation marks: at the end of clause (EOC), at the end of phrase (EOP) and in the middle of a word (like the dash in “re-invent” or the apostrophe in “don’”)</p>
+<p>The author claims that this is <em>“slighter better performance”</em> than the counting of the punctuation mark alone where the placement is ignored.</p>
+<p>The syntactic structures refers to the way that a “common” construction deviates to an “uncommon” construction.</p>
+<p>The “common/uncommon” are named “unmarked/marked” constructions. This is the technical name and “common/uncommon” are the names that I gave them due my lack of expertise in the topic.</p>
+<p>A “common” (unmarked) construction could be “how old are you?”. In English we could say “old” and “young” but it is very common to use “old” for some reason. The “uncommon” (marked) would be “how young are you?”.</p>
+<p>The “common/uncommon” does not limit to words but to phrases as well, no only in literal phrases but in the <em>syntax</em> of these.</p>
+<p>“the white house” follows the <code>&lt;adjetive&gt; &lt;noun&gt;</code> “common” pattern.</p>
+<p>While it is clear that these “common/uncommon” feature could spot non-native writers, it is not very clear to me how to use it for authorship attribution in general.</p>
+<p>Perhaps seeing repetitive patterns in the “uncommon” parts of a phrase? Like “the big white house” and “the white big house”: the order of the adjetives may leave a fingerprint of the author.</p>
+<p>The last feature is lexical features (word lengths, and stuff like that). The paper distinguishes between functional and content words but use both.</p>
+<p>These features (punctuation, syntactic and lexical) are extracted using ALIAS. Sadly it is a paid, closed source software (done by the author of the paper) and the dataset seems to be closed too.</p>
+<p>For the “machine learning” part, the paper used linear discriminant function analysis (DFA).</p>
+<h3 id="determination-of-writing-styles-to-detect-similarities-in-digital-documents"><em>Determination of writing styles to detect similarities in digital documents</em></h3>
+<p><label for='CkF1dGhvcnM6CllvaGFuZHJpIFJpbCBHaWwsIFl1bmlldCBkZWwgQ2FybWVuIFRvbGwgUGFsbWEsIEVkZHkgRm9uc2VjYSBMYWhlbnMKClVuaXZlcnNpdHkgb2YgSW5mb3JtYXRpb24gU2NpZW5jZXMsIEhhdmFuYQogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6CllvaGFuZHJpIFJpbCBHaWwsIFl1bmlldCBkZWwgQ2FybWVuIFRvbGwgUGFsbWEsIEVkZHkgRm9uc2VjYSBMYWhlbnMKClVuaXZlcnNpdHkgb2YgSW5mb3JtYXRpb24gU2NpZW5jZXMsIEhhdmFuYQogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Yohandri Ril Gil, Yuniet del Carmen Toll Palma, Eddy Fonseca Lahens
+<br /><br />
+University of Information Sciences, Havana
+</span></p>
+<p>The paper describes a stylometric mathematical model:</p>
+<ul>
+<li>frequency of stop words: articles, prepositions, adverbs and conjunctions.</li>
+<li>level of difficulty: what’s the <em>education level</em> required to understand the text. It uses the Flesch-Kincaid index (English only).</li>
+<li>richness of vocabulary</li>
+<li>mean sentence length</li>
+<li>mean word length</li>
+</ul>
+<p>The authors claim that <em>“The proposed method for determining writing styles can be used in a scenario where it is necessary to describe documents whose authorship has been validated.”</em></p>
+<p>But the “discussion and conclusions” section talks more about the underlying motivation for a person to do plagiarism than about the model.</p>
+<p>They also claim</p>
+<p><em>“The extraction of the style vector marks the difference between authors, whether or not they cover the same topic. By applying the proposed mathematical model to a considerable set of documents, it was found that trends really do exist when it comes to drafting, and that such trends put a stamp of authenticity onto a document.”</em></p>
+<blockquote>
+<p>In a personal opinion, I’m have my doubts about these statements based on the few numbers shown in the paper.</p>
+</blockquote>
+<h3 id="stylometry-based-approach-for-detecting-writing-style-changes-in-literary-texts"><em>Stylometry-based Approach for Detecting Writing Style Changes in Literary Texts</em></h3>
+<p><label for='CkF1dGhvcnM6CkhlbGVuYSBHw7NtZXotQWRvcm5vLCBKdWFuLVBhYmxvIFBvc2FkYXMtRHVyYW4sIEdlcm3DoW4gUmlvcy1Ub2xlZG8sIEdyaWdvcmkgU2lkb3JvdiwgR2VyYXJkbyBTaWVycmEKCkluc3RpdHV0byBQb2xpdMOpY25pY28gTmFjaW9uYWwsIE1leGljbzsgVW5pdmVyc2lkYWQgTmFjaW9uYWwgQXV0w7Nub21hIGRlIE3DqXhpY28sIE1leGljbzsgSW5zdGl0dXRvIFBvbGl0w6ljbmljbyBOYWNpb25hbCAoSVBOKSwgTWV4aWNvOyBDZW50cm8gTmFjaW9uYWwgZGUgSW52ZXN0aWdhY2nDs24geSBEZXNhcnJvbGxvIFRlY25vbMOzZ2ljbywgTWV4aWNvCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6CkhlbGVuYSBHw7NtZXotQWRvcm5vLCBKdWFuLVBhYmxvIFBvc2FkYXMtRHVyYW4sIEdlcm3DoW4gUmlvcy1Ub2xlZG8sIEdyaWdvcmkgU2lkb3JvdiwgR2VyYXJkbyBTaWVycmEKCkluc3RpdHV0byBQb2xpdMOpY25pY28gTmFjaW9uYWwsIE1leGljbzsgVW5pdmVyc2lkYWQgTmFjaW9uYWwgQXV0w7Nub21hIGRlIE3DqXhpY28sIE1leGljbzsgSW5zdGl0dXRvIFBvbGl0w6ljbmljbyBOYWNpb25hbCAoSVBOKSwgTWV4aWNvOyBDZW50cm8gTmFjaW9uYWwgZGUgSW52ZXN0aWdhY2nDs24geSBEZXNhcnJvbGxvIFRlY25vbMOzZ2ljbywgTWV4aWNvCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: Helena Gómez-Adorno, Juan-Pablo Posadas-Duran, Germán Rios-Toledo, Grigori Sidorov, Gerardo Sierra
+<br /><br />
+Instituto Politécnico Nacional, Mexico; Universidad Nacional Autónoma de México, Mexico; Instituto Politécnico Nacional (IPN), Mexico; Centro Nacional de Investigación y Desarrollo Tecnológico, Mexico
+</span></p>
+<p>The paper compares the performance of different algorithms (Logistic Regression and two implementation of Support Vector Machine) and different sets of features (statistics like mean, average of word length, sentences length, punctuation and stop words among others) to classify writings of different authors.</p>
+<p>The Figure 1 of the paper shows that - using SVM over punctuation feature only yields a very good results. - using Logistic Regression as default for other combination of features yields very good results.</p>
+<p>While those are interesting facts, there is no clear evidence of it (a very small corpus was used).</p>
+<p>The paper shows that some authors’ styles are more sensible to some features and algorithms than others.</p>
+<p>From a total of 6 authors:</p>
+<p><em>“[Punctuation-based models] classified the writing stage of a work above 70% of the times for two authors […], [in the case of other two authors] the combination of phraseology-and punctuation-based features obtained the best performance. The combination of all types of features obtained the best performance for [the remaining two authors]”</em></p>
+<blockquote>
+<p>It doesn’t look solid.</p>
+</blockquote>
+<h2 id="what-kicked-everything">What kicked everything</h2>
+<h3 id="detecting-deterring-ghostwritten-papers-best-practices"><em>Detecting deterring ghostwritten papers, best practices</em></h3>
+<p><label for='CkF1dGhvcnM6CkRhdmlkIEEuIFRvbWFyIChFZCBEYW50ZSkKIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkF1dGhvcnM6CkRhdmlkIEEuIFRvbWFyIChFZCBEYW50ZSkKIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Authors: David A. Tomar (Ed Dante)
+</span></p>
+<p><a href="https://thebestschools.org/resources/detecting-deterring-ghostwritten-papers-best-practices/">It is what started this.</a></p>
+<p>Classify the students paying for a ghost writer in three categories:</p>
+<ul>
+<li>Non native language: students that they need to write an essay in a foreign language, let’s say English. The student knows that he/she will have more opportunities to succeed if the essay is written by a native English speaker.</li>
+<li>Composition/Research deficient students: students that, while they can speak and write in the target language, they have hard time to write an essay or doing the homework.</li>
+<li>Lazy students: they prefer to pay for a service instead of doing the work.</li>
+</ul>
+<p>Detecting a ghost writer is hard and having solid proof of it is harder.</p>
+<p>The best strategy is to disallow the possibility from the begin making the decision of hiring a ghost writer much expensive, riskier.</p>
+<ul>
+<li>In-class writing: the students write during the class so it is hard for a ghost writer to be there</li>
+<li>Multi-draft process: have a periodic review with the students and check the evolution of the essay/work.</li>
+<li>Personalization of the subject matter: use topics that are more personal and can be bind to the author. That part is important, the subject must be bound to the student in some verificable way otherwise a ghost writer could just write a personal subject about him/her!</li>
+<li>Original course materials: make the topic have something very unique. Don’t repeat yourself.</li>
+</ul>
+<p>These should be combined and adapted to the particular class.</p>
+<blockquote>
+<p>Having 1o1 meetings with the students randomly chosen to discuss the implementation details of a work makes the “multi-draft process” scalable.</p>
+</blockquote>
+<p>Exit interviews (interviews that happen when the student does a final submission) are an example of that.</p>
+<blockquote>
+<p>A very nice article to read.</p>
+</blockquote>
+<h2 id="resources">Resources</h2>
+<p>NLTK’s <a href="https://www.nltk.org/_modules/nltk/tokenize/punkt.html">punkt</a> module: Punkt Sentence Tokenizer</p>
+<p><em>“This tokenizer divides a text into a list of sentences by using an unsupervised algorithm to build a model for abbreviation words, collocations, and words that start sentences. It must be trained on a large collection of plaintext in the target language before it can be used.”</em></p>
+<p><em>“The NLTK data package includes a pre-trained Punkt tokenizer for English.”</em></p>
+<p>It is used to determine when a period marks the end of a sentence and when it doesn’t and things like that.</p>
+<p><a href="https://github.com/euske/pdfminer/">PDFMiner</a> (community): parser for PDF files</p>
+<p><a href="https://cligs.hypotheses.org/577">Blog post</a> that explains how to call R code from Python using the <code>rpy2</code> module. In particular how to call the R package <code>stylo</code> from Python</p>
+<p><a href="https://github.com/computationalstylistics/stylo">Stylo</a>: R package for stylometric analyses</p>
+<p><a href="https://github.com/evllabs/JGAAP">JGAAP</a>: Java Graphical Authorship Attribution Program is a tool to allow nonexperts to use cutting edge machine learning techniques on text attribution problems</p>
+<p><a href="https://www.nltk.org/">NTLK</a>: Natural Language Toolkit for Python</p>
+<p><a href="https://stanfordnlp.github.io/stanza/index.html">Stanza</a>: A Python NLP Package for Many Human Languages</p>
+<p><a href="https://github.com/chrisspen/weka">Weka</a>: a toolset/framework for ML like skilearn but with a GUI. It is very interesting.</p>
+<p><a href="https://cschoel.github.io/nolds/nolds.html">Nolds</a>: Python package with algorithms to analyze random sequences (signals, market time series, text perhaps?)</p>
+<h2 id="some-other-resources">Some other resources</h2>
+<p><a href="https://github.com/Hassaan-Elahi/Writing-Styles-Classification-Using-Stylometric-Analysis">Identifying Different Writing Styles in a Document Intrinsically Using Stylometric Analysis</a> It is a single Python file with several metrics poorly documented. It could be useful to see the code for some cases because it has a lot of metrics, most of them mentioned in the paper of Zheng.</p>
+<p><a href="https://www.turnitin.com/">Turnitin</a>: among other stuff, it has a plagiarism detection.</p>
+<p><a href="https://aliastechnology.com">ALIAS</a> is program developed by Carole E. Chaski for <em>“lemmatizing, computing lexical frequency ranking, calculating lexical, sentential and text lengths, punctuation-edge counting, Part-Of-Speech-tagging (POS-tagging) , n-graph and n-gram sorting, and markedness subcategorizing”</em>.</p>
+<p>Sadly it is a paid, closed source software.</p>
+<blockquote>
+<p>n-gram is used to denote the sequence of \(n\) elements like words or POS tags while n-graph denotes sequences of \(n\) characters.</p>
+</blockquote>
+</article>
+<span class="print-footer">TL;DR Stylometrics - November 12, 2020 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

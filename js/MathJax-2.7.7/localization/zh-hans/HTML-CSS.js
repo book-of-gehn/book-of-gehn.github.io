@@ -1,0 +1,1 @@
+MathJax.Localization.addTranslation("zh-hans","HTML-CSS",{version:"2.7.7",isLoaded:!0,strings:{LoadWebFont:"加载web字体%1",CantLoadWebFont:"Web字体%1无法加载",FirefoxCantLoadWebFont:"您在使用火狐浏览器，她不支持从远程主机下载任何web字体",CantFindFontUsing:"无法找到使用%1的有效字体",WebFontsNotAvailable:"Web字体不知为何无法使用？！——我们将为阁下转换为图片字体"}}),MathJax.Ajax.loadComplete("[MathJax]/localization/zh-hans/HTML-CSS.js");

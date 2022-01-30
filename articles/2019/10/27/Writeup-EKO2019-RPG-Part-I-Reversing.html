@@ -1,0 +1,270 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>RPG - Part I (IDA writeup - EKO 2019)</title>
+  <meta name="description" content="RPG - Part I (IDA writeup - EKO 2019)">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2019/10/27/Writeup-EKO2019-RPG-Part-I-Reversing.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+RPG - Part I (IDA writeup - EKO 2019)
+</h1>
+<p class="subtitle">
+October 27, 2019
+</p>
+<p><code>rpg</code> is a buggy game where the player can attack to and defend from attacks of monsters.</p>
+<p>Let’s see if we can know how it works.<!--more--></p>
+<p>It is a 64 bits ELF <a href="/assets/writeups/eko2019/reversing/rpg">binary</a>:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ file rpg                      <span class="c1"># byexample: +norm-ws</span>
+rpg: ELF <span class="m">64</span>-bit LSB executable, x86-64, version <span class="m">1</span> <span class="o">(</span>GNU/Linux<span class="o">)</span>,
+statically linked, <span class="k">for</span> GNU/Linux <span class="m">2</span>.6.32,
+BuildID<span class="o">[</span>sha1<span class="o">]=</span>&lt;...&gt;, stripped
+</code></pre></div>
+
+<p>We expect some part of <code>libc</code> in the binary and no symbol at all.</p>
+<p>So our first task is to find what pieces of the binary are of the game and which aren’t like <code>stdlib</code>.</p>
+<h2 id="strings-as-starting-points">Strings as Starting Points</h2>
+<p>Let’s see what strings we can find:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ strings -a -16 rpg <span class="p">|</span> head -14
+Monster %s attack to %s with %d damage.
+%s has stopped the attack.
+%s is dead. GG WP.
+Monster %s defends with %d of defense.
+%s hit a critical to %s.
+<span class="m">0</span><span class="o">)</span> Create player
+<span class="m">1</span><span class="o">)</span> Update player name
+<span class="m">2</span><span class="o">)</span> Delete player
+<span class="m">3</span><span class="o">)</span> Player attack
+<span class="m">4</span><span class="o">)</span> Player defend
+<span class="m">5</span><span class="o">)</span> Get current <span class="nb">time</span>
+User created, first delete it.
+Enter player name:
+User not created.
+</code></pre></div>
+
+<p>Running the program we can map those strings to a mental model of what it does:</p>
+<p><label for='CklmIHRoZSBwbGF5ZXIgd2FzIG5vdCBjcmVhdGVkLCB0aGUgb3B0aW9ucyAxIHRvIDQgcHJpbnQgYGBVc2VyIG5vdCBjcmVhdGVkLmBgOwppZiB0aGUgcGxheWVyIHdhcyBjcmVhdGVkIHNlbGVjdGluZyAwIGFnYWluIHlpZWxkcyBhCmBgVXNlciBjcmVhdGVkLCBmaXJzdCBkZWxldGUgaXQuYGAgbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CklmIHRoZSBwbGF5ZXIgd2FzIG5vdCBjcmVhdGVkLCB0aGUgb3B0aW9ucyAxIHRvIDQgcHJpbnQgYGBVc2VyIG5vdCBjcmVhdGVkLmBgOwppZiB0aGUgcGxheWVyIHdhcyBjcmVhdGVkIHNlbGVjdGluZyAwIGFnYWluIHlpZWxkcyBhCmBgVXNlciBjcmVhdGVkLCBmaXJzdCBkZWxldGUgaXQuYGAgbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+If the player was not created, the options 1 to 4 print <code>User not created.</code>; if the player was created selecting 0 again yields a <code>User created, first delete it.</code>
+</span></p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<object  class='' align='middle' data='/img/writeups/eko2019/reversing/mentalmodel.svg' type='image/svg+xml'></object></figure></p>
+<p>Other strings shown up. Of course, I’m speculating the <em>conversion specifier</em> like <code>%s</code> and <code>%d</code>:</p>
+<pre><code>%s defends.
+%s roar to %s.
+Name: %s
+Lives: %d</code></pre>
+<p><code>ctrl+F12</code> opens the <em>Strings window</em> listing all the strings that IDA found. Pressing <code>enter</code> in one of the strings, IDA shows us the memory where it was found.</p>
+<p><figure><figcaption><span markdown='1'>
+Read-only <a href="https://en.wikipedia.org/wiki/Data_segment">.rodata</a> section where the strings of the game are stored: the ones that we found with <code>strings</code>, the ones that we saw running the program and some others that we did not spot like <code>"date +%s"</code>
+</span></figcaption>
+<img  class='' alt='' src='/img/writeups/eko2019/reversing/string_address.png' /></figure></p>
+<h2 id="guessing-functions-from-their-arguments">Guessing Functions from their Arguments</h2>
+<p>From there we can go to the locations of the binary that have a reference to each string selecting the label (<code>aMonsterSAttack</code>) and pressing <code>x</code>.</p>
+<p><figure><figcaption><span markdown='1'>
+Hint: the <code>mov     eax, 0</code> before the call; the calling convention says that the <em>variadic</em> function (like <code>printf</code>) will receive 0 floating point arguments.
+</span></figcaption>
+<img  class='' alt='' src='/img/writeups/eko2019/reversing/monster_attack_loc.png' /></figure></p>
+<p>The de facto <a href="https://en.wikipedia.org/wiki/X86_calling_conventions">calling convention</a> in Linux 64 bits says that the first six parameters are passed to the callee in registers <code>rdi</code>, <code>rsi</code>, <code>rdx</code>, <code>rcx</code>, <code>r8</code>, <code>r9</code> (<code>xmm0</code>, <code>xmm1</code>, <code>xmm2</code>, <code>xmm3</code>, <code>xmm4</code>, <code>xmm5</code>, <code>xmm6</code> and <code>xmm7</code> for floating point arguments).</p>
+<p>With this we could assume that the next call after referencing <code>aMonsterSAttack</code> is a <code>printf</code>-like function.</p>
+<p>This is what we got:</p>
+<p><figure><figcaption><span markdown='1'>
+Press <code>n</code> on top of a label we can change the name; press <code>:</code> we can add a comment on that line.
+</span></figcaption>
+<img  class='' alt='' src='/img/writeups/eko2019/reversing/monster_attack_loc_labeled.png' /></figure></p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9zZWNvbmRfaW5kaXJlY3Rpb24ucG5nJyAvPgpUbyBnZXQgdGhlIHBvaW50ZXIgdG8gdGhlIHBsYXllcnMgbmFtZSB0aGUgY29kZSBkb2VzIGEgKnNlY29uZCogaW5kaXJlY3Rpb246CnBvc3NpYmx5IHdlIGFyZSBkZWFsaW5nIHdpdGggYW4gYXR0cmlidXRlIG9mIGEgYGBzdHJ1Y3RgYC4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9zZWNvbmRfaW5kaXJlY3Rpb24ucG5nJyAvPgpUbyBnZXQgdGhlIHBvaW50ZXIgdG8gdGhlIHBsYXllcnMgbmFtZSB0aGUgY29kZSBkb2VzIGEgKnNlY29uZCogaW5kaXJlY3Rpb246CnBvc3NpYmx5IHdlIGFyZSBkZWFsaW5nIHdpdGggYW4gYXR0cmlidXRlIG9mIGEgYGBzdHJ1Y3RgYC4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/second_indirection.png' />
+To get the pointer to the players name the code does a <em>second</em> indirection: possibly we are dealing with an attribute of a <code>struct</code>.
+</span></p>
+<p><code>printf</code>-like function call with four arguments: the format string, the name of the monster, name of the player and the damage.</p>
+<p>What about the code that <em>reads</em> the player’s name?</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<img  class='' alt='' src='/img/writeups/eko2019/reversing/enter_player_name_loc.png' /></figure></p>
+<p>Three calls happen after the print of the message. One of them should be a <code>read</code> like function:</p>
+<ul>
+<li><code>sub_4117C0</code>: unlikely, it only receives one parameter (<code>cs:off_6CC840</code>)</li>
+<li><code>sub_400D16</code>: more likely, it receives a buffer and a size (<code>100h</code>)</li>
+<li><code>sub_425850</code>: unlikely, it receives the buffer but not the size because the size previously set in <code>esi</code> is <a href="https://wiki.osdev.org/System_V_ABI">not preserved</a> between calls so it could be garbage. Besides, <code>sub_425850</code> is not call when the user needs to select an option in the main menu so it is unlikely that it is a <code>read</code> like.</li>
+</ul>
+<p><label for='CklmIHlvdSBzYWlkLCAqZXkhKiwgbWF5IGJlIHRoZXJlIGlzIGEgYnVmZmVyIG92ZXJmbG93IHRoZXJlLiBOby4KRG91YmxlIGNsaWNrIGluIGBgc2J1ZmBgIHRvIGdvIHRvIHRoZSAqU3RhY2sgdmlldyogYW5kIHJpZ2h0IGNsaWNrIG9uIGBgc2J1ZmBgCmFuZCBzZWxlY3QgYGBDb252ZXJ0IHRvIEFycmF5YGA6IGJhc2VkIG9uIElEQSBhbmFseXNpcyB0aGVyZSBhcmUgYXQgbGVhc3QKMjY0IGJ5dGVzIChncmVhdGVyIHRoYW4gYGAxMDBoYGAgbyAyNTYpLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CklmIHlvdSBzYWlkLCAqZXkhKiwgbWF5IGJlIHRoZXJlIGlzIGEgYnVmZmVyIG92ZXJmbG93IHRoZXJlLiBOby4KRG91YmxlIGNsaWNrIGluIGBgc2J1ZmBgIHRvIGdvIHRvIHRoZSAqU3RhY2sgdmlldyogYW5kIHJpZ2h0IGNsaWNrIG9uIGBgc2J1ZmBgCmFuZCBzZWxlY3QgYGBDb252ZXJ0IHRvIEFycmF5YGA6IGJhc2VkIG9uIElEQSBhbmFseXNpcyB0aGVyZSBhcmUgYXQgbGVhc3QKMjY0IGJ5dGVzIChncmVhdGVyIHRoYW4gYGAxMDBoYGAgbyAyNTYpLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+If you said, <em>ey!</em>, may be there is a buffer overflow there. No. Double click in <code>sbuf</code> to go to the <em>Stack view</em> and right click on <code>sbuf</code> and select <code>Convert to Array</code>: based on IDA analysis there are at least 264 bytes (greater than <code>100h</code> o 256).
+</span></p>
+<p>Ok, if the second call (<code>sub_400D16</code>) is <code>fgets?</code>, the third should be a <code>strdup?</code> call.</p>
+<p>Why?</p>
+<p>The name is stored in the stack so the only way to make it to survive is copying it to the heap or other global place. <code>strdup</code> will do the trick.</p>
+<p><figure><figcaption><span markdown='1'>
+The last instruction marks that <em>the user was created</em> in a global variable.
+<br /><br />
+<code>cs:is_user_created</code> is tested against 0 in several places to check if the user was created or not.
+</span></figcaption>
+<img  class='' alt='' src='/img/writeups/eko2019/reversing/enter_player_name_loc_labeled.png' /></figure></p>
+<h2 id="keep-guessing">Keep Guessing</h2>
+<p>The entire block configures the hypothetical <code>player_struct</code> setting the name of the player at the offset 8 (like we saw before) and the lives of the player at the offset 0:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">mov</span><span class="w">     </span><span class="no">byte</span><span class="w"> </span><span class="no">ptr</span><span class="w"> </span><span class="p">[</span><span class="no">rax</span><span class="p">],</span><span class="w"> </span><span class="mi">10</span><span class="no">h</span><span class="w"></span>
+<span class="nf">mov</span><span class="w">     </span><span class="no">rax</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="no">rbp</span><span class="err">+</span><span class="no">player_struct</span><span class="p">]</span><span class="w"> </span><span class="c1">; player&#39;s lives (= 16)</span>
+</code></pre></div>
+
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9kZWxldGVfcGxheWVyX2ZyZWUucG5nJyAvPgpObywgdGhlcmUgYXJlIG5vdCBtZW1vcnkgbGVha3MgaGVyZS4gVGhlICpkZWxldGUgcGxheWVyKiBmdW5jdGlvbiBpcyBhIGdvb2QgYm95LgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9kZWxldGVfcGxheWVyX2ZyZWUucG5nJyAvPgpObywgdGhlcmUgYXJlIG5vdCBtZW1vcnkgbGVha3MgaGVyZS4gVGhlICpkZWxldGUgcGxheWVyKiBmdW5jdGlvbiBpcyBhIGdvb2QgYm95LgptYXJnaW4=' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/delete_player_free.png' />
+No, there are not memory leaks here. The <em>delete player</em> function is a good boy.
+</span></p>
+<p>If this is correct, <code>mov     cs:player_struct, rax</code> saves the <em>pointer</em> to the struct globally, struct allocated at the begin of the block.</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<img  class='' alt='' src='/img/writeups/eko2019/reversing/enter_player_name_loc_struct_labeled.png' /></figure></p>
+<p>The key note here is that <em>we don’t know</em>. We can just guess.</p>
+<p>But guessing is good, and the guess in one side may give use the context to understand other pieces of code.</p>
+<h2 id="magic-numbers">Magic Numbers</h2>
+<p>The begin of the game gives us more clues</p>
+<p><figure><figcaption><span markdown='1'>
+<code>time</code> and <code>sys_alarm</code> are wrappers of <em>syscalls</em>. In Linux a syscall call is made setting the <em>syscall number</em> in the <code>eax</code> register and calling <code>syscall</code> instruction. IDA detects those quite well. <br /> Full of shifts, multiplications and <em>magic numbers</em> like <code>834E0B5Fh</code> and <code>41C64E6Dh</code>? That looks like a <em>congruent</em> PRNG. That is how I found <code>srand</code>.
+</span></figcaption>
+<img  class='' alt='' src='/img/writeups/eko2019/reversing/game_start_loc.png' /></figure></p>
+<p>I bet this is something like <code>srand(time(NULL) &gt;&gt; 8)</code>.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9yYW5kX2xvYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9yYW5kX2xvYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/rand_loc.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>We found <code>srand</code>, and we found the <em>global state</em> of the PRNG at <code>6CC100h</code>, now we can find who <em>updates</em> that global state: the guy will probably be the <code>rand</code> function.</p>
+<h2 id="nice-findings">Nice Findings</h2>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9nZXRfdGltZV9sb2MucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9nZXRfdGltZV9sb2MucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/get_time_loc.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>The <em>get time</em> function is quite short: it is just a call to the <code>date</code> program and no command injection is possible.</p>
+<p>However this gives us two pieces of information:</p>
+<ul>
+<li>we know the time of the remote machine: we can break things like <code>srand(time())</code>.</li>
+<li>we know the position of the <code>system</code> function (<code>0x411070</code>) and a <code>call</code> to it (<code>0x401258</code>).</li>
+</ul>
+<p>The <em>player attack</em> code has a preamble of several operations but after that, there is a interesting section.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9wbGF5ZXJfYXR0YWNrX2xvYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9wbGF5ZXJfYXR0YWNrX2xvYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/player_attack_loc.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>It choose a monster name and if it is <code>NULL</code>, jumps to a block that copy the player’s name into the heap and <em>stores</em> it in the array that initially has the names of the <em>monsters</em>.</p>
+<p>Then it is passed as the first argument of a indirect call. Initially the only function that should be called is <code>monster_attack</code> but we may point to somewhere.</p>
+<p>Interesting things:</p>
+<ul>
+<li><code>monster_attack</code> does not free its argument so we may have a <strong>memory leak</strong> which content is controlled by us.</li>
+<li><code>monster_attack</code> does free the <code>player_struct</code> but it doesn’t set <code>is_user_created</code> to 0 so we may have a <strong>double free</strong> if we call <code>delete_player</code> later.</li>
+<li>unfortunately <code>monster_attack</code> may return 0 which makes <code>player_attack</code> to call <code>exit()</code>; only under a specific path <code>monster_attack</code> returns 1.</li>
+</ul>
+<p>Something similar happen in <code>monster_defense</code> and <code>roar</code> functions with the exception that <code>roar</code> returns always 0.</p>
+<h2 id="next-steps">Next Steps</h2>
+<p>We found a <strong>memory leak</strong> and a <strong>double free</strong> but we don’t have a real crash. We just reviewed the code.</p>
+<p>We need to keep exploring this, here are some ideas for a future post:</p>
+<ul>
+<li><p><a href="http://valgrind.org/">Valgrind</a>: we could see if there are more memory corruptions. Play with <a href="http://lcamtuf.coredump.cx/afl/">AFL</a> perhaps?</p></li>
+<li><p><a href="https://angr.io/">Angr</a>: trigger the leaking <code>strdup</code> is not trivial, we may use a symbolic execution for that.</p></li>
+<li><p>Heap attack: after all, we need to know how the heap management works and plan the attack.</p>
+</article>
+<span class="print-footer">RPG - Part I (IDA writeup - EKO 2019) - October 27, 2019 - Martin Di Paola</span>
+<footer>
+<hr class="slender">
+<div class="credits">
+    <span>&copy;
+        Martin Di Paola
+    </span></br>
+        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+    <br>
+
+    <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+
+</div>
+</footer></li>
+</ul>
+</body>
+</html>

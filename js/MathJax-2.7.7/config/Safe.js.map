@@ -1,0 +1,1 @@
+{"version":3,"sources":["z/js/MathJax-2.7.7/config/Safe.js"],"names":["MathJax","Hub","Register","StartupHook","config","extensions","push","Ajax","loadComplete"],"mappings":"AA+BAA,QAAQC,IAAIC,SAASC,YAAY,aAAc,WACxCH,QAAQC,IAAIG,OAAOC,aAAaL,QAAQC,IAAIG,OAAOC,WAAa,IACrEL,QAAQC,IAAIG,OAAOC,WAAWC,KAAK,aAGrCN,QAAQO,KAAKC,aAAa"}

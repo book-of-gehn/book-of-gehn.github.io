@@ -1,0 +1,215 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Index of Coincidence Explained</title>
+  <meta name="description" content="Index of Coincidence Explained">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2019/10/04/Index-of-Coincidence.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Index of Coincidence Explained
+</h1>
+<p class="subtitle">
+October 4, 2019
+</p>
+<p>The concept of Index of Coincidence was introduced by William Friedman in 1922-1923 in the paper titled “The Index of Coincidence and its Applications in Cryptoanalysis”.</p>
+<p>The Navy Department (US) worked in the following years on this topic coming, in 1955, with a paper titled “The Index of Coincidence” by Howard Campaigne.</p>
+<p>However I found some confusing and misleading concepts in the <em>modern</em> literature.</p>
+<p>This post is a summary of what I could understand from Howard’s work.<!--more--></p>
+<h2 id="count-coincidences">Count Coincidences</h2>
+<p>How similar are two strings?</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvYWxpZ24xLnBuZycgLz4KVHdvIHN0cmluZ3MgYWxpZ25lZCBoYXZlIDYgY29pbmNpZGVuY2VzLgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvYWxpZ24xLnBuZycgLz4KVHdvIHN0cmluZ3MgYWxpZ25lZCBoYXZlIDYgY29pbmNpZGVuY2VzLgptYXJnaW4=' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/crypto/index-of-coincidence/align1.png' />
+Two strings aligned have 6 coincidences.
+</span></p>
+<p>Put the two strings one below the other, perfectly aligned. Now, column by column, count how many times the same letter appear in the same column.</p>
+<p>Two strings that have substrings in common and <em>aligned</em> have a lot of coincidences.</p>
+<p>We will call this Aligned Count of Coincidences or \(AC(s_1,s_2)\).</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvYWxpZ24yLnBuZycgLz4KVHdvIHN0cmluZ3MsIHRoZSBzZWNvbmQgc2hpZnRlZCA0IHBvc2l0aW9ucyB0byB0aGUgcmlnaHQsIGhhdmUgMyBjb2luY2lkZW5jZXMuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvYWxpZ24yLnBuZycgLz4KVHdvIHN0cmluZ3MsIHRoZSBzZWNvbmQgc2hpZnRlZCA0IHBvc2l0aW9ucyB0byB0aGUgcmlnaHQsIGhhdmUgMyBjb2luY2lkZW5jZXMuCm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/crypto/index-of-coincidence/align2.png' />
+Two strings, the second shifted 4 positions to the right, have 3 coincidences.
+</span></p>
+<p>But if the substrings are not <em>aligned</em> we may think, incorrectly, that two strings does not have nothing in common.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvYWxpZ24zLnBuZycgLz4KVHdvIHN0cmluZ3MsIHRoZSBzZWNvbmQgc2hpZnRlZCA2IHBvc2l0aW9ucyB0byB0aGUgbGVmdCwgaGF2ZSAzIGNvaW5jaWRlbmNlcyB0b28uCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvYWxpZ24zLnBuZycgLz4KVHdvIHN0cmluZ3MsIHRoZSBzZWNvbmQgc2hpZnRlZCA2IHBvc2l0aW9ucyB0byB0aGUgbGVmdCwgaGF2ZSAzIGNvaW5jaWRlbmNlcyB0b28uCm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/crypto/index-of-coincidence/align3.png' />
+Two strings, the second shifted 6 positions to the left, have 3 coincidences too.
+</span></p>
+<p>So we define the Count of Coincidences \(C(s_1,s_2)\) between two strings as how many columns have the same letter for <em>every</em> possible alignment.</p>
+<p>It’s more simple than it looks.</p>
+<h3 id="count-for-every-possible-alignment">Count for Every Possible Alignment</h3>
+<p>Pick the first <code>e</code> of the first string. It will have a coincidence with every possible <code>e</code> in the second string.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvZV9jb2luY2lkZW5jZXMucG5nJyAvPgpDb2luY2lkZW5jZXMgb2YgdGhlIGZpcnN0IGBgZWBgIHdpdGggYWxsIHRoZSBgYGVgYCBvZiB0aGUgc2Vjb25kIHN0cmluZy4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvZV9jb2luY2lkZW5jZXMucG5nJyAvPgpDb2luY2lkZW5jZXMgb2YgdGhlIGZpcnN0IGBgZWBgIHdpdGggYWxsIHRoZSBgYGVgYCBvZiB0aGUgc2Vjb25kIHN0cmluZy4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/crypto/index-of-coincidence/e_coincidences.png' />
+Coincidences of the first <code>e</code> with all the <code>e</code> of the second string.
+</span></p>
+<p>There are 5 letters <code>e</code> in the second string, so we will have 5 coincidences.</p>
+<p>Then pick the second <code>e</code> of the first string and repeat. Another 5 coincidences.</p>
+<p>The first string has 3 letters <code>e</code> so at the end we will have 3 times 5, 15 coincidences.</p>
+<p>In general for a particular byte we will have \(n_i m_i\) coincidences where \(n_i\) is the count of that byte in the <em>first</em> plaintext and \(m_i\) in the second.</p>
+<p>For all the possible bytes \(i\), the count of coincidences for all the possible shifts and alignments is:</p>
+$$    C(s_1,s_2) = \sum_{\forall i} n_i m_i \tag{1}\label{Coincs1s2}$$
+<h2 id="expected-count">Expected Count</h2>
+<p>The equation \((\ref{Coincs1s2})\) counts the coincidence between two particular <em>instances</em>.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvZmFtaWxpZXMucG5nJyAvPgpUd28gc2V0cyBvciBmYW1pbGllcyBvZiBzdHJpbmdzIGBTXzFgey5tYXRoamF4fSBhbmQgYFNfMmB7Lm1hdGhqYXh9OyBgc18xYHsubWF0aGpheH0gYW5kIGBzXzJgey5tYXRoamF4fSBhcmUganVzdCB0d28gZXhhbXBsZXMgb2YgdGhvc2UuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8vaW5kZXgtb2YtY29pbmNpZGVuY2UvZmFtaWxpZXMucG5nJyAvPgpUd28gc2V0cyBvciBmYW1pbGllcyBvZiBzdHJpbmdzIGBTXzFgey5tYXRoamF4fSBhbmQgYFNfMmB7Lm1hdGhqYXh9OyBgc18xYHsubWF0aGpheH0gYW5kIGBzXzJgey5tYXRoamF4fSBhcmUganVzdCB0d28gZXhhbXBsZXMgb2YgdGhvc2UuCm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/crypto/index-of-coincidence/families.png' />
+Two sets or families of strings \(S_1\) and \(S_2\); \(s_1\) and \(s_2\) are just two examples of those.
+</span></p>
+<p>Instead of comparing two particular strings we compare two <em>families</em> of strings where the probability of each symbol \(i\) is \(p_i\) in the first family and \(q_i\) in the second.</p>
+<p>Because \(p_i\) and \(q_i\) are independent, the probability of picking the same letter or symbol \(i\) is \(p_i q_i\).</p>
+<p>Picking one letter or other are mutually exclusive events (disjoin events) so the probability of having <em>any</em> coincidence is the sum:</p>
+$$    PrC(S_1,S_2) = \sum_{\forall i} p_i q_i \tag{3}\label{PrCoincS1S2}$$
+<p>The equation \((\ref{PrCoincS1S2})\) is shown in [Howard], equation (25)</p>
+<p>With \((\ref{PrCoincS1S2})\), the <em>expected count</em> for two strings of length \(N\) taken from the families \(S_1\) and \(S_2\) is:</p>
+$$    EC(S_1,S_2) = N \sum_{\forall i} p_i q_i \tag{4}\label{ExpCoincS1S2}$$
+<p>[Howard], equation (pseudo 2.5)</p>
+<h3 id="expected-coincidences-between-two-random-strings">Expected Coincidences Between Two Random Strings</h3>
+<p>If we are comparing two <em>uniformly distributed</em> random strings, all the letters or symbols have the same probability so \(p_i = q_i = \frac{1}{c}\) where \(c\) is the length of the alphabet (256 for bytes, 26 for English letters, …)</p>
+$$
+\begin{align*}
+    PrC(R)         & = \sum_{\forall i} p_i q_i  \tag{3}\\
+                   & = \sum_{\forall i} \frac{1}{c} \frac{1}{c} \\
+                   & = c \frac{1}{c} \frac{1}{c}    \\
+                   & = \frac{1}{c}   \tag{5}\label{PrCoincR}
+\end{align*}
+$$
+<p>And therefore the <em>expected count</em> is</p>
+$$    EC(R) = N \sum_{\forall i} p_i q_i = \frac{N}{c} \tag{6}\label{ExpCoincR}$$
+<h2 id="cross-index-of-coincidence">Cross Index of Coincidence</h2>
+<p>Finally, we define the Cross Index of Coincidence, \(IC(s_1,s_2)\) for short, as the ratio between the count of coincidences between two strings (\(s_1\) and \(s_2\)) of the same length \(N\) and the <em>expected</em> coincidences assuming uniformly distributed random strings.</p>
+<p>In other words is the ratio between equations \((\ref{Coincs1s2})\) and \((\ref{ExpCoincR})\)</p>
+$$    IC(s_1,s_2) = \frac{C(s_1,s_2)}{EC(R)} = \frac{c}{N} \sum_{\forall i} n_i m_i  \tag{7}\label{IdxCoincs1s2}$$
+<p>We can also use \(AC(s_1,s_2)\) instead of \(C(s_1,s_2)\) and we will get another variant of \(IC(s_1,s_2)\).</p>
+<h3 id="c-is-not-a-normalization-factor">\(c\) is Not a Normalization Factor</h3>
+<p>I found in modern literature than the term \(c\) is explained as a normalization factor. Far from being truth.</p>
+<p>In fact, the values that \(IC(s_1,s_2)\) go from 0 to \(cN\).</p>
+<p>A <em>normalized</em> IC can be obtained from \((\ref{IdxCoincs1s2})\) if we divide it by \(cN\) which it is the same to ask for \(PrC(S_1,S_2)\):</p>
+$$
+\begin{align*}
+IC_N(s_1,s_2) & = \frac{c}{N} \sum_{\forall i} n_i m_i \frac{1}{cN}    \\
+              & = \frac{c}{c} \sum_{\forall i} \frac{n_i}{N} \frac{m_i}{N}  \\
+              & = \sum_{\forall i} p_i q_i \\
+              & = PrC(S_1,S_2)    \tag{3}
+\end{align*}
+$$
+<h3 id="cross-index-of-coincidence-between-two-families">Cross Index of Coincidence between Two Families</h3>
+<p>If we calculate the ratio between \((\ref{PrCoincS1S2})\) and \((\ref{PrCoincR})\) we have a way to compare families without needing the length:</p>
+$$ IC(S_1,S_2) = c \sum_{\forall i} p_i q_i \tag{9}\label{IdxCoincS}$$
+<h2 id="auto-index-of-coincidences">Auto Index of Coincidences</h2>
+<p>There is another definition of IC that compares a string with itself.</p>
+<p>It follows a similar counting process: put the string and its copy in two rows, count the coincidences, shift one place and repeat.</p>
+<p>Of course there is a case where both will have a full match. That case is ignored.</p>
+<p>The count of <em>auto</em> coincidences is:</p>
+$$
+    C(s) = \sum_{\forall i} n_i (n_i-1) \tag{10}\label{Coincs}
+$$
+<p>In term of the probabilities:</p>
+$$    PrC(S) = \sum_{\forall i} p_i (p_i-1)  \tag{11}\label{PrCoincS}$$
+<p>Once again, the IC is a ratio between the actual coincidences \(C(s)\) and the expected coincidences \(\frac{N}{c}\):</p>
+$$    IC(s) = \frac{c}{N} \sum_{\forall i} n_i (n_i-1)    \tag{12}\label{IdxCoincs}$$
+<p>Or it is the ratio between the probabilities:</p>
+$$ IC(S) = c \sum_{\forall i} p_i (p_i - 1) \tag{13}\label{IdxCoincNormS}$$
+<h2 id="final-thoughts">Final Thoughts</h2>
+<p>This post took me a lot of time. The topic is not complex and the maths are very simple but it is the amount of several and slightly different definitions that makes hard to read and interpret.</p>
+<p>Counting the coincidences between two strings aligned \(AC(s_1,s_2)\), not aligned \(C(s_1,s_2)\), the probability of having a coincidence \(PrC(S_1,S_2)\), the expected count, the \(IC\), …</p>
+<p>I hope to got it right in this post :D</p>
+</article>
+<span class="print-footer">Index of Coincidence Explained - October 4, 2019 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

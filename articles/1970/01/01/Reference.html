@@ -1,0 +1,297 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Blog Reference</title>
+  <meta name="description" content="Blog Reference">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/1970/01/01/Reference.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Blog Reference
+</h1>
+<p class="subtitle">
+January 1, 1970
+</p>
+<h2 id="front-matter">Front matter</h2>
+<p><code><span class="highlight-candombe-inline"><span class="n">layout</span></span></code>: actualmente solo <code><span class="highlight-candombe-inline"><span class="n">post</span></span></code>. Esto le dice al sistema que otros codigos HTML deben ser incluidos por default.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">title</span></span></code>: titulo</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">tags</span></span></code>: usado para el <code><span class="highlight-candombe-inline"><span class="n">search</span><span class="o">.</span><span class="n">js</span></span></code>, junto a titulo, para armar los indices.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">inline_default_language</span></span></code>: cada vez que se usen los backticks para resaltar un codigo con <code><span class="highlight-candombe-inline"><span class="n">pygments</span></span></code>, el resaltado usara como lenguaje de programacion para la syntaxis el lenguage definido. Por ejemplo esto seria codigo Python: <code><span class="highlight-candombe-inline"><span class="k">yield from</span> <span class="p">(</span><span class="mi">42</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span></span></code>.</p>
+<h2 id="spoiler">Spoiler</h2>
+<p><label for='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+<strong>– Spoiler Alert! –</strong>
+</span></p>
+<p>Usar <code><span class="highlight-candombe-inline"><span class="p">{</span> <span class="p">{</span> <span class="n">spoileralert</span><span class="p">()</span> <span class="p">}}</span></span></code> para poner un mini cartelito de advertencia</p>
+<h2 id="abstract">Abstract</h2>
+<p>Usar el tag <code><span class="highlight-candombe-inline"><span class="o">&lt;</span><span class="err">!</span><span class="o">--</span><span class="n">more</span><span class="o">--&gt;</span></span></code> para marcar el fin del <em>abstract</em>.<!--more--></p>
+<h2 id="draft-folders">Draft Folders</h2>
+<p>Folders with the word <code><span class="highlight-candombe-inline"><span class="n">DRAFT</span></span></code> in their filename are marked as drafts. They are compiled as any other folder (assets, posts, …) but they are removed from the public site.</p>
+<h2 id="secret-folders">Secret Folders</h2>
+<p>Any resource Posts with the word <code><span class="highlight-candombe-inline"><span class="n">SECRET</span></span></code> in their filename are marked as secret. They are compiled as any other post but their URL path are changed to a random and secret but deterministic hash so they are served by the public web site but they are neither indexed nor available unless you know the hash.</p>
+<p>This of course assumes that the web server is not offering an index page itself.</p>
+<h2 id="notes">Notes</h2>
+<p><label for='ClVzZSBtZSBmb3Igc21hbGwgdGhpbmdzLgoKTXVsdGlwbGUgcGFyYWdyYXBocyBhcmUgYWxsb3dlZCBhcyBhbHNvICptYXJrZG93biogKipvZioqCmBhbnlgIFtraW5kXSgpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClVzZSBtZSBmb3Igc21hbGwgdGhpbmdzLgoKTXVsdGlwbGUgcGFyYWdyYXBocyBhcmUgYWxsb3dlZCBhcyBhbHNvICptYXJrZG93biogKipvZioqCmBhbnlgIFtraW5kXSgpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Use me for small things.
+<br /><br />
+Multiple paragraphs are allowed as also <em>markdown</em> <strong>of</strong> <code><span class="highlight-candombe-inline"><span class="nb">any</span></span></code> <a href="">kind</a>.
+</span></p>
+<p>Margin notes son notas de texto que apareceran en el margen de la pagina.</p>
+<p>Acepta un parametro opcional <code><span class="highlight-candombe-inline"><span class="n">indexonly</span></span></code> que dice si el texto aparecera solo en las paginas que muestran solo los abstract (paginas index) o si el texto aparecera siempre.</p>
+<h2 id="code-fenced-block">Code Fenced Block</h2>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">syntax_highlighting_powered_by_pygments</span><span class="p">():</span>
+    <span class="k">return</span> <span class="kc">True</span>
+</code></pre></div>
+
+<h2 id="figures">Figures</h2>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9yZWYtRFJBRlQvaW1nLXJlZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9yZWYtRFJBRlQvaW1nLXJlZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/ref-DRAFT/img-ref.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>A <em>margin figure</em> is a figure that it is put in the margin. When the inline tag is used <code><span class="highlight-candombe-inline"><span class="p">{</span> <span class="p">{</span> <span class="n">marginfig</span><span class="p">(</span><span class="n">src</span><span class="p">)</span> <span class="p">}}</span></span></code>, only the image is put but if the <code><span class="highlight-candombe-inline"><span class="n">call</span></span></code> tag is used, a caption can be set to put it below the image.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9yZWYtRFJBRlQvaW1nLXJlZi5wbmcnIC8+CkEgY2FwdGlvbi4gTGlrZSB0aGUgYG1hcmdpbm5vdGVzYCBpdCBzdXBwb3J0cyAqbWFya2Rvd24qLgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9yZWYtRFJBRlQvaW1nLXJlZi5wbmcnIC8+CkEgY2FwdGlvbi4gTGlrZSB0aGUgYG1hcmdpbm5vdGVzYCBpdCBzdXBwb3J0cyAqbWFya2Rvd24qLgptYXJnaW4=' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/ref-DRAFT/img-ref.png' />
+A caption. Like the <code><span class="highlight-candombe-inline"><span class="n">marginnotes</span></span></code> it supports <em>markdown</em>.
+</span></p>
+<p>The images are loaded from the post’s folder.</p>
+<p>Similarly, <code><span class="highlight-candombe-inline"><span class="n">fullfig</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">mainfig</span></span></code> are used to put an image at full width (occupying the main part and the margin; with the caption below it) and to put it at the main part only (with the caption on the margin) respectively.</p>
+<p>Maximum width can be set with <code><span class="highlight-candombe-inline"><span class="n">max_width</span><span class="o">=</span><span class="s2">&quot;nn%&quot;</span></span></code>.</p>
+<h2 id="latex">Latex</h2>
+<p>Tex/Latex can be inline like in \(p^2\) or in a block like:</p>
+$$\begin{align*}
+      x_2 \oplus f_2 & = 02                     \\
+                 x_2 & = (02 \oplus f_2)
+\end{align*}$$
+<p>And</p>
+$$x_2 \oplus f_2 = 02$$
+<p>For the inline math we use backticks and the <code><span class="highlight-candombe-inline"><span class="p">{</span><span class="o">.</span><span class="n">mathjax</span><span class="p">}</span></span></code> attribute and for the bloc we use three backticks (code fenced block) with the class <code><span class="highlight-candombe-inline"><span class="n">tex</span><span class="p">;</span><span class="n">mathjax</span></span></code>.</p>
+<p>A shortcut for the inline math is using backticks as usual but after the first backtick write <code><span class="highlight-candombe-inline"><span class="p">]</span></span></code> like in \(g_i\). Set <code><span class="highlight-candombe-inline"><span class="p">{</span><span class="o">.</span><span class="n">none</span><span class="p">}</span></span></code> to disable like <code class="none">]g_i</code>.</p>
+<p>Special symbols can be set using Unicode like ⊕ which it is cool in the markdown text. This may not always look good in the webpage however.</p>
+<p>These Unicode can be written inside a MathJax inline/block with some okay results in general:</p>
+$$x_2 ⊕ f_2 = 02$$
+<h2 id="tables">Tables</h2>
+<p>Tables are supported by Pandoc’s Markdown in different formats.</p>
+<p>The <em>pipe</em> table is one of the simplest:</p>
+<div class="table-wrapper">
+<table>
+<caption>This is a caption for the table. It is the first line after the table that begins with <code><span class="highlight-candombe-inline"><span class="n">Table</span><span class="p">:</span></span></code> or <code><span class="highlight-candombe-inline"><span class="p">:</span></span></code>.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Center</th>
+<th style="text-align: left;">Left</th>
+<th style="text-align: right;">Right</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">None</td>
+<td style="text-align: left;">2586369892</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">LZMA</td>
+<td style="text-align: left;">153390408</td>
+<td style="text-align: right;">94.069%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><em>Split</em> LZMA</td>
+<td style="text-align: left;">60047300</td>
+<td style="text-align: right;">96.715%</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Depending on the location of the <code><span class="highlight-candombe-inline"><span class="p">:</span></span></code> the columns are aligned differently. (to center, to left and to right respectively in the example above)</p>
+<p>Columns’ sizes are based on their content like in the table above.</p>
+<p>However if one content is too large, the content will wrap and the columns’ sizes will be based on the relative size of the dashes lines.</p>
+<div class="table-wrapper">
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 63%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Small</th>
+<th style="text-align: left;">Widest</th>
+<th style="text-align: left;">Too Long: Wrapped</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">258</td>
+<td style="text-align: left;">aaaaaaaaa aaaaaaaaaaaa aaaaaaaaaaa aaaaaaaaaaa aaaaaaaaaaaaaaa aaaaaaaaaa aaaaaaaaaaaaaa</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LZMA</td>
+<td style="text-align: left;">153</td>
+<td style="text-align: left;">bb</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><em>Split</em> LZMA</td>
+<td style="text-align: left;">600</td>
+<td style="text-align: left;">cx</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Tables that are so wide can use the extend of the webpage adding the attribute <code><span class="highlight-candombe-inline"><span class="o">.</span><span class="n">fullwidth</span></span></code> to the caption (<code><span class="highlight-candombe-inline"><span class="n">Table</span><span class="p">:</span></span></code>). This is a hack made by us and not officially supported by Pandoc but it works.</p>
+<div class="fullwidth">
+<table>
+<caption></caption>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 63%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Small</th>
+<th style="text-align: left;">Widest</th>
+<th style="text-align: left;">Too Long: Wrapped</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">None</td>
+<td style="text-align: left;">258</td>
+<td style="text-align: left;">aaaaaaaaa aaaaaaaaaaaa aaaaaaaaaaa aaaaaaaaaaa aaaaaaaaaaaaaaa aaaaaaaaaa aaaaaaaaaaaaaa</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LZMA</td>
+<td style="text-align: left;">153</td>
+<td style="text-align: left;">bb</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><em>Split</em> LZMA</td>
+<td style="text-align: left;">600</td>
+<td style="text-align: left;">cx</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>There are <strong>more</strong> kind of tables in Pandoc.</p>
+<h2 id="diagrams">Diagrams</h2>
+<p>In order to support diagrams, the name of each file generated must be listed in the <code><span class="highlight-candombe-inline"><span class="n">artifacts</span></span></code> field of the post’s metadata.</p>
+<p><figure><figcaption><span markdown='1'>
+Optional captions can be set here, after the code fenced block
+</span></figcaption>
+<object  class='' align='middle' data='/img/ref-DRAFT/label.svg' type='image/svg+xml'></object></figure></p>
+<h2 id="code-link">Code link</h2>
+<p>Use <code><span class="highlight-candombe-inline"><span class="p">{</span> <span class="p">{</span> <span class="n">codelink</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="p">[</span><span class="n">link</span> <span class="n">name</span><span class="p">]}}</span></span></code> to generate a link to some nice code like <a href="/assets/ref-DRAFT/foo.py"><span style="white-space: nowrap;"><i class="fab fa-github"></i> code</span></a></p>
+<h2 id="horizontal-line">Horizontal line</h2>
+Bla bla bla
+<hr class="slender post-layout small" />
+<p>Bla bla bla</p>
+<h2 id="quotes">Quotes</h2>
+<blockquote>
+<p>“The virtual interfaces in client VMs are called <code><span class="highlight-candombe-inline"><span class="n">ethX</span></span></code>, and are provided by the <code><span class="highlight-candombe-inline"><span class="n">xen_netfront</span></span></code> kernel module, and the corresponding interfaces in the Net/Proxy VM are called <code><span class="highlight-candombe-inline"><span class="n">vifX</span><span class="o">.</span><span class="n">Y</span></span></code> and are created by the <code><span class="highlight-candombe-inline"><span class="n">xen_netback</span></span></code> module.” <cite class="epigraph"><a href="https://theinvisiblethings.blogspot.com/2011/09/playing-with-qubes-networking-for-fun.html">Playing with Qubes networking for fun</a></cite></p>
+</blockquote>
+<p>Highlight/Take home message</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>“This is important”</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</article>
+<span class="print-footer">Blog Reference - January 1, 1970 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Compiler Optimizations under a Race Condition</title>
+  <meta name="description" content="Compiler Optimizations under a Race Condition">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/02/07/Compiler-Optimizations-under-RC.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Compiler Optimizations under a Race Condition
+</h1>
+<p class="subtitle">
+February 7, 2020
+</p>
+<p>When two or more concurrent tasks perform non-atomic read/write operations over the same data we have a <em>race condition</em> and the system will be in an undefined state.</p>
+<p>But what exactly does that suppose to mean? What is behind the generic <em>undefined state</em>?<!--more--></p>
+<p>Consider the <a href="/assets/threading/optimization-under-rc/rc.c">following code</a></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="nf">loop</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ctx_t</span><span class="w"> </span><span class="o">*</span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ROUNDS</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DATASZ</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>The <code><span class="highlight-candombe-inline"><span class="n">loop</span><span class="w"></span></span></code> function will run in two separated threads. One will increase by one each value of the array if the previous value was even, the other will do the same but if the previous value was odd.</p>
+<p>To <em>synchornize</em> the efforts of these two, the code has a <em>busy wait</em>, a <code><span class="highlight-candombe-inline"><span class="k">while</span><span class="w"></span></span></code>-loop that will run until the condition is set.</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">data</span><span class="w"></span></span></code> array is not protected so this will lead to a race condition.</p>
+<p>Let’s compile &amp; run it:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ gcc --version
+gcc <span class="o">(</span>Debian <span class="m">6</span>.3.0-18+deb9u1<span class="o">)</span> <span class="m">6</span>.3.0 <span class="m">20170516</span>
+
+$ gcc -std<span class="o">=</span>c11 -lpthread -O0 -ggdb -DDATASZ<span class="o">=</span><span class="m">256</span> -o rcO0 rc.c
+
+$ ./rcO0 <span class="m">0</span> <span class="m">1</span>
+Sum <span class="m">5120</span>
+</code></pre></div>
+
+<p><label for='ClRoZSBhcnJheSBvZiBgREFUQVNaID09IDI1NmAgbnVtYmVycyBpcyBpbml0aWFsbHkgemVyb2VkLiBUd28KdGhyZWFkcyBpbmNyZW1lbnQgZWFjaCB2YWx1ZSBieSBvbmUgYFJPVU5EUyA9PSAxMGAgdGltZXMuCgpUaGUgZGlzcGxheWVkIG51bWJlciBpcwp0aGUgc3VtIG9mIHRoZSB2YWx1ZXMgd2hpY2ggc2hvdWxkIGdpdmUgYDI1NiAqIDEwICogMiA9PSA1MTIwYC4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBhcnJheSBvZiBgREFUQVNaID09IDI1NmAgbnVtYmVycyBpcyBpbml0aWFsbHkgemVyb2VkLiBUd28KdGhyZWFkcyBpbmNyZW1lbnQgZWFjaCB2YWx1ZSBieSBvbmUgYFJPVU5EUyA9PSAxMGAgdGltZXMuCgpUaGUgZGlzcGxheWVkIG51bWJlciBpcwp0aGUgc3VtIG9mIHRoZSB2YWx1ZXMgd2hpY2ggc2hvdWxkIGdpdmUgYDI1NiAqIDEwICogMiA9PSA1MTIwYC4KIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+The array of <code><span class="highlight-candombe-inline"><span class="n">DATASZ</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">256</span><span class="w"></span></span></code> numbers is initially zeroed. Two threads increment each value by one <code><span class="highlight-candombe-inline"><span class="n">ROUNDS</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">10</span><span class="w"></span></span></code> times.
+<br /><br />
+The displayed number is the sum of the values which should give <code><span class="highlight-candombe-inline"><span class="mi">256</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">5120</span><span class="w"></span></span></code>.
+</span></p>
+<p>Surprisingly the code seems to work computing the correct result.</p>
+<p>I ran several times and I always got the same.</p>
+<p>But the party begins when we compile with the optimizations enabled: <code><span class="highlight-candombe-inline"><span class="o">-</span><span class="n">O3</span><span class="w"></span></span></code> flag in <code><span class="highlight-candombe-inline"><span class="n">gcc</span><span class="w"></span></span></code>.</p>
+<p>This time, the optimized program hangs – <em>every time</em>.</p>
+<h2 id="dissection-of-an-optimized-rc">Dissection of an optimized RC</h2>
+<p>Let’s see what code <code><span class="highlight-candombe-inline"><span class="n">gcc</span><span class="w"></span></span></code> generated.</p>
+<p>For the non-optimized code <code><span class="highlight-candombe-inline"><span class="n">rcO0</span><span class="w"></span></span></code>, the following picture shows the busy loop <code><span class="highlight-candombe-inline"><span class="k">while</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span></span></code>:</p>
+<p><figure><figcaption><span markdown='1'>
+The <code><span class="highlight-candombe-inline"><span class="nf">mov</span><span class="w"> </span><span class="nb">eax</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nb">rax</span><span class="p">]</span><span class="w"></span></span></code> reads the array and <code><span class="highlight-candombe-inline"><span class="nf">cmp</span><span class="w"></span></span></code> checks for the condition.
+<br /><br />
+If it is not set, the <code><span class="highlight-candombe-inline"><span class="nf">jz</span><span class="w"></span></span></code> jumps to the begin of the loop again.
+</span></figcaption>
+<img  class='' alt='' src='/img/threading/optimization-under-rc/rcO0-busy-loop.png' /></figure></p>
+<p>We can see how the program retries again and again until the condition is set before proceeding.</p>
+<p>But for the optimized code, the story is totally different.</p>
+<p><figure><figcaption><span markdown='1'>
+The busy loop was rewritten as one conditional: if the condition is not set the program will jump to an infinite loop.
+</span></figcaption>
+<img  class='' alt='' src='/img/threading/optimization-under-rc/rcO3-busy-loop.png' /></figure></p>
+<p>A race condition leads to an undefined state and for a compiler this opens the door for optimizations.</p>
+<p>Unless explicitly noticed, the compiler will assume that the code is single threaded.</p>
+<p><label for='CmBgYGNwcAppZiAoZGF0YVtpXSAlIDIgPT0gbikKICAgIHdoaWxlICgxKTsKCisrZGF0YVtpXTsKYGBgCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CmBgYGNwcAppZiAoZGF0YVtpXSAlIDIgPT0gbikKICAgIHdoaWxlICgxKTsKCisrZGF0YVtpXTsKYGBgCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+<span class="pseudo-pre"><code><span class="highlight-candombe"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
+
+<span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span></span></code></span>
+</span></p>
+<p>If the <code><span class="highlight-candombe-inline"><span class="k">while</span><span class="w"></span></span></code>-loop waits for a different value but it does not change it, nobody will change it ever so, unless the condition is set from the begin, it is an infinite loop.</p>
+<p>So the compiler decided to rewrite it as a single check and an infinite loop which explains why the program hangs.</p>
+<h2 id="volatile">Volatile</h2>
+<p><label for='CldyaXRlcyAoKnN0b3JlcyopIHRvbzogYSBjb21waWxlciBjb3VsZCBvcHRpbWl6ZSBpc3N1aW5nCm9ubHkgdGhlIGxhc3Qgb2YgbWFueSB3cml0ZXMgaWYgbm90IHJlYWQgKCpsb2FkKikgaGFwcGVuIGluIGJldHdlZW4gb3IgaXQgY291bGQKaXNzdWUgb25lIG9mIHRoZW0gaWYgYWxsIG9mIHRoZW0gd3JpdGUgdGhlIHNhbWUgdmFsdWUuCgpgdm9sYXRpbGVgIGRpc2FibGVzIHRoZXNlIGFzc3VtcHRpb25zLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldyaXRlcyAoKnN0b3JlcyopIHRvbzogYSBjb21waWxlciBjb3VsZCBvcHRpbWl6ZSBpc3N1aW5nCm9ubHkgdGhlIGxhc3Qgb2YgbWFueSB3cml0ZXMgaWYgbm90IHJlYWQgKCpsb2FkKikgaGFwcGVuIGluIGJldHdlZW4gb3IgaXQgY291bGQKaXNzdWUgb25lIG9mIHRoZW0gaWYgYWxsIG9mIHRoZW0gd3JpdGUgdGhlIHNhbWUgdmFsdWUuCgpgdm9sYXRpbGVgIGRpc2FibGVzIHRoZXNlIGFzc3VtcHRpb25zLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Writes (<em>stores</em>) too: a compiler could optimize issuing only the last of many writes if not read (<em>load</em>) happen in between or it could issue one of them if all of them write the same value.
+<br /><br />
+<code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> disables these assumptions.
+</span></p>
+<p>C and C++ has the <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> qualifier that instructs to the compiler to not assume that reading twice the same variable could yield the same result even if no <em>apparent</em> write happen in between.</p>
+<p><label for='CmB2b2xhdGlsZSBpbnQgKnBgICBwb2ludGVyIHRvIHZvbGF0aWxlLWRhdGE7IGBpbnQgKiB2b2xhdGlsZSBwYAp2b2xhdGlsZSAqcG9pbnRlciogdG8gZGF0YS4gVGhleSBhcmUgbm90IHRoZSBzYW1lLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CmB2b2xhdGlsZSBpbnQgKnBgICBwb2ludGVyIHRvIHZvbGF0aWxlLWRhdGE7IGBpbnQgKiB2b2xhdGlsZSBwYAp2b2xhdGlsZSAqcG9pbnRlciogdG8gZGF0YS4gVGhleSBhcmUgbm90IHRoZSBzYW1lLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+<code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"></span></span></code> pointer to volatile-data; <code><span class="highlight-candombe-inline"><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">volatile</span><span class="w"> </span><span class="n">p</span><span class="w"></span></span></code> volatile <em>pointer</em> to data. They are not the same.
+</span></p>
+<p>We could define a pointer to the volatile data:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="nf">loop</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ctx_t</span><span class="w"> </span><span class="o">*</span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">volatile</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DATASZ</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+</code></pre></div>
+
+<p><label for='CllvdSBjYW4gZ2VuZXJhbGl6ZSB0aGlzIGNhc3QgYXMgYSBtYWNybwpgUkVBRCh4KSAoKHZvbGF0aWxlIHR5cGVvZigoeCkpKSh4KSlgCgpUYWtlIGF0IGxvb2sgYXQgTGludXgncwpbYFJFQURfT05DRWBdKGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9ibG9iL21hc3Rlci9pbmNsdWRlL2xpbnV4L2NvbXBpbGVyLmgpCmZvciBhIG1vcmUgY29tcGxldGUgY29uc3RydWN0aW9uIGV2ZW4gZm9yIG5vbi1hdG9taWMvbm9uLXByaW1pdGl2ZSB2YXJpYWJsZXMuIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CllvdSBjYW4gZ2VuZXJhbGl6ZSB0aGlzIGNhc3QgYXMgYSBtYWNybwpgUkVBRCh4KSAoKHZvbGF0aWxlIHR5cGVvZigoeCkpKSh4KSlgCgpUYWtlIGF0IGxvb2sgYXQgTGludXgncwpbYFJFQURfT05DRWBdKGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9ibG9iL21hc3Rlci9pbmNsdWRlL2xpbnV4L2NvbXBpbGVyLmgpCmZvciBhIG1vcmUgY29tcGxldGUgY29uc3RydWN0aW9uIGV2ZW4gZm9yIG5vbi1hdG9taWMvbm9uLXByaW1pdGl2ZSB2YXJpYWJsZXMuIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+You can generalize this cast as a macro <code><span class="highlight-candombe-inline"><span class="n">READ</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">((</span><span class="k">volatile</span><span class="w"> </span><span class="n">typeof</span><span class="p">((</span><span class="n">x</span><span class="p">)))(</span><span class="n">x</span><span class="p">))</span><span class="w"></span></span></code>
+<br /><br />
+Take at look at Linux’s <a href="https://github.com/torvalds/linux/blob/master/include/linux/compiler.h"><code><span class="highlight-candombe-inline"><span class="n">READ_ONCE</span><span class="w"></span></span></code></a> for a more complete construction even for non-atomic/non-primitive variables.
+</span></p>
+<p>Or we could use <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> in a cast:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="nf">loop</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ctx_t</span><span class="w"> </span><span class="o">*</span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span><span class="w">      </span><span class="cm">/* non-volatile */</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DATASZ</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">while</span><span class="p">(((</span><span class="k">volatile</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="n">data</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+</code></pre></div>
+
+<p>In the first case, any further read of or write to data will not be optimized by the compiler; while in the second case only the read of the <em>array element</em> will not be optimized.</p>
+<p>This is something that have an impact on the code generated.</p>
+<p>Even if the two programs run correctly, the latter case is slightly more efficient.</p>
+<p><figure><figcaption><span markdown='1'>
+On the left, the code when <code><span class="highlight-candombe-inline"><span class="n">data</span><span class="w"></span></span></code> was defined as <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="w"></span></span></code>; on the right, when only the read <code><span class="highlight-candombe-inline"><span class="p">((</span><span class="k">volatile</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="n">data</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="w"></span></span></code> was affected by <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code>.
+<br /><br />
+Both codes were generated with <code><span class="highlight-candombe-inline"><span class="o">-</span><span class="n">O3</span><span class="w"></span></span></code>: they are faster than the generated by <code><span class="highlight-candombe-inline"><span class="o">-</span><span class="n">O0</span><span class="w"></span></span></code> but slower than <code><span class="highlight-candombe-inline"><span class="o">-</span><span class="n">O3</span><span class="w"></span></span></code> <em>without</em> <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code>, still yielding the correct result.
+<br /><br />
+Notice how <code><span class="highlight-candombe-inline"><span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span></span></code> was optimized on the right.
+</span></figcaption>
+<img  class='' alt='' src='/img/threading/optimization-under-rc/rcvolatile.png' /></figure></p>
+<h2 id="conclusions">Conclusions</h2>
+<p>A race condition leads, by definition, to an undefined behaviour.</p>
+<p>And the compiler will take this as an opportunity for optimize the code even if that goes against the developer’s desires.</p>
+<p><code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> prevents some of these optimizations but the race condition is <strong>still there</strong> and therefore the undefined behaviour.</p>
+<p>This means that other parties like the CPU may perform optimizations and <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> will not help us.</p>
+<h2 id="references">References</h2>
+<ul>
+<li><p><a href="https://www.kernel.org/doc/html/v4.12/process/volatile-considered-harmful.html">Why the “volatile” type class should not be used</a></p></li>
+<li><p><a href="https://blog.regehr.org/archives/28">Nine ways to break your systems code using volatile</a></p>
+</article>
+<span class="print-footer">Compiler Optimizations under a Race Condition - February 7, 2020 - Martin Di Paola</span>
+<footer>
+<hr class="slender">
+<div class="credits">
+    <span>&copy;
+        Martin Di Paola
+    </span></br>
+        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+    <br>
+
+    <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+
+</div>
+</footer></li>
+</ul>
+</body>
+</html>

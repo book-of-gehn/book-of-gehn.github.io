@@ -1,0 +1,252 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Necklaces, Lyndon words and De Bruijn Sequences</title>
+  <meta name="description" content="Necklaces, Lyndon words and De Bruijn Sequences">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/02/15/Necklaces-Lyndon-Words-and-De-Bruijn-Sequences.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Necklaces, Lyndon words and De Bruijn Sequences
+</h1>
+<p class="subtitle">
+February 15, 2021
+</p>
+<p>What have in common a dense arrays for mapping numbers power of 2 to some objects, DNA sequencing and brute-forcing the lock pad of your neighbor?<!--more--></p>
+<h2 id="substrings">Substrings</h2>
+<p>Given an alphabet of \(k\) symbols, you can build strings of length \(n\) from it.</p>
+<p>For a binary alphabet \({0,1}\) these are the strings of length 4:</p>
+<pre><code>    0000    0100    1000    1100
+    0001    0101    1001    1101
+    0010    0110    1010    1110
+    0011    0111    1011    1111</code></pre>
+<p>A set of elements like the strings above can be <em>classified</em>: choose a <em>relationship</em> among the elements and build a class where all the elements of the class have the same relation.</p>
+<p>Mathematically, each class is defined as</p>
+$$ C = { x \in X \vert a \sim x }   $$
+<p>Where \(a\) is one element of the set \(X\) that is used as a reference.</p>
+<p>For example, we can classify the binary strings in two classes: the ones that have its last bit equal to 0 and the ones which don’t.</p>
+<p>In other words: the even and the odd numbers.</p>
+<pre><code>    0000    0100    |    0001    0101
+    0010    0110    |    0011    0111
+    1000    1100    |    1001    1101
+    1010    1110    |    1011    1111</code></pre>
+<p>In mathematics jargon, each class is an <a href="https://en.wikipedia.org/wiki/Equivalence_class">equivalence class</a> and the relation used to group them is an <a href="https://en.wikipedia.org/wiki/Equivalence_relation">equivalence relation</a>.</p>
+<h2 id="necklaces">Necklaces</h2>
+<p>The relation \(x \sim a\) is quite arbitrary; another relation could be the strings of length 4 that are a <em>rotation</em> of another string.</p>
+<p>This generates 6 classes:</p>
+<pre><code>    0000  |  0001  |  0011  |  0101  |  0111  |  1111
+          |  0010  |  0110  |  1010  |  1101  |
+          |  0100  |  1100  |        |  1011  |
+          |  1000  |  1001  |        |  1110  |</code></pre>
+<p>Each <a href="https://en.wikipedia.org/wiki/Equivalence_class">equivalence class</a> generated from strings of length \(n\) from an alphabet of \(k\) elements which <a href="https://en.wikipedia.org/wiki/Equivalence_relation">equivalence relation</a> is the rotation has the special names of <a href="https://en.wikipedia.org/wiki/Necklace_(combinatorics)">necklaces</a>.</p>
+<p>The above 6 classes are 6 necklaces for \(k=2\) and \(n=4\).</p>
+<h2 id="aperiodic-necklaces">Aperiodic necklaces</h2>
+<p>As you notice how many elements a necklace has varies. The necklace generated from all the rotations of 0000 has only one element: {0000}; while the necklace generated from 0001 has 4 elements: {0001, 0010, 0100 and 1000}.</p>
+<p>These are two extremes. A middle point is the necklace {0101, 1010}.</p>
+<p>You see, if you pick a string and you start rotating it you may find yourself with the same initial string <strong>before</strong> doing a complete wrap-around.</p>
+<p>Pick 0101, rotate it once and you get 1010, and once more and you get the original 0101.</p>
+<p>If you do the same with 0001 you will find that you need to perform 4 rotations to get the initial string.</p>
+<p>An <em>aperiodic</em> sequence respect the rotation are the strings of length \(n\) that you need to perform exactly \(n\) rotations to get the initial strings.</p>
+<p>Therefore the necklace that contains them has exactly \(n\) elements and it is known as <em>aperiodic necklace</em>.</p>
+<p><label for='CllvdSBtYXkgZmluZCBtdWx0aXBsZSBzdWJzdHJpbmdzIHRoYXQgcmVwZWF0ZWQgZm9ybSB0aGUgc2FtZQpzdHJpbmcuIEZvciBleGFtcGxlIDAxMDEwMTAxIGNhbiBiZSBmb3JtZWQgcmVwZWF0aW5nIDAxMDEgdHdpY2UKb3IgMDEgZm91ciB0aW1lcy4KClRoZSBmYWN0IGlzIHRoYXQgMDEwMSBpcyBpbiB0dXJuIHBlcmlvZGljLiBUaGUgc3Vic3RyaW5nIHdoaWNoIGl0CmlzICphcGVyaW9kaWMqIGlzIGNhbGxlZCB0aGUgKmFwZXJpb2RpYyByZWR1Y3Rpb24qIG9mIHRoZSBvcmlnaW5hbApzdHJpbmcuCgpJbiBvdXIgY2FzZSwgMDEgaXMgdGhlIGFwZXJpb2RpYyByZWR1Y3Rpb24gb2YgMDEwMSBhbmQgb2YgMDEwMTAxMDEuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CllvdSBtYXkgZmluZCBtdWx0aXBsZSBzdWJzdHJpbmdzIHRoYXQgcmVwZWF0ZWQgZm9ybSB0aGUgc2FtZQpzdHJpbmcuIEZvciBleGFtcGxlIDAxMDEwMTAxIGNhbiBiZSBmb3JtZWQgcmVwZWF0aW5nIDAxMDEgdHdpY2UKb3IgMDEgZm91ciB0aW1lcy4KClRoZSBmYWN0IGlzIHRoYXQgMDEwMSBpcyBpbiB0dXJuIHBlcmlvZGljLiBUaGUgc3Vic3RyaW5nIHdoaWNoIGl0CmlzICphcGVyaW9kaWMqIGlzIGNhbGxlZCB0aGUgKmFwZXJpb2RpYyByZWR1Y3Rpb24qIG9mIHRoZSBvcmlnaW5hbApzdHJpbmcuCgpJbiBvdXIgY2FzZSwgMDEgaXMgdGhlIGFwZXJpb2RpYyByZWR1Y3Rpb24gb2YgMDEwMSBhbmQgb2YgMDEwMTAxMDEuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+You may find multiple substrings that repeated form the same string. For example 01010101 can be formed repeating 0101 twice or 01 four times.
+<br /><br />
+The fact is that 0101 is in turn periodic. The substring which it is <em>aperiodic</em> is called the <em>aperiodic reduction</em> of the original string.
+<br /><br />
+In our case, 01 is the aperiodic reduction of 0101 and of 01010101.
+</span></p>
+<p>In contrast, a <em>periodic</em> sequence is a string that is the repetition of a substring that repeats so less rotations are required to get the initial string and therefore the necklace has less than \(n\) elements.</p>
+<p>The 0101 is formed by the substring 01 repeated twice.</p>
+<p>The analysis of the periodicity of the 6 necklaces follows with the substrings between parenthesis:</p>
+<pre><code>    (0)   |    aperiodic   |  (01)  |  aperiodic |  (1)
+    0000  |  0001  |  0011 |  0101  |    0111    |  1111
+          |  0010  |  0110 |  1010  |    1101    |
+          |  0100  |  1100 |        |    1011    |
+          |  1000  |  1001 |        |    1110    |</code></pre>
+<h2 id="lyndon-words">Lyndon words</h2>
+<p>We focus now in only the aperiodic necklaces:</p>
+<pre><code>    0001  |  0011  |  0111
+    0010  |  0110  |  1101
+    0100  |  1100  |  1011
+    1000  |  1001  |  1110</code></pre>
+<p>If the alphabet supports a total order, more specifically a <a href="https://en.wikipedia.org/wiki/Lexicographic_order">lexicographic order</a>, we can sort the elements of each necklace.</p>
+<p>Basically we get \(0001 < 0010 < 0100 < 1000\).</p>
+<p>For each aperiodic necklace we keep only the <em>smallest</em>:</p>
+<pre><code>    0001  |  0011  |  0111</code></pre>
+<p>These strings define the <a href="https://en.wikipedia.org/wiki/Lyndon_word">Lyndon words</a> of length \(n\) for the alphabet \({0,1}\) (\(k=2\)).</p>
+<p>More generally the <a href="https://en.wikipedia.org/wiki/Lyndon_word">Lyndon words</a> are the smallest strings of the aperiodic necklaces for <em>all</em> the strings of <em>any</em> length \(n\) for an alphabet of \(k\) elements.</p>
+<pre><code>    0, 1, 01, 001, 011, 0001, 0011, 0111, 00001, 00011, 00101, ...</code></pre>
+<h2 id="de-bruijn-sequence">De Bruijn sequence</h2>
+<p>Choose a natural number \(n\). Select the Lyndon words that have a length that <em>divides</em> \(n\).</p>
+<p>For the binary alphabet {0,1}, and choosing \(n=4\) we have the following set of strings of length 1, 2 and 4:</p>
+<pre><code>    0, 1, 01, 0001, 0011, 0111</code></pre>
+<p>Sorted lexicographically:</p>
+<pre><code>    0, 0001, 0011, 01, 0111, 1</code></pre>
+<p>If we concatenate them we obtain a <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">De Bruijn sequence</a></p>
+<pre><code>    0000100110101111</code></pre>
+<p>A <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">De Bruijn sequence</a> of order \(n\) has the property than all the substrings of length \(n\) that are possible are contained in the De Bruijn sequence if is seen as a cyclic sequence:</p>
+<pre><code>    0000100110101111
+    0000............
+    .0001...........
+    ..0010..........
+    ...0100.........
+    ....1001........
+    .....0011.......
+    ......0110......
+    .......1101.....
+    ........1010....
+    .........0101...
+    ..........1011..
+    ...........0111.
+    ............1111
+    0............111  =  1110
+    00............11  =  1100
+    000............1  =  1000</code></pre>
+<p>A <a href="https://en.wikipedia.org/wiki/De_Bruijn_sequence">De Bruijn sequence</a> is the smallest sequence that has this property but it is not unique.</p>
+<p>The count of distinct De Bruijn sequences for an alphabet of \(k\) elements and an order of \(n\) is</p>
+$$ \frac{(k!)^{k^{n-1}}}{k^n} $$
+<h2 id="de-bruijn-graphs">De Bruijn graphs</h2>
+<p>Given an alphabet of \(k\) symbols and the strings of \(n\) symbols we can build \(k^n\) different strings.</p>
+<p>Consider these strings now nodes of a directed graph.</p>
+<p>In this graph the node \(u\) connects to \(v\) if we drop the left most symbol of \(u\) and append on the right one symbol and the result is \(v\).</p>
+<p>In Python terms: <code>u[1:] + sym == v</code>.</p>
+<p>The resulting edge is labeled with the appended symbol.</p>
+<p>For instance, for the given binary strings 00 and 01 we have:</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<object  class='' align='middle' data='/img/math/00-01.svg' type='image/svg+xml'></object></figure></p>
+<p>In general for the alphabet \({0,1}\) and the strings of length \(n=2\) we have:</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<object  class='' align='middle' data='/img/math/00-01-10-11.svg' type='image/svg+xml'></object></figure></p>
+<p>These are the <a href="https://en.wikipedia.org/wiki/De_Bruijn_graph">De Bruijn graphs</a>.</p>
+<p>A <a href="https://en.wikipedia.org/wiki/Hamiltonian_path">Hamiltonian path</a> over the graph generates a De Bruijn sequence of order \(n\).</p>
+<p>That’s it, visit all the <em>nodes</em> of the graph without visiting a node twice and collect the labels of the traversed edges.</p>
+<p>This forms the De Bruijn sequence of order \(n\) for the given \(k\).</p>
+<p>If instead of a Hamiltonian path we build an <a href="https://en.wikipedia.org/wiki/Eulerian_path">Euclidean path</a>, the path generates a De Bruijn sequence of order \(n+1\).</p>
+<p>That’s it, visit all the <em>edges</em> of the graph without traveling for the same edge twice and collect the labels along the path.</p>
+<p>This forms the De Bruijn sequence of order \(n+1\) for the given \(k\).</p>
+<h2 id="de-bruijn-sequence-construction">De Bruijn sequence construction</h2>
+<p>As mentioned before we can build a De Bruijn graph and then through a Hamiltonian or Euclidean path we can build a De Bruijn sequence.</p>
+<p>But we can skip that and create the sequence directly with the <a href="/assets/debruijn-assets/debruijn.py">FMK algorithm</a>.</p>
+<p>FMK comes from the name of its authors: Fredricksen, Maiorana and Kessler.</p>
+<p>A recursive version of the algorithm is shown by Frank Ruskey in his <em>“Combinatorial Generation”</em>.</p>
+<p>The algorithm can generate necklaces, Lyndon words, pre-necklaces and De Bruijn sequences. Four in one.</p>
+<p>A Python implementation can be found <a href="/assets/debruijn-assets/debruijn.py">here</a>.</p>
+<h2 id="applications">Applications</h2>
+<h3 id="unlook-a-door">Unlook a door</h3>
+<p>Imagine that you have a register of \(n\) bits that if it is set to the correct value <em>unlocks</em> a door.</p>
+<p>You have \(2^n\) possible combinations.</p>
+<p>Typing \(n\) bits \(2^n\) times is is going to take a while but imagine that the register allows you to <em>reuse</em> some of those bits.</p>
+<p>On a new input the register shifts its content one bit to the left and the new bit is put on the right.</p>
+<p>Does this ring any bells?</p>
+<p>You can use a De Bruijn sequence of order \(n\) and reading it bit by bit you can <em>feed</em> the register.</p>
+<p>You will end up testing \(2^n\) combinations but you will have to type <strong>only 1 bit</strong> per test.</p>
+<h3 id="power-of-2-mapping">Power of 2 mapping</h3>
+<p>You want to map a value to each power of 2. You could use an dictionary for this like <code><span class="highlight-candombe-inline"><span class="p">{</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span> <span class="p">:</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">32</span><span class="p">)}</span></span></code>.</p>
+<p>A dictionary or a <em>sparse</em> array is needed because you cannot use a dense array for this.</p>
+<p>Or can we?</p>
+<p>If we are limiting ourselves to power of two up to \(2^{32}\), we only have 32 numbers.</p>
+<p>We can then generate a De Bruijn sequence of order \(n\) where \(n=5\) (because \(2^5=32\)).</p>
+<p>This sequence will contain \(2^5=32\) different substrings.</p>
+<p>Now, remember that multiplying a number by \(2^i\) is the same than shifting the number by \(i\).</p>
+<p>If we read the \(n\) most significant bits of the shifted sequence we will have a substring that is unique for the given shift \(i\) and therefore for \(2^i\).</p>
+<p>The \(n\) most significant bits forms the index of our dense array.</p>
+<p>With \(n=5\) we only need an array of \(32\) elements.</p>
+<h2 id="dna-reading">DNA reading</h2>
+<p>And yes, this is used in <a href="https://en.wikipedia.org/wiki/DNA_read_errors">DNA reading</a> too.</p>
+</article>
+<span class="print-footer">Necklaces, Lyndon words and De Bruijn Sequences - February 15, 2021 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

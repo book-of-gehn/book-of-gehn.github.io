@@ -1,0 +1,271 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Cipherchat (Crypto writeup - EKO 2019)</title>
+  <meta name="description" content="Cipherchat (Crypto writeup - EKO 2019)">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2019/10/01/Writeup-EKO2019-Cipherchat.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Cipherchat (Crypto writeup - EKO 2019)
+</h1>
+<p class="subtitle">
+October 1, 2019
+</p>
+<p>We start with a <a href="/assets/writeups/eko2019/bytecode/cipherchat.pcap">communication</a> between two machines, encrypted with an unknown algorithm and the challenge is to break it.</p>
+<p>As a <em>hint</em> we have the code that the client used to talk with the server.<!--more--></p>
+<h2 id="decompile">Decompile</h2>
+<p>It is a Python 3 <a href="/assets/writeups/eko2019/bytecode/client.min.pyc">compiled code</a> so our first task is to decompile it.</p>
+<p>For this I’m going to use <a href="https://github.com/rocky/python-uncompyle6">uncompyle6</a></p>
+<div class="highlight-candombe"><pre><span></span><code>$ uncompyle6 --encoding utf-8 -o . client.min.pyc       <span class="c1"># byexample: +skip</span>
+</code></pre></div>
+
+<p>This is what we got:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&lt;...&gt;</span>
+<span class="n">ۈ</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">𢜁</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">ې</span> <span class="o">=</span> <span class="nb">chr</span>
+<span class="n">𐬴</span> <span class="o">=</span> <span class="nb">print</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="n">䈶</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostbyname</span>
+<span class="n">چ</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span>
+<span class="n">ޠ</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span>
+<span class="n">𨐜</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span>
+<span class="n">𐫛</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">نحي</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span>
+<span class="n">𐤭</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exit</span>
+<span class="n">𣏲</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span>
+<span class="n">ࡃ</span> <span class="o">=</span> <span class="mi">12345</span>
+<span class="n">珽</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">𐠨</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">def</span> <span class="nf">𡛓</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+    <span class="n">敩</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">𨆂</span> <span class="o">=</span> <span class="n">珽</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+<span class="o">&lt;...&gt;</span>
+</code></pre></div>
+
+<p>The <code><span class="highlight-candombe-inline"><span class="n">ۈ</span></span></code> looks like a variable where <code><span class="highlight-candombe-inline"><span class="n">䈶</span></span></code> is just an alias of <code><span class="highlight-candombe-inline"><span class="n">socket</span><span class="o">.</span><span class="n">gethostbyname</span></span></code>.</p>
+<p><label for='ClZpbSB0aXA6IGBgOiVzLy94L2dgYCByZXBsYWNlcyB0aGUgbGFzdCBzZWFyY2hlZCBzdHJpbmcgYnkgYGB4YGAuCkNvbWJpbmVkIHdpdGggYGAqYGAgaXQgaXMgdmVyeSB1c2VmdWwgdG8gcmVwbGFjZSBoYXJkLXRvLXdyaXRlIHdvcmRzCmxpa2UgYGDbiGBgLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClZpbSB0aXA6IGBgOiVzLy94L2dgYCByZXBsYWNlcyB0aGUgbGFzdCBzZWFyY2hlZCBzdHJpbmcgYnkgYGB4YGAuCkNvbWJpbmVkIHdpdGggYGAqYGAgaXQgaXMgdmVyeSB1c2VmdWwgdG8gcmVwbGFjZSBoYXJkLXRvLXdyaXRlIHdvcmRzCmxpa2UgYGDbiGBgLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Vim tip: <code><span class="highlight-candombe-inline"><span class="p">:</span><span class="o">%</span><span class="n">s</span><span class="o">//</span><span class="n">x</span><span class="o">/</span><span class="n">g</span></span></code> replaces the last searched string by <code><span class="highlight-candombe-inline"><span class="n">x</span></span></code>. Combined with <code><span class="highlight-candombe-inline"><span class="o">*</span></span></code> it is very useful to replace hard-to-write words like <code><span class="highlight-candombe-inline"><span class="n">ۈ</span></span></code>.
+</span></p>
+<p>I did a little of search-and-replace to have better names, I filtered out artificial constructions like using a variable to hold the constant <code><span class="highlight-candombe-inline"><span class="kc">True</span></span></code> and things like that.</p>
+<p>Finally, I tried to rename the variables to have a meaningful name.</p>
+<p>The decompiled code is <a href="/assets/writeups/eko2019/bytecode/client.min.py">here</a>.</p>
+<h2 id="analysis-of-the-cipher">Analysis of the Cipher</h2>
+<p>This is the cipher function:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_shift</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">encxor</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="o">...</span>     <span class="n">key</span> <span class="o">=</span> <span class="n">key_seed</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">):</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="o">...</span>             <span class="k">break</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">x</span> <span class="o">=</span> <span class="n">n</span> <span class="o">^</span> <span class="n">key</span>
+<span class="o">...</span>             <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="n">key_shift</span><span class="p">)</span> <span class="o">%</span> <span class="mi">256</span>
+<span class="o">...</span>             <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
+<span class="o">...</span>                 <span class="k">pass</span>
+<span class="o">...</span>             <span class="k">else</span><span class="p">:</span>
+<span class="o">...</span>                 <span class="k">break</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">out</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">out</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>It is a <em>stream cipher</em> where the key stream evolves doing <em>shifts</em> of <code><span class="highlight-candombe-inline"><span class="n">key_shift</span></span></code> starting from <code><span class="highlight-candombe-inline"><span class="n">key_seed</span></span></code>.</p>
+<p>On particularity is that if the output byte <code><span class="highlight-candombe-inline"><span class="n">x</span></span></code> is 0 or it is equal to the (next) <code><span class="highlight-candombe-inline"><span class="n">key</span></span></code> byte, the <code><span class="highlight-candombe-inline"><span class="n">key</span></span></code> byte is ignored and the key stream is moved forward one byte.</p>
+<p>So in the output <code><span class="highlight-candombe-inline"><span class="n">out</span></span></code> we will never see a 0 or a key byte.</p>
+<p>This is the same function but simplified:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_shift</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">encxor</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="o">...</span>     <span class="n">key</span> <span class="o">=</span> <span class="n">key_seed</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">):</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="o">...</span>             <span class="k">break</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">...</span>         <span class="k">while</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">x</span> <span class="o">=</span> <span class="n">n</span> <span class="o">^</span> <span class="n">key</span>
+<span class="o">...</span>             <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="n">key_shift</span><span class="p">)</span> <span class="o">%</span> <span class="mi">256</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">out</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">out</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><label for='CldlIHNheSAqYWxtb3N0KiBiZWNhdXNlIHRvIHJ1bnMgb2YgdGhlIGtleSBzdHJlYW0gd2lsbCBiZSBpZGVudGljYWwgdW50aWwKb25lIG9mIHRoZW0sIGJhc2VkIG9uIHRoZSBwbGFpbnRleHQsIGhpdCB0aGUgYGB4ID09IDAgb3IgeCA9PSBrZXlgYCBjb25kaXRpb24KKnNoaWZ0aW5nKiB3aXRoIHJlc3BlY3QgdGhlIG90aGVyLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldlIHNheSAqYWxtb3N0KiBiZWNhdXNlIHRvIHJ1bnMgb2YgdGhlIGtleSBzdHJlYW0gd2lsbCBiZSBpZGVudGljYWwgdW50aWwKb25lIG9mIHRoZW0sIGJhc2VkIG9uIHRoZSBwbGFpbnRleHQsIGhpdCB0aGUgYGB4ID09IDAgb3IgeCA9PSBrZXlgYCBjb25kaXRpb24KKnNoaWZ0aW5nKiB3aXRoIHJlc3BlY3QgdGhlIG90aGVyLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+We say <em>almost</em> because to runs of the key stream will be identical until one of them, based on the plaintext, hit the <code><span class="highlight-candombe-inline"><span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">==</span> <span class="n">key</span></span></code> condition <em>shifting</em> with respect the other.
+</span></p>
+<p>Another particularity is that the cipher is <em>stateless</em>: two plaintexts will be encrypted with <em>almost</em> the same key stream.</p>
+<p>The other interesting part is how the <code><span class="highlight-candombe-inline"><span class="n">key_seed</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">key_shift</span></span></code> are initialized.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">_</span><span class="p">,</span> <span class="n">srcport</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()</span>
+<span class="n">key_seed</span> <span class="o">=</span> <span class="p">(</span><span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">65280</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+<span class="n">key_shift</span> <span class="o">=</span> <span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">255</span>
+</code></pre></div>
+
+<p><label for='ClRoZSBwY2FwIGhhZCBvbmx5IG9uZSBzaW5nbGUgVENQIHN0cmVhbSBidXQgaW4gbXVjaCBub3NpZXIgY2FwdHVyZXMKaXQgaXMgaGFuZHkgdG8gdXNlIGBgU3RhdGlzdGljID4gQ29udmVyc2F0aW9uc2BgIGluIGBgd2lyZXNoYXJrYGAKdG8gc3VtbWFyaXplIHRoZSBwcm90b2NvbHMsIGFkZHJlc3NlcyBhbmQgcG9ydHMuIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBwY2FwIGhhZCBvbmx5IG9uZSBzaW5nbGUgVENQIHN0cmVhbSBidXQgaW4gbXVjaCBub3NpZXIgY2FwdHVyZXMKaXQgaXMgaGFuZHkgdG8gdXNlIGBgU3RhdGlzdGljID4gQ29udmVyc2F0aW9uc2BgIGluIGBgd2lyZXNoYXJrYGAKdG8gc3VtbWFyaXplIHRoZSBwcm90b2NvbHMsIGFkZHJlc3NlcyBhbmQgcG9ydHMuIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+The pcap had only one single TCP stream but in much nosier captures it is handy to use <code><span class="highlight-candombe-inline"><span class="n">Statistic</span> <span class="o">&gt;</span> <span class="n">Conversations</span></span></code> in <code><span class="highlight-candombe-inline"><span class="n">wireshark</span></span></code> to summarize the protocols, addresses and ports.
+</span></p>
+<p>Not secret at all. <code><span class="highlight-candombe-inline"><span class="n">srcport</span></span></code> is the source port chosen by the OS which from the <a href="/assets/writeups/eko2019/bytecode/cipherchat.pcap">pcap</a> we know that it is 47898.</p>
+<p>So</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">srcport</span> <span class="o">=</span> <span class="mi">47898</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span> <span class="o">=</span> <span class="p">(</span><span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">65280</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_shift</span> <span class="o">=</span> <span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">255</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span><span class="p">,</span> <span class="n">key_shift</span>
+<span class="p">(</span><span class="mi">187</span><span class="p">,</span> <span class="mi">26</span><span class="p">)</span>
+</code></pre></div>
+
+<h2 id="decrypting">Decrypting</h2>
+<p>With this and the <code><span class="highlight-candombe-inline"><span class="n">encxor</span></span></code> function we can decrypt every message sent from the client to the server.</p>
+<p><label for='CkFub3RoZXIgYGB3aXJlc2hhcmtgYCB0aXA6IHNlbGVjdCBvbmUgcGFja2V0LCB0aGVuCmBgRm9sbG93IFRDUCBzdHJlYW1gYCwgZmlsdGVyIHRvIHNlZSBvbmx5IHRoZSBgYGNsaWVudC0+c2VydmVyYGAgcGFja2V0cwphbmQgc2VsZWN0IGBgc2hvdyBkYXRhYGAgYXMgYGByYXdgYC4gbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkFub3RoZXIgYGB3aXJlc2hhcmtgYCB0aXA6IHNlbGVjdCBvbmUgcGFja2V0LCB0aGVuCmBgRm9sbG93IFRDUCBzdHJlYW1gYCwgZmlsdGVyIHRvIHNlZSBvbmx5IHRoZSBgYGNsaWVudC0+c2VydmVyYGAgcGFja2V0cwphbmQgc2VsZWN0IGBgc2hvdyBkYXRhYGAgYXMgYGByYXdgYC4gbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+Another <code><span class="highlight-candombe-inline"><span class="n">wireshark</span></span></code> tip: select one packet, then <code><span class="highlight-candombe-inline"><span class="n">Follow</span> <span class="n">TCP</span> <span class="n">stream</span></span></code>, filter to see only the <code><span class="highlight-candombe-inline"><span class="n">client</span><span class="o">-&gt;</span><span class="n">server</span></span></code> packets and select <code><span class="highlight-candombe-inline"><span class="n">show</span> <span class="n">data</span></span></code> as <code><span class="highlight-candombe-inline"><span class="n">raw</span></span></code>.
+</span></p>
+<p>Which by the way are these:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">raw</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">... cba28100</span>
+<span class="s1">... 94bd8a655300</span>
+<span class="s1">... 94a586674400</span>
+<span class="s1">... 94b08c614c1d1f18abc7cdb600</span>
+<span class="s1">... 94b08c614c1d26e3c4cbf9927f4261221afa89a7b29e7f4c7a00</span>
+<span class="s1">... 94b08c614c1d1e51ffcdd6b7982d53293a01afd0aca8d77059207f15fcc2ac8895720f2f0c0fb7c5a380df7f5f2ce600</span>
+<span class="s1">... 94b08c614c1d341ee4c993f9ba2d4f202d10afddabb484314d2a2d59eac2b2dbdb506406180de4d4be819046432815e7fed6bbb6707854230ee6e6e68bdd555c00</span>
+<span class="s1">... 94b08c614c1d301eabc2d0f8d36148203f55e6dde3b49931522a2a59f1c2a6939f00</span>
+<span class="s1">... 94a586674400</span>
+<span class="s1">... 94a49a605700</span>
+<span class="s1">... &#39;&#39;&#39;</span>
+</code></pre></div>
+
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>            <span class="c1"># byexample: +timeout=10</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">msgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">B</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">raw</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">msgs</span><span class="p">:</span>
+<span class="o">...</span>     <span class="n">tmp</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">tmp</span> <span class="o">=</span> <span class="n">encxor</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+<span class="sa">b</span><span class="s1">&#39;pwn</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/help</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/ping</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/echo Hi bro</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/echo What are you doing?</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/echo I think that you are looking for the flag</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/echo cool, I have this for you: EKO</span><span class="si">{pseudo_perfect_secrecy_X0R}</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/echo go go! load it in you board</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/ping</span><span class="se">\x00</span><span class="s1">&#39;</span>
+<span class="sa">b</span><span class="s1">&#39;/quit</span><span class="se">\x00</span><span class="s1">&#39;</span>
+</code></pre></div>
+
+<p>That’s it: <code><span class="highlight-candombe-inline"><span class="n">EKO</span><span class="p">{</span><span class="n">pseudo_perfect_secrecy_X0R</span><span class="p">}</span></span></code>.</p>
+</article>
+<span class="print-footer">Cipherchat (Crypto writeup - EKO 2019) - October 1, 2019 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

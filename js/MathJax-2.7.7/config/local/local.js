@@ -1,0 +1,1 @@
+MathJax.Hub.Register.StartupHook("TeX Jax Ready",function(){MathJax.InputJax.TeX}),MathJax.Ajax.loadComplete("[MathJax]/config/local/local.js");

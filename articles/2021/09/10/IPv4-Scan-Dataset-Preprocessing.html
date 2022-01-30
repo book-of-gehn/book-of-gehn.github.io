@@ -1,0 +1,292 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>IPv4 Scan 2021 - Dataset Preprocessing</title>
+  <meta name="description" content="IPv4 Scan 2021 - Dataset Preprocessing">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+IPv4 Scan 2021 - Dataset Preprocessing
+</h1>
+<p class="subtitle">
+September 10, 2021
+</p>
+<p>The <a href="https://www.kaggle.com/signalspikes/internet-port-scan-1">dataset</a> is a survey or port scan of the whole IPv4 range made with <a href="https://github.com/robertdavidgraham/masscan">masscan</a>.</p>
+<p>The dataset however is much smaller than the expected mostly because most of the hosts didn’t response and/or they had all the scanned ports closed.</p>
+<p>Only open ports were registered.</p>
+<p>More over, of the 65536 available ports only a few were scanned and only for the TCP protocol.</p>
+<p>Even with such reduced scope the dataset occupies around 9 GB.</p>
+<p>This post is a walk-through for loading and preprocessing it.<!--more--></p>
+<h2 id="loading-json">Loading JSON</h2>
+<p>The original dataset is in JSON which it is not the most space-efficient format.</p>
+<p>It consists in an array of hosts and per host we have an array of ports.</p>
+<div class="highlight-candombe"><pre><span></span><code>  <span class="p">{</span>
+    <span class="s1">&#39;ip&#39;</span><span class="o">:</span> <span class="s1">&#39;165.221.32.138&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;timestamp&#39;</span><span class="o">:</span> <span class="s1">&#39;1619562631&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ports&#39;</span><span class="o">:</span> <span class="p">[</span>
+       <span class="p">{</span>
+         <span class="s1">&#39;port&#39;</span><span class="o">:</span> <span class="mf">21</span><span class="p">,</span>
+         <span class="s1">&#39;proto&#39;</span><span class="o">:</span> <span class="s1">&#39;tcp&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;status&#39;</span><span class="o">:</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;reason&#39;</span><span class="o">:</span> <span class="s1">&#39;syn-ack&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;ttl&#39;</span><span class="o">:</span> <span class="mf">245</span>
+       <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+</code></pre></div>
+
+<p>So there is plenty room for improvements.</p>
+<p>Python’s <code><span class="highlight-candombe-inline"><span class="n">json</span></span></code> library loads everything to memory. This is a no-go. We use instead <a href="https://github.com/ICRAR/ijson">ijson</a> that iterates over the elements of the file loading only what it is needed.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kn">import</span> <span class="nn">ijson</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># read from standard input and yield each host from it</span>
+<span class="n">hosts</span> <span class="o">=</span> <span class="n">ijson</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="s1">&#39;item&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">host</span> <span class="ow">in</span> <span class="n">hosts</span><span class="p">:</span>
+    <span class="n">ip</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">ports</span> <span class="o">=</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">host</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]),</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;ports&#39;</span><span class="p">]</span>
+    <span class="o">...</span>
+</code></pre></div>
+
+<h2 id="ipv4-packing">IPv4 packing</h2>
+<p>The IP address can be stored in 4 bytes and Python’s <code><span class="highlight-candombe-inline"><span class="n">ipaddress</span></span></code> can pack it for us:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kn">import</span> <span class="nn">ipaddress</span>
+
+<span class="k">for</span> <span class="n">host</span> <span class="ow">in</span> <span class="n">hosts</span><span class="p">:</span>
+    <span class="n">ip</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">ports</span> <span class="o">=</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">host</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">]),</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;ports&#39;</span><span class="p">]</span>
+
+    <span class="n">ip</span> <span class="o">=</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">ip_address</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">ip</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">4</span>
+
+    <span class="n">ip</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span>
+    <span class="o">...</span>
+</code></pre></div>
+
+<h2 id="categorical-data">Categorical data</h2>
+<p>Each port has a <code><span class="highlight-candombe-inline"><span class="n">status</span></span></code> and protocol (<code><span class="highlight-candombe-inline"><span class="n">proto</span></span></code>). Because those two are fixed to <code><span class="highlight-candombe-inline"><span class="nb">open</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">tcp</span></span></code> respectively, it is pointless to store them.</p>
+<p>The rest of the port’s attributes are more interesting:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">for</span> <span class="n">host</span> <span class="ow">in</span> <span class="n">hosts</span><span class="p">:</span>
+    <span class="o">...</span>
+    <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">ports</span><span class="p">:</span>
+        <span class="n">num</span><span class="p">,</span> <span class="n">ttl</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">[</span><span class="s1">&#39;ttl&#39;</span><span class="p">])</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="n">port</span><span class="p">[</span><span class="s1">&#39;reason&#39;</span><span class="p">]</span>
+        <span class="o">...</span>
+</code></pre></div>
+
+<p><code><span class="highlight-candombe-inline"><span class="n">reason</span></span></code> is a string that represent why the port is open. But strings are expensive.</p>
+<p>We can use instead a <em>categorical type</em>, a mapping between these strings and integers that represent them more efficiently:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="kn">import</span> <span class="n">CategoricalDtype</span>
+
+<span class="c1"># all the reasons that are in the dataset</span>
+<span class="n">reason_cat</span> <span class="o">=</span> <span class="n">CategoricalDtype</span><span class="p">([</span>
+    <span class="s1">&#39;syn-ack&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;syn-ack-ece-cwr&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;syn-ack-ece&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;syn-psh-ack&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;syn-ack-cwr&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;fin-syn-ack&#39;</span>
+    <span class="p">])</span>
+</code></pre></div>
+
+<p>Pandas already generates the categories for us but this requires to feed Pandas with all the dataset at once.</p>
+<p>Instead we create the categories beforehand, split the dataset into manageable subsets, <em>buckets</em> or <em>partitions</em> and create one Pandas’ <code><span class="highlight-candombe-inline"><span class="n">DataFrame</span></span></code> per bucket/partition.</p>
+<p>We use the <em>same</em> <code><span class="highlight-candombe-inline"><span class="n">reason_cat</span></span></code> object for all the dataframes created.</p>
+<p>This is critical because merging/concatenating two dataframes with different (but semantically-equivalent) category sets will <strong>not</strong> raise any error but it will convert the column(s) into object type.</p>
+<p>Quiet unhappy.</p>
+<p><label for='ClllcywgSSBrbm93LCAyMiBpcyBsZXNzIHRoYW4gODAKYnV0IGl0IGlzIG1lYW5pbmdsZXNzOiAic3NoIiBpcyBsZXNzIHRoYW4gImh0dHAiLCB3aGF0IGNvdWxkIHlvdSBkcmF3CmZyb20gaXQ/CiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClllcywgSSBrbm93LCAyMiBpcyBsZXNzIHRoYW4gODAKYnV0IGl0IGlzIG1lYW5pbmdsZXNzOiAic3NoIiBpcyBsZXNzIHRoYW4gImh0dHAiLCB3aGF0IGNvdWxkIHlvdSBkcmF3CmZyb20gaXQ/CiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Yes, I know, 22 is less than 80 but it is meaningless: “ssh” is less than “http”, what could you draw from it?
+</span></p>
+<p>The port numbers are also categories as they are not quantities nor have a meaningful order.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="c1"># all the port numbers that are in the dataset</span>
+<span class="n">port_cat</span> <span class="o">=</span> <span class="n">CategoricalDtype</span><span class="p">([</span>
+    <span class="s1">&#39;21&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;22&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;23&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;80&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;443&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;3389&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;4444&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;5601&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;8000&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;8443&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;9200&#39;</span><span class="p">,</span>
+    <span class="p">])</span>
+</code></pre></div>
+
+<h2 id="serialization-in-apaches-parquet-format">Serialization in Apache’s Parquet format</h2>
+<p>To keep the dataset as small as possible we can use smaller types for each column:</p>
+<ul>
+<li><code><span class="highlight-candombe-inline"><span class="n">ip</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">timestamp</span></span></code> can be represented by <code><span class="highlight-candombe-inline"><span class="n">uint32</span></span></code></li>
+<li><code><span class="highlight-candombe-inline"><span class="n">ttl</span></span></code> fits perfectly in <code><span class="highlight-candombe-inline"><span class="n">uint8</span></span></code></li>
+</ul>
+<p>Finally, we store each dataframe in disk using Apache’s <a href="https://parquet.apache.org/">Parquet format</a>. We use version 2 that supports a much richer set of data types including <code><span class="highlight-candombe-inline"><span class="n">uint32</span></span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">save_df</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">fileno</span><span class="p">):</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ip&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;ttl&#39;</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">]</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span>
+        <span class="s1">&#39;ip&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span>   <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,</span>
+        <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="n">port_cat</span><span class="p">,</span>  <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="n">reason_cat</span><span class="p">,</span>
+        <span class="s1">&#39;ttl&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="c1"># clean up</span>
+    <span class="n">rows</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="c1"># Save. &#39;brotli&#39; yielded better compression ratio</span>
+    <span class="c1"># when compared with snappy y gzip.</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;scan</span><span class="si">{</span><span class="n">fileno</span><span class="si">:</span><span class="s1">04</span><span class="si">}</span><span class="s1">.pq&#39;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;brotli&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;2.0&#39;</span><span class="p">)</span>
+
+
+<span class="n">i</span><span class="p">,</span> <span class="n">fileno</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+<span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">host</span> <span class="ow">in</span> <span class="n">hosts</span><span class="p">:</span>
+    <span class="o">...</span>
+    <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">ports</span><span class="p">:</span>
+        <span class="o">...</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">ttl</span><span class="p">,</span> <span class="n">reason</span><span class="p">)</span>
+
+    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="n">bucket_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">save_df</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">fileno</span><span class="p">)</span>
+        <span class="n">fileno</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="o">...</span>
+</code></pre></div>
+
+<p>The dataframes are in <em>tidy format</em>: each row represents a single observation, or in this case, a single port scan.</p>
+<p>We repeat over and over data that it is shared between port scans like the IP address or the timestamp (it is the opposite format of the <em>normalized format</em>).</p>
+<p>It occupies more space, yes, but the manipulation of the dataset is <em>much simpler</em> and Pandas and Seaborn <em>are</em> tidy-centric.</p>
+<h2 id="host-aggregation">Host aggregation</h2>
+<p>We know that all the ports for the same host are in the same <code><span class="highlight-candombe-inline"><span class="n">df</span></span></code> object so we can do some analysis here instead on the whole dataset.</p>
+<p>We could count how many ports each host has, how many <em>different</em> reasons were found on each host and the minimum and maximum TTL seen.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">&#39;ip&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;ttl&#39;</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;ip&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span>
+    <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="s1">&#39;count&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ttl&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="s1">&#39;nunique&#39;</span><span class="p">,</span>
+<span class="p">})</span>
+</code></pre></div>
+
+<p>After a group by/aggregation, the columns will be <em>multi-index</em> (to access the minimum of the TTL we will write <code><span class="highlight-candombe-inline"><span class="n">df</span><span class="p">[</span><span class="s1">&#39;ttl&#39;</span><span class="p">][</span><span class="s1">&#39;min&#39;</span><span class="p">]</span></span></code>).</p>
+<p>We don’t want that so we can remap the columns and reset the index.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span>
+    <span class="s1">&#39;port_count&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
+    <span class="s1">&#39;reason_count&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span>
+<span class="p">})</span>
+</code></pre></div>
+
+<p>Then we can extend <code><span class="highlight-candombe-inline"><span class="n">save_df</span><span class="p">()</span></span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">save_df</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">fileno</span><span class="p">):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+    <span class="o">...</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;scan/scan</span><span class="si">{</span><span class="n">fileno</span><span class="si">:</span><span class="s1">04</span><span class="si">}</span><span class="s1">.pq&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;2.0&#39;</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">&#39;ip&#39;</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;ttl&#39;</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;ip&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span>
+        <span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="s1">&#39;count&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;ttl&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="s1">&#39;nunique&#39;</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="o">...</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;agg/agg</span><span class="si">{</span><span class="n">fileno</span><span class="si">:</span><span class="s1">04</span><span class="si">}</span><span class="s1">.pq&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;2.0&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<h2 id="final-bits">Final bits</h2>
+<p>Putting all this together in <a href="/assets/network/internet_scan/repack.py">repack.py</a> and presto!</p>
+<div class="highlight-candombe"><pre><span></span><code>unzip -p archive.zip <span class="p">|</span> python repack.py
+</code></pre></div>
+
+</article>
+<span class="print-footer">IPv4 Scan 2021 - Dataset Preprocessing - September 10, 2021 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

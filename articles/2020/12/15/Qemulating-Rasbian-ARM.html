@@ -1,0 +1,255 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>QEMUlating a Rasbian (ARM)</title>
+  <meta name="description" content="QEMUlating a Rasbian (ARM)">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/12/15/Qemulating-Rasbian-ARM.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+QEMUlating a Rasbian (ARM)
+</h1>
+<p class="subtitle">
+December 15, 2020
+</p>
+<p>Quick how-to download and run a Raspbian Buster (ARM) emulating the vm with QEMU.<!--more--></p>
+<ul>
+<li>Download <a href="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2020-12-04/">Raspbian lite image (Buster)</a></li>
+<li>Download <a href="https://github.com/dhruvvyas90/qemu-rpi-kernel">kernel image</a> for Raspbian (<code>kernel-qemu-*-buster</code>) and the <em>dtb</em> file for that kernel (<code>versatile-pb-buster-*.dtb</code>)</li>
+<li>Install QEMU: <code>apt-get install qemu-system</code></li>
+</ul>
+<h2 id="preparing-the-image">Preparing the image</h2>
+<p>Unpack and check the disk file.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ unzip <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.zip
+Archive:  <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.zip
+  inflating: <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img
+
+$ sudo fdisk -l <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img
+Disk <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img: <span class="m">1</span>.7 GiB, <span class="m">1858076672</span> bytes, <span class="m">3629056</span> sectors
+Units: sectors of <span class="m">1</span> * <span class="nv">512</span> <span class="o">=</span> <span class="m">512</span> bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
+Disklabel type: dos
+Disk identifier: 0x067e19d7
+
+Device                                    Boot  Start     End Sectors Size Id Type
+<span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img1        <span class="m">8192</span>  <span class="m">532479</span>  <span class="m">524288</span> 256M  c W95 FAT32 <span class="o">(</span>LBA<span class="o">)</span>
+<span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img2      <span class="m">532480</span> <span class="m">3629055</span> <span class="m">3096576</span> <span class="m">1</span>.5G <span class="m">83</span> Linux
+</code></pre></div>
+
+<p>Mount the second partition. Because the file has 2 partitions, we need to set the offset where the second starts: the start sector number multiplied by the size of each sector in bytes.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sudo mount -v -o <span class="nv">offset</span><span class="o">=</span><span class="k">$((</span><span class="m">532480</span> <span class="o">*</span> <span class="m">512</span><span class="k">))</span> -t ext4 <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img ~/mnt
+</code></pre></div>
+
+<p><label for='CldoeSB3ZSBuZWVkIHRvIGRvIHRoaXM/IE5vIGlkZWEuIE1heSBiZSBpcyByZWxhdGVkIHdpdGgKW3RoaXNdKGh0dHBzOi8vc3RhY2tvdmVyZmxvdy5jb20vcXVlc3Rpb25zLzQ1MjUzNzU1L3doeS1pcy10aGUtc3RhY2stc2VnbWVudC1leGVjdXRhYmxlLW9uLXJhc3BiZXJyeS1waSkKIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldoeSB3ZSBuZWVkIHRvIGRvIHRoaXM/IE5vIGlkZWEuIE1heSBiZSBpcyByZWxhdGVkIHdpdGgKW3RoaXNdKGh0dHBzOi8vc3RhY2tvdmVyZmxvdy5jb20vcXVlc3Rpb25zLzQ1MjUzNzU1L3doeS1pcy10aGUtc3RhY2stc2VnbWVudC1leGVjdXRhYmxlLW9uLXJhc3BiZXJyeS1waSkKIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Why we need to do this? No idea. May be is related with <a href="https://stackoverflow.com/questions/45253755/why-is-the-stack-segment-executable-on-raspberry-pi">this</a>
+</span></p>
+<p>Comment out any entry of <code>ld.so.preload</code> adding a <code>#</code> at the begin of each line.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ cat ~/mnt/etc/ld.so.preload
+/usr/lib/arm-linux-gnueabihf/libarmmem-<span class="si">${</span><span class="nv">PLATFORM</span><span class="si">}</span>.so
+
+$ sudo sed -i <span class="s1">&#39;s/^.*$/#\0/&#39;</span> ~/mnt/etc/ld.so.preload
+</code></pre></div>
+
+<p>Check the <code>fstab</code>. Replace <code>/dev/mmcblk0p1</code> and <code>/dev/mmcblk0p2</code> with <code>/dev/sda1</code> and <code>/dev/sda2</code>.</p>
+<p>In my case there are not explicit names like <code>/dev/mmcblk0p1</code>. Instead, there are UUIDs so I didn’t touch them.</p>
+<pre><code>$ cat ~/mnt/etc/fstab
+proc                  /proc    proc    defaults             0   0
+PARTUUID=067e19d7-01  /boot    vfat    defaults             0   2
+PARTUUID=067e19d7-02  /        ext4    defaults,noatime     0   1</code></pre>
+<p>We are done.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sudo umount ~/mnt
+</code></pre></div>
+
+<p>Now it is show time!</p>
+<h2 id="running-the-os">Running the OS</h2>
+<div class="highlight-candombe"><pre><span></span><code>$ qemu-system-arm                       <span class="se">\</span>
+  -M versatilepb                        <span class="se">\</span>
+  -cpu arm1176                          <span class="se">\</span>
+  -m <span class="m">256</span>                                <span class="se">\</span>
+  -drive <span class="s2">&quot;file=2020-12-02-raspios-buster-armhf-lite.img,if=none,index=0,media=disk,format=raw,id=disk0&quot;</span>  <span class="se">\</span>
+  -device <span class="s2">&quot;virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off&quot;</span>                              <span class="se">\</span>
+  -net <span class="s2">&quot;user,hostfwd=tcp::3022-:22&quot;</span>     <span class="se">\</span>
+  -dtb versatile-pb-buster-5.4.51.dtb   <span class="se">\</span>
+  -kernel kernel-qemu-5.4.51-buster     <span class="se">\</span>
+  -append <span class="s1">&#39;root=/dev/vda2 panic=1&#39;</span>      <span class="se">\</span>
+  -no-reboot                            <span class="se">\</span>
+  -net nic                              <span class="se">\</span>
+  -nographic
+</code></pre></div>
+
+<p>The <code>hostfwd=tcp::3022-:22</code> tells QEMU to forward TCP connections to the 3022 port from the host to the 22 port on the guest side. More forward rules can be added.</p>
+<p>Enable ssh (now and on boot); login with <code>pi</code>/<code>raspberry</code>. This will allows us to upload/retrieve files to the vm and have additional consoles.</p>
+<pre class="ssh"><code>$ sudo service ssh start
+$ sudo update-rc.d ssh enable</code></pre>
+<p>Now, from your host connect to the vm through the port 3022.</p>
+<p>Install <code>gdbserver</code> for remote debugging:</p>
+<div class="highlight-candombe"><pre><span></span><code>sudo apt-get install gdbserver
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+The following NEW packages will be installed:
+  gdbserver
+<span class="m">0</span> upgraded, <span class="m">1</span> newly installed, <span class="m">0</span> to remove and <span class="m">0</span> not upgraded.
+&lt;...&gt;
+Preparing to unpack .../gdbserver_8.2.1-2_armhf.deb ...
+Unpacking gdbserver <span class="o">(</span><span class="m">8</span>.2.1-2<span class="o">)</span> ...
+Setting up gdbserver <span class="o">(</span><span class="m">8</span>.2.1-2<span class="o">)</span> ...
+</code></pre></div>
+
+<h2 id="enlarge-the-disk">Enlarge the disk</h2>
+<p>Optionally, you can expand the disk image to have more room for your programs.</p>
+<p>First, with QEMU turned off, expand the disk image</p>
+<div class="highlight-candombe"><pre><span></span><code>$ qemu-img resize <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img +1G
+</code></pre></div>
+
+<p>Now, turn on the vm and redefine the partition. In my case is the partition number 2 (<code>/dev/vda2</code>):</p>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ sudo fdisk /dev/vda
+
+Command <span class="o">(</span>m <span class="k">for</span> <span class="nb">help</span><span class="o">)</span>: p
+Disk /dev/vda: <span class="m">2</span>.7 GiB, <span class="m">2931818496</span> bytes, <span class="m">5726208</span> sectors
+Units: sectors of <span class="m">1</span> * <span class="nv">512</span> <span class="o">=</span> <span class="m">512</span> bytes
+Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
+I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
+Disklabel type: dos
+Disk identifier: 0x067e19d7
+
+Device     Boot  Start     End Sectors  Size Id Type
+/dev/vda1         <span class="m">8192</span>  <span class="m">532479</span>  <span class="m">524288</span>  256M  c W95 FAT32 <span class="o">(</span>LBA<span class="o">)</span>
+/dev/vda2       <span class="m">532480</span> <span class="m">3629055</span> <span class="m">3096576</span>  <span class="m">1</span>.5G <span class="m">83</span> Linux
+
+Command <span class="o">(</span>m <span class="k">for</span> <span class="nb">help</span><span class="o">)</span>: d
+Partition number <span class="o">(</span><span class="m">1</span>,2, default <span class="m">2</span><span class="o">)</span>: <span class="m">2</span>
+
+Partition <span class="m">2</span> has been deleted.
+
+Command <span class="o">(</span>m <span class="k">for</span> <span class="nb">help</span><span class="o">)</span>: n
+Partition <span class="nb">type</span>
+   p   primary <span class="o">(</span><span class="m">1</span> primary, <span class="m">0</span> extended, <span class="m">3</span> free<span class="o">)</span>
+   e   extended <span class="o">(</span>container <span class="k">for</span> logical partitions<span class="o">)</span>
+Select <span class="o">(</span>default p<span class="o">)</span>: p
+Partition number <span class="o">(</span><span class="m">2</span>-4, default <span class="m">2</span><span class="o">)</span>: <span class="m">2</span>
+First sector <span class="o">(</span><span class="m">2048</span>-5726207, default <span class="m">2048</span><span class="o">)</span>: <span class="m">532480</span>
+Last sector, +/-sectors or +/-size<span class="o">{</span>K,M,G,T,P<span class="o">}</span> <span class="o">(</span><span class="m">532480</span>-5726207, default <span class="m">5726207</span><span class="o">)</span>:
+
+Created a new partition <span class="m">2</span> of <span class="nb">type</span> <span class="s1">&#39;Linux&#39;</span> and of size <span class="m">2</span>.5 GiB.
+Partition <span class="c1">#2 contains a ext4 signature.</span>
+
+Do you want to remove the signature? <span class="o">[</span>Y<span class="o">]</span>es/<span class="o">[</span>N<span class="o">]</span>o: n
+
+Command <span class="o">(</span>m <span class="k">for</span> <span class="nb">help</span><span class="o">)</span>: w
+
+The partition table has been altered.
+Syncing disks.
+</code></pre></div>
+
+<p>Note that <code>fdisk</code> offered by default the first sector to be 2048. This is the space <em>before</em> <code>/dev/vda1</code> and it is too small, only 8kb.</p>
+<p>Instead we want to start <em>after</em> <code>/dev/vda1</code>, in the same sector that the original <code>/dev/vda2</code>: the 532480.</p>
+<p>From there, to the end of the disk: 5726207.</p>
+<p>With the partition expanded, reboot and then update the filesystem:</p>
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ sudo resize2fs /dev/vda2
+resize2fs <span class="m">1</span>.44.5 <span class="o">(</span><span class="m">15</span>-Dec-2018<span class="o">)</span>
+Filesystem at /dev/vda2 is mounted on /<span class="p">;</span> on-line resizing required
+<span class="nv">old_desc_blocks</span> <span class="o">=</span> <span class="m">1</span>, <span class="nv">new_desc_blocks</span> <span class="o">=</span> <span class="m">1</span>
+The filesystem on /dev/vda2 is now <span class="m">649216</span> <span class="o">(</span>4k<span class="o">)</span> blocks long.
+</code></pre></div>
+
+<h2 id="references">References</h2>
+<p>This tutorial setups a <a href="https://azeria-labs.com/emulate-raspberry-pi-with-qemu/">Raspbian Jessie in Qemu</a>.</p>
+<p>I adapted the steps to use a modern Raspbian Buster image.</p>
+<p>The tutorial is super complete and includes how to enlarge the disk and setup the network.</p>
+<p>But for the enlarge the disk part, this <a href="https://gist.github.com/larsks/3933980">gist</a> explains the thing a little better.</p>
+<p><a href="https://github.com/bradfitz/embiggen-disk">embiggen-disk</a> seems to be a tool to facilite the task.</p>
+</article>
+<span class="print-footer">QEMUlating a Rasbian (ARM) - December 15, 2020 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

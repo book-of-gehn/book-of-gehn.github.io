@@ -1,0 +1,250 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Home Made Python F-String</title>
+  <meta name="description" content="Home Made Python F-String">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/07/11/Home-Made-Python-F-String.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Home Made Python F-String
+</h1>
+<p class="subtitle">
+July 11, 2021
+</p>
+<p>Python 3.6 introduced the so called <em>f-strings</em>: literal strings that support formatting from the variable in the local context.</p>
+<p>Before 3.6 you would to do something like this:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">11</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">22</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s2">&quot;x=</span><span class="si">{x}</span><span class="s2"> y=</span><span class="si">{y}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+<span class="s1">&#39;x=11 y=22&#39;</span>
+</code></pre></div>
+
+<p>But with the f-strings we can remove the bureaucratic call to <code><span class="highlight-candombe-inline"><span class="nb">format</span></span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="sa">f</span><span class="s2">&quot;x=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2"> y=</span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s1">&#39;x=11 y=22&#39;</span>
+</code></pre></div>
+
+<p>A few days ago <a href="https://yurichev.com/news/20210707_py_problem/">Yurichev</a> posted: could we achieve a similar feature but without using the f-strings?.</p>
+<p>Challenge accepted.<!--more--></p>
+<p>The trick is to realize that even if we don’t pass a variable explicitly to a function, the function still have access it through the Python’s stack.</p>
+<p>So we can write something like this:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">level2</span><span class="p">():</span>
+<span class="o">...</span>     <span class="n">stack</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span>
+<span class="o">...</span>     <span class="n">level2_var</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="p">{</span><span class="n">c</span><span class="o">.</span><span class="n">function</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">f_locals</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">stack</span><span class="p">}</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">level1</span><span class="p">():</span>
+<span class="o">...</span>     <span class="n">level1_var</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">level2</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">level1</span><span class="p">()</span>
+<span class="p">{</span><span class="s1">&#39;&lt;module&gt;&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">&lt;...&gt;</span>
+              <span class="s1">&#39;level1&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">level1</span> <span class="n">at</span> <span class="o">&lt;...&gt;&gt;</span><span class="p">,</span>
+              <span class="s1">&#39;level2&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">function</span> <span class="n">level2</span> <span class="n">at</span> <span class="o">&lt;...&gt;&gt;</span><span class="p">,</span>
+              <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+              <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">22</span><span class="p">},</span>
+ <span class="s1">&#39;level1&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;level1_var&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+ <span class="s1">&#39;level2&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;level2_var&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s1">&#39;stack&#39;</span><span class="p">:</span> <span class="p">[</span><span class="o">&lt;...&gt;</span><span class="p">]}}</span>
+</code></pre></div>
+
+<p>From <code><span class="highlight-candombe-inline"><span class="n">level2</span></span></code> we can access <code><span class="highlight-candombe-inline"><span class="n">level1</span></span></code>’s variables and even further.</p>
+<p>The other part of the challenge consist in to parse strings like <code><span class="highlight-candombe-inline"><span class="s2">&quot;x=</span><span class="si">{x}</span><span class="s2"> x^2={x**2}&quot;</span></span></code>. I played a lot with Python’s <code><span class="highlight-candombe-inline"><span class="n">string</span><span class="o">.</span><span class="n">Formatter</span></span></code> when I implemented <a href="https://github.com/bad-address/xview">xview</a>, a <code><span class="highlight-candombe-inline"><span class="n">hexdump</span></span></code>-like utility for <a href="https://github.com/bad-address/iasm">iasm</a> an interactive assembler.</p>
+<p>In particular, the <code><span class="highlight-candombe-inline"><span class="n">get_field</span></span></code> method of <code><span class="highlight-candombe-inline"><span class="n">string</span><span class="o">.</span><span class="n">Formatter</span></span></code> gets called each time the parser finds a <code><span class="highlight-candombe-inline"><span class="s2">&quot;</span><span class="si">{x}</span><span class="s2">&quot;</span></span></code>.</p>
+<p>The idea is to <em>eval</em> <code><span class="highlight-candombe-inline"><span class="n">x</span></span></code> in the context of the caller’s frame: this will not only resolve variables like <code><span class="highlight-candombe-inline"><span class="n">x</span></span></code> but also expressions like <code><span class="highlight-candombe-inline"><span class="n">x</span><span class="o">**</span><span class="mi">2</span></span></code>.</p>
+<p>Combining all together:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">string</span> <span class="kn">import</span> <span class="n">Formatter</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">class</span> <span class="nc">LocalsFormatter</span><span class="p">(</span><span class="n">Formatter</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">caller_ix</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="o">...</span>         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+<span class="o">...</span>         <span class="bp">self</span><span class="o">.</span><span class="n">_caller_ix</span> <span class="o">=</span> <span class="n">caller_ix</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">vformat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">stack</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span>
+<span class="o">...</span>         <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augment_eval_context</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">vformat</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmt</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kargs</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">stack</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span>
+<span class="o">...</span>         <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augment_eval_context</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">vformat</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">_augment_eval_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">caller</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_caller_ix</span><span class="p">]</span>
+<span class="o">...</span>         <span class="n">frame</span> <span class="o">=</span> <span class="n">caller</span><span class="o">.</span><span class="n">frame</span>
+<span class="o">...</span>         <span class="n">ctx</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">f_locals</span><span class="p">)</span> <span class="c1"># ensure a copy</span>
+<span class="o">...</span>         <span class="n">ctx</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kargs</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="n">args</span><span class="p">,</span> <span class="n">ctx</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">val</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">kargs</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="n">field_name</span>
+</code></pre></div>
+
+<p><code><span class="highlight-candombe-inline"><span class="n">caller_ix</span></span></code> is the index of the frame in the stack that we want to use as the context for the evaluation.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">caller_ix</span> <span class="o">==</span> <span class="mi">1</span></span></code> means use the caller of <code><span class="highlight-candombe-inline"><span class="nb">format</span><span class="p">()</span></span></code> or <code><span class="highlight-candombe-inline"><span class="n">vformat</span><span class="p">()</span></span></code>; <code><span class="highlight-candombe-inline"><span class="n">caller_ix</span> <span class="o">==</span> <span class="mi">2</span></span></code> means use the caller of the caller of <code><span class="highlight-candombe-inline"><span class="nb">format</span><span class="p">()</span></span></code>/<code><span class="highlight-candombe-inline"><span class="n">vformat</span><span class="p">()</span></span></code></p>
+<p><code><span class="highlight-candombe-inline"><span class="n">string</span><span class="o">.</span><span class="n">Formatter</span></span></code> implements <code><span class="highlight-candombe-inline"><span class="nb">format</span></span></code> calling <code><span class="highlight-candombe-inline"><span class="n">vformat</span></span></code> but that would introduces another frame in the stack <em>shifting</em> the caller index.</p>
+<p>To simplify I redefined <code><span class="highlight-candombe-inline"><span class="nb">format</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">vformat</span></span></code> to get the stack from <em>their point of view</em> and only then call other methods.</p>
+<h3 id="examples">Examples</h3>
+<p>Let’s see how it works:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">printf</span><span class="p">(</span><span class="n">fmt</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">f</span> <span class="o">=</span> <span class="n">LocalsFormatter</span><span class="p">(</span><span class="n">caller_ix</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fmt</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span><span class="o">=</span><span class="mi">123</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">y</span><span class="o">=</span><span class="mi">456</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;{x+y}&quot;</span><span class="p">)</span>
+<span class="mi">579</span>
+</code></pre></div>
+
+<p>This also includes calling methods and functions:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">l</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{l}</span><span class="s2"> {l.__len__()} {len(l)}&quot;</span><span class="p">)</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="mi">3</span> <span class="mi">3</span>
+</code></pre></div>
+
+<p>Closures should work too:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">outter</span><span class="p">():</span>
+<span class="o">...</span>     <span class="n">outter_y</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">inner</span><span class="p">():</span>
+<span class="o">...</span>         <span class="k">nonlocal</span> <span class="n">outter_y</span>
+<span class="o">...</span>         <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{outter_y}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">inner</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">outter</span><span class="p">()</span>
+<span class="mi">1</span>
+</code></pre></div>
+
+<p>I thought that I could cache the result of an expression and reuse it if it was used in the format string more than once.</p>
+<p>But then I realize that would not work in some edge-cases:</p>
+<p>Considere the following edge-case using a closure and notice how <code><span class="highlight-candombe-inline"><span class="n">inc</span><span class="p">()</span></span></code> is called three times.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">counter</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">start</span> <span class="o">-=</span> <span class="mi">1</span>
+<span class="o">...</span>     <span class="k">def</span> <span class="nf">inc</span><span class="p">():</span>
+<span class="o">...</span>         <span class="k">nonlocal</span> <span class="n">start</span>
+<span class="o">...</span>         <span class="n">start</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="o">...</span>         <span class="k">return</span> <span class="n">start</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">inc</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">inc</span> <span class="o">=</span> <span class="n">counter</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;{inc()}, {inc()}, {inc()}&quot;</span><span class="p">)</span>
+<span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+</code></pre></div>
+
+<p><code><span class="highlight-candombe-inline"><span class="n">LocalsFormatter</span></span></code> can also use the user-provided variables which will take precedence:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">printf</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kargs</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">f</span> <span class="o">=</span> <span class="n">LocalsFormatter</span><span class="p">(</span><span class="n">caller_ix</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">vformat</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">33</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;x=</span><span class="si">{x}</span><span class="s2"> y=</span><span class="si">{y}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">27</span><span class="p">)</span>
+<span class="n">x</span><span class="o">=</span><span class="mi">27</span> <span class="n">y</span><span class="o">=</span><span class="mi">33</span>
+</code></pre></div>
+
+<p>If a variable cannot be found, an error will be shown</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">inner</span><span class="p">():</span>
+<span class="o">...</span>     <span class="n">printf</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{outter_y}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">outter</span><span class="p">():</span>
+<span class="o">...</span>     <span class="n">outter_y</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="o">...</span>     <span class="n">inner</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">outter</span><span class="p">()</span>
+<span class="o">&lt;...&gt;</span>
+<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;outter_y&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+</code></pre></div>
+
+</article>
+<span class="print-footer">Home Made Python F-String - July 11, 2021 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

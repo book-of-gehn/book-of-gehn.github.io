@@ -1,0 +1,286 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Constant Rate Loop</title>
+  <meta name="description" content="Constant Rate Loop">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2019/10/23/Constant-Rate-Loop.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Constant Rate Loop
+</h1>
+<p class="subtitle">
+October 23, 2019
+</p>
+<!--more-->
+<h2 id="motivation">Motivation</h2>
+<p>Consider a <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> function that renders an animation. An animation is just a list of images or frames that <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> will render one frame per iteration.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">draw</span><span class="p">():</span>
+<span class="o">...</span>     <span class="k">global</span> <span class="n">it</span>
+<span class="o">...</span>     <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>     <span class="c1"># pick the &quot;next&quot; frame</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">f</span> <span class="o">=</span> <span class="n">frames</span><span class="p">[</span><span class="n">it</span> <span class="o">%</span> <span class="n">n</span><span class="p">]</span>  <span class="c1"># keep looping</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">render</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</code></pre></div>
+
+<p>To get the animation effect we want to call <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> in a loop.</p>
+<p>We may do this:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">loop</span><span class="p">():</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">draw</span><span class="p">()</span>
+</code></pre></div>
+
+<p>But then the animation speed will be determinate by the speed of the machine: faster machines will render faster animations.</p>
+<p>Adding a <code><span class="highlight-candombe-inline"><span class="n">sleep</span><span class="p">()</span></span></code> solves this partially</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">fixed_sleep_loop</span><span class="p">():</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">draw</span><span class="p">()</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span>
+</code></pre></div>
+
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9jbG9ja19kcmlmdC5wbmcnIC8+ClBsb3QgdGhlIGRpZmZlcmVuY2UgYmV0d2VlbiB0aGUgcmVhbCB0aW1lIGBgbm93KClgYCBhbmQgdGhlIGV4cGVjdGVkIGluCmVhY2ggaXRlcmF0aW9uIGBgaXQgKiByYXRlYGAgbG9vcGluZyBkdXJpbmcgMSBzZWNvbmQgYXQgYSByYXRlIG9mIGBgMS82MGBgLgpVc2luZyBhICpmaXhlZCBzbGVlcCogbG9vcCB0aGUgZGlmZmVyZW5jZQppbmNyZWFzZSBsaW5lYXJseSB3aGlsZSB1c2luZyBhICpjb25zdGFudCByYXRlKiBsb29wIHRoZSBkaWZmZXJlbmNlIGlzCnF1aXRlIGxvdyBhbmQgcmVsYXRpdmVseSBjb25zdGFudC4KIFs8aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiBjb2RlXSgvYXNzZXRzL2dhbWUvY29uc3RhbnQtcmF0ZS1sb29wL2Nsb2NrX2RyaWZ0LnB5KQptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9jbG9ja19kcmlmdC5wbmcnIC8+ClBsb3QgdGhlIGRpZmZlcmVuY2UgYmV0d2VlbiB0aGUgcmVhbCB0aW1lIGBgbm93KClgYCBhbmQgdGhlIGV4cGVjdGVkIGluCmVhY2ggaXRlcmF0aW9uIGBgaXQgKiByYXRlYGAgbG9vcGluZyBkdXJpbmcgMSBzZWNvbmQgYXQgYSByYXRlIG9mIGBgMS82MGBgLgpVc2luZyBhICpmaXhlZCBzbGVlcCogbG9vcCB0aGUgZGlmZmVyZW5jZQppbmNyZWFzZSBsaW5lYXJseSB3aGlsZSB1c2luZyBhICpjb25zdGFudCByYXRlKiBsb29wIHRoZSBkaWZmZXJlbmNlIGlzCnF1aXRlIGxvdyBhbmQgcmVsYXRpdmVseSBjb25zdGFudC4KIFs8aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiBjb2RlXSgvYXNzZXRzL2dhbWUvY29uc3RhbnQtcmF0ZS1sb29wL2Nsb2NrX2RyaWZ0LnB5KQptYXJnaW4=' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/game/constant-rate-loop/clock_drift.png' />
+Plot the difference between the real time <code><span class="highlight-candombe-inline"><span class="n">now</span><span class="p">()</span></span></code> and the expected in each iteration <code><span class="highlight-candombe-inline"><span class="n">it</span> <span class="o">*</span> <span class="n">rate</span></span></code> looping during 1 second at a rate of <code><span class="highlight-candombe-inline"><span class="mi">1</span><span class="o">/</span><span class="mi">60</span></span></code>. Using a <em>fixed sleep</em> loop the difference increase linearly while using a <em>constant rate</em> loop the difference is quite low and relatively constant. <a href="/assets/game/constant-rate-loop/clock_drift.py"><i class="fab fa-github"></i> code</a>
+</span></p>
+<p>The problem is that we are not considering neither the time elapsed in <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> nor the fact that <code><span class="highlight-candombe-inline"><span class="n">sleep</span><span class="p">()</span></span></code> may sleep more than it should be.</p>
+<blockquote>
+<p>“If the interval specified not an exact multiple of the granularity underlying clock, then the interval will be rounded up to the next multiple. Furthermore, after the sleep completes, there may still be a delay before the CPU becomes free to once again execute the calling thread.” From <a href="http://man7.org/linux/man-pages/man2/nanosleep.2.html">nanosleep(2)</a></p>
+</blockquote>
+<p>This error is <em>accumulative</em>, increasing in each iteration, making the <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> out of synchronization very quickly.</p>
+<h2 id="problem">Problem</h2>
+<p>You want to do an action every X time maintaining a constant rate.</p>
+<h2 id="solution">Solution</h2>
+<p>The idea is to have a loop that can call a function <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> every X time, like a precise clock.</p>
+<p>If the loop gets out of sync and begins to be <em>behind</em> schedule, the loop needs to compensate somehow to catch up.</p>
+<p>Two alternatives are possible: <em>drop &amp; rest</em> and <em>no rest-keep working</em></p>
+<h3 id="if-behind-drop-rest">If behind, drop &amp; rest</h3>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">constant_rate_loop</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">t1</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="o">...</span>     <span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">...</span>     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<span class="o">...</span>         <span class="n">func</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">t2</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="o">...</span>         <span class="n">rest</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">-</span> <span class="p">(</span><span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">rest</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">behind</span> <span class="o">=</span> <span class="o">-</span><span class="n">rest</span>  <span class="c1"># this is always positive</span>
+<span class="o">...</span>             <span class="n">rest</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">-</span> <span class="n">behind</span> <span class="o">%</span> <span class="n">rate</span>
+<span class="o">...</span>             <span class="n">lost</span> <span class="o">=</span> <span class="n">behind</span> <span class="o">+</span> <span class="n">rest</span>
+<span class="o">...</span>             <span class="n">t1</span> <span class="o">+=</span> <span class="n">lost</span>
+<span class="o">...</span>             <span class="n">it</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lost</span> <span class="o">//</span> <span class="n">rate</span><span class="p">)</span>  <span class="c1"># floor division</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">sleep</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">t1</span> <span class="o">+=</span> <span class="n">rate</span>
+<span class="o">...</span>         <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p>The difference between <code><span class="highlight-candombe-inline"><span class="n">t2</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">t1</span></span></code> yields how much time we were in the <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> call.</p>
+<p>In a normal situation, this should be <em>less</em> than the expected rate and the loop sleeps the remaining time to complete the current iteration.</p>
+<p>The <em>next</em> <code><span class="highlight-candombe-inline"><span class="n">t1</span></span></code> is increased by <code><span class="highlight-candombe-inline"><span class="n">rate</span></span></code>: we don’t call <code><span class="highlight-candombe-inline"><span class="n">now</span><span class="p">()</span></span></code> again otherwise will be introducing a clock drift due the extra delays of <code><span class="highlight-candombe-inline"><span class="n">sleep</span><span class="p">()</span></span></code>.</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<img  class='' alt='' src='/img/game/constant-rate-loop/rest-nodrop.png' /></figure></p>
+<p>That’s the happy path.</p>
+<p>But what happen if <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> is too slow and takes more time than the expected for one iteration?</p>
+<p>First we determinate how much time we are <em>behind schedule</em>:</p>
+<div class="highlight-candombe"><pre><span></span><code>    <span class="n">behind</span> <span class="o">=</span> <span class="o">-</span><span class="n">rest</span>  <span class="c1"># this is always positive</span>
+</code></pre></div>
+
+<p>Then, it is very likely that we are in some point in the middle, and incomplete iteration, so we calculate how much time we should sleep to synchronize ourselves with the <em>next</em> iteration – this is the <em>drop &amp; rest</em>:</p>
+<div class="highlight-candombe"><pre><span></span><code>    <span class="n">rest</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">-</span> <span class="n">behind</span> <span class="o">%</span> <span class="n">rate</span>
+</code></pre></div>
+
+<p>Finally, how many iterations we lost or skipped:</p>
+<div class="highlight-candombe"><pre><span></span><code>    <span class="n">lost</span> <span class="o">=</span> <span class="n">behind</span> <span class="o">+</span> <span class="n">rest</span>
+
+    <span class="n">it</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lost</span> <span class="o">//</span> <span class="n">rate</span><span class="p">)</span>  <span class="c1"># floor division</span>
+    <span class="n">t1</span> <span class="o">+=</span> <span class="n">lost</span>
+</code></pre></div>
+
+<p>The <code><span class="highlight-candombe-inline"><span class="n">t1</span> <span class="o">+=</span> <span class="n">lost</span></span></code> is crucial otherwise <code><span class="highlight-candombe-inline"><span class="n">t1</span></span></code> will be always behind like if the following <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> calls were always too slow.</p>
+<p><figure><figcaption><span markdown='1'>
+The iteration 1 took too long and the iteration 2 was lost. <br /> Note how the begin of the iteration 3 starts at the begin of a new slot.
+</span></figcaption>
+<img  class='' alt='' src='/img/game/constant-rate-loop/rest-drop.png' /></figure></p>
+<p>Full code in <a href="/assets/game/constant-rate-loop/constant_rate.py"><i class="fab fa-github"></i> github</a>.</p>
+<h3 id="if-behind-keep-working">If behind, keep working</h3>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">constant_rate_loop</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">t1</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="o">...</span>     <span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="o">...</span>     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<span class="o">...</span>         <span class="n">func</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">t2</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+<span class="o">...</span>         <span class="n">rest</span> <span class="o">=</span> <span class="n">rate</span> <span class="o">-</span> <span class="p">(</span><span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="n">rest</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">behind</span> <span class="o">=</span> <span class="o">-</span><span class="n">rest</span>  <span class="c1"># this is always positive</span>
+<span class="o">...</span>             <span class="n">lost</span> <span class="o">=</span> <span class="n">behind</span> <span class="o">-</span> <span class="n">behind</span> <span class="o">%</span> <span class="n">rate</span>
+<span class="o">...</span>             <span class="n">t1</span> <span class="o">+=</span> <span class="n">lost</span>
+<span class="o">...</span>             <span class="n">it</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lost</span> <span class="o">//</span> <span class="n">rate</span><span class="p">)</span>  <span class="c1"># floor division</span>
+<span class="o">...</span>         <span class="k">else</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">sleep</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="n">t1</span> <span class="o">+=</span> <span class="n">rate</span>
+<span class="o">...</span>         <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre></div>
+
+<p>Like in <em>drop &amp; rest</em>, the happy path is the same: if we finish an iteration before the deadline we take some rest until the next iteration.</p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<img  class='' alt='' src='/img/game/constant-rate-loop/rest-nodrop.png' /></figure></p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9ub3Jlc3Qtbm9sb3N0LnBuZycgLz4KSXRlcmF0aW9uIDIgaXMgbm90IGRyb3BwZWQgYW5kIGJlZ2lucyBhcyBzb29uIGFzIHBvc3NpYmxlLgo8YnIgLz4KQ29udHJhc3QgdGhpcyB3aXRoIHRoZSAqZHJvcCAmIHJlc3QqIHN0cmF0ZWd5OgoKbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9ub3Jlc3Qtbm9sb3N0LnBuZycgLz4KSXRlcmF0aW9uIDIgaXMgbm90IGRyb3BwZWQgYW5kIGJlZ2lucyBhcyBzb29uIGFzIHBvc3NpYmxlLgo8YnIgLz4KQ29udHJhc3QgdGhpcyB3aXRoIHRoZSAqZHJvcCAmIHJlc3QqIHN0cmF0ZWd5OgoKbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/game/constant-rate-loop/norest-nolost.png' />
+Iteration 2 is not dropped and begins as soon as possible. <br /> Contrast this with the <em>drop &amp; rest</em> strategy:
+</span></p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9yZXN0LWRyb3AucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9yZXN0LWRyb3AucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/game/constant-rate-loop/rest-drop.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>But if we are behind schedule we do something different: the last partially consumed iteration is not considered lost.</p>
+<div class="highlight-candombe"><pre><span></span><code>    <span class="n">lost</span> <span class="o">=</span> <span class="n">behind</span> <span class="o">-</span> <span class="n">behind</span> <span class="o">%</span> <span class="n">rate</span>
+</code></pre></div>
+
+<p>While <em>drop &amp; rest</em> consideres an iteration lost if <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> cannot be called at the begin of the iteration, <em>no rest-keep working</em> consideres an iteration lost if it was totally consumed without calling <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code>.</p>
+<p>If there is room to call it even if it is not at the begin of the iteration, <em>no rest-keep working</em> will call it immediately – it will not rest, it will keep working.</p>
+<p><figure><figcaption><span markdown='1'>
+<code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> is called in the iteration 2 as soon as the previous finishes. <br /> No rest is taken, trying to <em>catch up</em> as soon as possible without loosing any frame even if that means call <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> in the middle of an iteration.
+</span></figcaption>
+<img  class='' alt='' src='/img/game/constant-rate-loop/norest-nolost.png' /></figure></p>
+<p><em>No rest-keep working</em> is suitable for situations where we want to minimize the drops; <em>drop &amp; rest</em> is better when we want to call <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> at specific times even if we have to drop an iteration.</p>
+<p>Of course, if <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> spans 2 or more iterations, <em>no rest-keep working</em> will be forced to drop the iterations in the middle.</p>
+<p><figure><figcaption><span markdown='1'>
+<code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> took more than 2 iterations to complete so the iteration 2 is considered lost.
+</span></figcaption>
+<img  class='' alt='' src='/img/game/constant-rate-loop/norest-lost.png' /></figure></p>
+<h3 id="synchronization-on-drops">Synchronization on Drops</h3>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> may need to know when it is not being called as expected, when some iterations are being dropped.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9iaXRlLmdpZicgLz4KU2FtZSBhbmltYXRpb24gdGhhdCBsYXN0IDEgc2Vjb25kIGluIGEgbG9vcC4gRnJvbSB0b3AgdG8gZG93biwgdGhlIGZpcnN0CmlzIGFuIGFuaW1hdGlvbiB3aXRob3V0IGFueSBmcmFtZSBsb3N0LCB0aGUgc2Vjb25kIGhhZCBsb3N0IHNvbWUgZnJhbWVzCmJ1dCBgYGRyYXcoKWBgIGlzIHN0aWxsIGluIHN5bmMsIHRoZSBsYXN0IG9uZSBsb3N0IHRoZSBzYW1lIGFtb3VudApvZiBmcmFtZXMgYnV0IGBgZHJhdygpYGAgdXNlZCBpdHMgb3duIG5vdGlvbiBvZiB0aW1lIGFuIGdvdCBvdXQgb2Ygc3luYy4KIFs8aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiBjb2RlXSgvYXNzZXRzL2dhbWUvY29uc3RhbnQtcmF0ZS1sb29wL2Ryb3BfaXRlcmF0aW9ucy5weSkKbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9iaXRlLmdpZicgLz4KU2FtZSBhbmltYXRpb24gdGhhdCBsYXN0IDEgc2Vjb25kIGluIGEgbG9vcC4gRnJvbSB0b3AgdG8gZG93biwgdGhlIGZpcnN0CmlzIGFuIGFuaW1hdGlvbiB3aXRob3V0IGFueSBmcmFtZSBsb3N0LCB0aGUgc2Vjb25kIGhhZCBsb3N0IHNvbWUgZnJhbWVzCmJ1dCBgYGRyYXcoKWBgIGlzIHN0aWxsIGluIHN5bmMsIHRoZSBsYXN0IG9uZSBsb3N0IHRoZSBzYW1lIGFtb3VudApvZiBmcmFtZXMgYnV0IGBgZHJhdygpYGAgdXNlZCBpdHMgb3duIG5vdGlvbiBvZiB0aW1lIGFuIGdvdCBvdXQgb2Ygc3luYy4KIFs8aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiBjb2RlXSgvYXNzZXRzL2dhbWUvY29uc3RhbnQtcmF0ZS1sb29wL2Ryb3BfaXRlcmF0aW9ucy5weSkKbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/game/constant-rate-loop/bite.gif' />
+Same animation that last 1 second in a loop. From top to down, the first is an animation without any frame lost, the second had lost some frames but <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> is still in sync, the last one lost the same amount of frames but <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> used its own notion of time an got out of sync. <a href="/assets/game/constant-rate-loop/drop_iterations.py"><i class="fab fa-github"></i> code</a>
+</span></p>
+<p>If <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> is too slow, the loop will drop some iterations as shown.</p>
+<p>But <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> will never notice this and instead of <em>skipping</em> some frames it will render the <em>next</em> frame <em>accordingly to him</em>.</p>
+<p>The animation will appear smooth to the user but behind the scene the <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> will be out of sync: the animation will take more time to complete or it will be cut in the middle.</p>
+<p>Instead, we can pass to <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> the iteration number explicitly.</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> must be updated accordingly:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="n">it</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">f</span> <span class="o">=</span> <span class="n">frames</span><span class="p">[</span><span class="n">it</span> <span class="o">%</span> <span class="n">n</span><span class="p">]</span>      <span class="c1"># pick what correspond to &quot;this&quot; iteration</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">render</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</code></pre></div>
+
+<p>In a normal situation, this is always an sequential number but if iterations are being dropped, there will be <em>shifts</em> in the count and <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> will skip some frames but it will remain in sync.</p>
+<p><figure><figcaption><span markdown='1'>
+The first row shows all the frames that forms the animation. The other two are the frames plotted by a <em>slow</em> <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> with some frames dropped. But the first <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> (second row) kept in sync while the other did not. <a href="/assets/game/constant-rate-loop/drop_iterations.py"><i class="fab fa-github"></i> code</a>
+</span></figcaption>
+<img  class='' alt='' src='/img/game/constant-rate-loop/bite_frames.png' /></figure></p>
+<h2 id="known-uses">Known Uses</h2>
+<p>Game and rendering loops.</p>
+<h2 id="also-known-as">Also Known as</h2>
+<p>Frame-rate limiting.</p>
+<h3 id="attributions">Attributions</h3>
+<p>The <em>werewolf</em> images were made by <a href="https://opengameart.org/users/mindchamber">MindChamber</a>, licensed CC-BY 3.0, from <a href="https://opengameart.org/content/dark-saber-werewolf">OpenGameArt</a></p>
+</article>
+<span class="print-footer">Constant Rate Loop - October 23, 2019 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

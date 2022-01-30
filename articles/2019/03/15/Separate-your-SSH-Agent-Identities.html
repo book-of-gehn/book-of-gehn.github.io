@@ -1,0 +1,173 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Separate your SSH Agent Identities</title>
+  <meta name="description" content="Separate your SSH Agent Identities">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2019/03/15/Separate-your-SSH-Agent-Identities.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Separate your SSH Agent Identities
+</h1>
+<p class="subtitle">
+March 15, 2019
+</p>
+<p>Using a <code>ssh-agent</code> to handle our keys is handy.</p>
+<p>When you need to access to different hosts jumping from one to another, <em>forwarding</em> the agent is much more secure than copying and pasting your keys around.</p>
+<p>But if one host gets compromised it will expose your agent: even if the attacker will not get your secret keys he will be able to login into any system as you.</p>
+<p>You cannot prevent this, but you can restrict this to reduce the splash damage.<!--more--></p>
+<h2 id="explicit-is-better-than-implicit">Explicit is better than implicit</h2>
+<p>You can instruct to your <code>ssh-agent</code> to request your <em>explicit</em> permission to use a particular key.</p>
+<p>This gives you the opportunity to detect when someone is trying to use your agent.</p>
+<p>A simple alias is enough:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">alias</span> ssh-add<span class="o">=</span><span class="s1">&#39;ssh-add -c&#39;</span>
+</code></pre></div>
+
+<p>To make it usable you are going to need a program that can ask you if a particular key can be used or not. There are several options but if you want simplicity I think that <code>ssh-askpass</code> is good enough.</p>
+<h2 id="multiple-ssh-agents">Multiple <code>ssh-agent</code>s</h2>
+<p>Even using an explicit confirmation, you agent may leak some info exposing all the public keys that it has.</p>
+<p>This is because when you (or the attacker in your behalf) request a secure shell to a remote host, <code>ssh</code> will offer <strong>all</strong> the available public keys that the agent has.</p>
+<p>Only if one is accepted, the agent will ask you confirmation; technically a public key is for that but it may reveal more than you want.</p>
+<p>For example you could have ssh key for your personal <code>github</code> account and another key for your work.</p>
+<p>You use the latter ssh key to log in to some work-related host and forward the agent.</p>
+<p>But if you loaded <em>both</em> keys to the <em>same</em> agent, it may leak the fact that you have a personal <code>github</code> account.</p>
+<p>The only way to prevent this is to not load all the keys in the same agent and use <em>different</em> <code>ssh-agent</code>s instead.</p>
+<h3 id="switch-by-hand">Switch by hand</h3>
+<p>Assuming that you have two <code>ssh-agent</code>s running, to use a particular one you need to set some environment variables in your current shell:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">export</span> <span class="nv">SSH_AGENT_PID</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$agent_pid</span><span class="s2">&quot;</span>
+$ <span class="nb">export</span> <span class="nv">SSH_AUTH_SOCK</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$sock_file</span><span class="s2">&quot;</span>
+</code></pre></div>
+
+<p>Where <code>$agent_pid</code> and <code>$sock_file</code> are the process id of the agent and the socket file that it created for IPC.</p>
+<p>But doing that by hand is error prone.</p>
+<h2 id="ssh-use-agent"><code>ssh-use-agent</code></h2>
+<p>For this I wrote <a href="https://github.com/eldipa/ssh-use-agent">ssh-use-agent</a>, a simple script to spawn and switch between <code>ssh-agent</code>s.</p>
+<p>To install it, save the script somewhere and give it execution permissions.</p>
+<p>For simplicity, create an <code>alias</code> to invoke it without remembering to source it.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">alias</span> ssh-use-agent<span class="o">=</span><span class="s2">&quot;. ~/your-scripts/ssh-use-agent&quot;</span>
+</code></pre></div>
+
+<p>And to have a quick feedback about which <code>ssh-agent</code> is begin use, modify your prompt:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;${SSH_AGENT_NAME:+(agent $SSH_AGENT_NAME) } \$ &#39;</span>
+</code></pre></div>
+
+<blockquote>
+<p>That works for <code>Bash</code>, depending of your shell and your personal configuration and taste those bits may vary.</p>
+</blockquote>
+<p>To start using an agent run:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ssh-use-agent use personal
+</code></pre></div>
+
+<p>That will <em>use</em> an already running <code>ssh-agent</code> registered under the name <code>personal</code> and it will <em>source</em> into your terminal the required environment variables so any program spawned from there will use that agent.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="nv">$SSH_AGENT_PID</span>
+&lt;pid&gt;
+
+$ <span class="nb">echo</span> <span class="nv">$SSH_AUTH_SOCK</span>
+/tmp/&lt;...&gt;
+
+$ <span class="nb">echo</span> <span class="nv">$SSH_AGENT_NAME</span>
+personal
+</code></pre></div>
+
+<p>If no agent is registered under that name, <code>ssh-use-agent</code> will spawn a new <code>ssh-agent</code> for you.</p>
+<p>It is up to you to load any ssh key to it later with <code>ssh-add</code> (or <code>ssh-add -c</code>).</p>
+<p>Run <code>ssh-use-agent disuse</code> to dis-configure your terminal. Keep in mind that no agent will be shutdown.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ssh-use-agent disuse
+
+$ <span class="nb">echo</span> <span class="nv">$SSH_AGENT_PID</span>
+$ <span class="nb">echo</span> <span class="nv">$SSH_AUTH_SOCK</span>
+$ <span class="nb">echo</span> <span class="nv">$SSH_AGENT_NAME</span>
+</code></pre></div>
+
+<p>To remove a key or all the keys use <code>ssh-add</code> as usual; to kill a particular <code>ssh-agent</code> use the traditional <code>kill -15</code>.</p>
+</article>
+<span class="print-footer">Separate your SSH Agent Identities - March 15, 2019 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Isolate a wifi card and keep your traffic out of the Big Brother sight</title>
+  <meta name="description" content="Isolate a wifi card and keep your traffic out of the Big Brother sight">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2017/04/16/Isolate-wifi-and-keep-traffic-out-Big-Brother-sight.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Isolate a wifi card and keep your traffic out of the Big Brother sight
+</h1>
+<p class="subtitle">
+April 16, 2017
+</p>
+<p>HTTP Proxies blacklisting evil domains, firewalls blocking weird traffic and IDSs looking for someone that shouldn’t be there are reasonable and understandable policies for a corporate environment.</p>
+<p>But when a friend opened his browser this week and went to <code>google.com</code> the things got odd.</p>
+<p>The browser refused the connection warning him that the SSL certificate of the server wasn’t issue by <code>google.com</code> at all or signed by a trusted authority.<!--more--></p>
+<p>My first thought was, <em>“this is a man in the middle attack”</em> but it turned out that the IT guys said to him: <em>“it’s OK, just accept the new certificate and ignore the warning of the browser”</em>.</p>
+<p>They were tampering the internet access of all the company!</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2lzb2xhdGVfd2lmaV9iaWdfYnJvdGhlcl9zaWdodC5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2lzb2xhdGVfd2lmaV9iaWdfYnJvdGhlcl9zaWdodC5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/network/isolate_wifi_big_brother_sight.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>All his credentials, emails and documents could be read by someone else. That was unacceptable.</p>
+<p>Fortunately he has a Starbucks near with a decent wifi signal strength.</p>
+<p><label for='CioqdGw7ZHI6KiogdGhpcyBbc2NyaXB0XSgvYXNzZXRzL25ldHdvcmsvaXNvbGF0ZV93aWZpLnNoKQogaXMgYWxsIHdoYXQgeW91IG5lZWQgdG8gaGF2ZSBhbiBpc29sYXRlZCB3aWZpIG5ldHdvcmsuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CioqdGw7ZHI6KiogdGhpcyBbc2NyaXB0XSgvYXNzZXRzL25ldHdvcmsvaXNvbGF0ZV93aWZpLnNoKQogaXMgYWxsIHdoYXQgeW91IG5lZWQgdG8gaGF2ZSBhbiBpc29sYXRlZCB3aWZpIG5ldHdvcmsuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+<strong>tl;dr:</strong> this <a href="/assets/network/isolate_wifi.sh">script</a> is all what you need to have an isolated wifi network.
+</span></p>
+<p>Now the challenge is how to separate the private traffic so it can go only through the wifi while ensuring that the corporate traffic stays where it belongs, under the sight of the <em>Big Brother</em>.</p>
+<h3 id="isolate-a-wifi-card-with-network-namespaces">Isolate a wifi card with Network Namespaces</h3>
+<p>In a modern linux implementation we can use a <code>Network Namespace</code> which can create isolated full network stacks with their own routes and firewall rules.</p>
+<p>Any program running inside that namespace will see only that network stack which it is perfect for our purpose.</p>
+<p>Let’s create it first; pick a nice name and run:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip netns add <span class="s2">&quot;starbucks&quot;</span>
+</code></pre></div>
+
+<p>With that we have our <code>"starbucks"</code> namespace, empty for now.</p>
+<p>Now, we cannot put our wifi card into that namespace directly using the <code>ip</code> command.</p>
+<p>Typically you should use something like:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip link <span class="nb">set</span> DEVICE netns <span class="s2">&quot;starbucks&quot;</span>
+</code></pre></div>
+
+<p>to move the <code>DEVICE</code> from the default namespace to the <code>"starbucks"</code> namespace, <strong>but no</strong>, we cannot use this.</p>
+<p>A wireless card is a little more exotic.</p>
+<p>First, we need to know the <em>physical id</em> of our card:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ iw dev <span class="s2">&quot;wlan0&quot;</span> info
+Interface
+    ifindex <span class="m">3</span>
+    wdev 0x1
+    addr &lt;mac-addr&gt;
+    <span class="nb">type</span> managed
+    wiphy &lt;phy-id&gt;
+</code></pre></div>
+
+<p>where <code>"wlan0"</code> is the name of our wifi interface.</p>
+<p>If you are lazy like me then you may find useful this shortcut. The <code>iw</code> manpage warns that the output of this command shouldn’t be scrapped, but let’s be disobedient for a while:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nv">PHYNUM</span><span class="o">=</span><span class="k">$(</span>iw dev <span class="s2">&quot;wlan0&quot;</span> info <span class="p">|</span> sed -n <span class="s1">&#39;s/^.*wiphy \([0-9]\+\)$/\1/p&#39;</span><span class="k">)</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$PHYNUM</span><span class="s2">&quot;</span>
+&lt;phy-id&gt;
+</code></pre></div>
+
+<p>Now, it comes the tricky part.</p>
+<p>To move a wifi card to a namespace we need to have a process already running there in the first place.</p>
+<p>Then we use <code>iw</code> to move the card.</p>
+<p>Here are the bits that do the magic:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> sleep <span class="m">3</span> <span class="p">&amp;</span>
+$ <span class="nv">PID</span><span class="o">=</span><span class="nv">$!</span>
+
+$ iw phy <span class="s2">&quot;phy&lt;phy-id&gt;&quot;</span> <span class="nb">set</span> netns <span class="s2">&quot;</span><span class="nv">$PID</span><span class="s2">&quot;</span>
+</code></pre></div>
+
+<p>Just run a process in the namespace in background, grab its process id, and move the <code>"phy&lt;phy-id&gt;"</code> card to the same namespace of that process.</p>
+<h3 id="connect-to-a-wifi-network">Connect to a wifi network</h3>
+<p>With the card in its place, we are left is configure it. Pretty standard.</p>
+<p>First, up the interfaces in the <code>"starbucks"</code> namespace:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> rfkill unblock <span class="s2">&quot;&lt;phy-id&gt;&quot;</span>
+
+$ ip -n <span class="s2">&quot;starbucks&quot;</span> link <span class="nb">set</span> <span class="s2">&quot;wlan0&quot;</span> up
+$ ip -n <span class="s2">&quot;starbucks&quot;</span> link <span class="nb">set</span> <span class="s2">&quot;lo&quot;</span> up
+</code></pre></div>
+
+<p>And connect to the access point.</p>
+<p>This of course will depend of the authentication method used by your local Starbucks.</p>
+<p>For an open network it is quite easy:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> iw <span class="s2">&quot;wlan0&quot;</span> connect -w <span class="s2">&quot;</span><span class="nv">$SSID</span><span class="s2">&quot;</span>
+wlan0 <span class="o">(</span>phy <span class="c1">#&lt;phy-id&gt;): connected to &lt;ap-mac-addr&gt;</span>
+</code></pre></div>
+
+<p>For a WPA/WPA2 protected network we need to generate a passphrase (and configuration) and then run <code>wpa_supplicant</code>, an agent that will handle the negotiation between your machine and the access point and it will keep it alive in background.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ wpa_passphrase <span class="s2">&quot;</span><span class="nv">$SSID</span><span class="s2">&quot;</span> &gt; <span class="s2">&quot;/tmp/starbucks_wpa_file&quot;</span>
+$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> wpa_supplicant -B -i <span class="s2">&quot;wlan0&quot;</span> -c <span class="s2">&quot;/tmp/starbucks_wpa_file&quot;</span>
+</code></pre></div>
+
+<p>In both cases, the <code>$SSID</code> is the name of the wifi network which you want to connect.</p>
+<p>To setup the IP address, the gateway and the DNS server we can use a DHCP client:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> dhclient <span class="s2">&quot;wlan0&quot;</span>
+</code></pre></div>
+
+<p>Or we can setup them manually:</p>
+<pre class="shell_session"><code>$ ip -n &quot;starbucks&quot; addr add &quot;192.168.0.22/24&quot; dev &quot;wlan0&quot;
+$ ip -n &quot;starbucks&quot; route add default via &quot;192.168.0.1&quot; dev &quot;wlan0&quot;
+
+$ mkdir -p &quot;/etc/netns/starbucks&quot;
+$ echo &quot;nameserver 8.8.8.8&quot; &gt; /etc/netns/starbucks/resolv.conf</code></pre>
+<p>The network namespace will mount on <code>/etc</code> each custom file inside <code>/etc/netns/starbucks</code> so any unaware program executed by <code>ip netns exec</code> that wants to read/write a file in <code>/etc</code> will be actually accessing to the files in <code>/etc/netns/starbucks</code>.</p>
+<p>In our case, we created a custom <code>/etc/netns/starbucks/resolv.conf</code> to configure the DNS lookup.</p>
+<blockquote>
+<p>Upss: <code>dhclient</code> will no be able to write its <code>resolv.conf</code> and you will require to setup the DNS manually.</p>
+<p>If you are brave enough you can try another <a href="https://stackoverflow.com/questions/38102481/how-can-dhclient-be-made-namespace-aware">hack</a>.</p>
+</blockquote>
+<h3 id="surf-out-of-the-big-brother-sight"><em>Surf</em> out of the Big Brother sight</h3>
+<p>To navigate free, open your favorite browser (or other network application) <em>inside</em> the network namespace.</p>
+<p>To do that open a shell inside the namespace and log in as a normal user; only then open your browser:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> su -l <span class="s2">&quot;gehn&quot;</span>
+<span class="k">in</span> namespace<span class="o">)</span> firefox
+</code></pre></div>
+
+<p>This is an important detail: if you run <code>ip netns exec firefox</code> directly you will end up running your browser with root privileges.</p>
+<h3 id="close-everything">Close everything</h3>
+<p>In order to clean up everything, you need to ensure that all the processes running inside the namespace are killed and only then remove the namespace itself.</p>
+<p>Otherwise if some process keeps alive the namespace will not be deleted.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip netns pids <span class="s2">&quot;starbucks&quot;</span> <span class="p">|</span> xargs <span class="nb">kill</span> -15 <span class="c1"># be polite</span>
+$ sleep <span class="m">12</span>
+$ ip netns pids <span class="s2">&quot;starbucks&quot;</span> <span class="p">|</span> xargs <span class="nb">kill</span> -9  <span class="c1"># but being bad is more fun</span>
+$ ip netns delete <span class="s2">&quot;starbucks&quot;</span>
+$ rm -Rf /etc/netns/starbucks/
+</code></pre></div>
+
+<p>If you are a little paranoiac you can also block the wifi card before leaving the namespace to ensure that nobody will use it after that the namespace is gone:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> rfkill block <span class="s2">&quot;&lt;phy-id&gt;&quot;</span>
+</code></pre></div>
+
+</article>
+<span class="print-footer">Isolate a wifi card and keep your traffic out of the Big Brother sight - April 16, 2017 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

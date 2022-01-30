@@ -1,0 +1,220 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Debug: the Case of a CPU Burning Ruby Process</title>
+  <meta name="description" content="Debug: the Case of a CPU Burning Ruby Process">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/09/13/Debug-the-Case-of-a-CPU-Burning-Ruby-Process.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Debug: the Case of a CPU Burning Ruby Process
+</h1>
+<p class="subtitle">
+September 13, 2020
+</p>
+<p><code>executor.rb</code> is a little program that starts and finishes other programs based on the needs of the system.</p>
+<p>It is expected to have one and only one <code>executor.rb</code> process running with little overhead.</p>
+<p>In one of the machines in the lab I found the opposite: two <code>executor.rb</code> instances and one of them running at top speed, consuming 100% of CPU.</p>
+<p>For the rest, the system was working properly so one of the <code>executor.rb</code> was doing its job.</p>
+<p>But what was the <em>“twin evil”</em> process doing with the CPU?<!--more--></p>
+<h2 id="ruby-stack-sampling-with-rbspy">Ruby stack sampling with <code>rbspy</code></h2>
+<p>To get some insight I used <a href="https://github.com/rbspy/rbspy">rbspy</a>. It profiles a Ruby process sampling its memory, reconstructing the stack and showing which stack traces are the most common executed.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sudo ./rbspy record --pid <span class="m">2331</span> -d <span class="m">120</span> --raw-file data.gz        <span class="c1"># byexample: +skip</span>
+</code></pre></div>
+
+<p>Two minutes of sampling was done for the good and the bad <code>executor.rb</code> processes.</p>
+<p><code>rbspy</code> can also generate <a href="https://rbspy.github.io/using-flamegraphs/">flame graphs</a></p>
+<div class="highlight-candombe"><pre><span></span><code>$ ./rbspy report -f flamegraph -i data.gz  -o out-good.svg      <span class="c1"># byexample: +skip</span>
+</code></pre></div>
+
+<p><figure class='fullwidth'><img  class='fullwidth' alt='' src='/img/debug/ruby-process/flame-ruby-executor.png' />
+<figcaption>
+Flamegraph of 2 minutes sampling. On top a good behaving <code>executor.rb</code>, spending most of the time waiting (right side). On bottom, its evil twin with a totally broken call stack.
+</figcaption></figure></p>
+<p>Unfortunately the call stack of the buggy process makes no sense.</p>
+<h2 id="syscall-tracing-with-strace">Syscall tracing with <code>strace</code></h2>
+<p><label for='Ckl0IHdvdWxkIG5vdCBiZSBmaXJzdCB0aW1lIHRoYXQgSSBzZWUgYSBpbmZpbml0ZSBsb29wIGNhbGxpbmcgYHJlYWQoZmQsCmJ1ZiwgMClgICBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='Ckl0IHdvdWxkIG5vdCBiZSBmaXJzdCB0aW1lIHRoYXQgSSBzZWUgYSBpbmZpbml0ZSBsb29wIGNhbGxpbmcgYHJlYWQoZmQsCmJ1ZiwgMClgICBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+It would not be first time that I see a infinite loop calling <code>read(fd, buf, 0)</code>
+</span></p>
+<p>I rollback to the traditional <a href="https://linux.die.net/man/1/strace">strace</a>. It slows down quite a bit the debugged process but knowing which syscall is being executed can be of a great help.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sudo strace -tt -T -f -p <span class="m">2331</span>
+&lt;...&gt;
+<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676271 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000008&gt;
+<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676309 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000008&gt;
+<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676346 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000008&gt;
+<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676383 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000008&gt;
+<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676419 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000007&gt;
+&lt;...&gt;
+</code></pre></div>
+
+<p><a href="https://www.man7.org/linux/man-pages/man2/sched_yield.2.html">sched_yield()</a> is a syscall to <em>“relinquish the CPU”</em>.</p>
+<p>The caller thread decides that it cannot make any useful so it tells the OS that it should be moved out of the CPU (move the thread from running to ready) so other threads can use it.</p>
+<p><label for='CkkgdGFsayBhIG1hcmdpbmFsbHkgYWJvdXQgdGhpcyBpbiBteQpbb3RoZXIgcG9zdF0oL2FydGljbGVzLzIwMjAvMDIvMTUvQ1BVLUNhY2hlLUNvaGVyZW5jZS5odG1sKQogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkkgdGFsayBhIG1hcmdpbmFsbHkgYWJvdXQgdGhpcyBpbiBteQpbb3RoZXIgcG9zdF0oL2FydGljbGVzLzIwMjAvMDIvMTUvQ1BVLUNhY2hlLUNvaGVyZW5jZS5odG1sKQogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+I talk a marginally about this in my <a href="/articles/2020/02/15/CPU-Cache-Coherence.html">other post</a>
+</span></p>
+<p>I found this syscall in the past to implement a neighbor-friendly busy wait loop. Something like this:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">wait</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">some_condition</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">sched_yield</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>No code in <code>executor.rb</code> was doing such a thing however, I was still missing something.</p>
+<h2 id="c-stack-sampling-with-linux-perf">C stack sampling with Linux <code>perf</code></h2>
+<p>And <a href="https://perf.wiki.kernel.org/index.php/Main_Page">Linux perf</a> filled the blanks.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sudo perf top -p <span class="m">2331</span>                 <span class="c1"># byexample: +skip</span>
+&lt;...&gt;
+<span class="m">34</span>.90%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> do_syscall_64
+<span class="m">15</span>.37%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> syscall_return_via_sysret
+ <span class="m">9</span>.08%  <span class="o">[</span>unknown<span class="o">]</span>             <span class="o">[</span>k<span class="o">]</span> 0xfffffe000000601e
+ <span class="m">5</span>.89%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> pvclock_clocksource_read
+ <span class="m">5</span>.06%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> __schedule
+ <span class="m">2</span>.52%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> __raw_callee_save___pv_queued_spin_unloc
+ <span class="m">2</span>.45%  libc-2.24.so          <span class="o">[</span>.<span class="o">]</span> __sched_yield
+ <span class="m">2</span>.21%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> _raw_spin_lock
+ <span class="m">2</span>.16%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> __entry_trampoline_start
+ <span class="m">2</span>.01%  libruby-2.3.so.2.3.0  <span class="o">[</span>.<span class="o">]</span> rb_thread_stop_timer_thread
+ <span class="m">1</span>.86%  <span class="o">[</span>unknown<span class="o">]</span>             <span class="o">[</span>k<span class="o">]</span> 0xfffffe0000006000
+ <span class="m">1</span>.61%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> cpuacct_charge
+&lt;...&gt;
+</code></pre></div>
+
+<p>The <code>rb_thread_stop_timer_thread</code> is a function of the ruby virtual machine and it was my first suspect.</p>
+<p>A search in google completed the story.</p>
+<h2 id="finding-the-bug-with-google-and-the-open-source-community">Finding the bug with Google and the Open Source Community</h2>
+<p>Bug reports <a href="https://bugs.ruby-lang.org/issues/13794">here</a> and <a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=876377">here</a>.</p>
+<p>A counter is used for signaling between threads and <a href="https://en.wikipedia.org/wiki/Compare-and-swap">CAS</a> loop for detecting when it is zero yielding the CPU with <code>sched_yield</code> if the condition was not met yet.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">native_stop_timer_thread</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">ATOMIC_CAS</span><span class="p">(</span><span class="n">timer_thread_pipe</span><span class="p">.</span><span class="n">writing</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">rb_atomic_t</span><span class="p">)</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">native_thread_yield</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>If a fork happen after one thread increments the counter but before someone decrements it, the child process will get stuck waiting for the counter to be zero.</p>
+<p>This makes totally sense for <code>executor.rb</code> which main task is to fork and exec other processes.</p>
+<p>But I need to be sure that this is the bug.</p>
+<h2 id="confirming-the-bug-with-gdb">Confirming the bug with GDB</h2>
+<p>I attached <a href="https://www.gnu.org/software/gdb/">gdb</a> to ruby process and confirmed the bug.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sudo gdb -p <span class="m">2331</span>                      <span class="c1"># byexample: +skip</span>
+&lt;...&gt;
+0x0000&lt;...&gt; <span class="k">in</span> sched_yield <span class="o">()</span> from /lib/x86_64-linux-gnu/libc.so.6
+&lt;...&gt;
+<span class="o">(</span>gdb<span class="o">)</span> bt
+<span class="c1">#0  0x0000&lt;...&gt; in sched_yield () from/lib/x86_64-linux-gnu/libc.so.6</span>
+<span class="c1">#1  0x0000&lt;...&gt; in native_stop_timer_thread () atthread_pthread.c</span>
+<span class="c1">#2  rb_thread_stop_timer_thread () at thread.c</span>
+<span class="c1">#3  0x0000&lt;...&gt; in before_exec_non_async_signal_safe () atprocess.c</span>
+<span class="c1">#4  before_exec () at process.c</span>
+<span class="c1">#5  rb_f_exec (argc=&lt;optimized out&gt;, argv=&lt;optimized out&gt;) atprocess.c</span>
+&lt;...&gt;
+<span class="o">(</span>gdb<span class="o">)</span> frame <span class="m">2</span>
+<span class="c1">#2  rb_thread_stop_timer_thread () at thread.c</span>
+<span class="o">(</span>gdb<span class="o">)</span> p timer_thread_pipe
+<span class="nv">$1</span> <span class="o">=</span> <span class="o">{</span><span class="nv">normal</span> <span class="o">=</span> <span class="o">{</span><span class="m">3</span>, <span class="m">4</span><span class="o">}</span>, <span class="nv">low</span> <span class="o">=</span> <span class="o">{</span><span class="m">5</span>, <span class="m">6</span><span class="o">}</span>, <span class="nv">owner_process</span> <span class="o">=</span> <span class="m">0</span>, <span class="nv">writing</span> <span class="o">=</span> <span class="m">1</span><span class="o">}</span>
+</code></pre></div>
+
+<p>With <code>timer_thread_pipe.writing</code> in 1, the CAS loop will never end.</p>
+<p>Note that attaching a debugger is quite disruptive as it stops the debugged process; Linux <code>perf</code> and <code>rbspy</code> are much less intrusive and more appropriate for production environments.</p>
+<h2 id="final-thoughts">Final thoughts</h2>
+<p>No single tool can always give you the answer and sometimes you need more than tools to solve the puzzle.</p>
+<p>You are not alone. People is out there to help you.</p>
+<p>But do not relay in google/stackoverflow only: without searching a little from your side generic queries like <em>“ruby program consumes 100% CPU”</em> will lead you to nowhere.</p>
+</article>
+<span class="print-footer">Debug: the Case of a CPU Burning Ruby Process - September 13, 2020 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

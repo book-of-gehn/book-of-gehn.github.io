@@ -1,0 +1,315 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>RC-on-XDP-RX-Queue</title>
+  <meta name="description" content="RC-on-XDP-RX-Queue">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/11/29/RC-on-XDP-RX-Queue.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+RC-on-XDP-RX-Queue
+</h1>
+<p class="subtitle">
+November 29, 2020
+</p>
+<p>Picture this: you’d been developing for six months a network sniffer using XDP, a kernel <em>in-pass</em> in Linux.</p>
+<p>Six months and when you are about to release it, you find not one but three bugs that shake all your understanding of XDP.</p>
+<p>A debugging race against the clock begins.<!--more--></p>
+<p>We were hitting three issues in a row:</p>
+<ul>
+<li>RX queue returns addresses with the incorrect offset</li>
+<li>More packets hold by the application than possible</li>
+<li>Pointer to <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code> data</li>
+</ul>
+<p>All of them at random times but very often.</p>
+<h2 id="xdp-rx-queue">XDP RX queue</h2>
+<p>The XDP RX queue is a lock free single-producer, single-consumer queue where the kernel plays the role of the producer and the user application the consumer.</p>
+<p>The kernel pushes addresses (offsets respect the UMEM’s base address) into the queue that points to the received packets.</p>
+<p>The <em>pop</em> has three parts:</p>
+<ul>
+<li>the user application calls <code><span class="highlight-candombe-inline"><span class="n">xsk_ring_cons__peek</span><span class="w"></span></span></code> to know how many packets are ready to be consumed.</li>
+<li>then, for each one a call to <code><span class="highlight-candombe-inline"><span class="n">xsk_ring_cons__rx_desc</span><span class="w"></span></span></code> to get the packet’s descriptor and therefore, its address (<code><span class="highlight-candombe-inline"><span class="n">addr</span><span class="w"></span></span></code> field)</li>
+<li>and finally a call to <code><span class="highlight-candombe-inline"><span class="n">xsk_ring_cons__release</span><span class="w"></span></span></code> to mark the descriptors free to be reused by the producer.</li>
+</ul>
+<p>There is no need to <em>process</em> the packets before <code><span class="highlight-candombe-inline"><span class="n">xsk_ring_cons__release</span><span class="w"></span></span></code>: releasing the packets’ descriptors of the RX does not make the UMEM’s frames holding the packets free to be reused.</p>
+<p>Only when the packets’ addresses are pushed into the fill queue (FQ) the frames are available again.</p>
+<p><figure><figcaption><span markdown='1'>
+Addresses of free frames are consumed from the FQ queue by the kernel (1). XDP then writes the incoming packet in a free frame (2) and pushes the address into the RX queue (3). The user application consumes from the RX queue (4) addresses of packets ready to be read or write (5). When it is done, the address is pushed back to the FQ for reuse (6).
+</span></figcaption>
+<img style="max-width: 80%" class='' alt='' src='/img/debug/xdp-rx-rc/rx-rc-umem-cycle.png' /></figure></p>
+<p>The packet descriptor returned by <code><span class="highlight-candombe-inline"><span class="n">xsk_ring_cons__rx_desc</span><span class="w"></span></span></code> has two attributes: the packet’s address and its length.</p>
+<p>The address is an <code><span class="highlight-candombe-inline"><span class="kt">uint64_t</span><span class="w"></span></span></code> offset respect the UMEM’s base address.</p>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtZnJhbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtZnJhbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-frame.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>The UMEM is a memory pool divided evenly by 2048 or 4096 bytes, the frame size and addresses are aligned to the frame size plus an offset for a headroom.</p>
+<p>The headroom is an application defined space reserved at the begin of the frame for whatever the user wants to do. By default it’s zero.</p>
+<p>Well, for some reason the RX queue was returning sometimes addresses with the wrong offset.</p>
+<h2 id="more-than-possible">More than possible</h2>
+<p>The UMEM is a fixed memory pool divided evenly in frames where each frame holds a packet.</p>
+<p>Therefore the count of packets that the application can hold before releasing them is fixed (UMEM size / frame size).</p>
+<p>At anytime the count is less than or equal to UMEM size / frame size.</p>
+<p>However the counters of the application shown a different thing: more packets where entering in the application and were hold before releasing them than the expected!</p>
+<h2 id="pointer-to-null">Pointer to <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code></h2>
+<p>As mentioned before you can prepend metadata to each packet.</p>
+<p>In our case, one of the attributes is a pointer to an external structure and the pointer is never updated again. Remains constant.</p>
+<p>But to our surprise the pointer changes and leaves pointing to <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code>.</p>
+<p>And the code is extraordinary simple and straightforward so there is no chances to change the pointer to <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code> by an error in the logic.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">do_work</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">alive</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">pkt_t</span><span class="w"> </span><span class="o">*</span><span class="n">pkt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read_packet</span><span class="p">();</span><span class="w">  </span><span class="c1">// pull from the RX queue</span>
+
+<span class="w">    </span><span class="n">pkt</span><span class="o">-&gt;</span><span class="n">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">external_object</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">assert</span><span class="w"> </span><span class="p">(</span><span class="n">pkt</span><span class="o">-&gt;</span><span class="n">obj</span><span class="p">);</span><span class="w">                 </span><span class="c1">// not NULL</span>
+
+<span class="w">    </span><span class="cm">/* moments later */</span><span class="w"></span>
+<span class="w">    </span><span class="n">use</span><span class="p">(</span><span class="n">pkt</span><span class="o">-&gt;</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">field</span><span class="p">);</span><span class="w">   </span><span class="c1">// segmentation fault, pkt-&gt;obj is NULL</span>
+
+<span class="w">    </span><span class="n">free_packet</span><span class="p">(</span><span class="n">pkt</span><span class="p">);</span><span class="w">       </span><span class="c1">// push into the FQ queue</span>
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+
+<p>No chances.</p>
+<h2 id="debugging">Debugging</h2>
+<p>So far we have three unrelated bugs. While possible, it is unlikely that we are dealing with three <em>independent</em> bugs.</p>
+<p>They must be related somehow.</p>
+<p>Let’s spin a debugger.</p>
+<h3 id="counting-before-a-crash">Counting before a crash</h3>
+<p>How many packets were pulled from the RX queue before getting one crash.</p>
+<pre class="gdb"><code>(gdb) b read_packet
+(gdb) ignore 1 1000000</code></pre>
+<p>When the bug is detected, GDB will stop and we’ll have the chance to see how many times the breakpoint was hit before.</p>
+<pre class="gdb"><code>(gdb) info break
+&lt;...&gt;breakpoint already hit 29 times</code></pre>
+<p>Would this change in function of the UMEM size? Larger UMEMs has more frames.</p>
+<p>These are the results:</p>
+<pre class="gdb"><code>// Minimum size, UMEM can hold 1 frame only
+breakpoint already hit 29 times
+breakpoint already hit 19 times
+breakpoint already hit 23 times
+
+// Slightly larger UMEM, it can hold 16 frames
+breakpoint already hit 69 times
+breakpoint already hit 43 times
+breakpoint already hit 50 times
+
+// 64 frames
+breakpoint already hit 111 times
+breakpoint already hit 69 times
+breakpoint already hit 126 times
+
+// 256 frames
+breakpoint already hit 348 times
+breakpoint already hit 324 times
+breakpoint already hit 1 time</code></pre>
+<p>So, with larger UMEMs is less likely to hit the bug but it is not a hard rule. In the last test, with the largest UMEM, we hit the bug in the first try.</p>
+<h3 id="spontaneous-addresses">Spontaneous addresses</h3>
+<p>What about the addresses returned by the RX queue? We want to print them without stopping the process.</p>
+<pre class="gdb"><code>(gdb) b do_work.c:16     // after the call to read_packet()
+(gdb) commands
+&gt; silent
+&gt; p pkt - umem-&gt;base
+&gt; cont
+&gt; end</code></pre>
+<p>The segmentation fault due the <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code> pointer happen even when the addresses had the correct offsets (<code><span class="highlight-candombe-inline"><span class="n">pkt</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">umem</span><span class="o">-&gt;</span><span class="n">base</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">frame_size</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">headroom_size</span><span class="w"></span></span></code>)</p>
+<p>For the ones with incorrect offset, the address most common was the 0 (<code><span class="highlight-candombe-inline"><span class="n">pkt</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">umem</span><span class="o">-&gt;</span><span class="n">base</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"></span></span></code>).</p>
+<p>I hypothesized that I could be putting the address 0 by mistake in the FQ. Further testing shown that the 0 was never put in FQ but still being received in the RX queue.</p>
+<p>So the RX queue was returning addresses that I never put in the FQ. Those are new addresses!</p>
+<p>That explains the issue number 2: the application having more packets than it should.</p>
+<p>Later, I found that 0 was not the only addresses with an incorrect offset (issue number 1).</p>
+<h3 id="poison-values">Poison values</h3>
+<p>Let’s print the packets as soon as they are read and the external object is set:</p>
+<pre class="gdb"><code>(gdb) set print pretty on
+
+(gdb) b do_work.c:19     // after the call to external_object()
+(gdb) commands
+&gt; silent
+&gt; p *pkt
+&gt; cont
+&gt; end</code></pre>
+<p>The last packet printed before the segmentation fault (issue 3) was something like this</p>
+<pre><code>{
+  timestamp = 121212121,
+  length = 60,
+  data = 0xsomeaddress
+}</code></pre>
+<p>And after the crash, the same packet looked like this:</p>
+<pre><code>{
+  timestamp = 0,
+  length = 60,
+  data = 0x0
+}</code></pre>
+<p>So the <code><span class="highlight-candombe-inline"><span class="n">timestamp</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">data</span><span class="w"></span></span></code> where zero’d. Was this done by the application or something else happen?</p>
+<p>Perhaps a rouge <code><span class="highlight-candombe-inline"><span class="n">memset</span><span class="w"></span></span></code>?</p>
+<p>The fields are initialized to zero by the eBPF filter and overwritten by the application.</p>
+<p>I decided to set them to non-trivial values, called <em>poison values</em>.</p>
+<p>If a <code><span class="highlight-candombe-inline"><span class="n">memset</span><span class="w"></span></span></code> zero’d them, I will notice.</p>
+<p>This is the packet <strong>after</strong> the crash:</p>
+<p><label for='CmBgYGdkYgooZ2RiKSBwL3ggcGt0LT50aW1lc3RhbXAKMHhkZWFkCmBgYAoKSWYgeW91IGRpZG4ndCByZWFsaXplLCB0aGUgdGltZXN0YW1wIHdhcyBub3QgemVybydkIGVpdGhlci4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CmBgYGdkYgooZ2RiKSBwL3ggcGt0LT50aW1lc3RhbXAKMHhkZWFkCmBgYAoKSWYgeW91IGRpZG4ndCByZWFsaXplLCB0aGUgdGltZXN0YW1wIHdhcyBub3QgemVybydkIGVpdGhlci4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+<code class="gdb" data-cssclass="highlight-candombe" data-wrap-with-pseudo-pre="pseudo-pre">(gdb) p/x pkt-&gt;timestamp
+0xdead</code>
+<br /><br />
+If you didn’t realize, the timestamp was not zero’d either.
+</span></p>
+<pre><code>{
+  timestamp = 57005,
+  length = 60,
+  data = 0xbeaf
+}</code></pre>
+<p>So the whole structure was <em>not zero’d but reset</em>, overwritten by the eBPF filter when the packet was supposed to be managed by user.</p>
+<p>The three bugs are symptoms of the same unknown problem: the RX queue is returning invalid addresses, not only without the expected offset but addresses that belong to packets that the kernel still thinks that are free.</p>
+<h2 id="the-real-bug">The real bug</h2>
+<p>Something was wrong in the RX queue / kernel side so we started to search this issue in the web.</p>
+<p>A college of mine found a candidate: the fix of a race condition in the generic receive path.</p>
+<p>eBPF runs in the driver if this one supports it. If not, eBPF is executed in the kernel and the packets take a slightly larger path from the network card to user.</p>
+<p>This path is known as the XDP generic path or just XDP generic.</p>
+<p>Remember than the RX is a single-producer queue so it is not thread safe for concurrent pushes.</p>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlIiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RlYnVnL3hkcC1yeC1yYy9yeC1yYy1xdWV1ZXMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlIiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RlYnVnL3hkcC1yeC1yYy9yeC1yYy1xdWV1ZXMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="max-width: 120%" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' />
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></p>
+<p>No problem when XDP runs in the driver but when it does in the generic mode, the kernel may be receiving several packets and pushing them <strong>concurrently</strong> into the RX queue.</p>
+<blockquote>
+<p>“Unlike driver mode, generic xdp receive could be triggered by different threads on different CPU cores at the same time leading to the fill and rx queue breakage. For example, this could happen while sending packets from two processes to the first interface of <code><span class="highlight-candombe-inline"><span class="n">veth</span><span class="w"></span></span></code> pair while the second part of it is open with <code><span class="highlight-candombe-inline"><span class="n">AF_XDP</span><span class="w"></span></span></code> socket.</p>
+<p>Need to take a lock for each generic receive to avoid race.” <cite class="epigraph"><a href="https://github.com/torvalds/linux/commit/bf0bdd1343efbbf65b4d53aef1fce14acbd79d50">commit bf0bdd13</a></cite></p>
+</blockquote>
+<p>The commit fixes the issue using a <code><span class="highlight-candombe-inline"><span class="n">spinlock</span><span class="w"></span></span></code> but the fix was not backported.</p>
+<p>And doing a kernel upgrade is <strong>not an option</strong>.</p>
+<h2 id="single-queue">Single queue</h2>
+<p><label for='ClRoZSBhcnRpY2xlCltNb25pdG9yaW5nIGFuZCBUdW5pbmcgdGhlIExpbnV4IE5ldHdvcmtpbmcgU3RhY2s6IFJlY2VpdmluZyBEYXRhXShodHRwczovL2Jsb2cucGFja2FnZWNsb3VkLmlvL2VuZy8yMDE2LzA2LzIyL21vbml0b3JpbmctdHVuaW5nLWxpbnV4LW5ldHdvcmtpbmctc3RhY2stcmVjZWl2aW5nLWRhdGEvKQpleHBsYWlucyB0aGlzIHdvbmRlcmZ1bGx5LgoKRGVzcGl0ZSB0aGUgbmFtZSwgdGhlIGFydGljdWxlIGRlc2NyaWJlcyBhbGwgdGhlIG5ldHdvcmsgc3RhY2sgZnJvbSB0aGUKZHJpdmVyIHRvIGEgVENQL1VEUCBzb2NrZXQuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBhcnRpY2xlCltNb25pdG9yaW5nIGFuZCBUdW5pbmcgdGhlIExpbnV4IE5ldHdvcmtpbmcgU3RhY2s6IFJlY2VpdmluZyBEYXRhXShodHRwczovL2Jsb2cucGFja2FnZWNsb3VkLmlvL2VuZy8yMDE2LzA2LzIyL21vbml0b3JpbmctdHVuaW5nLWxpbnV4LW5ldHdvcmtpbmctc3RhY2stcmVjZWl2aW5nLWRhdGEvKQpleHBsYWlucyB0aGlzIHdvbmRlcmZ1bGx5LgoKRGVzcGl0ZSB0aGUgbmFtZSwgdGhlIGFydGljdWxlIGRlc2NyaWJlcyBhbGwgdGhlIG5ldHdvcmsgc3RhY2sgZnJvbSB0aGUKZHJpdmVyIHRvIGEgVENQL1VEUCBzb2NrZXQuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+The article <a href="https://blog.packagecloud.io/eng/2016/06/22/monitoring-tuning-linux-networking-stack-receiving-data/">Monitoring and Tuning the Linux Networking Stack: Receiving Data</a> explains this wonderfully.
+<br /><br />
+Despite the name, the articule describes all the network stack from the driver to a TCP/UDP socket.
+</span></p>
+<p>Once a packet is received by the network card a interruption is signaled. The interruption runs briefly and delegates the rest of the processing to a kernel thread named <code><span class="highlight-candombe-inline"><span class="n">ksoftirqd</span><span class="o">/</span><span class="n">n</span><span class="w"></span></span></code>.</p>
+<p>The packet is put by the interruption into a queue to be consumed by a <strong>single</strong> <code><span class="highlight-candombe-inline"><span class="n">ksoftirqd</span><span class="o">/</span><span class="n">n</span><span class="w"></span></span></code> thread.</p>
+<p>How the kernel can process multiple packet in parallel?</p>
+<p>With multiple queues of course!</p>
+<p>If we cannot upgrade the kernel we must enforce a single producer thread in the kernel side.</p>
+<p>Configuring the interface to use a <strong>single</strong> RX queue the kernel will use a <strong>single</strong> <code><span class="highlight-candombe-inline"><span class="n">ksoftirqd</span><span class="o">/</span><span class="n">n</span><span class="w"></span></span></code> thread, a single-producer.</p>
+<p><label for='ClRyeSBgc3VkbyBldGh0b29sIC1MIDxpZmFjZT4gY29tYmluZWQgMWAgaWYgdGhlIG90aGVyIGRvZXMgbm90IHdvcmsuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRyeSBgc3VkbyBldGh0b29sIC1MIDxpZmFjZT4gY29tYmluZWQgMWAgaWYgdGhlIG90aGVyIGRvZXMgbm90IHdvcmsuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Try <code><span class="highlight-candombe-inline"><span class="n">sudo</span><span class="w"> </span><span class="n">ethtool</span><span class="w"> </span><span class="o">-</span><span class="n">L</span><span class="w"> </span><span class="o">&lt;</span><span class="n">iface</span><span class="o">&gt;</span><span class="w"> </span><span class="n">combined</span><span class="w"> </span><span class="mi">1</span><span class="w"></span></span></code> if the other does not work.
+</span></p>
+<p>Thankfully the configuration is one liner:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sudo ethtool -L &lt;iface&gt; rx <span class="m">1</span>
+</code></pre></div>
+
+<h2 id="conclusions">Conclusions</h2>
+<p>This was hard. One innocently expects the bugs in the user application, not in the kernel.</p>
+<p>And most of the time that’s true!</p>
+<p>Debugging confirmed the opposite. And it was not easy.</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">do_work</span><span class="w"></span></span></code> shown is an oversimplification. The real code decouple the <code><span class="highlight-candombe-inline"><span class="n">read_packet</span><span class="w"></span></span></code> from the processing from the <code><span class="highlight-candombe-inline"><span class="n">free_packet</span><span class="w"></span></span></code> into a serie of threads.</p>
+<p>And if debugging a multithreading application is not hard enough, putting a breakpoint in some places added enough delay that the bug was not trigger anymore.</p>
+<p><a href="https://en.wikipedia.org/wiki/Heisenbug">Heisenbug!</a></p>
+<p>GDB’s <code><span class="highlight-candombe-inline"><span class="n">set</span><span class="w"> </span><span class="n">non</span><span class="o">-</span><span class="n">stop</span><span class="w"> </span><span class="n">on</span><span class="w"></span></span></code> helped to reduce the impact: when a breakpoint is hit by a thread, only that thread is stopped.</p>
+<p>A special thanks to my college Mario that dug into kernel’s git log and found <a href="https://github.com/torvalds/linux/commit/bf0bdd1343efbbf65b4d53aef1fce14acbd79d50">commit bf0bdd13</a>.</p>
+<p>That was the missing piece to solve this puzzle.</p>
+<h2 id="references">References</h2>
+<ul>
+<li><p><a href="https://blog.packagecloud.io/eng/2016/06/22/monitoring-tuning-linux-networking-stack-receiving-data/">Monitoring and Tuning the Linux Networking Stack: Receiving Data</a></p></li>
+<li><p><a href="https://www.infradead.org/~mchehab/rst_conversion/networking/scaling.html">Scaling in the Linux Networking Stack</a></p></li>
+<li><p><a href="https://www.kernel.org/doc/html/latest/networking/af_xdp.html">Linux AF_XDP</a></p>
+</article>
+<span class="print-footer">RC-on-XDP-RX-Queue - November 29, 2020 - Martin Di Paola</span>
+<footer>
+<hr class="slender">
+<div class="credits">
+    <span>&copy;
+        Martin Di Paola
+    </span></br>
+        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+    <br>
+
+    <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+
+</div>
+</footer></li>
+</ul>
+</body>
+</html>

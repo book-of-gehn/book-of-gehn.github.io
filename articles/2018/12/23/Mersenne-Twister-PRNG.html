@@ -1,0 +1,245 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Breaking MT19937 Crypto</title>
+  <meta name="description" content="Breaking MT19937 Crypto">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2018/12/23/Mersenne-Twister-PRNG.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Breaking MT19937 Crypto
+</h1>
+<p class="subtitle">
+December 23, 2018
+</p>
+<p>The Mersenne-Twister 19937 or just MT19937 is one of the most used pseudo random number generator with a quite large cycle length and with a nice random quality.</p>
+<p>However it was not designed to be used for crypto.</p>
+<p><label for='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+<strong>– Spoiler Alert! –</strong>
+</span></p>
+<p>But some folks may not know this…<!--more--></p>
+<h2 id="warming-up">Warming up</h2>
+<p>Before anything, let’s <a href="https://cryptopals.com/sets/3/challenges/21">implement the MT19937 Mersenne Twister RNG</a></p>
+<p>For testing, I’m going to use the following <a href="https://gist.githubusercontent.com/mimoo/8e5d80a2e236b8b6f5ed/raw/20a704e0ccb3d50ea574cf6fe81fcb07cd9a66a3/gistfile1.txt">test vector</a></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks.prng</span> <span class="kn">import</span> <span class="n">MT19937</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;assets/matasano/MT19937.vector&#39;</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">expected_rnd_seq</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_rnd_seq</span> <span class="o">=</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">expected_rnd_seq</span><span class="p">))]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">expected_rnd_seq</span> <span class="o">==</span> <span class="n">gen_rnd_seq</span>
+<span class="kc">True</span>
+</code></pre></div>
+
+<h2 id="cracking">Cracking</h2>
+<p>It is quite common to find people that use the current time as their <em>secret</em> seed for the generator.</p>
+<p>Some even say <em>“but I’m using 64 bits with microsecond resolution so it will impossible to find it by brute force”</em></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">time</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">secret_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">secret_seed</span><span class="p">)))</span>
+</code></pre></div>
+
+<p>Exploring 64 bits is quite hard but the seed is <strong>not random</strong>, therefore we do not need to explore the whole space.</p>
+<p>Instead we just explore the numbers in the vicinity of the current time which turns the <a href="https://cryptopals.com/sets/3/challenges/22">crack an MT19937 seed</a> into a much simpler task:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">search</span>    <span class="c1"># byexample: +timeout=10</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">MT19937_oracle</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">first_known_output</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">g</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">==</span> <span class="n">first_known_output</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">oracle</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">MT19937_oracle</span><span class="p">,</span> <span class="n">first_known_output</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">delta</span> <span class="o">=</span> <span class="mi">2048</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">-</span> <span class="n">delta</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">delta</span><span class="o">*</span><span class="mi">2</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">oracle</span><span class="p">,</span> <span class="n">likely</span><span class="o">=</span><span class="s1">&#39;middle&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">secret_seed</span>      <span class="c1"># byexample: +timeout=10</span>
+<span class="kc">True</span>
+</code></pre></div>
+
+<h2 id="cloning">Cloning</h2>
+<p><label for='CkZvcm1hbGx5LCB0aGVyZSBpcyBub3Qgc3VjaCBlZmZpY2llbnQgYWxnb3JpdGhtIHRoYXQgYWxsb3cgYW4gYXR0YWNrCnRvIGRpc3Rpbmd1aXNoIGV2ZW4gd2l0aCBhIHNtYWxsIHByb2JhYmlsaXR5IGZvciBsYXJnZSBidXQgZmluaXRlCnNlcXVlbmNlcy4gRXZlbnR1YWxseSB3aXRoIGEgKnJlYWxseSBsYXJnZSogc2VxdWVuY2VzIHRoZSBhdHRhY2tlciBtYXkKYnJlYWsgaXQuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkZvcm1hbGx5LCB0aGVyZSBpcyBub3Qgc3VjaCBlZmZpY2llbnQgYWxnb3JpdGhtIHRoYXQgYWxsb3cgYW4gYXR0YWNrCnRvIGRpc3Rpbmd1aXNoIGV2ZW4gd2l0aCBhIHNtYWxsIHByb2JhYmlsaXR5IGZvciBsYXJnZSBidXQgZmluaXRlCnNlcXVlbmNlcy4gRXZlbnR1YWxseSB3aXRoIGEgKnJlYWxseSBsYXJnZSogc2VxdWVuY2VzIHRoZSBhdHRhY2tlciBtYXkKYnJlYWsgaXQuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Formally, there is not such efficient algorithm that allow an attack to distinguish even with a small probability for large but finite sequences. Eventually with a <em>really large</em> sequences the attacker may break it.
+</span></p>
+<p>A property that all PRNG cryptographically secure must hold is that even if the attacker knows the partial output of the PRNG he cannot distinguish it from a truly random sequence.</p>
+<p>In particular he cannot predict any future output.</p>
+<p>The MT19937 does not hold this and it is possible to <a href="https://cryptopals.com/sets/3/challenges/23">clone an MT19937 RNG from its output</a> allowing an attacker to predict any future value:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks.prng</span> <span class="kn">import</span> <span class="n">clone_mt19937</span>               <span class="c1"># byexample: +timeout=10</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">secret_seed</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">624</span><span class="p">)]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">cg</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">clone_mt19937</span><span class="p">(</span><span class="n">out</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">all</span><span class="p">((</span><span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">==</span> <span class="nb">next</span><span class="p">(</span><span class="n">cg</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">624</span><span class="p">))</span>
+<span class="kc">True</span>
+</code></pre></div>
+
+<p>The fundamental problem of the MT19937 is that part of the output generation is a <em>reversible</em> operation.</p>
+<p><label for='CkFuZCB0aGlzIGlzIGhvdyB3ZSBjb3VsZCBtYWtlIHRoZSBNVDE5OTM3IGEgbGl0dGxlIGhhcmRlcjoKbWFrZSB0aGUgb3BlcmF0aW9uIG5vbi1pbnZlcnRpYmxlICphbmQqIG1ha2luZyBlYWNoIG91dHB1dApieXRlIGEgZnVuY3Rpb24gYmFzZWQgb24gdGhlIHdob2xlIHNlY3JldCBzdGF0ZSBhZGRpbmcgbW9yZQplbnRyb3B5IGFuZCBzaHVmZmxpbmcgaW50byB0aGUgbWl4LgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkFuZCB0aGlzIGlzIGhvdyB3ZSBjb3VsZCBtYWtlIHRoZSBNVDE5OTM3IGEgbGl0dGxlIGhhcmRlcjoKbWFrZSB0aGUgb3BlcmF0aW9uIG5vbi1pbnZlcnRpYmxlICphbmQqIG1ha2luZyBlYWNoIG91dHB1dApieXRlIGEgZnVuY3Rpb24gYmFzZWQgb24gdGhlIHdob2xlIHNlY3JldCBzdGF0ZSBhZGRpbmcgbW9yZQplbnRyb3B5IGFuZCBzaHVmZmxpbmcgaW50byB0aGUgbWl4LgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+And this is how we could make the MT19937 a little harder: make the operation non-invertible <em>and</em> making each output byte a function based on the whole secret state adding more entropy and shuffling into the mix.
+</span></p>
+<p>And because each output byte has a dependency with one and just one single secret byte, from that output byte an attacker can get the single secret byte.</p>
+<p>For a 624 output samples, the full secret state of the MT19937 can be obtained.</p>
+<h2 id="cracking-a-cipher-based-on-a-mt19937">Cracking a cipher based on a MT19937</h2>
+<p>From a pseudo random generator we can build a stream of pseudo random bytes, just seeing each number as 4 or 8 bytes:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.conv</span> <span class="kn">import</span> <span class="n">repack</span>          <span class="c1"># byexample: +timeout=10</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">prng</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">n16</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">repack</span><span class="p">(</span><span class="n">prng</span><span class="p">,</span> <span class="n">ifmt</span><span class="o">=</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">ofmt</span><span class="o">=</span><span class="s1">&#39;&gt;BBBB&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Given this stream we can build a stream cipher just xoring the random stream with the plaintext in a similar way like CTR works</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">secret</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">lnonce</span>     <span class="c1"># quite large random &quot;secret&quot; stuff</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">s</span> <span class="o">^</span> <span class="nb">next</span><span class="p">(</span><span class="n">kstream</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">secret</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">clen</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">clen</span>
+<span class="mi">128</span>
+</code></pre></div>
+
+<p>Now, let’s assume that we know some part of the plaintext from an unknown position:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">at</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">n8</span> <span class="o">%</span> <span class="p">(</span><span class="n">clen</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">known_plaintext</span> <span class="o">=</span> <span class="n">secret</span><span class="p">[</span><span class="n">at</span><span class="p">:</span><span class="n">at</span><span class="o">+</span><span class="mi">8</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">plen</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">known_plaintext</span><span class="p">)</span>     <span class="c1"># quite arbitrary, it could work with less</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">plen</span>
+<span class="mi">8</span>
+</code></pre></div>
+
+<p><label for='CltDcmVhdGUgdGhlIE1UMTk5Mzcgc3RyZWFtIGNpcGhlciBhbmQgYnJlYWsgaXRdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy8zL2NoYWxsZW5nZXMvMjQpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CltDcmVhdGUgdGhlIE1UMTk5Mzcgc3RyZWFtIGNpcGhlciBhbmQgYnJlYWsgaXRdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy8zL2NoYWxsZW5nZXMvMjQpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+<a href="https://cryptopals.com/sets/3/challenges/24">Create the MT19937 stream cipher and break it</a>
+</span></p>
+<p>Because the cipher does not use a <em>random</em> secret key (the seed), it is possible to break this ciphering.</p>
+<p>First, lets see all the possible substrings of the same length than the known plaintext:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">cngrams</span> <span class="o">=</span> <span class="n">ciphertext</span><span class="o">.</span><span class="n">ngrams</span><span class="p">(</span><span class="n">plen</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Then we could try to xor them with the plain text: all except one of the substring will be just garbage but one will be part of the original secret key stream product of the PRNG.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pngrams</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="o">^</span> <span class="n">known_plaintext</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cngrams</span><span class="p">]</span>
+</code></pre></div>
+
+<p>Of course we do not know which substring is garbage and which is not.</p>
+<p>Out best strategy is to generate a long enough key stream with our guessed seed and see if a substring matches or not.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">oracle</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">g</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span>
+<span class="o">...</span>     <span class="n">tmp</span> <span class="o">=</span> <span class="n">repack</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">ifmt</span><span class="o">=</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">ofmt</span><span class="o">=</span><span class="s1">&#39;&gt;BBBB&#39;</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">stream</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">clen</span><span class="p">))</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">sngrams</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">ngrams</span><span class="p">(</span><span class="n">plen</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="n">p</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sngrams</span><span class="p">,</span> <span class="n">pngrams</span><span class="p">))</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">seed</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">16</span><span class="p">,</span> <span class="n">oracle</span><span class="p">)</span>                         <span class="c1"># byexample: +timeout=300</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">prng</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">repack</span><span class="p">(</span><span class="n">prng</span><span class="p">,</span> <span class="n">ifmt</span><span class="o">=</span><span class="s1">&#39;&gt;I&#39;</span><span class="p">,</span> <span class="n">ofmt</span><span class="o">=</span><span class="s1">&#39;&gt;BBBB&#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">B</span><span class="p">(</span><span class="n">c</span> <span class="o">^</span> <span class="nb">next</span><span class="p">(</span><span class="n">kstream</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ciphertext</span><span class="p">)</span> <span class="o">==</span> <span class="n">secret</span>
+<span class="kc">True</span>
+</code></pre></div>
+
+</article>
+<span class="print-footer">Breaking MT19937 Crypto - December 23, 2018 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

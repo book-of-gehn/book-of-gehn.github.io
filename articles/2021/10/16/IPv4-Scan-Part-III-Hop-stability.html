@@ -1,0 +1,276 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>IPv4 Scan 2021 - Hop-Count Route Stability</title>
+  <meta name="description" content="IPv4 Scan 2021 - Hop-Count Route Stability">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+IPv4 Scan 2021 - Hop-Count Route Stability
+</h1>
+<p class="subtitle">
+October 16, 2021
+</p>
+<p><a href="https://github.com/robertdavidgraham/masscan/">masscan</a> tracks the <em>time to live</em> of each packet coming from the host under scan.</p>
+<p><label for='ClllcyBhbmQgbm86IHRoZXkgc2hvdWxkIG5vdCBidXQgc29tZSBuZXR3b3JrIGRldmljZXMgd2lsbCAqbWFuZ2xlIHRoZSBwYWNrZXRzCmFzIHRoZXkgd2FudCosIGluY2x1ZGluZyBzZXR0aW5nIGFyYml0cmFyeSBUVExzLgoKU2VlIHRoZSBvYnNlcnZhdGlvbnMgZG9uZSBpbiB0aGUKW1RUTCBCb29zdCBwb3N0XSgvYXJ0aWNsZXMvMjAyMS8xMS8xMy9JUHY0LVNjYW4tUGFydC1WLVRUTC1Cb29zdC5odG1sKS4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClllcyBhbmQgbm86IHRoZXkgc2hvdWxkIG5vdCBidXQgc29tZSBuZXR3b3JrIGRldmljZXMgd2lsbCAqbWFuZ2xlIHRoZSBwYWNrZXRzCmFzIHRoZXkgd2FudCosIGluY2x1ZGluZyBzZXR0aW5nIGFyYml0cmFyeSBUVExzLgoKU2VlIHRoZSBvYnNlcnZhdGlvbnMgZG9uZSBpbiB0aGUKW1RUTCBCb29zdCBwb3N0XSgvYXJ0aWNsZXMvMjAyMS8xMS8xMy9JUHY0LVNjYW4tUGFydC1WLVRUTC1Cb29zdC5odG1sKS4KIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Yes and no: they should not but some network devices will <em>mangle the packets as they want</em>, including setting arbitrary TTLs.
+<br /><br />
+See the observations done in the <a href="/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html">TTL Boost post</a>.
+</span></p>
+<p>These time to live (TTL) are numbers between 0 and 255 set by the host. In its journey, the packet goes through different routers which each decrements by one the TTL.</p>
+<p>Once a packet has a TTL of zero, the router will discard it.</p>
+<p><label for='CkFzc3VtaW5nIHRoYXQgdGhlIHBhY2tldCBnb2VzIHN0cmFpZ2h0LWZvcndhcmQgdG8gdXMuIElmIHRoZXJlIGFyZQoqbG9vcHMqIGluIHRoZSByb3V0aW5nIHN5c3RlbXMsIHRoZSBwYWNrZXQgd2lsbCBsb29wIGJldHdlZW4gdGhlIGRldmljZXMKZ29pbmcgbm93aGVyZS4KPGJyIC8+ClRoYXQncyB0aGUgcG9pbnQgb2YgdGhlIFRUTDogdG8gY2F0Y2ggYW5kIGRyb3AgcGFja2V0cyBsb29waW5nIGFyb3VuZC4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkFzc3VtaW5nIHRoYXQgdGhlIHBhY2tldCBnb2VzIHN0cmFpZ2h0LWZvcndhcmQgdG8gdXMuIElmIHRoZXJlIGFyZQoqbG9vcHMqIGluIHRoZSByb3V0aW5nIHN5c3RlbXMsIHRoZSBwYWNrZXQgd2lsbCBsb29wIGJldHdlZW4gdGhlIGRldmljZXMKZ29pbmcgbm93aGVyZS4KPGJyIC8+ClRoYXQncyB0aGUgcG9pbnQgb2YgdGhlIFRUTDogdG8gY2F0Y2ggYW5kIGRyb3AgcGFja2V0cyBsb29waW5nIGFyb3VuZC4KIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Assuming that the packet goes straight-forward to us. If there are <em>loops</em> in the routing systems, the packet will loop between the devices going nowhere. <br /> That’s the point of the TTL: to catch and drop packets looping around.
+</span></p>
+<p>Of course the host set the TTL to some reasonable high number so the packet should reach to its destination (us) before reaching to zero.</p>
+<p>We cannot know exactly which route/s the packets taken but we can <em>count for how many hops they went through</em>: any change in the <em>hop-count</em> and we will get different TTLs and that’s evidence that they taken different routes.</p>
+<p>The inverse is not true: a constant hop-count does not imply that the route taken is the same, only the route/s have the same hops.</p>
+<p>In this post I will <a href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">continue exploring</a> how much a <em>route</em> is <em>stable</em> in terms of <em>hop-counts</em>.<!--more--></p>
+<h2 id="how-much-stable-is-a-route-in-a-burst">How much stable is a route in a <em>burst</em>?</h2>
+<p><a href="https://github.com/robertdavidgraham/masscan/">masscan</a> scans the same host sending several probes at the <em>same time</em> in a <em>burst</em>.</p>
+<p>As saw in a <a href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">previous post</a>, <code><span class="highlight-candombe-inline"><span class="n">masscan</span></span></code> may scan the same host more than once. We will call these <em>rounds of bursts</em> or just <em>rounds</em>.</p>
+<p><figure><figcaption><span markdown='1'>
+<code><span class="highlight-candombe-inline"><span class="n">masscan</span></span></code> sends multiple packets (<em>probes</em>) to test the hosts’ ports.
+<br /><br />
+It sends <em>at the same time</em> the probes to <em>the same host</em> in a <strong>burst</strong>.
+<br /><br />
+Some time later it <em>may</em> scan the same host <em>again</em>. The collection of bursts to <em>the same host</em> are the <strong>rounds</strong> for that host.
+</span></figcaption>
+<img style="max-width: 80%" class='' alt='' src='/img/network/internet_scan/ip-burst-rounds.png' /></figure></p>
+<h3 id="ttls-extrema-values-for-each-short-burst">TTLs extrema values for each short burst</h3>
+<p>Let’s review the short bursts first, the probes sent to a host at the same time:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts_g</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="p">[</span><span class="ss">:ip</span><span class="p">,</span> <span class="ss">:timestamp</span><span class="p">])</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">short_bursts_g</span><span class="p">,</span> <span class="ss">:ttl</span> <span class="o">=&gt;</span> <span class="n">minimum</span> <span class="o">=&gt;</span> <span class="ss">:min</span><span class="p">,</span> <span class="ss">:ttl</span> <span class="o">=&gt;</span> <span class="n">maximum</span> <span class="o">=&gt;</span> <span class="ss">:max</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Alternatively:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">short_bursts</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">short_bursts_g</span><span class="p">,</span> <span class="ss">:ttl</span> <span class="o">=&gt;</span> <span class="p">(</span><span class="n">x</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">extrema</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="ss">:min</span><span class="p">,</span> <span class="ss">:max</span><span class="p">])</span>
+</code></pre></div>
+
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vaXAtc2hvcnQtYnVyc3QtdHRscy5wbmcnIC8+CkZvciBlYWNoIHJlc3BvbnNlLCB0aGUgVFRMIGlzIHJlYWQgYW5kIHRoZSBtaW5pbXVtIGFuZCBtYXhpbXVtCnZhbHVlcyBhcmUgY2FsY3VsYXRlZCBmb3IgZWFjaCBidXJzdC4KClRoaXMgZ2l2ZXMgYW4gaWRlYSBvZiBob3cgZGlmZmVyZW50IHRoZSBUVEwgY2FuIGJlIGZvciBwcm9iZXMgc2VudAppbiBhICpzaG9ydC1lbGFwc2VkIGJ1cnN0Ki4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vaXAtc2hvcnQtYnVyc3QtdHRscy5wbmcnIC8+CkZvciBlYWNoIHJlc3BvbnNlLCB0aGUgVFRMIGlzIHJlYWQgYW5kIHRoZSBtaW5pbXVtIGFuZCBtYXhpbXVtCnZhbHVlcyBhcmUgY2FsY3VsYXRlZCBmb3IgZWFjaCBidXJzdC4KClRoaXMgZ2l2ZXMgYW4gaWRlYSBvZiBob3cgZGlmZmVyZW50IHRoZSBUVEwgY2FuIGJlIGZvciBwcm9iZXMgc2VudAppbiBhICpzaG9ydC1lbGFwc2VkIGJ1cnN0Ki4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/network/internet_scan/ip-short-burst-ttls.png' />
+For each response, the TTL is read and the minimum and maximum values are calculated for each burst.
+<br /><br />
+This gives an idea of how different the TTL can be for probes sent in a <em>short-elapsed burst</em>.
+</span></p>
+<p>The latter walks over the samples once calling the <code><span class="highlight-candombe-inline"><span class="n">extrema</span></span></code> function. However <code><span class="highlight-candombe-inline"><span class="n">extrema</span></span></code> is not compatible with <code><span class="highlight-candombe-inline"><span class="n">DataFrames</span></span></code> as is so we need to wrap it in an anonymous function <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="n">x</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">extrema</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span></span></code>.</p>
+<p>This makes the latter much slower than the former, even if the former may walk over the samples twice.</p>
+<h3 id="hop-stability-in-short-bursts">Hop stability in short bursts</h3>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">countmap</span><span class="p">(</span><span class="n">short_bursts</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="ss">:max</span><span class="p">]</span> <span class="o">-</span> <span class="n">short_bursts</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="ss">:min</span><span class="p">])</span>
+<span class="kt">Dict</span><span class="p">{</span><span class="kt">Int32</span><span class="p">,</span> <span class="kt">Int64</span><span class="p">}</span> <span class="n">with</span> <span class="mi">6</span> <span class="n">entries</span><span class="o">:</span>
+  <span class="mi">0</span> <span class="o">=&gt;</span> <span class="mi">64801995</span>
+  <span class="mi">1</span> <span class="o">=&gt;</span> <span class="mi">68</span>
+  <span class="mi">2</span> <span class="o">=&gt;</span> <span class="mi">16</span>
+  <span class="mi">3</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+  <span class="mi">4</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+  <span class="mi">7</span> <span class="o">=&gt;</span> <span class="mi">4</span>
+</code></pre></div>
+
+<p>The difference between the <em>extremes</em>, called the <em>range</em>, shows that the routes are quite stable, at least during the scan for a particular host.</p>
+<p>The histogram shows that all the bursts have a TTL range of 0 except very few cases.</p>
+<p>This means that the routes are <strong>stable</strong> but…</p>
+<p>Keep in mind that the scans for a particular host <em>in a particular time</em> are like <strong>bursts</strong>: so it is reasonable that the routes didn’t change in such short period.</p>
+<p>What would happen if we analyze now the stability for a longer period?</p>
+<h2 id="how-much-stable-is-a-route-in-a-longer-period">How much stable is a route in a longer period?</h2>
+<p>The dataset has scans to the same host at different time, what we call <em>rounds</em>.</p>
+<p>We can do a second <code><span class="highlight-candombe-inline"><span class="n">groupby</span></span></code> + <code><span class="highlight-candombe-inline"><span class="n">combine</span></span></code> taking the minimum of the minimum TTLs and the maximum of the maximum TTLs to have the <em>range</em> per host, regardless of the <code><span class="highlight-candombe-inline"><span class="n">timestamp</span></span></code>, hence capturing some statistics for each round.</p>
+<p>However we need to <em>filter out</em> the groups of scans to the same host that have only one timestamps: we want to compare rounds at different time and having a single round defeats the purpose.</p>
+<p>These are scans to a host that were done in a <em>single burst</em> and we don’t have different burst at different time to compare with!</p>
+<p><label for='CmBgYGp1bGlhCmp1bGlhPiBoaXN0X2JpYXNlZFswXSAtIGhpc3RfdW5iaWFzZWRbMF0KMjkzNDk1MDkKYGBgCgpUbyBnaXZlIHlvdSBhbiBpZGVhIG9mIGhvdyBtdWNoIHRoZSBiaWFzCnRvd2FyZHMgc3RhYmxlIHJvdXRlcyBpcyAoYWthIHJhbmdlIG9mIDApLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CmBgYGp1bGlhCmp1bGlhPiBoaXN0X2JpYXNlZFswXSAtIGhpc3RfdW5iaWFzZWRbMF0KMjkzNDk1MDkKYGBgCgpUbyBnaXZlIHlvdSBhbiBpZGVhIG9mIGhvdyBtdWNoIHRoZSBiaWFzCnRvd2FyZHMgc3RhYmxlIHJvdXRlcyBpcyAoYWthIHJhbmdlIG9mIDApLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+<span class="pseudo-pre"><code><span class="highlight-candombe"><span class="n">julia</span><span class="o">&gt;</span> <span class="n">hist_biased</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">hist_unbiased</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="mi">29349509</span></span></code></span>
+<br /><br />
+To give you an idea of how much the bias towards stable routes is (aka range of 0).
+</span></p>
+<p>If we left those, our analysis will be biased toward stable routes (range of 0).</p>
+<h3 id="rounds-of-bursts">Rounds of bursts</h3>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">all_rounds_g</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">short_bursts</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rounds_g</span> <span class="o">=</span> <span class="n">filter</span><span class="p">(</span><span class="n">sdf</span> <span class="o">-&gt;</span> <span class="n">nrow</span><span class="p">(</span><span class="n">sdf</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">all_rounds_g</span><span class="p">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">rounds_ttl</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">rounds_g</span><span class="p">,</span> <span class="ss">:min</span> <span class="o">=&gt;</span> <span class="n">minimum</span> <span class="o">=&gt;</span> <span class="ss">:min</span><span class="p">,</span> <span class="ss">:max</span> <span class="o">=&gt;</span> <span class="n">maximum</span> <span class="o">=&gt;</span> <span class="ss">:max</span><span class="p">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">hist_unbiased</span> <span class="o">=</span> <span class="n">countmap</span><span class="p">(</span><span class="n">rounds_ttl</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="ss">:max</span><span class="p">]</span> <span class="o">-</span> <span class="n">rounds_ttl</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="ss">:min</span><span class="p">])</span>
+<span class="kt">Dict</span><span class="p">{</span><span class="kt">Int32</span><span class="p">,</span> <span class="kt">Int64</span><span class="p">}</span> <span class="n">with</span> <span class="mi">217</span> <span class="n">entries</span><span class="o">:</span>
+  <span class="mi">56</span>  <span class="o">=&gt;</span> <span class="mi">50</span>
+  <span class="mi">35</span>  <span class="o">=&gt;</span> <span class="mi">221</span>
+  <span class="mi">60</span>  <span class="o">=&gt;</span> <span class="mi">597</span>
+  <span class="mi">220</span> <span class="o">=&gt;</span> <span class="mi">4</span>
+  <span class="mi">67</span>  <span class="o">=&gt;</span> <span class="mi">5813</span>
+  <span class="mi">73</span>  <span class="o">=&gt;</span> <span class="mi">75</span>
+  <span class="mi">115</span> <span class="o">=&gt;</span> <span class="mi">3</span>
+  <span class="mi">112</span> <span class="o">=&gt;</span> <span class="mi">4</span>
+  <span class="mi">185</span> <span class="o">=&gt;</span> <span class="mi">85</span>
+  <span class="o">⋮</span>   <span class="o">=&gt;</span> <span class="o">⋮</span>
+</code></pre></div>
+
+<p><label for='ClllcywgdGhlIGAoLSlgIGlzIHRoZSBiaW5hcnkgb3BlcmF0b3IgKm1pbnVzKiBvciBzdWJ0cmFjdGlvbiB3aGljaCBpcwphcHBsaWVkIHJvdyBieSByb3cgdG8gdGhlIG1heGltdW0gYW5kIG1pbmltdW0gdmFsdWVzIChgOm1heGAgYW5kIGA6bWluYApjb2x1bW5zKS4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClllcywgdGhlIGAoLSlgIGlzIHRoZSBiaW5hcnkgb3BlcmF0b3IgKm1pbnVzKiBvciBzdWJ0cmFjdGlvbiB3aGljaCBpcwphcHBsaWVkIHJvdyBieSByb3cgdG8gdGhlIG1heGltdW0gYW5kIG1pbmltdW0gdmFsdWVzIChgOm1heGAgYW5kIGA6bWluYApjb2x1bW5zKS4KIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Yes, the <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="o">-</span><span class="p">)</span></span></code> is the binary operator <em>minus</em> or subtraction which is applied row by row to the maximum and minimum values (<code><span class="highlight-candombe-inline"><span class="ss">:max</span></span></code> and <code><span class="highlight-candombe-inline"><span class="ss">:min</span></span></code> columns).
+</span></p>
+<h3 id="hop-stability-in-longer-periods">Hop stability in longer periods</h3>
+<p>Okay, the situation is quite different!</p>
+<!--
+multirounds_range -> groupedby_ip_timestamp__filterby_count.pq
+-->
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">multirounds_range</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">rounds_ttl</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">,</span> <span class="p">[</span><span class="ss">:max</span><span class="p">,</span> <span class="ss">:min</span><span class="p">]</span> <span class="o">=&gt;</span> <span class="p">(</span><span class="o">-</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="ss">:range</span><span class="p">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="p">(</span><span class="n">multirounds_range</span><span class="p">,</span> <span class="ss">:mean</span><span class="p">,</span> <span class="ss">:std</span><span class="p">,</span> <span class="ss">:min</span><span class="p">,</span> <span class="ss">:q25</span><span class="p">,</span> <span class="ss">:median</span><span class="p">,</span> <span class="ss">:q75</span><span class="p">,</span> <span class="ss">:max</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="ss">:range</span><span class="p">)</span>
+<span class="mi">1</span><span class="o">×</span><span class="mi">8</span> <span class="n">DataFrame</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>  <span class="n">mean</span>      <span class="n">std</span>      <span class="n">min</span>    <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>     <span class="n">max</span>
+<span class="n">─────┼──────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">range</span>     <span class="mf">0.634406</span>  <span class="mf">6.73528</span>      <span class="mi">0</span>      <span class="mf">0.0</span>      <span class="mf">0.0</span>      <span class="mf">0.0</span>   <span class="mi">239</span>
+</code></pre></div>
+
+<p>So 75% of the samples have a range of 0. Let’s analyze the dataset without them:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">not_perfectly_stable</span> <span class="o">=</span> <span class="n">filter</span><span class="p">(</span><span class="ss">:range</span> <span class="o">=&gt;</span> <span class="o">!=</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">multirounds_range</span><span class="p">)</span>
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">quite_stable</span> <span class="o">=</span> <span class="n">filter</span><span class="p">(</span><span class="ss">:range</span> <span class="o">=&gt;</span> <span class="o">&lt;=</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span> <span class="n">not_perfectly_stable</span><span class="p">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="p">(</span><span class="n">quite_stable</span><span class="p">,</span> <span class="ss">:mean</span><span class="p">,</span> <span class="ss">:std</span><span class="p">,</span> <span class="ss">:min</span><span class="p">,</span> <span class="ss">:q25</span><span class="p">,</span> <span class="ss">:median</span><span class="p">,</span> <span class="ss">:q75</span><span class="p">,</span> <span class="ss">:max</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="ss">:range</span><span class="p">)</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>  <span class="n">mean</span>     <span class="n">std</span>      <span class="n">min</span>    <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>      <span class="n">max</span>
+<span class="n">─────┼─────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">range</span>     <span class="mf">1.77117</span>  <span class="mf">1.39118</span>      <span class="mi">1</span>      <span class="mf">1.0</span>      <span class="mf">1.0</span>      <span class="mf">2.0</span>    <span class="mi">7</span>
+
+
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">unstable</span> <span class="o">=</span> <span class="n">filter</span><span class="p">(</span><span class="ss">:range</span> <span class="o">=&gt;</span> <span class="o">&gt;</span><span class="p">(</span><span class="mi">7</span><span class="p">),</span> <span class="n">not_perfectly_stable</span><span class="p">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="p">(</span><span class="n">unstable</span><span class="p">,</span> <span class="ss">:mean</span><span class="p">,</span> <span class="ss">:std</span><span class="p">,</span> <span class="ss">:min</span><span class="p">,</span> <span class="ss">:q25</span><span class="p">,</span> <span class="ss">:median</span><span class="p">,</span> <span class="ss">:q75</span><span class="p">,</span> <span class="ss">:max</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="ss">:range</span><span class="p">)</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>  <span class="n">mean</span>     <span class="n">std</span>      <span class="n">min</span>    <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>      <span class="n">max</span>
+<span class="n">─────┼─────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">range</span>     <span class="mf">85.5505</span>  <span class="mf">62.5483</span>      <span class="mi">8</span>     <span class="mf">62.0</span>     <span class="mf">64.0</span>    <span class="mf">127.0</span>   <span class="mi">239</span>
+</code></pre></div>
+
+<p>So it seems that the difference between TTLs for the same host is quite concentrated on 0 and closer, up to 7, as the mean 1.77117 and the standard deviation 1.39118 shows.</p>
+<p>From there the differences are spread over the 8 to 239 range. The mean is around the middle of the range and the standard deviation is approx one quarter so the values are really spread.</p>
+<p><label for='CkluIHRoZSBkYXRhc2V0IHdlIGhhdmUgYSBzbGlnaHRseSBtb3JlIHVuaXF1ZSBob3N0czogNDMwNTY1OTYuClRoZSBkaWZmZXJlbmNlIGlzIGR1ZSB0aGUgZmlsdGVyaW5nIHRoYXQgd2UgZGlkIGFib3ZlIGJ1dCBpdCBkb2VzCm5vdCBjaGFuZ2UgdGhlIHJlc3VsdHMuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkluIHRoZSBkYXRhc2V0IHdlIGhhdmUgYSBzbGlnaHRseSBtb3JlIHVuaXF1ZSBob3N0czogNDMwNTY1OTYuClRoZSBkaWZmZXJlbmNlIGlzIGR1ZSB0aGUgZmlsdGVyaW5nIHRoYXQgd2UgZGlkIGFib3ZlIGJ1dCBpdCBkb2VzCm5vdCBjaGFuZ2UgdGhlIHJlc3VsdHMuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+In the dataset we have a slightly more unique hosts: 43056596. The difference is due the filtering that we did above but it does not change the results.
+</span></p>
+<p>There are only 172217 samples of 43056567 unique hosts so the <em>unstable</em> represents only 0.39998%.</p>
+<h3 id="bursts-over-longer-periods-but-for-how-long">Bursts over longer periods but for how long?</h3>
+<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vaXAtdHRsLXJhbmdlLWFuZC10aW1lLnBuZycgLz4KRm9yIGVhY2ggYnVyc3Qgd2UgY2FsY3VsYXRlIGl0cyBUVEwgcmFuZ2UuCgpGcm9tIHRoZXJlLCBhIGJ1bmNoIG9mIHN0YXRpc3RpY3MgY2FuIGJlIGNhbGN1bGF0ZWQgYWJvdXQgdGhlIFRUTCByYW5nZXMKZm9yIHRoZSAqc2FtZSBob3N0cyogZ2l2aW5nIHVzIGFuIGlkZWEgb2YgdGhlIHN0YWJpbGl0eSBvZiB0aGUgcm91dGUKdG8gaXQuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vaXAtdHRsLXJhbmdlLWFuZC10aW1lLnBuZycgLz4KRm9yIGVhY2ggYnVyc3Qgd2UgY2FsY3VsYXRlIGl0cyBUVEwgcmFuZ2UuCgpGcm9tIHRoZXJlLCBhIGJ1bmNoIG9mIHN0YXRpc3RpY3MgY2FuIGJlIGNhbGN1bGF0ZWQgYWJvdXQgdGhlIFRUTCByYW5nZXMKZm9yIHRoZSAqc2FtZSBob3N0cyogZ2l2aW5nIHVzIGFuIGlkZWEgb2YgdGhlIHN0YWJpbGl0eSBvZiB0aGUgcm91dGUKdG8gaXQuCm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img  class='fullwidth' alt='' src='/img/network/internet_scan/ip-ttl-range-and-time.png' />
+For each burst we calculate its TTL range.
+<br /><br />
+From there, a bunch of statistics can be calculated about the TTL ranges for the <em>same hosts</em> giving us an idea of the stability of the route to it.
+</span></p>
+<p>Can we conclude that the routes are 99% of the time <em>stable</em>?</p>
+<p>Well, yes but we are making an assumption: when we have two or more bursts to the same host we are assuming that those happen at different moments but… what do we mean by <em>different moments</em>?</p>
+<p>Certainly, a difference of a few seconds does not change anything by real.</p>
+<p>What we want is to measure the changes in the TTLs between bursts that happen at <strong>hours</strong> of difference.</p>
+<p>So, let’s check how <em>spread</em> are the timestamps of the grouped by <code><span class="highlight-candombe-inline"><span class="ss">:ip</span></span></code>, aka how <em>spread</em> are the <em>bursts</em>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">rounds_spread</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">rounds_g</span><span class="p">,</span> <span class="ss">:timestamp</span> <span class="o">=&gt;</span> <span class="n">std</span><span class="p">)</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="p">(</span><span class="n">rounds_spread</span><span class="p">,</span> <span class="ss">:mean</span><span class="p">,</span> <span class="ss">:std</span><span class="p">,</span> <span class="ss">:min</span><span class="p">,</span> <span class="ss">:q25</span><span class="p">,</span> <span class="ss">:median</span><span class="p">,</span> <span class="ss">:q75</span><span class="p">,</span> <span class="ss">:max</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="ss">:timestamp_std</span><span class="p">)</span>
+ <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>       <span class="n">mean</span>     <span class="n">std</span>      <span class="n">min</span>       <span class="n">q25</span>      <span class="n">median</span>   <span class="n">q75</span>      <span class="n">max</span>
+<span class="n">─────┼─────────────────────────────────────────────────────────────────────────────────</span>
+   <span class="mi">1</span> <span class="n">│</span> <span class="n">timestamp_std</span>  <span class="mf">51768.5</span>  <span class="mf">32284.3</span>  <span class="mf">0.707107</span>  <span class="mf">25612.8</span>  <span class="mf">49328.5</span>  <span class="mf">73464.1</span>  <span class="mf">1.52706e5</span>
+</code></pre></div>
+
+<p>So we have bursts that happen one after the other, roughly with <code><span class="highlight-candombe-inline"><span class="mf">0.707</span></span></code> seconds of difference.</p>
+<p>But most of the burst happen with several minutes, even <strong>hours</strong> of difference.</p>
+<p>The 25-quantile, that represents the value of the first quarter of the samples, is of 25612.8 seconds, a little more than 7 hours.</p>
+<h2 id="conclusions">Conclusions</h2>
+<p>So with these so-spread bursts and the so-little changed difference in the TTLs we can conclude that most of the hop-count routes are <em>stable</em>.</p>
+<p>We cannot say anything about the real routes that the packets took but we can know that the count of hops that they passed through remained constant.</p>
+</article>
+<span class="print-footer">IPv4 Scan 2021 - Hop-Count Route Stability - October 16, 2021 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+FROM shellshock:latest
+
+RUN set -ex; \
+# install these to run the automated tests
+	apk add --no-cache py-pip; \
+	pip install byexample;
+
+# you need to copy the tests into the files/ folder
+# so the following COPY will work
+COPY files/20*.md files/shellshock /
+
+CMD ["/bin/bash"]
