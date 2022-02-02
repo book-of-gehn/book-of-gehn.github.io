@@ -83,6 +83,28 @@
 </h1>
 <span class="index-single-post">
 <hr class="slender post-layout">
+<a href="https://book-of-gehn.github.io/articles/2022/02/01/Fix-Ownership-of-Files-in-a-Mounted-Volume.html">
+<h2 class="larger">
+Fix Ownership of Files in a Mounted Volume
+</h2>
+</a> <br><span class="smaller">February 1, 2022</span> <br/>
+<div>
+<p>The file system of a docker container is ephemeral: it will disappear as soon as the container is destroyed.</p>
+<p>To prevent data losses you can mount a folder <em>of the host</em> into the container which will survive the destroy of the container.</p>
+<p>But it is not uncommon to find issues with the ownership and permissions of the <em>shared</em> files.</p>
+<p>The file system of the host represents who is the owner of each file with an user and a group numbers.</p>
+<p>Plain numbers.</p>
+<p>Humans, on the other hand, think in terms of user names: <em>“this is the file of Alice; this other is of Bob”</em>.</p>
+<p>The mapping between the numbers that the file system uses and the names that the humans understand is stored in <code>/etc/passwd</code> and <code>/etc/groups</code>.</p>
+<p>And here we have a problem.</p>
+<p>These two files, <code>/etc/passwd</code> and <code>/etc/groups</code>, live in the host’s file system and they are used to map the files’ numbers to names when you are seeing the files <em>from the host</em>.</p>
+<p>When you enter into the docker container (or run a command inside), the shared files, mounted with <code>-v</code>, will have the <strong>same</strong> file numbers.</p>
+<p>But, an here is the twist, inside the container you will be using for the mapping the <code>/etc/passwd</code> and <code>/etc/groups</code> files <em>of the container</em> and not of the host.</p>
+<p>Same file numbers, different mappings.</p>
+</div>
+<p></span></p>
+<span class="index-single-post">
+<hr class="slender post-layout">
 <a href="https://book-of-gehn.github.io/articles/2021/11/13/IPv4-Scan-Part-IV-Hop-Distance-and-IP-Distribution.html">
 <h2 class="larger">
 IPv4 Scan 2021 - Hop-Distance Average and IP Distribution

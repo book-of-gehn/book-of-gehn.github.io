@@ -1,0 +1,258 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Fix Ownership of Files in a Mounted Volume</title>
+  <meta name="description" content="Fix Ownership of Files in a Mounted Volume">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/02/01/Fix-Ownership-of-Files-in-a-Mounted-Volume.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Fix Ownership of Files in a Mounted Volume
+</h1>
+<p class="subtitle">
+February 1, 2022
+</p>
+<p>The file system of a docker container is ephemeral: it will disappear as soon as the container is destroyed.</p>
+<p>To prevent data losses you can mount a folder <em>of the host</em> into the container which will survive the destroy of the container.</p>
+<p>But it is not uncommon to find issues with the ownership and permissions of the <em>shared</em> files.</p>
+<p>The file system of the host represents who is the owner of each file with an user and a group numbers.</p>
+<p>Plain numbers.</p>
+<p>Humans, on the other hand, think in terms of user names: <em>“this is the file of Alice; this other is of Bob”</em>.</p>
+<p>The mapping between the numbers that the file system uses and the names that the humans understand is stored in <code><span class="highlight-candombe-inline">/etc/passwd</span></code> and <code><span class="highlight-candombe-inline">/etc/groups</span></code>.</p>
+<p>And here we have a problem.</p>
+<p>These two files, <code><span class="highlight-candombe-inline">/etc/passwd</span></code> and <code><span class="highlight-candombe-inline">/etc/groups</span></code>, live in the host’s file system and they are used to map the files’ numbers to names when you are seeing the files <em>from the host</em>.</p>
+<p>When you enter into the docker container (or run a command inside), the shared files, mounted with <code><span class="highlight-candombe-inline">-v</span></code>, will have the <strong>same</strong> file numbers.</p>
+<p>But, an here is the twist, inside the container you will be using for the mapping the <code><span class="highlight-candombe-inline">/etc/passwd</span></code> and <code><span class="highlight-candombe-inline">/etc/groups</span></code> files <em>of the container</em> and not of the host.</p>
+<p>Same file numbers, different mappings.<!--more--></p>
+<h2 id="uidgid">UID/GID</h2>
+<p>Imagine the following folder in the host:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ ls -lah /home/alice/blog
+drwxr-xr-x <span class="m">12</span> alice devel <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
+drwxr-xr-x <span class="m">63</span> alice devel <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
+drwxr-xr-x  <span class="m">2</span> alice devel <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
+drwxr-xr-x  <span class="m">8</span> alice devel <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:40 .git
+-rw-r--r--  <span class="m">1</span> alice devel   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
+-rw-r--r--  <span class="m">1</span> alice devel <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
+drwxr-xr-x <span class="m">26</span> alice devel <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+</code></pre></div>
+
+<p>All those files and folders belong to the user <code><span class="highlight-candombe-inline">alice</span></code> and the group <code><span class="highlight-candombe-inline">develop</span></code>.</p>
+<p>But that’s with the host’s mapping.</p>
+<p>We can see the file numbers behind running:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ ls -lah --numeric-uid-gid /home/alice/blog
+drwxr-xr-x <span class="m">12</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
+drwxr-xr-x <span class="m">63</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
+drwxr-xr-x  <span class="m">2</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
+drwxr-xr-x  <span class="m">8</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:43 .git
+-rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span>   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
+-rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
+drwxr-xr-x <span class="m">26</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+</code></pre></div>
+
+<p>So, for the host user <code><span class="highlight-candombe-inline">alice</span></code> maps to the UID <code><span class="highlight-candombe-inline"><span class="m">1001</span></span></code>; the same goes for the group <code><span class="highlight-candombe-inline">develop</span></code> and the GID <code><span class="highlight-candombe-inline"><span class="m">1024</span></span></code>.</p>
+<p>Now, imagine that we run a docker container and mount that folder above</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ docker run -it -v /home/alice/blog:/wd ubuntu bash
+</code></pre></div>
+
+<p>The host’s <code><span class="highlight-candombe-inline">/home/alice/blog</span></code> is mounted in <code><span class="highlight-candombe-inline">/wd</span></code> inside the container.</p>
+<p>If we list the files from <em>inside</em> the container we will see the <em>same</em> UIDs and GIDs</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span> $ ls -lah --numeric-uid-gid /wd
+drwxr-xr-x <span class="m">12</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
+drwxr-xr-x <span class="m">63</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
+drwxr-xr-x  <span class="m">2</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
+drwxr-xr-x  <span class="m">8</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:43 .git
+-rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span>   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
+-rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
+drwxr-xr-x <span class="m">26</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+</code></pre></div>
+
+<p>But not necessary we will see the same mapping.</p>
+<h2 id="incorrect-mapping-two-scenarios">Incorrect mapping: two scenarios</h2>
+<p>There are 2 cases.</p>
+<p><strong>Scenario 1</strong>: there is no user/group with those IDs in the container so you will see this:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span> $ ls -lah /wd
+drwxr-xr-x <span class="m">12</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
+drwxr-xr-x <span class="m">63</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
+drwxr-xr-x  <span class="m">2</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
+drwxr-xr-x  <span class="m">8</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:43 .git
+-rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span>   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
+-rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
+drwxr-xr-x <span class="m">26</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+</code></pre></div>
+
+<p><strong>Scenario 2</strong>: there is user/group in the container assigned to those IDs but they are mapped, of course, to something different than <code><span class="highlight-candombe-inline">alice</span></code>/<code><span class="highlight-candombe-inline">develop</span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span> $ ls -lah /wd
+drwxr-xr-x <span class="m">12</span> apt sys <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
+drwxr-xr-x <span class="m">63</span> apt sys <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
+drwxr-xr-x  <span class="m">2</span> apt sys <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
+drwxr-xr-x  <span class="m">8</span> apt sys <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:43 .git
+-rw-r--r--  <span class="m">1</span> apt sys   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
+-rw-r--r--  <span class="m">1</span> apt sys <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
+drwxr-xr-x <span class="m">26</span> apt sys <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+</code></pre></div>
+
+<h2 id="how-to-fix-this">How to fix this?</h2>
+<p>We need a <em>common</em> user and group in the host and container with the same UID and GID in both worlds.</p>
+<p>In the scenario 1 we need to create an user and a group inside the container with the same UID/GID that the one from the host (<code><span class="highlight-candombe-inline"><span class="m">1001</span></span></code> and <code><span class="highlight-candombe-inline"><span class="m">1024</span></span></code> respectively)</p>
+<p>In the scenario 1 we are lucky: the UID/GID <code><span class="highlight-candombe-inline"><span class="m">1001</span></span></code>/<code><span class="highlight-candombe-inline"><span class="m">1024</span></span></code> are not assigned to any user/group so we can create the user <code><span class="highlight-candombe-inline">alice</span></code> and the group <code><span class="highlight-candombe-inline">develop</span></code> in the container and that’s it.</p>
+<p>The scenario 2 is more complex because the UID/GID are already assigned. We will have to create a totally new user/group, both in the host and the container, to fix this.</p>
+<p>Because the scenario 1 is a special subset of the scenario 1, I will describe how to fix the scenario 2.</p>
+<p>First, pick a UID/GID that is not used either in the host nor in the container.</p>
+<p><label for='CkknbSB1c2luZyBkaWZmZXJlbnQgbnVtYmVycyB0byBtYWtlIGl0IGVhc2llciB0byByZWFkIGJ1dCBpdCBpcyBub3QKbmVjZXNzYXJ5LiBZb3UgY291bGQgdXNlIHRoZSBzYW1lIG51bWJlciBmb3IgdGhlIFVJRCBhbmQgdGhlIEdJRCB3aXRob3V0CnByb2JsZW1zLgoKWW91IGNhbiBza2lwIHRoaXMgc3RlcCBmb3IgdGhlIHNjZW5hcmlvIDEgYW5kIHVzZSB0aGUgb3JpZ2luYWwgVUlEL0dJRApgMTAwMWAvYDEwMjRgCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkknbSB1c2luZyBkaWZmZXJlbnQgbnVtYmVycyB0byBtYWtlIGl0IGVhc2llciB0byByZWFkIGJ1dCBpdCBpcyBub3QKbmVjZXNzYXJ5LiBZb3UgY291bGQgdXNlIHRoZSBzYW1lIG51bWJlciBmb3IgdGhlIFVJRCBhbmQgdGhlIEdJRCB3aXRob3V0CnByb2JsZW1zLgoKWW91IGNhbiBza2lwIHRoaXMgc3RlcCBmb3IgdGhlIHNjZW5hcmlvIDEgYW5kIHVzZSB0aGUgb3JpZ2luYWwgVUlEL0dJRApgMTAwMWAvYDEwMjRgCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+I’m using different numbers to make it easier to read but it is not necessary. You could use the same number for the UID and the GID without problems.
+<br /><br />
+You can skip this step for the scenario 1 and use the original UID/GID <code><span class="highlight-candombe-inline"><span class="m">1001</span></span></code>/<code><span class="highlight-candombe-inline"><span class="m">1024</span></span></code>
+</span></p>
+<p>For example, let’s pick <code><span class="highlight-candombe-inline"><span class="m">1201</span></span></code> for the UID and <code><span class="highlight-candombe-inline"><span class="m">1224</span></span></code> for the group.</p>
+<p>We can check this running <code><span class="highlight-candombe-inline">grep</span></code> and getting a 0 response which means that the id was not found (so it is not used)</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ grep -c <span class="m">1201</span> /etc/passwd
+<span class="m">0</span>
+<span class="o">(</span>host<span class="o">)</span> $ grep -c <span class="m">1224</span> /etc/group
+<span class="m">0</span>
+
+<span class="o">(</span>container<span class="o">)</span> $ grep -c <span class="m">1201</span> /etc/passwd
+<span class="m">0</span>
+<span class="o">(</span>container<span class="o">)</span> $ grep -c <span class="m">1224</span> /etc/group
+<span class="m">0</span>
+</code></pre></div>
+
+<p>With a free UID/GID we need to create a group and an user with those ids</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span> $ sudo groupadd -g <span class="m">1224</span> devel2
+<span class="o">(</span>container<span class="o">)</span> $ sudo useradd -s /bin/bash -u <span class="m">1201</span> -M -g <span class="m">1224</span> alice2
+</code></pre></div>
+
+<p>These creates a group named <code><span class="highlight-candombe-inline">devel2</span></code> with GID of <code><span class="highlight-candombe-inline"><span class="m">1224</span></span></code> and an user named <code><span class="highlight-candombe-inline">alice2</span></code> with UID of <code><span class="highlight-candombe-inline"><span class="m">1201</span></span></code>. <em>Yes, I’m not very creative with the names.</em></p>
+<p>The <code><span class="highlight-candombe-inline">-M</span></code> says that you don’t want a home folder and <code><span class="highlight-candombe-inline">-s</span></code> sets the user’s shell to <code><span class="highlight-candombe-inline">/bin/bash</span></code>.</p>
+<p><label for='CllvdSBjYW4gc2tpcCB0aGlzIHN0ZXAgZm9yIHRoZSBzY2VuYXJpbyAxIGFzIHlvdSBjYW4gdXNlIGBhbGljZWAgYW5kCmBkZXZlbGAKbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CllvdSBjYW4gc2tpcCB0aGlzIHN0ZXAgZm9yIHRoZSBzY2VuYXJpbyAxIGFzIHlvdSBjYW4gdXNlIGBhbGljZWAgYW5kCmBkZXZlbGAKbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+You can skip this step for the scenario 1 as you can use <code><span class="highlight-candombe-inline">alice</span></code> and <code><span class="highlight-candombe-inline">devel</span></code>
+</span></p>
+<p>Now we do the same in the <em>host</em></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ sudo groupadd -g <span class="m">1224</span> devel2
+<span class="o">(</span>host<span class="o">)</span> $ sudo useradd -s /bin/bash -u <span class="m">1201</span> -M -g <span class="m">1224</span> alice2
+</code></pre></div>
+
+<p>Finally change the ownership of the shared files running</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ sudo chown -R <span class="m">1201</span>:1224 /home/user/blog
+</code></pre></div>
+
+<p>Now before working with the files you need to log in as <code><span class="highlight-candombe-inline">alice2</span></code></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ sudo su alice2
+
+<span class="o">(</span>container<span class="o">)</span> $ sudo su alice2
+</code></pre></div>
+
+<p>This applies to both the host and container.</p>
+<p>Once logged in it may be convenient to set your <code><span class="highlight-candombe-inline">HOME</span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ <span class="nb">export</span> <span class="nv">HOME</span><span class="o">=</span>/home/alice
+<span class="o">(</span>container<span class="o">)</span> $ <span class="nb">export</span> <span class="nv">HOME</span><span class="o">=</span>/wd
+</code></pre></div>
+
+<h2 id="why-a-simplest-chownchmod-does-not-work">Why a simplest <code><span class="highlight-candombe-inline">chown</span></code>/<code><span class="highlight-candombe-inline">chmod</span></code> does not work?</h2>
+<p>On internet the solution to the <em>“permission problem”</em> is to run <code><span class="highlight-candombe-inline">chmod</span></code>.</p>
+<p>You run <code><span class="highlight-candombe-inline">chmod</span></code> in the container to add a read-write-exec permissions ot <em>everyone</em>. Indeed any user, from the host or container, will be able to work with those files.</p>
+<p>But what happen if you add a new shared file? That will have the user ownership and default permissions and you will not be able to use it in the host/container.</p>
+<p>Not a stable fix, and <code><span class="highlight-candombe-inline"><span class="m">0777</span></span></code> looks suspicious.</p>
+<p>Running <code><span class="highlight-candombe-inline">chown</span></code> to change the ownership is even more messier because you may change and set the <em>“correct”</em> user/group inside the container but you will be scrubbing the scenario in the host.</p>
+<p>The ownership is not the problem. The permission are not the problem. Who to interpret the UID/GID <strong>is</strong> the problem.</p>
+<h2 id="bonus-track-to-be-a-sudoer">(bonus track) To be a sudoer</h2>
+<pre><code>$ sudo groupadd admin
+$ sudo echo &#39;%admin  ALL=(ALL) NOPASSWD:ALL&#39; &gt; /etc/sudoers.d/admin
+$ sudo chmod 0400 /etc/sudoers.d/admin
+
+$ sudo usermod -aG admin alice2
+$ sudo usermod -aG sudo alice2</code></pre>
+</article>
+<span class="print-footer">Fix Ownership of Files in a Mounted Volume - February 1, 2022 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

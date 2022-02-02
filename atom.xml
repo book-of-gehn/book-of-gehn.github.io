@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2022-01-30T21:12:23.509041+00:00</updated>
+  <updated>2022-02-02T04:53:59.117149+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -11,6 +11,171 @@
   <link href="https://book-of-gehn.github.io/atom.xml" rel="self"/>
   <generator uri="https://lkiesow.github.io/python-feedgen" version="0.9.0">python-feedgen</generator>
   <subtitle>blog</subtitle>
+  <entry>
+    <id>https://book-of-gehn.github.io/articles/2022/02/01/Fix-Ownership-of-Files-in-a-Mounted-Volume.html</id>
+    <title>Fix Ownership of Files in a Mounted Volume</title>
+    <updated>2022-02-01T00:00:00+00:00</updated>
+    <author>
+      <name>Martin Di Paola</name>
+    </author>
+    <content type="html">&lt;p&gt;The file system of a docker container is ephemeral: it will disappear as soon as the container is destroyed.&lt;/p&gt;
+&lt;p&gt;To prevent data losses you can mount a folder &lt;em&gt;of the host&lt;/em&gt; into the container which will survive the destroy of the container.&lt;/p&gt;
+&lt;p&gt;But it is not uncommon to find issues with the ownership and permissions of the &lt;em&gt;shared&lt;/em&gt; files.&lt;/p&gt;
+&lt;p&gt;The file system of the host represents who is the owner of each file with an user and a group numbers.&lt;/p&gt;
+&lt;p&gt;Plain numbers.&lt;/p&gt;
+&lt;p&gt;Humans, on the other hand, think in terms of user names: &lt;em&gt;“this is the file of Alice; this other is of Bob”&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;The mapping between the numbers that the file system uses and the names that the humans understand is stored in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/etc/passwd&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/etc/groups&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;And here we have a problem.&lt;/p&gt;
+&lt;p&gt;These two files, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/etc/passwd&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/etc/groups&lt;/span&gt;&lt;/code&gt;, live in the host’s file system and they are used to map the files’ numbers to names when you are seeing the files &lt;em&gt;from the host&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;When you enter into the docker container (or run a command inside), the shared files, mounted with &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;-v&lt;/span&gt;&lt;/code&gt;, will have the &lt;strong&gt;same&lt;/strong&gt; file numbers.&lt;/p&gt;
+&lt;p&gt;But, an here is the twist, inside the container you will be using for the mapping the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/etc/passwd&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/etc/groups&lt;/span&gt;&lt;/code&gt; files &lt;em&gt;of the container&lt;/em&gt; and not of the host.&lt;/p&gt;
+&lt;p&gt;Same file numbers, different mappings.&lt;!--more--&gt;&lt;/p&gt;
+&lt;h2 id="uidgid"&gt;UID/GID&lt;/h2&gt;
+&lt;p&gt;Imagine the following folder in the host:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ ls -lah /home/alice/blog
+drwxr-xr-x &lt;span class="m"&gt;12&lt;/span&gt; alice devel &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:28 .
+drwxr-xr-x &lt;span class="m"&gt;63&lt;/span&gt; alice devel &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:25 ..
+drwxr-xr-x  &lt;span class="m"&gt;2&lt;/span&gt; alice devel &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;20&lt;/span&gt;:35 docker
+drwxr-xr-x  &lt;span class="m"&gt;8&lt;/span&gt; alice devel &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:40 .git
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; alice devel   &lt;span class="m"&gt;52&lt;/span&gt; Jan &lt;span class="m"&gt;22&lt;/span&gt; &lt;span class="m"&gt;14&lt;/span&gt;:23 .gitignore
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; alice devel &lt;span class="m"&gt;1&lt;/span&gt;.9K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:10 Makefile
+drwxr-xr-x &lt;span class="m"&gt;26&lt;/span&gt; alice devel &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:22 posts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;All those files and folders belong to the user &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;alice&lt;/span&gt;&lt;/code&gt; and the group &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;develop&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;But that’s with the host’s mapping.&lt;/p&gt;
+&lt;p&gt;We can see the file numbers behind running:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ ls -lah --numeric-uid-gid /home/alice/blog
+drwxr-xr-x &lt;span class="m"&gt;12&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:28 .
+drwxr-xr-x &lt;span class="m"&gt;63&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:25 ..
+drwxr-xr-x  &lt;span class="m"&gt;2&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;20&lt;/span&gt;:35 docker
+drwxr-xr-x  &lt;span class="m"&gt;8&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:43 .git
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt;   &lt;span class="m"&gt;52&lt;/span&gt; Jan &lt;span class="m"&gt;22&lt;/span&gt; &lt;span class="m"&gt;14&lt;/span&gt;:23 .gitignore
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;.9K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:10 Makefile
+drwxr-xr-x &lt;span class="m"&gt;26&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:22 posts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;So, for the host user &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;alice&lt;/span&gt;&lt;/code&gt; maps to the UID &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1001&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;; the same goes for the group &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;develop&lt;/span&gt;&lt;/code&gt; and the GID &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1024&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Now, imagine that we run a docker container and mount that folder above&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ docker run -it -v /home/alice/blog:/wd ubuntu bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The host’s &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/home/alice/blog&lt;/span&gt;&lt;/code&gt; is mounted in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/wd&lt;/span&gt;&lt;/code&gt; inside the container.&lt;/p&gt;
+&lt;p&gt;If we list the files from &lt;em&gt;inside&lt;/em&gt; the container we will see the &lt;em&gt;same&lt;/em&gt; UIDs and GIDs&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ ls -lah --numeric-uid-gid /wd
+drwxr-xr-x &lt;span class="m"&gt;12&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:28 .
+drwxr-xr-x &lt;span class="m"&gt;63&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:25 ..
+drwxr-xr-x  &lt;span class="m"&gt;2&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;20&lt;/span&gt;:35 docker
+drwxr-xr-x  &lt;span class="m"&gt;8&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:43 .git
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt;   &lt;span class="m"&gt;52&lt;/span&gt; Jan &lt;span class="m"&gt;22&lt;/span&gt; &lt;span class="m"&gt;14&lt;/span&gt;:23 .gitignore
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;.9K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:10 Makefile
+drwxr-xr-x &lt;span class="m"&gt;26&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:22 posts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;But not necessary we will see the same mapping.&lt;/p&gt;
+&lt;h2 id="incorrect-mapping-two-scenarios"&gt;Incorrect mapping: two scenarios&lt;/h2&gt;
+&lt;p&gt;There are 2 cases.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Scenario 1&lt;/strong&gt;: there is no user/group with those IDs in the container so you will see this:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ ls -lah /wd
+drwxr-xr-x &lt;span class="m"&gt;12&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:28 .
+drwxr-xr-x &lt;span class="m"&gt;63&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:25 ..
+drwxr-xr-x  &lt;span class="m"&gt;2&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;20&lt;/span&gt;:35 docker
+drwxr-xr-x  &lt;span class="m"&gt;8&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:43 .git
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt;   &lt;span class="m"&gt;52&lt;/span&gt; Jan &lt;span class="m"&gt;22&lt;/span&gt; &lt;span class="m"&gt;14&lt;/span&gt;:23 .gitignore
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;.9K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:10 Makefile
+drwxr-xr-x &lt;span class="m"&gt;26&lt;/span&gt; &lt;span class="m"&gt;1001&lt;/span&gt; &lt;span class="m"&gt;1024&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:22 posts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Scenario 2&lt;/strong&gt;: there is user/group in the container assigned to those IDs but they are mapped, of course, to something different than &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;alice&lt;/span&gt;&lt;/code&gt;/&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;develop&lt;/span&gt;&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ ls -lah /wd
+drwxr-xr-x &lt;span class="m"&gt;12&lt;/span&gt; apt sys &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:28 .
+drwxr-xr-x &lt;span class="m"&gt;63&lt;/span&gt; apt sys &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:25 ..
+drwxr-xr-x  &lt;span class="m"&gt;2&lt;/span&gt; apt sys &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;20&lt;/span&gt;:35 docker
+drwxr-xr-x  &lt;span class="m"&gt;8&lt;/span&gt; apt sys &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:43 .git
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; apt sys   &lt;span class="m"&gt;52&lt;/span&gt; Jan &lt;span class="m"&gt;22&lt;/span&gt; &lt;span class="m"&gt;14&lt;/span&gt;:23 .gitignore
+-rw-r--r--  &lt;span class="m"&gt;1&lt;/span&gt; apt sys &lt;span class="m"&gt;1&lt;/span&gt;.9K Jan &lt;span class="m"&gt;30&lt;/span&gt; &lt;span class="m"&gt;21&lt;/span&gt;:10 Makefile
+drwxr-xr-x &lt;span class="m"&gt;26&lt;/span&gt; apt sys &lt;span class="m"&gt;4&lt;/span&gt;.0K Jan &lt;span class="m"&gt;31&lt;/span&gt; &lt;span class="m"&gt;02&lt;/span&gt;:22 posts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="how-to-fix-this"&gt;How to fix this?&lt;/h2&gt;
+&lt;p&gt;We need a &lt;em&gt;common&lt;/em&gt; user and group in the host and container with the same UID and GID in both worlds.&lt;/p&gt;
+&lt;p&gt;In the scenario 1 we need to create an user and a group inside the container with the same UID/GID that the one from the host (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1001&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1024&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; respectively)&lt;/p&gt;
+&lt;p&gt;In the scenario 1 we are lucky: the UID/GID &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1001&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;/&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1024&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; are not assigned to any user/group so we can create the user &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;alice&lt;/span&gt;&lt;/code&gt; and the group &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;develop&lt;/span&gt;&lt;/code&gt; in the container and that’s it.&lt;/p&gt;
+&lt;p&gt;The scenario 2 is more complex because the UID/GID are already assigned. We will have to create a totally new user/group, both in the host and the container, to fix this.&lt;/p&gt;
+&lt;p&gt;Because the scenario 1 is a special subset of the scenario 1, I will describe how to fix the scenario 2.&lt;/p&gt;
+&lt;p&gt;First, pick a UID/GID that is not used either in the host nor in the container.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CkknbSB1c2luZyBkaWZmZXJlbnQgbnVtYmVycyB0byBtYWtlIGl0IGVhc2llciB0byByZWFkIGJ1dCBpdCBpcyBub3QKbmVjZXNzYXJ5LiBZb3UgY291bGQgdXNlIHRoZSBzYW1lIG51bWJlciBmb3IgdGhlIFVJRCBhbmQgdGhlIEdJRCB3aXRob3V0CnByb2JsZW1zLgoKWW91IGNhbiBza2lwIHRoaXMgc3RlcCBmb3IgdGhlIHNjZW5hcmlvIDEgYW5kIHVzZSB0aGUgb3JpZ2luYWwgVUlEL0dJRApgMTAwMWAvYDEwMjRgCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkknbSB1c2luZyBkaWZmZXJlbnQgbnVtYmVycyB0byBtYWtlIGl0IGVhc2llciB0byByZWFkIGJ1dCBpdCBpcyBub3QKbmVjZXNzYXJ5LiBZb3UgY291bGQgdXNlIHRoZSBzYW1lIG51bWJlciBmb3IgdGhlIFVJRCBhbmQgdGhlIEdJRCB3aXRob3V0CnByb2JsZW1zLgoKWW91IGNhbiBza2lwIHRoaXMgc3RlcCBmb3IgdGhlIHNjZW5hcmlvIDEgYW5kIHVzZSB0aGUgb3JpZ2luYWwgVUlEL0dJRApgMTAwMWAvYDEwMjRgCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+I’m using different numbers to make it easier to read but it is not necessary. You could use the same number for the UID and the GID without problems.
+&lt;br /&gt;&lt;br /&gt;
+You can skip this step for the scenario 1 and use the original UID/GID &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1001&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;/&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1024&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;For example, let’s pick &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1201&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for the UID and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1224&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for the group.&lt;/p&gt;
+&lt;p&gt;We can check this running &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;grep&lt;/span&gt;&lt;/code&gt; and getting a 0 response which means that the id was not found (so it is not used)&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ grep -c &lt;span class="m"&gt;1201&lt;/span&gt; /etc/passwd
+&lt;span class="m"&gt;0&lt;/span&gt;
+&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ grep -c &lt;span class="m"&gt;1224&lt;/span&gt; /etc/group
+&lt;span class="m"&gt;0&lt;/span&gt;
+
+&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ grep -c &lt;span class="m"&gt;1201&lt;/span&gt; /etc/passwd
+&lt;span class="m"&gt;0&lt;/span&gt;
+&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ grep -c &lt;span class="m"&gt;1224&lt;/span&gt; /etc/group
+&lt;span class="m"&gt;0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;With a free UID/GID we need to create a group and an user with those ids&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ sudo groupadd -g &lt;span class="m"&gt;1224&lt;/span&gt; devel2
+&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ sudo useradd -s /bin/bash -u &lt;span class="m"&gt;1201&lt;/span&gt; -M -g &lt;span class="m"&gt;1224&lt;/span&gt; alice2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;These creates a group named &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;devel2&lt;/span&gt;&lt;/code&gt; with GID of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1224&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and an user named &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;alice2&lt;/span&gt;&lt;/code&gt; with UID of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;1201&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. &lt;em&gt;Yes, I’m not very creative with the names.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;-M&lt;/span&gt;&lt;/code&gt; says that you don’t want a home folder and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;-s&lt;/span&gt;&lt;/code&gt; sets the user’s shell to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;/bin/bash&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CllvdSBjYW4gc2tpcCB0aGlzIHN0ZXAgZm9yIHRoZSBzY2VuYXJpbyAxIGFzIHlvdSBjYW4gdXNlIGBhbGljZWAgYW5kCmBkZXZlbGAKbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CllvdSBjYW4gc2tpcCB0aGlzIHN0ZXAgZm9yIHRoZSBzY2VuYXJpbyAxIGFzIHlvdSBjYW4gdXNlIGBhbGljZWAgYW5kCmBkZXZlbGAKbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+You can skip this step for the scenario 1 as you can use &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;alice&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;devel&lt;/span&gt;&lt;/code&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Now we do the same in the &lt;em&gt;host&lt;/em&gt;&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ sudo groupadd -g &lt;span class="m"&gt;1224&lt;/span&gt; devel2
+&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ sudo useradd -s /bin/bash -u &lt;span class="m"&gt;1201&lt;/span&gt; -M -g &lt;span class="m"&gt;1224&lt;/span&gt; alice2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Finally change the ownership of the shared files running&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ sudo chown -R &lt;span class="m"&gt;1201&lt;/span&gt;:1224 /home/user/blog
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now before working with the files you need to log in as &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;alice2&lt;/span&gt;&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ sudo su alice2
+
+&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ sudo su alice2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This applies to both the host and container.&lt;/p&gt;
+&lt;p&gt;Once logged in it may be convenient to set your &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;HOME&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;(&lt;/span&gt;host&lt;span class="o"&gt;)&lt;/span&gt; $ &lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;HOME&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;/home/alice
+&lt;span class="o"&gt;(&lt;/span&gt;container&lt;span class="o"&gt;)&lt;/span&gt; $ &lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;HOME&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;/wd
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="why-a-simplest-chownchmod-does-not-work"&gt;Why a simplest &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;chown&lt;/span&gt;&lt;/code&gt;/&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;chmod&lt;/span&gt;&lt;/code&gt; does not work?&lt;/h2&gt;
+&lt;p&gt;On internet the solution to the &lt;em&gt;“permission problem”&lt;/em&gt; is to run &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;chmod&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;You run &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;chmod&lt;/span&gt;&lt;/code&gt; in the container to add a read-write-exec permissions ot &lt;em&gt;everyone&lt;/em&gt;. Indeed any user, from the host or container, will be able to work with those files.&lt;/p&gt;
+&lt;p&gt;But what happen if you add a new shared file? That will have the user ownership and default permissions and you will not be able to use it in the host/container.&lt;/p&gt;
+&lt;p&gt;Not a stable fix, and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="m"&gt;0777&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; looks suspicious.&lt;/p&gt;
+&lt;p&gt;Running &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;chown&lt;/span&gt;&lt;/code&gt; to change the ownership is even more messier because you may change and set the &lt;em&gt;“correct”&lt;/em&gt; user/group inside the container but you will be scrubbing the scenario in the host.&lt;/p&gt;
+&lt;p&gt;The ownership is not the problem. The permission are not the problem. Who to interpret the UID/GID &lt;strong&gt;is&lt;/strong&gt; the problem.&lt;/p&gt;
+&lt;h2 id="bonus-track-to-be-a-sudoer"&gt;(bonus track) To be a sudoer&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;$ sudo groupadd admin
+$ sudo echo &amp;#39;%admin  ALL=(ALL) NOPASSWD:ALL&amp;#39; &amp;gt; /etc/sudoers.d/admin
+$ sudo chmod 0400 /etc/sudoers.d/admin
+
+$ sudo usermod -aG admin alice2
+$ sudo usermod -aG sudo alice2&lt;/code&gt;&lt;/pre&gt;
+</content>
+    <link href="https://book-of-gehn.github.io/articles/2022/02/01/Fix-Ownership-of-Files-in-a-Mounted-Volume.html" rel="alternate" type="text/html" title="Fix Ownership of Files in a Mounted Volume"/>
+    <category term="docker" label="docker"/>
+    <published>2022-02-01T00:00:00+00:00</published>
+  </entry>
   <entry>
     <id>https://book-of-gehn.github.io/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html</id>
     <title>IPv4 Scan 2021 - TTL Boost (or reset)</title>
