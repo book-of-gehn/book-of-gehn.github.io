@@ -1,0 +1,185 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Hanoi File System</title>
+  <meta name="description" content="Hanoi File System">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/02/07/Hanoi-File-System.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Hanoi File System
+</h1>
+<p class="subtitle">
+February 7, 2022
+</p>
+<p>Yeup, why not implement the classic <a href="https://en.wikipedia.org/wiki/Tower_of_Hanoi">Tower of Hanoi</a> using folders as the towers and files as the discs?</p>
+<p>Using <a href="https://github.com/libfuse/libfuse">FUSE</a> we can implement a <em>file system</em> that can enforce the rules of the puzzle.</p>
+<ul>
+<li>each file would have a <em>size</em> that represent the disc’s size</li>
+<li>one can move a file from one folder to another if the file is the smallest of the files of both folders</li>
+</ul>
+<p>Sounds fun?<!--more--></p>
+<h2 id="code-overview">Code overview</h2>
+<p>Three FUSE hooks are required for this:</p>
+<ul>
+<li><code><span class="highlight-candombe-inline"><span class="n">getattr</span><span class="w"></span></span></code> to define which entries are files and which are folders</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">readdir</span><span class="w"></span></span></code> to list which entries are in which folder.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">rename</span><span class="w"></span></span></code> to enforce the rules of Tower of Hanoi.</li>
+</ul>
+<p>These plus some extra bits are implemented in <a href="https://github.com/eldipa/hanoifs/blob/master/hanoifs.c">hanoifs.c</a>.</p>
+<p>Behind scenes, the logic of the game is handled by <a href="https://github.com/eldipa/hanoifs/blob/master/hanoi.c">hanoi.c</a>.</p>
+<p>To keep the code simple, each tower (peg) is represented by a bit stack: a bit vector with a LIFO discipline, coded at <a href="https://github.com/eldipa/hanoifs/blob/master/bitstack.c">bitstack.c</a>.</p>
+<h2 id="hanoi-fs">Hanoi FS</h2>
+<p>Once compiled, you can mount the puzzle running <code><span class="highlight-candombe-inline"><span class="n">hanoifs</span><span class="w"></span></span></code></p>
+<div class="highlight-candombe"><pre><span></span><code>$ ./hanoifs mnt/
+</code></pre></div>
+
+<p>Within the mounted file system the folders represent the <em>towers</em> of Hanoi</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ls -lah mnt/
+total <span class="m">4</span>.0K
+drwxr-xr-x <span class="m">5</span> root root    <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> .
+drwxr-xr-x &lt;...&gt; ..
+drwxr-xr-x <span class="m">2</span> root root    <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> A
+drwxr-xr-x <span class="m">2</span> root root    <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> B
+drwxr-xr-x <span class="m">2</span> root root    <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> C
+</code></pre></div>
+
+<p>Inside each folder there are the files which represent the <em>discs</em> of the game.</p>
+<p>Initially all the files (discs) are in the first folder (tower).</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ls -lah mnt/A
+mnt/A:
+total <span class="m">0</span>
+drwxr-xr-x <span class="m">2</span> root root <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> .
+drwxr-xr-x <span class="m">5</span> root root <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> ..
+-r--r--r-- <span class="m">1</span> root root <span class="m">1</span> Jan  <span class="m">1</span>  <span class="m">1970</span> <span class="m">0</span>
+-r--r--r-- <span class="m">1</span> root root <span class="m">2</span> Jan  <span class="m">1</span>  <span class="m">1970</span> <span class="m">1</span>
+-r--r--r-- <span class="m">1</span> root root <span class="m">4</span> Jan  <span class="m">1</span>  <span class="m">1970</span> <span class="m">2</span>
+</code></pre></div>
+
+<p>The traditional <code><span class="highlight-candombe-inline"><span class="n">mv</span><span class="w"></span></span></code> is used to move the discs. Under the hood any program that issue the <code><span class="highlight-candombe-inline"><span class="n">rename</span><span class="w"></span></span></code> syscall will be allowed.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mv mnt/A/0 mnt/C
+</code></pre></div>
+
+<p>Not all the movements are possible however; the movements are restricted following the rules of the puzzle.</p>
+<p>You cannot move a disc that is not in the top of its tower (it is not the smallest file); you cannot move a disc to a tower on top of a disc smaller either.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mv mnt/A/2 mnt/B
+mv: cannot move <span class="s1">&#39;mnt/A/2&#39;</span> to <span class="s1">&#39;mnt/B/2&#39;</span>: Permission denied
+
+$ mv mnt/A/1 mnt/C
+mv: cannot move <span class="s1">&#39;mnt/A/1&#39;</span> to <span class="s1">&#39;mnt/C/1&#39;</span>: Permission denied
+</code></pre></div>
+
+<h2 id="puzzle-solution">Puzzle solution</h2>
+<!--
+$ mv mnt/C/0 mnt/A/0
+-->
+<p>The goal of the Hanoi Towers is to move all the discs to the latest tower (the latest folder, <code><span class="highlight-candombe-inline"><span class="n">C</span><span class="w"></span></span></code> in our case).</p>
+<p>Here is the complete solution:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mv mnt/A/0 mnt/C
+$ mv mnt/A/1 mnt/B
+$ mv mnt/C/0 mnt/B
+$ mv mnt/A/2 mnt/C
+$ mv mnt/B/0 mnt/A
+$ mv mnt/B/1 mnt/C
+$ mv mnt/A/0 mnt/C
+</code></pre></div>
+
+<p>Once completed, a special file will appear at the root:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ls mnt/           <span class="c1"># byexample: +norm-ws</span>
+ A   B   C  <span class="s1">&#39;you win&#39;</span>
+</code></pre></div>
+
+<!--
+$ fusermount -u mnt     # byexample: -skip +pass
+-->
+</article>
+<span class="print-footer">Hanoi File System - February 7, 2022 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

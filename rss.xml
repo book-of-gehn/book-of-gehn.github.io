@@ -8,7 +8,97 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 02 Feb 2022 04:53:59 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 08 Feb 2022 02:09:00 +0000</lastBuildDate>
+    <item>
+      <title>Hanoi File System</title>
+      <link>https://book-of-gehn.github.io/articles/2022/02/07/Hanoi-File-System.html</link>
+      <description>&lt;p&gt;Yeup, why not implement the classic &lt;a href="https://en.wikipedia.org/wiki/Tower_of_Hanoi"&gt;Tower of Hanoi&lt;/a&gt; using folders as the towers and files as the discs?&lt;/p&gt;
+&lt;p&gt;Using &lt;a href="https://github.com/libfuse/libfuse"&gt;FUSE&lt;/a&gt; we can implement a &lt;em&gt;file system&lt;/em&gt; that can enforce the rules of the puzzle.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;each file would have a &lt;em&gt;size&lt;/em&gt; that represent the disc’s size&lt;/li&gt;
+&lt;li&gt;one can move a file from one folder to another if the file is the smallest of the files of both folders&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Sounds fun?&lt;!--more--&gt;&lt;/p&gt;
+&lt;h2 id="code-overview"&gt;Code overview&lt;/h2&gt;
+&lt;p&gt;Three FUSE hooks are required for this:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;getattr&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to define which entries are files and which are folders&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;readdir&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to list which entries are in which folder.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;rename&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to enforce the rules of Tower of Hanoi.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;These plus some extra bits are implemented in &lt;a href="https://github.com/eldipa/hanoifs/blob/master/hanoifs.c"&gt;hanoifs.c&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Behind scenes, the logic of the game is handled by &lt;a href="https://github.com/eldipa/hanoifs/blob/master/hanoi.c"&gt;hanoi.c&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;To keep the code simple, each tower (peg) is represented by a bit stack: a bit vector with a LIFO discipline, coded at &lt;a href="https://github.com/eldipa/hanoifs/blob/master/bitstack.c"&gt;bitstack.c&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="hanoi-fs"&gt;Hanoi FS&lt;/h2&gt;
+&lt;p&gt;Once compiled, you can mount the puzzle running &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;hanoifs&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ./hanoifs mnt/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Within the mounted file system the folders represent the &lt;em&gt;towers&lt;/em&gt; of Hanoi&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ls -lah mnt/
+total &lt;span class="m"&gt;4&lt;/span&gt;.0K
+drwxr-xr-x &lt;span class="m"&gt;5&lt;/span&gt; root root    &lt;span class="m"&gt;0&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; .
+drwxr-xr-x &amp;lt;...&amp;gt; ..
+drwxr-xr-x &lt;span class="m"&gt;2&lt;/span&gt; root root    &lt;span class="m"&gt;0&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; A
+drwxr-xr-x &lt;span class="m"&gt;2&lt;/span&gt; root root    &lt;span class="m"&gt;0&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; B
+drwxr-xr-x &lt;span class="m"&gt;2&lt;/span&gt; root root    &lt;span class="m"&gt;0&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; C
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Inside each folder there are the files which represent the &lt;em&gt;discs&lt;/em&gt; of the game.&lt;/p&gt;
+&lt;p&gt;Initially all the files (discs) are in the first folder (tower).&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ls -lah mnt/A
+mnt/A:
+total &lt;span class="m"&gt;0&lt;/span&gt;
+drwxr-xr-x &lt;span class="m"&gt;2&lt;/span&gt; root root &lt;span class="m"&gt;0&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; .
+drwxr-xr-x &lt;span class="m"&gt;5&lt;/span&gt; root root &lt;span class="m"&gt;0&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; ..
+-r--r--r-- &lt;span class="m"&gt;1&lt;/span&gt; root root &lt;span class="m"&gt;1&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; &lt;span class="m"&gt;0&lt;/span&gt;
+-r--r--r-- &lt;span class="m"&gt;1&lt;/span&gt; root root &lt;span class="m"&gt;2&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;
+-r--r--r-- &lt;span class="m"&gt;1&lt;/span&gt; root root &lt;span class="m"&gt;4&lt;/span&gt; Jan  &lt;span class="m"&gt;1&lt;/span&gt;  &lt;span class="m"&gt;1970&lt;/span&gt; &lt;span class="m"&gt;2&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The traditional &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;mv&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is used to move the discs. Under the hood any program that issue the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;rename&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; syscall will be allowed.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ mv mnt/A/0 mnt/C
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Not all the movements are possible however; the movements are restricted following the rules of the puzzle.&lt;/p&gt;
+&lt;p&gt;You cannot move a disc that is not in the top of its tower (it is not the smallest file); you cannot move a disc to a tower on top of a disc smaller either.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ mv mnt/A/2 mnt/B
+mv: cannot move &lt;span class="s1"&gt;&amp;#39;mnt/A/2&amp;#39;&lt;/span&gt; to &lt;span class="s1"&gt;&amp;#39;mnt/B/2&amp;#39;&lt;/span&gt;: Permission denied
+
+$ mv mnt/A/1 mnt/C
+mv: cannot move &lt;span class="s1"&gt;&amp;#39;mnt/A/1&amp;#39;&lt;/span&gt; to &lt;span class="s1"&gt;&amp;#39;mnt/C/1&amp;#39;&lt;/span&gt;: Permission denied
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="puzzle-solution"&gt;Puzzle solution&lt;/h2&gt;
+&lt;!--
+$ mv mnt/C/0 mnt/A/0
+--&gt;
+&lt;p&gt;The goal of the Hanoi Towers is to move all the discs to the latest tower (the latest folder, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in our case).&lt;/p&gt;
+&lt;p&gt;Here is the complete solution:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ mv mnt/A/0 mnt/C
+$ mv mnt/A/1 mnt/B
+$ mv mnt/C/0 mnt/B
+$ mv mnt/A/2 mnt/C
+$ mv mnt/B/0 mnt/A
+$ mv mnt/B/1 mnt/C
+$ mv mnt/A/0 mnt/C
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Once completed, a special file will appear at the root:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ls mnt/           &lt;span class="c1"&gt;# byexample: +norm-ws&lt;/span&gt;
+ A   B   C  &lt;span class="s1"&gt;&amp;#39;you win&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;!--
+$ fusermount -u mnt     # byexample: -skip +pass
+--&gt;
+</description>
+      <guid isPermaLink="false">https://book-of-gehn.github.io/articles/2022/02/07/Hanoi-File-System.html</guid>
+      <category>kernel</category>
+      <category>file system</category>
+      <category>fuse</category>
+      <pubDate>Mon, 07 Feb 2022 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>Fix Ownership of Files in a Mounted Volume</title>
       <link>https://book-of-gehn.github.io/articles/2022/02/01/Fix-Ownership-of-Files-in-a-Mounted-Volume.html</link>
