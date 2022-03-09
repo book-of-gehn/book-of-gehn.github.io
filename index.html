@@ -83,6 +83,57 @@
 </h1>
 <span class="index-single-post">
 <hr class="slender post-layout">
+<a href="https://book-of-gehn.github.io/articles/2022/03/06/Multiprocessing-Spawn-of-Dynamically-Imported-Code.html">
+<h2 class="larger">
+Multiprocessing Spawn of Dynamically Imported Code
+</h2>
+</a> <br><span class="smaller">March 6, 2022</span> <br/>
+<div>
+<p>The following snippet loads any Python module in the <code>./plugins/</code> folder.</p>
+<p>This is the Python 3.x way to load code dynamically.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">load_modules</span><span class="p">():</span>
+<span class="o">...</span>     <span class="n">dirnames</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;plugins/&quot;</span><span class="p">]</span>
+<span class="o">...</span>     <span class="n">loaded</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># For each plugin folder, see which Python files are there</span>
+<span class="o">...</span>     <span class="c1"># and load them</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">importer</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">is_pkg</span> <span class="ow">in</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">iter_modules</span><span class="p">(</span><span class="n">dirnames</span><span class="p">):</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="c1"># Find and load the Python module</span>
+<span class="o">...</span>         <span class="n">spec</span> <span class="o">=</span> <span class="n">importer</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">loaded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="c1"># Add the loaded module to sys.module so it can be</span>
+<span class="o">...</span>         <span class="c1"># found by pickle</span>
+<span class="o">...</span>         <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">loaded</span>
+</code></pre></div>
+
+<p>The loaded modules work as any other Python module. In a plugin system you typically will lookup for a specific function or a class that will serve as entry point or hooks for the plugin.</p>
+<p>For example, in <a href="https://byexamples.github.io/byexample/contrib/how-to-support-new-finders-and-languages">byexample</a> the plugins must define classes that inherit from <code>ExampleFinder</code>, <code>ExampleParser</code>, <code>ExampleRunner</code> or <code>Concern</code>. These extend <code>byexample</code> functionality to find, parse and run examples in different languages and hook –via <code>Concern</code>– most of the execution logic.</p>
+<p>Imagine now that one of the plugins implements a function <code>exec_bg</code> that needs to be executed in background, in a <strong>separated Python process</strong>.</p>
+<p>We could do something like:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">loaded</span> <span class="o">=</span> <span class="n">load_modules</span><span class="p">()</span> <span class="c1"># loading the plugins</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mod</span> <span class="o">=</span> <span class="n">loaded</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># pick the first, this is just an example</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;exec_bg&#39;</span><span class="p">)</span>  <span class="c1"># lookup plugin&#39;s exec_bg function</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>    <span class="c1"># run exec_bg in a separated process</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</code></pre></div>
+
+<p>This is plain simple use of <code>multiprocessing</code>…. and it will <strong>not</strong> work.</p>
+<p>Well, it <em>will</em> work in Linux but not in MacOS or Windows.</p>
+<p>In this post I will show why it will <strong>not</strong> work for dynamically loaded code (like from a plugin) and how to fix it.</p>
+</div>
+<p></span></p>
+<span class="index-single-post">
+<hr class="slender post-layout">
 <a href="https://book-of-gehn.github.io/articles/2022/02/07/Hanoi-File-System.html">
 <h2 class="larger">
 Hanoi File System

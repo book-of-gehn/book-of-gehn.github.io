@@ -1,0 +1,267 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Multiprocessing Spawn of Dynamically Imported Code</title>
+  <meta name="description" content="Multiprocessing Spawn of Dynamically Imported Code">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/03/06/Multiprocessing-Spawn-of-Dynamically-Imported-Code.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Multiprocessing Spawn of Dynamically Imported Code
+</h1>
+<p class="subtitle">
+March 6, 2022
+</p>
+<p>The following snippet loads any Python module in the <code><span class="highlight-candombe-inline"><span class="o">./</span><span class="n">plugins</span><span class="o">/</span></span></code> folder.</p>
+<p>This is the Python 3.x way to load code dynamically.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">load_modules</span><span class="p">():</span>
+<span class="o">...</span>     <span class="n">dirnames</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;plugins/&quot;</span><span class="p">]</span>
+<span class="o">...</span>     <span class="n">loaded</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># For each plugin folder, see which Python files are there</span>
+<span class="o">...</span>     <span class="c1"># and load them</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">importer</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">is_pkg</span> <span class="ow">in</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">iter_modules</span><span class="p">(</span><span class="n">dirnames</span><span class="p">):</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="c1"># Find and load the Python module</span>
+<span class="o">...</span>         <span class="n">spec</span> <span class="o">=</span> <span class="n">importer</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+<span class="o">...</span>         <span class="n">loaded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>         <span class="c1"># Add the loaded module to sys.module so it can be</span>
+<span class="o">...</span>         <span class="c1"># found by pickle</span>
+<span class="o">...</span>         <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">loaded</span>
+</code></pre></div>
+
+<p>The loaded modules work as any other Python module. In a plugin system you typically will lookup for a specific function or a class that will serve as entry point or hooks for the plugin.</p>
+<p>For example, in <a href="https://byexamples.github.io/byexample/contrib/how-to-support-new-finders-and-languages">byexample</a> the plugins must define classes that inherit from <code><span class="highlight-candombe-inline"><span class="n">ExampleFinder</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">ExampleParser</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">ExampleRunner</span></span></code> or <code><span class="highlight-candombe-inline"><span class="n">Concern</span></span></code>. These extend <code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code> functionality to find, parse and run examples in different languages and hook –via <code><span class="highlight-candombe-inline"><span class="n">Concern</span></span></code>– most of the execution logic.</p>
+<p>Imagine now that one of the plugins implements a function <code><span class="highlight-candombe-inline"><span class="n">exec_bg</span></span></code> that needs to be executed in background, in a <strong>separated Python process</strong>.</p>
+<p>We could do something like:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">loaded</span> <span class="o">=</span> <span class="n">load_modules</span><span class="p">()</span> <span class="c1"># loading the plugins</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mod</span> <span class="o">=</span> <span class="n">loaded</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># pick the first, this is just an example</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;exec_bg&#39;</span><span class="p">)</span>  <span class="c1"># lookup plugin&#39;s exec_bg function</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>    <span class="c1"># run exec_bg in a separated process</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</code></pre></div>
+
+<p>This is plain simple use of <code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span></span></code>…. and it will <strong>not</strong> work.</p>
+<p>Well, it <em>will</em> work in Linux but not in MacOS or Windows.</p>
+<p>In this post I will show why it will <strong>not</strong> work for dynamically loaded code (like from a plugin) and how to fix it.<!--more--></p>
+<h2 id="multiprocessings-start-method"><code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span></span></code>’s start method</h2>
+<p>To gain truly parallelism in Python you need to use <code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span></span></code>.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span></span></code> takes a target callable and an optional list of arguments and runs it in a separated Python process.</p>
+<p><label for='CkFjdHVhbGx5IHRoZXJlIGlzIGEgdGhpcmQgbWVjaGFuaXNtLCBgZm9ya3NlcnZlcmAsIGJ1dCBpdCB3b3JrcwpzaW1pbGFyIGFuZCBzdWZmZXJzIGZyb20gdGhlIHNhbWUgaXNzdWVzIHRoYXQgYHNwYXduYC4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkFjdHVhbGx5IHRoZXJlIGlzIGEgdGhpcmQgbWVjaGFuaXNtLCBgZm9ya3NlcnZlcmAsIGJ1dCBpdCB3b3JrcwpzaW1pbGFyIGFuZCBzdWZmZXJzIGZyb20gdGhlIHNhbWUgaXNzdWVzIHRoYXQgYHNwYXduYC4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+Actually there is a third mechanism, <code><span class="highlight-candombe-inline"><span class="n">forkserver</span></span></code>, but it works similar and suffers from the same issues that <code><span class="highlight-candombe-inline"><span class="n">spawn</span></span></code>.
+</span></p>
+<p>There are two mechanisms to have this separated Python process running: you can <code><span class="highlight-candombe-inline"><span class="n">fork</span></span></code> the main process getting a copy of the Python process or you can <code><span class="highlight-candombe-inline"><span class="n">spawn</span></span></code> a <strong>fresh new</strong> Python process.</p>
+<p>This is the so called <em>start method</em> for <code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span></span></code>.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">fork</span></span></code> is the default in Linux and it is the fastest. When the child process gets alive, it is immediately ready to execute the target callable: it has access to all the global state of the parent (a copy), it has access to the target code to call and to its arguments.</p>
+<p><em>Ready to rumble.</em></p>
+<p>On the other hand <code><span class="highlight-candombe-inline"><span class="n">spawn</span></span></code> starts a <strong>fresh new</strong> Python server that has no idea of the state or the code loaded in the parent process.</p>
+<p>The parent needs to share to the child server the target callable and its arguments via a pipe and for the serialization it uses <code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code>.</p>
+<p><label for='CldoaWxlIHRlY2huaWNhbGx5IGBmb3JrYCBzaG91bGQgd29yayBmaW5lIGluIG11bHRpdGhyZWFkZWQgYXBwcywgc29tZQp2ZXJ5IGNvbW1vbiBtdWx0aXRocmVhZGVkIGxpYnMgaW4gTWFjT1MgZG8gbm90IHdvcmsgd2VsbC4KVGhpcyBicm91Z2h0IFtzb21lIGhlYWRhY2hlc10oaHR0cHM6Ly9idWdzLnB5dGhvbi5vcmcvaXNzdWUzMzcyNSkKaW4gdGhlIHBhc3QgYW5kIHNpbmNlIFB5dGhvbiAzLjggYHNwYXduYCBpcyB0aGUgZGVmYXVsdCBpbiBNYWNPUy4KCkluIExpbnV4IHRoZSBtb3N0IGNvbW1vbiBtdWx0aXRocmVhZGVkIGxpYnMgYXJlIHByZXBhcmVkIGZvciBgZm9ya2AKc28gdGhlIHJpc2sgaXMgbWluaW11bSAoSSB3b3VsZCBsaWtlIHRvIHNheSB6ZXJvIGJ1dCwgeW91IGtub3csIC4uLikKbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldoaWxlIHRlY2huaWNhbGx5IGBmb3JrYCBzaG91bGQgd29yayBmaW5lIGluIG11bHRpdGhyZWFkZWQgYXBwcywgc29tZQp2ZXJ5IGNvbW1vbiBtdWx0aXRocmVhZGVkIGxpYnMgaW4gTWFjT1MgZG8gbm90IHdvcmsgd2VsbC4KVGhpcyBicm91Z2h0IFtzb21lIGhlYWRhY2hlc10oaHR0cHM6Ly9idWdzLnB5dGhvbi5vcmcvaXNzdWUzMzcyNSkKaW4gdGhlIHBhc3QgYW5kIHNpbmNlIFB5dGhvbiAzLjggYHNwYXduYCBpcyB0aGUgZGVmYXVsdCBpbiBNYWNPUy4KCkluIExpbnV4IHRoZSBtb3N0IGNvbW1vbiBtdWx0aXRocmVhZGVkIGxpYnMgYXJlIHByZXBhcmVkIGZvciBgZm9ya2AKc28gdGhlIHJpc2sgaXMgbWluaW11bSAoSSB3b3VsZCBsaWtlIHRvIHNheSB6ZXJvIGJ1dCwgeW91IGtub3csIC4uLikKbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+While technically <code><span class="highlight-candombe-inline"><span class="n">fork</span></span></code> should work fine in multithreaded apps, some very common multithreaded libs in MacOS do not work well. This brought <a href="https://bugs.python.org/issue33725">some headaches</a> in the past and since Python 3.8 <code><span class="highlight-candombe-inline"><span class="n">spawn</span></span></code> is the default in MacOS.
+<br /><br />
+In Linux the most common multithreaded libs are prepared for <code><span class="highlight-candombe-inline"><span class="n">fork</span></span></code> so the risk is minimum (I would like to say zero but, you know, …)
+</span></p>
+<p><code><span class="highlight-candombe-inline"><span class="n">spawn</span></span></code> is slightly slower than <code><span class="highlight-candombe-inline"><span class="n">fork</span></span></code> but it is thread-safe and the default in MacOS and Windows.</p>
+<h2 id="pickle-ing-a-callable"><code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code>-ing a callable</h2>
+<p>So, what does it mean to <code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code> a callable?</p>
+<p>One could think that the serialization is the dump of the bytecode of the callable but <code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code> is less sophisticated.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">a_callable</span><span class="p">)</span></span></code> just dumps enough information so <code><span class="highlight-candombe-inline"><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">()</span></span></code> can <strong>load the code</strong> again.</p>
+<p>Here are a few examples:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">pickle</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">re</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">)</span>
+<span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x80\x04\x95\x10\x00\x00\x00\x00\x00\x00\x00\x8c\x02</span><span class="s1">re</span><span class="se">\x94\x8c\x05</span><span class="s1">match</span><span class="se">\x94\x93\x94</span><span class="s1">.&#39;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">match</span><span class="p">)</span>
+<span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x80\x04\x95</span><span class="s1">?</span><span class="se">\x00\x00\x00\x00\x00\x00\x00\x8c\x08</span><span class="s1">builtins</span><span class="se">\x94\x8c\x07</span><span class="s1">getattr</span><span class="se">\x94\x93\x94\x8c\x02</span><span class="s1">re</span><span class="se">\x94\x8c\x08</span><span class="s1">_compile</span><span class="se">\x94\x93\x94\x8c\x00\x94</span><span class="s1">K </span><span class="se">\x86\x94</span><span class="s1">R</span><span class="se">\x94\x8c\x05</span><span class="s1">match</span><span class="se">\x94\x86\x94</span><span class="s1">R</span><span class="se">\x94</span><span class="s1">.&#39;</span>
+</code></pre></div>
+
+<p>There is no need to go into the details, we can use the intuition here.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">re</span><span class="o">.</span><span class="n">match</span></span></code> is a function so the only thing that we need to reload it is where to find it. In the output of <code><span class="highlight-candombe-inline"><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span></span></code> we can see the strings <code><span class="highlight-candombe-inline"><span class="n">re</span></span></code> and <code><span class="highlight-candombe-inline"><span class="k">match</span></span></code>.</p>
+<p>For <code><span class="highlight-candombe-inline"><span class="n">c</span><span class="o">.</span><span class="n">match</span></span></code> is different. This is a <em>bound method</em>, so it is more complex and involves modules (<code><span class="highlight-candombe-inline"><span class="n">builtins</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">re</span></span></code>) and functions/methods (<code><span class="highlight-candombe-inline"><span class="nb">getattr</span></span></code>, <code><span class="highlight-candombe-inline"><span class="k">match</span></span></code>) and some more bits.</p>
+<p>So, what happen on <code><span class="highlight-candombe-inline"><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">()</span></span></code> ?</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code> imports any necessary module (<code><span class="highlight-candombe-inline"><span class="n">builtins</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">re</span></span></code>) and from there loads the code.</p>
+<p><em>It is like a recipe of how to (re)import the callable.</em></p>
+<p><label for='CmBwaWNrbGVgIGlzIG5vdCB0aGUgb25seSB3YXkgdG8gc2VyaWFsaXplIHRoaW5ncy4KW2RpbGxdKGh0dHBzOi8vcHlwaS5vcmcvcHJvamVjdC9kaWxsLykgZXh0ZW5kcyBgcGlja2xlYCBhbmQgc3VwcG9ydHMKbXVjaCBtb3JlIHRoaW5ncyBpbmNsdWRpbmcgYGxhbWJkYWAgZnVuY3Rpb25zLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CmBwaWNrbGVgIGlzIG5vdCB0aGUgb25seSB3YXkgdG8gc2VyaWFsaXplIHRoaW5ncy4KW2RpbGxdKGh0dHBzOi8vcHlwaS5vcmcvcHJvamVjdC9kaWxsLykgZXh0ZW5kcyBgcGlja2xlYCBhbmQgc3VwcG9ydHMKbXVjaCBtb3JlIHRoaW5ncyBpbmNsdWRpbmcgYGxhbWJkYWAgZnVuY3Rpb25zLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+<code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code> is not the only way to serialize things. <a href="https://pypi.org/project/dill/">dill</a> extends <code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code> and supports much more things including <code><span class="highlight-candombe-inline"><span class="k">lambda</span></span></code> functions.
+</span></p>
+<p>Not all the callable can be serialized however: <code><span class="highlight-candombe-inline"><span class="k">lambda</span></span></code> for example cannot be imported from a module so they cannot be serialized.</p>
+<h2 id="not-such-module">Not such module</h2>
+<p>Now why the following fails may be more obvious. Let’s recap:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">loaded</span> <span class="o">=</span> <span class="n">load_modules</span><span class="p">()</span> <span class="c1"># loading the plugins</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mod</span> <span class="o">=</span> <span class="n">loaded</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># pick the first, this is just an example</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;exec_bg&#39;</span><span class="p">)</span>  <span class="c1"># lookup plugin&#39;s exec_bg function</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>    <span class="c1"># run exec_bg in a separated process</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</code></pre></div>
+
+<p>The child process, <em>spawned</em> by the parent, tries to unpickle the <code><span class="highlight-candombe-inline"><span class="n">target</span></span></code> function and for such it will try to import the module <code><span class="highlight-candombe-inline"><span class="n">mod</span></span></code>.</p>
+<p>The module is not loaded yet and not present in <code><span class="highlight-candombe-inline"><span class="n">sys</span><span class="o">.</span><span class="n">modules</span></span></code> in the child process because it is a fresh Python process.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">()</span></span></code> does a normal <code><span class="highlight-candombe-inline"><span class="kn">import</span></span></code> as usual but the module <code><span class="highlight-candombe-inline"><span class="n">mod</span></span></code> will <em>not be found</em>, it is <strong>not</strong> a module in the standard path (<code><span class="highlight-candombe-inline"><span class="n">sys</span><span class="o">.</span><span class="n">path</span></span></code>) but a module loaded from an arbitrary folder (<code><span class="highlight-candombe-inline"><span class="o">./</span><span class="n">plugins</span><span class="o">/</span></span></code>)</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">()</span></span></code> just cannot know that!</p>
+<p>That’s why you cannot use <code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span></span></code> naively with dynamically imported code: the child process has no idea how to load it!</p>
+<p>This <a href="https://github.com/byexamples/byexample/issues/220">issue</a> hit <code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code> when a third-party plugin tried to run in a subprocess part of its code in MacOS.</p>
+<p><label for='CldlbGwsIGl0ICppcyogcG9zc2libGUgdG8gdHJpZ2dlciBpdCBpbiBMaW51eCwgeW91IGp1c3QgbmVlZCB0byBjaGFuZ2UKdGhlIHN0YXJ0IG1ldGhvZCBvZiBgbXVsdGlwcm9jZXNzaW5nYCBjYWxsaW5nIGBzZXRfc3RhcnRfbWV0aG9kKClgIG9yCmBnZXRfY29udGV4dCgpYC4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldlbGwsIGl0ICppcyogcG9zc2libGUgdG8gdHJpZ2dlciBpdCBpbiBMaW51eCwgeW91IGp1c3QgbmVlZCB0byBjaGFuZ2UKdGhlIHN0YXJ0IG1ldGhvZCBvZiBgbXVsdGlwcm9jZXNzaW5nYCBjYWxsaW5nIGBzZXRfc3RhcnRfbWV0aG9kKClgIG9yCmBnZXRfY29udGV4dCgpYC4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+Well, it <em>is</em> possible to trigger it in Linux, you just need to change the start method of <code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span></span></code> calling <code><span class="highlight-candombe-inline"><span class="n">set_start_method</span><span class="p">()</span></span></code> or <code><span class="highlight-candombe-inline"><span class="n">get_context</span><span class="p">()</span></span></code>.
+</span></p>
+<p>In Linux, with <code><span class="highlight-candombe-inline"><span class="n">fork</span></span></code> being the default, no <code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code> is needed and the bug was never triggered.</p>
+<h2 id="the-fix">The fix</h2>
+<p>What we need is to (re)load all the dynamically loaded modules in the child process <strong>before</strong> the <code><span class="highlight-candombe-inline"><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">()</span></span></code> takes place.</p>
+<p>Instead of calling <code><span class="highlight-candombe-inline"><span class="n">target</span></span></code> on the child directly, we call a helper <code><span class="highlight-candombe-inline"><span class="n">trampoline</span></span></code> that does the bootstrap, loads the modules, unpickles the real <code><span class="highlight-candombe-inline"><span class="n">target</span></span></code> and calls it.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">loaded</span> <span class="o">=</span> <span class="n">load_modules</span><span class="p">()</span> <span class="c1"># loading the plugins</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mod</span> <span class="o">=</span> <span class="n">loaded</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># pick the first, this is just an example</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">trampoline</span><span class="p">(</span><span class="n">serialized_func</span><span class="p">):</span>
+<span class="o">...</span>     <span class="c1"># All of this happens in the *child* process</span>
+<span class="o">...</span>     <span class="c1"># We reload the modules (and possible we do any bootstrapping</span>
+<span class="o">...</span>     <span class="c1"># needed)</span>
+<span class="o">...</span>     <span class="n">loaded</span> <span class="o">=</span> <span class="n">load_modules</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># Now this pickle.loads() shouldn&#39;t fail</span>
+<span class="o">...</span>     <span class="n">target</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">serialized_func</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">target</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># We pickle the target ourselves so we can control *when*</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># it is unpickled later.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;exec_bg&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">serialized_func</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">trampoline</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">serialized_func</span><span class="p">,))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">proc</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</code></pre></div>
+
+<h3 id="forkingpickler-a-detail"><code><span class="highlight-candombe-inline"><span class="n">ForkingPickler</span></span></code>: a detail</h3>
+<p>To be more precise, <code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span></span></code> uses a slightly improved <code><span class="highlight-candombe-inline"><span class="n">pickle</span></span></code> implemented in <code><span class="highlight-candombe-inline"><span class="n">multiprocessing</span><span class="o">.</span><span class="n">reduction</span><span class="o">.</span><span class="n">ForkingPickler</span></span></code>.</p>
+<p>We should use it too to keep the same behavior.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">trampoline</span><span class="p">(</span><span class="n">serialized_func</span><span class="p">):</span>
+<span class="o">...</span>     <span class="c1"># .....</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">fpickler</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">reduction</span><span class="o">.</span><span class="n">ForkingPickler</span>
+<span class="o">...</span>     <span class="n">target</span> <span class="o">=</span> <span class="n">fpickler</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">serialized_func</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">target</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">fpickler</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">reduction</span><span class="o">.</span><span class="n">ForkingPickler</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;exec_bg&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">serialized_func</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">fpickler</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># ....</span>
+</code></pre></div>
+
+</article>
+<span class="print-footer">Multiprocessing Spawn of Dynamically Imported Code - March 6, 2022 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>
