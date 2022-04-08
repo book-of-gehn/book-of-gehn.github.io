@@ -100,29 +100,29 @@ July 25, 2019
 <p><figure><figcaption><span markdown='1'>
 <pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
-<object  class='' align='middle' data='/img/regex/label.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/label.svg' type='image/svg+xml'></object></figure></p>
 <p>A NFA allows the use of <em>epsilon</em> transitions or \(\epsilon\)-transitions for short.</p>
 <p>A NFA moves from one state to another through a \(\epsilon\)-transition <em>without</em> reading any character: it represents the empty string match.</p>
 <p><figure><figcaption><span markdown='1'>
 We are going to drop the label in some cases for clarity in the following diagrams.
 </span></figcaption>
-<object  class='' align='middle' data='/img/regex/epsilon.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/epsilon.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="optional-match">Optional match</h2>
 <p>We this two simple definitions we can build an <em>optional match</em> represented in regex syntax as <code>a?</code></p>
 <p><figure><figcaption><span markdown='1'>
 <pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
-<object  class='' align='middle' data='/img/regex/optional.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/optional.svg' type='image/svg+xml'></object></figure></p>
 <p>The optional part can be as complex as we want like another NFA, no necessary must be a simple <em>literal</em>.</p>
 <p><figure><figcaption><span markdown='1'>
 We represent any arbitrary complex construction as state machine (\(sm_1\)) defined elsewhere. We plug it using \(\epsilon\)-transitions and we make it <em>optional</em> using a third \(\epsilon\)-transition to <em>bypass</em> \(sm_1\).
 </span></figcaption>
-<object  class='' align='middle' data='/img/regex/sm_optional.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/sm_optional.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="concatenation-and-repetition-of-nfas">Concatenation and repetition of NFAs</h2>
-<p><label for='PG9iamVjdCAgY2xhc3M9JycgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9yZWdleC9jb25jYXQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5Db25jYXRlbmF0aW9uIG9mIHR3byBzdGF0ZSBtYWNoaW5lcyBgc21fMWB7Lm1hdGhqYXh9IGFuZApgc21fMmB7Lm1hdGhqYXh9IChgYGFiYGAgaW4gcmVnZXggc3ludGF4KS5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9JycgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9yZWdleC9jb25jYXQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5Db25jYXRlbmF0aW9uIG9mIHR3byBzdGF0ZSBtYWNoaW5lcyBgc21fMWB7Lm1hdGhqYXh9IGFuZApgc21fMmB7Lm1hdGhqYXh9IChgYGFiYGAgaW4gcmVnZXggc3ludGF4KS5tYXJnaW4=' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3JlZ2V4L2NvbmNhdC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PkNvbmNhdGVuYXRpb24gb2YgdHdvIHN0YXRlIG1hY2hpbmVzIGBzbV8xYHsubWF0aGpheH0gYW5kCmBzbV8yYHsubWF0aGpheH0gKGBgYWJgYCBpbiByZWdleCBzeW50YXgpLm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3JlZ2V4L2NvbmNhdC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PkNvbmNhdGVuYXRpb24gb2YgdHdvIHN0YXRlIG1hY2hpbmVzIGBzbV8xYHsubWF0aGpheH0gYW5kCmBzbV8yYHsubWF0aGpheH0gKGBgYWJgYCBpbiByZWdleCBzeW50YXgpLm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<object  class='' align='middle' data='/img/regex/concat.svg' type='image/svg+xml'></object>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/concat.svg' type='image/svg+xml'></object>
 Concatenation of two state machines \(sm_1\) and \(sm_2\) (<code>ab</code> in regex syntax).
 </span></p>
 <p>Two or more NFAs can be concatenated to match a <em>sequence</em> of submatches being linked one to the other using \(\epsilon\)-transitions.</p>
@@ -133,10 +133,10 @@ Concatenation of two state machines \(sm_1\) and \(sm_2\) (<code>ab</code> in re
 This is made obvious in the diagrams: \(sm_1\) cannot link to itself. Underwood we will have three \(sm_1\) identical objects.
 </span></p>
 <p>As a extension, a NFA can be <em>link to a clone of itself</em> to match a sequence of <em>repeated</em> submatches. In regex syntax, <code>a{n}</code>.</p>
-<p><label for='PG9iamVjdCAgY2xhc3M9JycgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9yZWdleC9yZXBlYXRlZC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PlJlcGV0aXRpb24gb2YgYHNtXzFgey5tYXRoamF4fSB0aHJlZSB0aW1lcyAgKGBgYXszfWBgIGluIHJlZ2V4IHN5bnRheCkubWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9JycgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9yZWdleC9yZXBlYXRlZC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PlJlcGV0aXRpb24gb2YgYHNtXzFgey5tYXRoamF4fSB0aHJlZSB0aW1lcyAgKGBgYXszfWBgIGluIHJlZ2V4IHN5bnRheCkubWFyZ2lu' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3JlZ2V4L3JlcGVhdGVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+UmVwZXRpdGlvbiBvZiBgc21fMWB7Lm1hdGhqYXh9IHRocmVlIHRpbWVzICAoYGBhezN9YGAgaW4gcmVnZXggc3ludGF4KS5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3JlZ2V4L3JlcGVhdGVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+UmVwZXRpdGlvbiBvZiBgc21fMWB7Lm1hdGhqYXh9IHRocmVlIHRpbWVzICAoYGBhezN9YGAgaW4gcmVnZXggc3ludGF4KS5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<object  class='' align='middle' data='/img/regex/repeated.svg' type='image/svg+xml'></object>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/repeated.svg' type='image/svg+xml'></object>
 Repetition of \(sm_1\) three times (<code>a{3}</code> in regex syntax).
 </span></p>
 <p>We say that the link is to a clone because technically a link to itself would end up in an <em>unbounded</em> loop and what we want instead is a <em>sequence</em> of a <em>fixed size</em>.</p>
@@ -144,18 +144,18 @@ Repetition of \(sm_1\) three times (<code>a{3}</code> in regex syntax).
 <p><figure><figcaption><span markdown='1'>
 <em>Klee</em> construction of \(sm_1\) that accepts zero or more items. Notice the difference between this (link to itself) and the fixed repetition above (link to a clone).
 </span></figcaption>
-<object  class='' align='middle' data='/img/regex/klee.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/klee.svg' type='image/svg+xml'></object></figure></p>
 <p>The repetition can have different finite lower and higher bounds to form a <em>range</em> with a minimum and a maximum of repetitions <code>a{,2}</code> <code>a{2,4}</code> or with the higher limit unbounded <code>a{2,}</code> <code>a+</code>.</p>
 <p><figure><figcaption><span markdown='1'>
 Repeated at least 2 times, up to 4 times: is the combination of a fixed <code>a{2}</code> followed by an <em>up to</em> <code>a{,2}</code>.
 </span></figcaption>
-<object  class='' align='middle' data='/img/regex/range.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/range.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="union">Union</h2>
 <p>Finally, the <code>a|b</code> regex. As you may guessed, we stick two or more state machines using \(\epsilon\)-transitions.</p>
 <p><figure><figcaption><span markdown='1'>
 Disjunction/union of two state machines \(sm_1\) and \(sm_2\).
 </span></figcaption>
-<object  class='' align='middle' data='/img/regex/union.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/union.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="further-readings">Further readings</h2>
 <p>Aho, Lam, Sethi and Ullman. <em>Compilers: Principles, Techniques, &amp; Tools</em>, Second edition, Chapter 3.</p>
 <p>You can find a NFA implementation in Python <a href="https://github.com/eldipa/nfa">here in Github</a>.</p>

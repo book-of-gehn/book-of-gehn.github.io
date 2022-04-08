@@ -1,0 +1,286 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Linux Control Group (cgroup)</title>
+  <meta name="description" content="Linux Control Group (cgroup)">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2478/01/01/Linux-Cgroup-Structure.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Linux Control Group (cgroup)
+</h1>
+<p class="subtitle">
+January 1, 2478
+</p>
+<!--
+$ touch /sys/fs/cgroup/testing/cgroup.type      # byexample: +fail-fast
+$ echo $?                                       # byexample: +fail-fast
+0
+-->
+<h3 id="mount-point">Mount point</h3>
+<p>To access the control interface of <code>cgroup</code> we need to have mounted the (pseudo) file system.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mount <span class="p">|</span> grep cgroup                               <span class="c1"># byexample: +fail-fast</span>
+cgroup2 on /sys/fs/cgroup <span class="nb">type</span> cgroup2 <span class="o">(</span>&lt;...&gt;<span class="o">)</span>
+</code></pre></div>
+
+<p><label for='ClRoZXJlIGFyZSBzb21lIGtlcm5lbCBwYXJhbWV0ZXJzIHRoYXQgZW5hYmxlL2Rpc2FibGUgcGFydHMgb2YgYGNncm91cGAgYW5kCnRoZXJlIGFyZSBzb21lIG9wdGlvbnMgZm9yIGBtb3VudGAgdG8gdHdlYWsgaXQgdG9vLgoKVGhlIGRlZmF1bHRzIG9mIHlvdXIgZGlzdHJvIHNob3VsZCBiZSBmaW5lLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZXJlIGFyZSBzb21lIGtlcm5lbCBwYXJhbWV0ZXJzIHRoYXQgZW5hYmxlL2Rpc2FibGUgcGFydHMgb2YgYGNncm91cGAgYW5kCnRoZXJlIGFyZSBzb21lIG9wdGlvbnMgZm9yIGBtb3VudGAgdG8gdHdlYWsgaXQgdG9vLgoKVGhlIGRlZmF1bHRzIG9mIHlvdXIgZGlzdHJvIHNob3VsZCBiZSBmaW5lLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+There are some kernel parameters that enable/disable parts of <code>cgroup</code> and there are some options for <code>mount</code> to tweak it too.
+<br /><br />
+The defaults of your distro should be fine.
+</span></p>
+<p>In my case it is mounted on <code>/sys/fs/cgroup</code>.</p>
+<p>It is possible to have mounted the version 1 but it is deprecated in flavor of the version 2 so if you are running an updated system (Debian 11 or Fedora) you probably will not have troubles.</p>
+<h3 id="domains">Domains</h3>
+<p>A <code>cgroup</code> that operates with processes is called, by default, a <em>domain</em>.</p>
+<p>These can be easily created just creating subfolders inside the mount point.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">cd</span> /sys/fs/cgroup
+$ mkdir -p testing
+
+$ ls -1 testing/
+&lt;...&gt;
+cgroup.procs
+&lt;...&gt;
+cgroup.threads
+cgroup.type
+&lt;...&gt;
+</code></pre></div>
+
+<p>The file <code>cgroup.type</code> says which kind of <code>cgroup</code> we have (a domain in this case)</p>
+<div class="highlight-candombe"><pre><span></span><code>$ cat testing/cgroup.type
+domain
+</code></pre></div>
+
+<p><code>cgroup.procs</code> lists the processes’ ids that belongs to the <code>cgroup</code> and, as you may guessed, <code>cgroup.threads</code> lists the threads’ ids of the processes in the <code>cgroup</code>.</p>
+<p>No process is in my <code>testing/</code> <code>cgroup</code> so both listings are empty.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ cat testing/cgroup.procs
+
+$ cat testing/cgroup.threads
+</code></pre></div>
+
+<p>At the moment (kernel 5.17) there is no limit on how much nested a <code>cgroup</code> can be: we can create as many (sub) <code>cgroups</code> as we may please.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mkdir -p testing/cg1
+$ cat testing/cg1/cgroup.type
+domain
+
+$ mkdir -p testing/cg2
+$ cat testing/cg2/cgroup.type
+domain
+</code></pre></div>
+
+<h3 id="domains-threaded-and-threaded-cgroups">Domains Threaded and <code>threaded cgroups</code></h3>
+<p>A main difference with <code>cgroup v1</code> is that in <code>v2</code> we distribute the resources at the process level, with <em>process granularity</em>.</p>
+<p>However there are some resources that still make sense to distribute them even further, at the thread level.</p>
+<p>In these cases we can turn one <em>normal</em> domain into a <em>domain threaded</em>.</p>
+<p><label for='CioqU3VtbWFyeToqKiBhIGBkb21haW5gIG9yIGBkb21haW4gdGhyZWFkZWRgIGFyZSBgY2dyb3Vwc2AgdGhhdCBvcGVyYXRlIGF0IHByb2Nlc3MKbGV2ZWwgd2hpbGUgYHRocmVhZGVkIGNncm91cHNgIG9wZXJhdGVzIGF0IHRocmVhZCBsZXZlbC4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CioqU3VtbWFyeToqKiBhIGBkb21haW5gIG9yIGBkb21haW4gdGhyZWFkZWRgIGFyZSBgY2dyb3Vwc2AgdGhhdCBvcGVyYXRlIGF0IHByb2Nlc3MKbGV2ZWwgd2hpbGUgYHRocmVhZGVkIGNncm91cHNgIG9wZXJhdGVzIGF0IHRocmVhZCBsZXZlbC4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+<strong>Summary:</strong> a <code>domain</code> or <code>domain threaded</code> are <code>cgroups</code> that operate at process level while <code>threaded cgroups</code> operates at thread level.
+</span></p>
+<p>The domain threaded still operates at the process level but further divisions are for <em>partitioning the threads</em> of the processes in the domain threads.</p>
+<p>These divisions are neither normal domains nor domains threaded, these are <em>threaded cgroups</em>.</p>
+<p>Let’s create first a few normal domains:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mkdir -p testing/cg1/t1
+$ cat testing/cg1/t1/cgroup.type
+domain
+
+$ mkdir -p testing/cg1/t2
+$ cat testing/cg1/t2/cgroup.type
+domain
+</code></pre></div>
+
+<p>Now we turn one of the domains into a <em>threaded cgroup</em> and that will automatically turn <em>its parent</em> into a <em>domain threaded</em>:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup, before</span>
+$ cat testing/cg1/cgroup.type
+domain
+
+$ <span class="nb">echo</span> <span class="s2">&quot;threaded&quot;</span> &gt; testing/cg1/t1/cgroup.type
+$ cat testing/cg1/t1/cgroup.type
+threaded
+
+$ <span class="c1"># The parent cgroup, after</span>
+$ cat testing/cg1/cgroup.type
+domain threaded
+</code></pre></div>
+
+<h3 id="domain-invalid">Domain invalid</h3>
+<p>We made <code>testing/cg1/t1</code> into a <code>threaded</code> and that turned its parent <code>testing/cg1</code> into a <code>domain threaded</code>.</p>
+<p>What happen with the sibling of <code>testing/cg1/t1</code>, the <code>testing/cg1/t2</code> cgroup?</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup</span>
+$ cat testing/cg1/cgroup.type
+domain threaded
+
+$ <span class="c1"># The threaded cgroup</span>
+$ cat testing/cg1/t1/cgroup.type
+threaded
+
+$ <span class="c1"># Its sibling</span>
+$ cat testing/cg1/t2/cgroup.type
+domain invalid
+</code></pre></div>
+
+<p><code>testing/cg1/t2</code> is in an invalid state because we said that any subfolder of a <code>domain threaded</code> must be of the <code>threaded</code> kind.</p>
+<p>By default <code>testing/cg1/t2</code> was <code>domain</code> so this is incompatible.</p>
+<p>The same would happen if we create a new cgroup, because the default is of type <code>domain</code>, the resulting will be invalid too.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup</span>
+$ cat testing/cg1/cgroup.type
+domain threaded
+
+$ <span class="c1"># Create a new cgroup</span>
+$ mkdir testing/cg1/t3
+
+$ <span class="c1"># The default type is always &#39;domain&#39; so it makes</span>
+$ <span class="c1"># it invalid here inside of the &#39;domain threaded&#39;</span>
+$ cat testing/cg1/t3/cgroup.type
+domain invalid
+</code></pre></div>
+
+<p>We can turn these invalid domains into <code>threaded</code> cgroups just writing in their <code>cgroup.type</code> the value <code>threaded</code>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;threaded&#39;</span> &gt; testing/cg1/t2/cgroup.type
+$ cat testing/cg1/t2/cgroup.type
+threaded
+</code></pre></div>
+
+<h3 id="life-time-of-a-domain-threaded">Life time of a <code>domain threaded</code></h3>
+<p>As we saw earlier, a <code>domain threaded</code> can be created by making one of its (sub) <code>cgroups</code> into a <code>threaded cgroup</code>.</p>
+<p>It is <em>not</em> possible to write <code>domain threaded</code> neither to change the type of a <code>domain invalid</code> nor to change a <code>domain</code> into a <code>domain threaded</code>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;domain threaded&#39;</span> &gt; testing/cg1/t3/cgroup.type
+bash: echo: write error: Invalid argument
+
+$ <span class="nb">echo</span> <span class="s1">&#39;domain threaded&#39;</span> &gt; testing/cg2/cgroup.type
+bash: echo: write error: Invalid argument
+
+$ cat testing/cg1/t3/cgroup.type
+domain invalid
+
+$ cat testing/cg2/cgroup.type
+domain
+</code></pre></div>
+
+<p>The <code>domain threaded</code> type is a kind of condition or state: we cannot change it because it reflects the state of its (sub) <code>cgroups</code> (if they are or not <code>threaded cgroups</code>)</p>
+<h3 id="cgroup-states"><code>cgroup</code> states</h3>
+<p><figure><figcaption><span markdown='1'>
+A summary of all the possible types that a <code>cgroup</code> can have and the possible transitions from one type to another.
+<br /><br />
+All the transitions requires a direct action from the user like <code>rmdir</code> a folder to delete a <code>cgroup</code> or writing <code>"threaded"</code> in <code>cgroup.type</code> to turn that <code>cgroup</code> into a <code>threaded cgroup</code>.
+<br /><br />
+There are 2 exceptions: a <code>domain</code> goes to <code>domain invalid</code> or to <code>domain threaded</code> based on the type of its parent and children. The same with the reverse transitions.
+</span></figcaption>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-states.svg' type='image/svg+xml'></object></figure></p>
+<h3 id="cgroup-hierarchical-organization"><code>cgroup</code> hierarchical organization</h3>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBgY2dyb3VwYCAqdHlwZSogYW5kIHRoZSBhcnJvd3MKcmVwcmVzZW50cyB3aGljaCBgY2dyb3VwYCB0eXBlIGNhbiAqY29udGFpbiogd2hpY2ggKHN1YikgYGNncm91cGAuCkZvciBleGFtcGxlIG9uZSBgZG9tYWluIHRocmVhZGVkYCBjYW4gaGF2ZSBvbmUgb3IgbW9yZSBgdGhyZWFkZWQKY2dyb3Vwc2AuCgpSb290IGlzIGEgdmVyeSBzcGVjaWFsIGBjZ3JvdXBgIHdoaWNoIGNhbiBjb250YWluIGFueSBvdGhlciB0eXBlIG9mCmBjZ3JvdXBgLgoKVGhlIGRpYWdyYW0gZm9sbG93cyB0aGUgc2VtYW50aWNzIG9mIGFuIFVNTCBkaWFncmFtLm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBgY2dyb3VwYCAqdHlwZSogYW5kIHRoZSBhcnJvd3MKcmVwcmVzZW50cyB3aGljaCBgY2dyb3VwYCB0eXBlIGNhbiAqY29udGFpbiogd2hpY2ggKHN1YikgYGNncm91cGAuCkZvciBleGFtcGxlIG9uZSBgZG9tYWluIHRocmVhZGVkYCBjYW4gaGF2ZSBvbmUgb3IgbW9yZSBgdGhyZWFkZWQKY2dyb3Vwc2AuCgpSb290IGlzIGEgdmVyeSBzcGVjaWFsIGBjZ3JvdXBgIHdoaWNoIGNhbiBjb250YWluIGFueSBvdGhlciB0eXBlIG9mCmBjZ3JvdXBgLgoKVGhlIGRpYWdyYW0gZm9sbG93cyB0aGUgc2VtYW50aWNzIG9mIGFuIFVNTCBkaWFncmFtLm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-hierarchical-org.svg' type='image/svg+xml'></object>
+<br /> Each box represents a <code>cgroup</code> <em>type</em> and the arrows represents which <code>cgroup</code> type can <em>contain</em> which (sub) <code>cgroup</code>. For example one <code>domain threaded</code> can have one or more <code>threaded cgroups</code>.
+<br /><br />
+Root is a very special <code>cgroup</code> which can contain any other type of <code>cgroup</code>.
+<br /><br />
+The diagram follows the semantics of an UML diagram.
+</span></p>
+<p>We can summarize all the above in the following:</p>
+<ul>
+<li>A domain can be divided into more (sub) <code>domains</code> just creating more (sub) <code>cgroups</code> with <code>mkdir</code>.</li>
+<li>A <code>cgroup</code> can be turned into a <code>threaded cgroup</code>; its parent <code>cgroup</code> is automatically turned into a <code>domain threaded</code>.</li>
+<li>If a <code>domain threaded</code> is left without <code>threaded cgroups</code>, automatically changes to <code>domain</code>.</li>
+<li>A <code>domain threaded</code> is divided into <code>threaded cgroups</code> and these can be further divided in more (sub) <code>threaded cgroups</code>.</li>
+</ul>
+<p>The mount point or <em>root</em> is a special <code>cgroup</code> that works as a <code>domain</code> but also as a <code>domain threaded</code> so it can have (sub) <code>cgroups</code> of <code>domain</code> type and of <code>threaded</code> type as well.</p>
+<!--
+Delete recursively every cgroup (folder) from the leaves to the
+root.
+
+$ rmdir $(find /sys/fs/cgroup/testing/* -type d | sort -r)        # byexample: +pass -skip
+-->
+</article>
+<span class="print-footer">Linux Control Group (cgroup) - January 1, 2478 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

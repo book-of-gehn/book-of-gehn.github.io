@@ -154,7 +154,7 @@ exit_group  0xf8    num</code></pre>
 <p><figure><figcaption><span markdown='1'>
 <pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
-<object  class='' align='middle' data='/img/arm/azeria-arm-challenges/argv.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/arm/azeria-arm-challenges/argv.svg' type='image/svg+xml'></object></figure></p>
 <p>In assembly this translates to:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="w">    </span><span class="nf">mov</span><span class="w"> </span><span class="nb">r3</span><span class="p">,</span><span class="w"> </span><span class="c1">#0              @; &amp;argv[3]</span><span class="w"></span>
 <span class="w">    </span><span class="nf">add</span><span class="w"> </span><span class="nb">r2</span><span class="p">,</span><span class="w"> </span><span class="nv">pc</span><span class="p">,</span><span class="w"> </span><span class="nv">Largv2</span><span class="o">-</span><span class="nv">.</span><span class="o">-</span><span class="mi">8</span><span class="w"></span>
@@ -294,7 +294,7 @@ The <code><span class="highlight-candombe-inline"><span class="nf">good</span><s
 <p><figure><figcaption><span markdown='1'>
 <pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
-<object  class='' align='middle' data='/img/arm/azeria-arm-challenges/stack.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/arm/azeria-arm-challenges/stack.svg' type='image/svg+xml'></object></figure></p>
 <p><code><span class="highlight-candombe-inline"><span class="n">addr1</span><span class="w"></span></span></code> is <code><span class="highlight-candombe-inline"><span class="nf">sp</span><span class="w"></span></span></code>. But what value is?</p>
 <p>If we disable ASLR we can peek the value with a debugger: 0xbefffbb8</p>
 <h2 id="the-attack">The attack</h2>

