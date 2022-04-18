@@ -4,8 +4,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Linux Control Group (cgroup)</title>
-  <meta name="description" content="Linux Control Group (cgroup)">
+  <title>Linux Control Group - Organization</title>
+  <meta name="description" content="Linux Control Group - Organization">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -80,16 +80,11 @@
 </header>
 <article class="group">
 <h1>
-Linux Control Group (cgroup)
+Linux Control Group - Organization
 </h1>
 <p class="subtitle">
 January 1, 2478
 </p>
-<!--
-$ touch /sys/fs/cgroup/testing/cgroup.type      # byexample: +fail-fast
-$ echo $?                                       # byexample: +fail-fast
-0
--->
 <h3 id="mount-point">Mount point</h3>
 <p>To access the control interface of <code>cgroup</code> we need to have mounted the (pseudo) file system.</p>
 <div class="highlight-candombe"><pre><span></span><code>$ mount <span class="p">|</span> grep cgroup                               <span class="c1"># byexample: +fail-fast</span>
@@ -264,10 +259,11 @@ The diagram follows the semantics of an UML diagram.
 Delete recursively every cgroup (folder) from the leaves to the
 root.
 
-$ rmdir $(find /sys/fs/cgroup/testing/* -type d | sort -r)        # byexample: +pass -skip
+$ cd /sys/fs/cgroup/                                              # byexample: +pass -skip
+$ rmdir $(find /sys/fs/cgroup/testing/ -type d | sort -r)         # byexample: +pass -skip
 -->
 </article>
-<span class="print-footer">Linux Control Group (cgroup) - January 1, 2478 - Martin Di Paola</span>
+<span class="print-footer">Linux Control Group - Organization - January 1, 2478 - Martin Di Paola</span>
 <footer>
     <hr class="slender">
     <div class="credits">
