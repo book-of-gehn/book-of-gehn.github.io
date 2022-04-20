@@ -1,0 +1,499 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Linux Control Group - No Internal Process Constraint</title>
+  <meta name="description" content="Linux Control Group - No Internal Process Constraint">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='/js/MathJax-2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2478/01/03/Interprocess.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Linux Control Group - No Internal Process Constraint
+</h1>
+<p class="subtitle">
+January 3, 2478
+</p>
+<!--
+$ test -d /sys/fs/cgroup/testing && echo "cgroup testing/ already created!"     # byexample: +fail-fast
+-->
+<p>Let’s create the following cgroup hierarchy. Notice how we enable the resource controller <code>+pids</code> on <code>testing/</code>’s and <code>cg1/</code>’s subtrees but not on <code>cg2/</code>’s.</p>
+<p><label for='CmBgYHNoZWxsCiQgY2QgL3N5cy9mcy9jZ3JvdXAKJCBta2RpciAtcCB0ZXN0aW5nL2NnMS9jZzFfMQokIG1rZGlyIC1wIHRlc3RpbmcvY2cxL2NnMV8yCiQgbWtkaXIgLXAgdGVzdGluZy9jZzIvY2cyXzEKJCBta2RpciAtcCB0ZXN0aW5nL2NnMi9jZzJfMgoKJCBjZCB0ZXN0aW5nLwoKJCBlY2hvICcrcGlkcycgPiBjZ3JvdXAuc3VidHJlZV9jb250cm9sCiQgZWNobyAnK3BpZHMnID4gY2cxL2Nncm91cC5zdWJ0cmVlX2NvbnRyb2wKYGBgCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CmBgYHNoZWxsCiQgY2QgL3N5cy9mcy9jZ3JvdXAKJCBta2RpciAtcCB0ZXN0aW5nL2NnMS9jZzFfMQokIG1rZGlyIC1wIHRlc3RpbmcvY2cxL2NnMV8yCiQgbWtkaXIgLXAgdGVzdGluZy9jZzIvY2cyXzEKJCBta2RpciAtcCB0ZXN0aW5nL2NnMi9jZzJfMgoKJCBjZCB0ZXN0aW5nLwoKJCBlY2hvICcrcGlkcycgPiBjZ3JvdXAuc3VidHJlZV9jb250cm9sCiQgZWNobyAnK3BpZHMnID4gY2cxL2Nncm91cC5zdWJ0cmVlX2NvbnRyb2wKYGBgCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+<span class="pseudo-pre"><code><span class="highlight-candombe">$ <span class="nb">cd</span> /sys/fs/cgroup
+$ mkdir -p testing/cg1/cg1_1
+$ mkdir -p testing/cg1/cg1_2
+$ mkdir -p testing/cg2/cg2_1
+$ mkdir -p testing/cg2/cg2_2
+
+$ <span class="nb">cd</span> testing/
+
+$ <span class="nb">echo</span> <span class="s1">&#39;+pids&#39;</span> &gt; cgroup.subtree_control
+$ <span class="nb">echo</span> <span class="s1">&#39;+pids&#39;</span> &gt; cg1/cgroup.subtree_control</span></code></span>
+</span></p>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/starting.svg' type='image/svg+xml'></object></figure></p>
+<p>Let’s create a long running process and let’s move it to one cgroup. In fact, let’s try different cgroups.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sleep <span class="m">1000</span> <span class="p">&amp;</span>
+<span class="o">[</span>&lt;job-id-proc1&gt;<span class="o">]</span> &lt;pid-proc1&gt;
+
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cgroup.procs            <span class="c1"># byexample: +paste</span>
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; ../cgroup.procs         <span class="c1"># byexample: +paste</span>
+
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cg1/cgroup.procs        <span class="c1"># byexample: +paste</span>
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; ../cgroup.procs         <span class="c1"># byexample: +paste</span>
+
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cg1/cg1_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; ../cgroup.procs               <span class="c1"># byexample: +paste</span>
+
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cg2/cg2_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; ../cgroup.procs               <span class="c1"># byexample: +paste</span>
+</code></pre></div>
+
+<p>The process could be moved to <code>testing/</code>, <code>cg1/</code>, <code>cg1_1</code> and <code>cg2_1</code> without problems.</p>
+<p>But you may wonder, what is the need of <code>echo &lt;pid-proc1&gt; &gt; ../cgroup.procs1</code>, why after moving the process to a cgroup I had to move it to the root before move it again to another cgroup?</p>
+<p>The hierarchy is empty so the resource controller is not acting on any process yet. Once a process is added to one of the cgroups the “no internal process” constraint enters in action.</p>
+<p>Let me show you. I will move the <code>sleep</code> process to <code>cg1</code> and then move it again to <code>cg1_1</code> as before <em>but</em> without moving it to the root in between.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cg1/cgroup.procs        <span class="c1"># byexample: +paste</span>
+
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cg1/cg1_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
+&lt;...&gt;write error: Operation not supported
+</code></pre></div>
+
+<p>Okay, it seems that we cannot move our process after all!</p>
+<p>Is because we cannot move it <strong>from</strong> where it is or because we cannot move it <strong>to</strong> where we want?</p>
+<p>We could move it outside so it is likely that the problem is that we cannot move it <strong>to</strong> <code>cg1/cg1_1</code>.</p>
+<p>Let’s try with another process:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ sleep <span class="m">1000</span> <span class="p">&amp;</span>
+<span class="o">[</span>&lt;job-id-proc2&gt;<span class="o">]</span> &lt;pid-proc2&gt;
+
+$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; cg1/cg1_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
+&lt;...&gt;write error: Operation not supported
+
+$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; cg1/cg1_2/cgroup.procs        <span class="c1"># byexample: +paste</span>
+&lt;...&gt;write error: Operation not supported
+
+$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; cgroup.procs                  <span class="c1"># byexample: +paste</span>
+&lt;...&gt;write error: Device or resource busy
+
+$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; cg1/cgroup.procs              <span class="c1"># byexample: +paste</span>
+</code></pre></div>
+
+<p>Interesting… so far we have:</p>
+<ul>
+<li>if the hierarchy is empty you can add a process at any level</li>
+<li>if it is not empty, adding a process into a subtree fails with an <code>Operation not supported</code></li>
+<li>if it is not empty, adding a process into a parent cgroup fails with a <code>Device or resource busy</code>. An exception of this is the root cgroup.</li>
+<li>if it is not empty, adding a process into the same cgroup that <em>already</em> has processes succeeds.</li>
+</ul>
+<p><figure><figcaption><span markdown='1'>
+<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
+</span></figcaption>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_with_proc_in_cg1.svg' type='image/svg+xml'></object></figure></p>
+<!--
+####Let's create a long running process. As we see child process of our
+####shell inherits the same cgroup but this is a default, not a restriction:
+####so let's move the long running process to `cg2/`.
+
+####```shell
+####$ echo max > pids.max
+
+####$ sleep 1000 &
+####[<job-id-sleep>] <pid-sleep>
+
+####$ grep <pid-sleep> cg1/cgroup.procs  # our child is here we our shell    # byexample: +paste
+####<pid-sleep>
+
+####$ echo <pid-sleep> > cg2/cgroup.procs  # but we can move it freely  # byexample: +paste
+####```
+
+####{~% call maindiag('testing_cg1_shell_cg2_sleep.svg', 'dot') %}
+####```dot
+####digraph CG  {
+####    bgcolor="transparent";
+
+####    // Domains
+####    node [shape=box, color="#000000", style=solid] {
+####        "testing" [label="testing/"];
+####        "root" [label="/"];
+####        "cg1" [label="cg1/", group=lvl1];
+####        "cg2" [label="cg2/", group=lvl1];
+####    }
+
+####    // Processes
+####    node [shape=circle,  color="#880000", style=bold, width=0.5, fixedsize=true] {
+####        "shell" [label="shell", group=lvl1];
+####        "sleep" [label="sleep", group=lvl1];
+####        "sleepalt" [label="sleep", style=dashed];
+####    }
+
+####    // Failed processes
+####    node [shape=circle,  color="#880000", style="dashed,bold", width=0.5, fixedsize=true] {
+####    }
+
+####    // Cgroups at top
+####    {rank=min; root testing cg1}
+####    {rank=same; shell sleepalt}
+
+####    {rank=max; sleep}
+
+####    root -> testing [minlen=2];
+####    testing -> cg1;
+####    testing -> cg2;
+
+####    cg1 -> shell;
+####    cg1 -> sleepalt [style=dashed, arrowhead=none];
+
+####    shell -> cg2 [style=invis];
+
+####    cg2 -> sleep;
+####    sleepalt -> sleep [style=dashed, arrowhead=onormal];
+####}
+####```
+####`cgroup` hierarchy during the movement of `sleep` from `cg1/` to `cg2/`.
+####<br />
+####<br />
+####`shell` spawned `sleep` so it inherited the same cgroup `cg1/` however
+####this is just a default, not an enforcement, so here we move `sleep` to
+####`cg2/` without trouble.
+####<br />
+####<br />
+####The diagram is a little misleading because the `sleep`
+####process is never really in two cgroups at the same time:
+####the movement *is* atomic.
+####{~% endcall %}
+
+
+####{~% call margindiag('testing_cg1_shell_echo_cat_cg2_sleep.svg', 'dot') %}
+####```dot
+####digraph CG  {
+####    bgcolor="transparent";
+
+####    // Controllers
+####    node [shape=none] {
+####        "pids" [label="pids ≤ 3"];
+####        "pidscg1" [label="pids ≤ max"];
+####        //"pidscg2" [label="pids ≤ max"];
+####    }
+
+####    // Domains
+####    node [shape=box, color="#000000", style=solid] {
+####        "testing" [label="testing/"];
+####        "root" [label="/"];
+####        "cg1" [label="cg1/", group=lvl1];
+####        "cg2" [label="cg2/", group=lvl1];
+####    }
+
+####    // Processes
+####    node [shape=circle,  color="#880000", style=bold, width=0.5, fixedsize=true] {
+####        "shell" [label="shell", group=lvl1];
+####        "sleep" [label="sleep", group=lvl1];
+####        "echo" [label="echo"];
+####    }
+
+####    // Failed processes
+####    node [shape=circle,  color="#880000", style="dashed,bold", width=0.5, fixedsize=true] {
+####        "cat" [label="cat"];
+####    }
+
+####    // Cgroups at top
+####    {rank=min; pids pidscg1}
+####    {rank=same; root testing cg1}
+####    {rank=same; shell echo cat}
+
+####    {rank=max; sleep}
+
+####    pids -> testing [style=dashed, arrowtail=dot, dir=back, color="#620099"];
+####    pidscg1 -> cg1 [style=dashed, arrowtail=dot, dir=back, color="#620099"];
+
+####    root -> testing [minlen=2];
+####    testing -> cg1;
+####    testing -> cg2;
+
+####    cg1 -> shell;
+####    cg1 -> echo;
+####    cg1 -> cat [style=invis];
+
+####    shell -> cg2 [style=invis];
+
+####    cg2 -> sleep;
+####}
+####```
+####{~% endcall %}
+
+
+
+
+
+
+
+
+####Let's remove all the restrictions on `pids`:
+
+####```shell
+####$ echo max > pids.max
+####```
+
+####Let's try now to move the `sleep` program to its parent cgroup,
+####`testing/`:
+
+
+####```shell
+####$ echo <pid-sleep> > cgroup.procs       # byexample: +paste
+####<...>Device or resource busy
+####```
+
+####Mm?, what if we try to move a process which it is outside of `testing/`
+####like the following Python shell?
+
+####```python
+####>>> import os
+####>>> os.getpid()
+####<pid-python>
+####```
+
+####```shell
+####$ echo <pid-python> > cgroup.procs       # byexample: +paste
+####<...>Device or resource busy
+####```
+
+
+####{~% call maindiag('testing_cg1_shell_cg2_sleep_try_move_sleep.svg', 'dot') %}
+####```dot
+####digraph CG  {
+####    bgcolor="transparent";
+
+####    // Controllers
+####    node [shape=none] {
+####        "pids" [label="pids ≤ max"];
+####        "pidscg1" [label="pids ≤ max"];
+####        "pidscg2" [label="pids ≤ max"];
+####    }
+
+####    // Domains
+####    node [shape=box, color="#000000", style=solid] {
+####        "testing" [label="testing/", group=lvl0];
+####        "root" [label="/", group=lvl];
+####        "cg1" [label="cg1/", group=lvl1];
+####        "cg2" [label="cg2/", group=lvl1];
+####    }
+
+####    // Processes
+####    node [shape=circle,  color="#880000", style=bold, width=0.5, fixedsize=true] {
+####        "shell" [label="shell", group=lvl1];
+####        "sleep" [label="sleep", group=lvl1];
+####        "python" [label="py", group=lvl];
+####    }
+
+####    // Failed processes
+####    node [shape=circle,  color="#880000", style="dashed,bold", width=0.5, fixedsize=true] {
+####        "sleepalt" [label="sleep"];
+####        "pythonalt" [label="py"];
+####    }
+
+####    // Cgroups at top
+####    {rank=min; pids pidscg1}
+####    {rank=same; root testing cg1}
+####    {rank=same; python pythonalt shell sleepalt}
+####    {rank=same; cg2 pidscg2}
+
+####    {rank=max; sleep}
+
+####    pids -> testing [style=dashed, arrowtail=dot, dir=back, color="#620099"];
+####    pidscg1 -> cg1 [style=dashed, arrowtail=dot, dir=back, color="#620099"];
+
+####    root -> testing [minlen=5];
+####    root -> python;
+
+####    testing -> cg1 [minlen=4];
+####    testing -> cg2;
+
+####    testing -> pythonalt [style=invis];
+####    testing -> sleepalt [style=invis];
+
+####    cg1 -> shell;
+
+####    shell -> cg2 [style=invis];
+
+####    cg2 -> sleep;
+####    sleep -> sleepalt [style=dashed, arrowhead=crowvee, color="#880000"];
+####    python -> pythonalt [style=dashed, arrowhead=crowvee, color="#880000"];
+
+####    pythonalt -> sleepalt [style=invis, weight=9];
+
+####    cg2 -> pidscg2 [style=dashed, minlen=2, arrowhead=dot, color="#620099"];
+####}
+####```
+####{~% endcall %}
+
+####Why we cannot move the processes to `testing/cgroup.procs`? Did  we break
+####something? - Yes, we broke the *No Internal Process Constraint*.
+
+####The goal is to have all the processes running in the leaves of the
+####subtree so the resource controller can know where to find them.
+
+
+
+
+
+####When we wrote `+pids` into `testing/cgroup.subtree_control` we didn't
+####just enabled the `pids` resource controller to the children of
+####`testing/`, we also *moved* the controller to the subtree of
+####`testing/`.
+
+####A controller can only have processes in its subtree but not in any of
+####its cgroup ancestors.
+
+####So once we enabled `pids` in the subtree of `testing/`, no process can
+####be added to `testing/cgroup.procs`.
+
+####A controller enabled in a cgroup with processes within, no process can
+####be added to its (sub) cgroups.
+
+####The inverse is also true: no resource controller can be enabled on a
+####subtree if there is at least one process in the cgroup or in its
+####ancestors.
+
+####Here is an example of the last:
+
+####```shell
+####$ mkdir cg1/sub1
+####$ echo '+pids' > cg1/cgroup.subtree_control
+
+####$ cat cgroup.subtree_control
+####pids
+
+####$ cat cg1/cgroup.subtree_control
+####pids
+
+####$ cat cg1/sub1/cgroup.controllers
+####pids
+
+####$ echo <pid-python> > cgroup.procs       # byexample: +paste
+####<...>Device or resource busy
+
+####$ echo <pid-python> > cg1/cgroup.procs       # byexample: +paste
+
+####$ echo <pid-python> > cg1/sub1/cgroup.procs       # byexample: +paste
+####<...>Operation not supported
+####```
+-->
+<!--
+Remove any constraint on pids
+$ echo max > /sys/fs/cgroup/testing/pids.max                # byexample: -skip +pass
+$ echo max > /sys/fs/cgroup/testing/cg1/pids.max            # byexample: -skip +pass
+$ echo max > /sys/fs/cgroup/testing/cg1/cg1_1/pids.max       # byexample: -skip +pass
+$ echo max > /sys/fs/cgroup/testing/cg1/cg1_2/pids.max       # byexample: -skip +pass
+$ echo max > /sys/fs/cgroup/testing/cg2/pids.max            # byexample: -skip +pass
+$ echo max > /sys/fs/cgroup/testing/cg2/cg2_1/pids.max       # byexample: -skip +pass
+$ echo max > /sys/fs/cgroup/testing/cg2/cg2_2/pids.max       # byexample: -skip +pass
+
+Kill any subprocess
+$ kill -9 $(jobs -p) && wait                                # byexample: -skip +pass
+$ sleep 5                                                   # byexample: -skip +pass +timeout=8
+
+$ echo '-pids' > /sys/fs/cgroup/testing/cg1/cg1_1/cgroup.subtree_control           # byexample: -skip +pass
+$ echo '-pids' > /sys/fs/cgroup/testing/cg1/cg1_2/cgroup.subtree_control           # byexample: -skip +pass
+$ echo '-pids' > /sys/fs/cgroup/testing/cg2/cg2_1/cgroup.subtree_control           # byexample: -skip +pass
+$ echo '-pids' > /sys/fs/cgroup/testing/cg2/cg2_2/cgroup.subtree_control           # byexample: -skip +pass
+$ echo '-pids' > /sys/fs/cgroup/testing/cg1/cgroup.subtree_control           # byexample: -skip +pass
+$ echo '-pids' > /sys/fs/cgroup/testing/cg2/cgroup.subtree_control           # byexample: -skip +pass
+$ echo '-pids' > /sys/fs/cgroup/testing/cgroup.subtree_control           # byexample: -skip +pass
+
+Delete recursively every cgroup (folder) from the leaves to the
+root. All of them should be empty by now
+$ cd /sys/fs/cgroup/                                        # byexample: +pass -skip
+$ rmdir $(find /sys/fs/cgroup/testing/ -type d | sort -r)   # byexample: +pass -skip
+-->
+</article>
+<span class="print-footer">Linux Control Group - No Internal Process Constraint - January 3, 2478 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

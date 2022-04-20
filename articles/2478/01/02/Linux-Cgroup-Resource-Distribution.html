@@ -97,6 +97,9 @@ January 2, 2478
 <p>Once exhausted, no other process can be started leaving the system unusable.</p>
 <p>At difference with CPU and memory, exhausting the pids space is very easy.</p>
 <p>So in this post we will explore how to control this resource using <code>cgroup</code>.</p>
+<!--
+$ test -d /sys/fs/cgroup/testing && echo "cgroup testing/ already created!"     # byexample: +fail-fast
+-->
 <h2 id="limit-the-resource-pid-count-on-a-cgroup">Limit the resource (pid count) on a cgroup</h2>
 <p>Let’s create a <code>testing/</code> cgroup:</p>
 <div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">cd</span> /sys/fs/cgroup
@@ -224,14 +227,14 @@ $ echo max > /sys/fs/cgroup/testing/cg1/sub1/pids.max       # byexample: -skip +
 $ echo max > /sys/fs/cgroup/testing/cg2/pids.max            # byexample: -skip +pass
 
 $ echo '-pids' > /sys/fs/cgroup/testing/cgroup.subtree_control           # byexample: -skip +pass
-$ sleep 5                                                   # byexample: -skip +pass +timeout=8
-
-Kill any subprocess
-$ kill -9 "$(jobs -p)" && wait                              # byexample: -skip +pass
 
 Move our shell(s) to the root
 $ echo $$ > /sys/fs/cgroup/cgroup.procs                     # byexample: +pass -skip
 
+$ sleep 5                                                   # byexample: -skip +pass +timeout=8
+
+Kill any subprocess
+$ kill -9 $(jobs -p) && wait                                # byexample: -skip +pass
 $ sleep 5                                                   # byexample: -skip +pass +timeout=8
 
 Delete recursively every cgroup (folder) from the leaves to the
