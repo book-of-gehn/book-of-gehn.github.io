@@ -1,0 +1,327 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Control Group - Hierarchical Organization</title>
+  <meta name="description" content="Control Group - Hierarchical Organization">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      //root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Control Group - Hierarchical Organization
+</h1>
+<p class="subtitle">
+April 23, 2022
+</p>
+<p>Control group or <code>cgroup</code> is a mechanism to distribute and enforce limits over the resources of the system.</p>
+<p>It was introduced in Linux kernel around 2007 but its complexity leaded to inconsistent behaviour and hard adoption.</p>
+<p>Fast forwarding 9 years, in kernel 4.5 a rewrite of <code>cgroup</code> revamp the idea, making it simpler and consistent.</p>
+<p>This post focus in the organization of cgroups and it is the first of a 3-posts series about <code>cgroup</code> in its new <code>v2</code> version. <!--more--></p>
+<h2 id="overview-of-cgroup-organization">Overview of <code>cgroup</code> organization</h2>
+<p><label for='CioqTm90YXRpb246KiogSSB3aWxsIHdyaXRlIGBjZ3JvdXBgIHRvIGRlbm90ZSB0aGUgQ29udHJvbCBHcm91cAppbXBsZW1lbnRhdGlvbiBvciBoaWVyYXJjaHkgd2hpbGUgSSB3aWxsIHdyaXRlIGNncm91cCBvciBjZ3JvdXBzIHRvCnJlZmVyIGFib3V0IG9uZSBvciBtb3JlIGdyb3VwcyBpbiBwYXJ0aWN1bGFyLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CioqTm90YXRpb246KiogSSB3aWxsIHdyaXRlIGBjZ3JvdXBgIHRvIGRlbm90ZSB0aGUgQ29udHJvbCBHcm91cAppbXBsZW1lbnRhdGlvbiBvciBoaWVyYXJjaHkgd2hpbGUgSSB3aWxsIHdyaXRlIGNncm91cCBvciBjZ3JvdXBzIHRvCnJlZmVyIGFib3V0IG9uZSBvciBtb3JlIGdyb3VwcyBpbiBwYXJ0aWN1bGFyLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+<strong>Notation:</strong> I will write <code>cgroup</code> to denote the Control Group implementation or hierarchy while I will write cgroup or cgroups to refer about one or more groups in particular.
+</span></p>
+<p><code>cgroup</code> can be split into two components: the <em>core</em> which mandates how the cgroups, processes and controllers are organized and the <em>resource controllers</em> which do the real resource distribution and enforce limits.</p>
+<p>In this post I’ll focus on the core only.</p>
+<p>In the <code>v1</code> version, the <code>cgroup</code> system supported multiple hierarchies of cgroups and processes but this flexibility didn’t pay off.</p>
+<p>In v2, <code>cgroup</code> has a single hierarchy where all the cgroups, processes and controllers live and that’s what we are going to explore here.</p>
+<p>Let’s get into!</p>
+<h3 id="mount-point">Mount point</h3>
+<p>To access the control interface of <code>cgroup</code> we need to have mounted the (pseudo) file system.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mount <span class="p">|</span> grep cgroup                               <span class="c1"># byexample: +fail-fast</span>
+cgroup2 on /sys/fs/cgroup <span class="nb">type</span> cgroup2 <span class="o">(</span>&lt;...&gt;<span class="o">)</span>
+</code></pre></div>
+
+<p>In my case it is mounted on <code>/sys/fs/cgroup</code>; in some other distros it is mounted under <code>/sys/fs/cgroup/unified</code>: just check where the (pseudo) <code>cgroup2</code> file system is mounted.</p>
+<h3 id="creating-new-cgroups">Creating new cgroups</h3>
+<p>A hierarchy is divided into cgroups and those into more sub cgroups.</p>
+<p>These can be easily created just creating subfolders inside the mount point.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">cd</span> /sys/fs/cgroup
+$ mkdir -p <span class="nb">test</span>
+
+$ ls -1 test/
+&lt;...&gt;
+cgroup.procs
+&lt;...&gt;
+cgroup.threads
+cgroup.type
+&lt;...&gt;
+</code></pre></div>
+
+<p><code>cgroup.procs</code> lists the processes’ ids that belongs to the <code>test/</code> cgroup and, as you may guessed, <code>cgroup.threads</code> lists the threads’ ids of the processes in the cgroup.</p>
+<p>No process is in my <code>test/</code> cgroup so both files are empty.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ cat test/cgroup.procs
+
+$ cat test/cgroup.threads
+</code></pre></div>
+
+<p>At the moment (kernel 5.17) there is no limit on how much nested a cgroup can be: we can create as many (sub) cgroups as we may please.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mkdir -p test/cg1
+$ mkdir -p test/cg2
+</code></pre></div>
+
+<h2 id="domain-cgroups"><code>domain</code> cgroups</h2>
+<p>The file <code>cgroup.type</code> says which kind of cgroup we have:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ cat test/cgroup.type
+domain
+
+$ cat test/cg1/cgroup.type
+domain
+
+$ cat test/cg2/cgroup.type
+domain
+</code></pre></div>
+
+<p>A cgroup that operates with processes is called a <em>domain</em> and it is the default type for each newly created cgroup.</p>
+<p><label for='ClRoZSB0ZXJtICpzbGljZSogaXMgYm9ycm93ZWQgZnJvbSBgc3lzdGVtZGA6IGBzeXN0ZW1kYCB1c2VzIGBjZ3JvdXBgIHRvCm1hbmFnZSB0aGUgcmVzb3VyY2VzIG9mIHByb2Nlc3NlcyBhbmQgbmFtZXMgYC5zbGljZWAgdGhlIGZpbGVzIHRvCmNvbmZpZ3VyZSB0aGUgcmVzb3VyY2UgZGlzdHJpYnV0aW9uLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSB0ZXJtICpzbGljZSogaXMgYm9ycm93ZWQgZnJvbSBgc3lzdGVtZGA6IGBzeXN0ZW1kYCB1c2VzIGBjZ3JvdXBgIHRvCm1hbmFnZSB0aGUgcmVzb3VyY2VzIG9mIHByb2Nlc3NlcyBhbmQgbmFtZXMgYC5zbGljZWAgdGhlIGZpbGVzIHRvCmNvbmZpZ3VyZSB0aGUgcmVzb3VyY2UgZGlzdHJpYnV0aW9uLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+The term <em>slice</em> is borrowed from <code>systemd</code>: <code>systemd</code> uses <code>cgroup</code> to manage the resources of processes and names <code>.slice</code> the files to configure the resource distribution.
+</span></p>
+<p>It is our main way to organize processes into different domains to assign them different amounts of a resource, different <em>slices</em> of the cake.</p>
+<h2 id="domain-threaded-and-threaded-cgroups"><code>domain threaded</code> and <code>threaded</code> cgroups</h2>
+<p>However there are some resources that still make sense to distribute them even further, at the thread level.</p>
+<p>In these cases we can turn one <em>normal</em> <code>domain</code> into a <code>domain threaded</code>.</p>
+<p><label for='CioqU3VtbWFyeToqKiBhIGBkb21haW5gIG9yIGBkb21haW4gdGhyZWFkZWRgIGFyZSBgY2dyb3Vwc2AgdGhhdCBvcGVyYXRlIGF0IHByb2Nlc3MKbGV2ZWwgd2hpbGUgYHRocmVhZGVkIGNncm91cHNgIG9wZXJhdGVzIGF0IHRocmVhZCBsZXZlbC4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CioqU3VtbWFyeToqKiBhIGBkb21haW5gIG9yIGBkb21haW4gdGhyZWFkZWRgIGFyZSBgY2dyb3Vwc2AgdGhhdCBvcGVyYXRlIGF0IHByb2Nlc3MKbGV2ZWwgd2hpbGUgYHRocmVhZGVkIGNncm91cHNgIG9wZXJhdGVzIGF0IHRocmVhZCBsZXZlbC4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+<strong>Summary:</strong> a <code>domain</code> or <code>domain threaded</code> are <code>cgroups</code> that operate at process level while <code>threaded cgroups</code> operates at thread level.
+</span></p>
+<p>The domain threaded still operates at the process level but further divisions are for <em>partitioning the threads</em> of the processes in the domain.</p>
+<p>These divisions are neither normal <code>domain</code> nor <code>domain threaded</code>, these are <code>threaded</code> cgroups.</p>
+<p>Let’s create first a few normal <code>domain</code>s:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mkdir -p test/cg1/t1
+$ cat test/cg1/t1/cgroup.type
+domain
+
+$ mkdir -p test/cg1/t2
+$ cat test/cg1/t2/cgroup.type
+domain
+</code></pre></div>
+
+<p>Now we turn one of the domains into a <code>threaded</code> cgroup and that will automatically turn <em>its parent</em> into a <code>domain threaded</code>:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup, before</span>
+$ cat test/cg1/cgroup.type
+domain
+
+$ <span class="nb">echo</span> <span class="s2">&quot;threaded&quot;</span> &gt; test/cg1/t1/cgroup.type
+$ cat test/cg1/t1/cgroup.type
+threaded
+
+$ <span class="c1"># The parent cgroup, after</span>
+$ cat test/cg1/cgroup.type
+domain threaded
+</code></pre></div>
+
+<p>While we can still use <code>test/cg1/</code> to control the resources of the processes that belong to the group, we can now use <code>test/cg1/t1/</code> and <code>test/cg1/t2/</code> to distribute the resources differently among the <em>threads</em> of the processes.</p>
+<p>Of course this is possible only if the resource controller supports such distribution, if it is meaningful.</p>
+<p>A resource controller that can distribute the resource among threads is a <em>thread controller</em>. A resource controller that operates only at the process level is a <em>domain controller</em>.</p>
+<p>A main difference with <code>cgroup v1</code> is that in <code>v2</code> all the threads of a process belong to the <em>same</em> domain and hence they are subject to the control of a domain controller.</p>
+<p>We can distribute the resources even further creating <code>threaded</code> partitions but all of them are inside the <em>same</em> <code>domain threaded</code> group.</p>
+<p>In <code>v1</code> the threads of a process could live in a different, totally unrelated part of the hierarchy which made the implementation of the controllers much complex.</p>
+<h2 id="domain-invalid"><code>domain invalid</code></h2>
+<p>We made <code>test/cg1/t1/</code> into a <code>threaded</code> and that turned its parent <code>test/cg1/</code> into a <code>domain threaded</code>.</p>
+<p>What happen with the sibling of <code>test/cg1/t1/</code>, the <code>test/cg1/t2/</code> cgroup?</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup</span>
+$ cat test/cg1/cgroup.type
+domain threaded
+
+$ <span class="c1"># The threaded cgroup</span>
+$ cat test/cg1/t1/cgroup.type
+threaded
+
+$ <span class="c1"># Its sibling</span>
+$ cat test/cg1/t2/cgroup.type
+domain invalid
+</code></pre></div>
+
+<p><code>test/cg1/t2/</code> is in an invalid state because we said that any subfolder of a <code>domain threaded</code> must be of the <code>threaded</code> kind.</p>
+<p>By default <code>test/cg1/t2/</code> was <code>domain</code> so this is incompatible.</p>
+<p>The same would happen if we create a new cgroup, because the default is of type <code>domain</code>, the resulting will be invalid too.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup</span>
+$ cat test/cg1/cgroup.type
+domain threaded
+
+$ <span class="c1"># Create a new cgroup</span>
+$ mkdir test/cg1/t3
+
+$ <span class="c1"># The default type is always &#39;domain&#39; so it makes</span>
+$ <span class="c1"># it invalid here inside of the &#39;domain threaded&#39;</span>
+$ cat test/cg1/t3/cgroup.type
+domain invalid
+</code></pre></div>
+
+<p>We can turn these invalid domains into <code>threaded</code> cgroups just writing in their <code>cgroup.type</code> the value <code>threaded</code>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;threaded&#39;</span> &gt; test/cg1/t2/cgroup.type
+$ cat test/cg1/t2/cgroup.type
+threaded
+</code></pre></div>
+
+<h2 id="life-time-of-a-domain-threaded">Life time of a <code>domain threaded</code></h2>
+<p>As we saw earlier, a <code>domain threaded</code> can be created by making one of its (sub) cgroups a <code>threaded</code> cgroup.</p>
+<p>It is <em>not</em> possible to write <code>domain threaded</code> neither to change the type of a <code>domain invalid</code> nor to change a <code>domain</code> into a <code>domain threaded</code>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;domain threaded&#39;</span> &gt; test/cg1/t3/cgroup.type
+bash: echo: write error: Invalid argument
+
+$ <span class="nb">echo</span> <span class="s1">&#39;domain threaded&#39;</span> &gt; test/cg2/cgroup.type
+bash: echo: write error: Invalid argument
+
+$ cat test/cg1/t3/cgroup.type
+domain invalid
+
+$ cat test/cg2/cgroup.type
+domain
+</code></pre></div>
+
+<p>The only way to get a <code>domain threaded</code> is to have a (sub) cgroup of <code>threaded</code> type.</p>
+<p>The same restriction works on the way back: to make a <code>domain threaded</code> back to a <code>domain</code> you must delete the (sub) <code>threaded</code> cgroups (changing them to <code>domain</code> does not work).</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># this doen&#39;t work</span>
+$ <span class="nb">echo</span> <span class="s1">&#39;domain&#39;</span> &gt; test/cg1/t1/cgroup.type
+&lt;...&gt;write error: Invalid argument
+
+$ rmdir test/cg1/t1
+$ rmdir test/cg1/t2
+
+$ <span class="c1"># back to &quot;normal&quot; domain</span>
+$ cat test/cg1/cgroup.type
+domain
+
+$ <span class="c1"># not longer domain invalid</span>
+$ cat test/cg1/t3/cgroup.type
+domain
+</code></pre></div>
+
+<h2 id="cgroups-type-transitions">cgroup’s type transitions</h2>
+<p><figure><figcaption><span markdown='1'>
+A summary of all the possible types that a cgroup can have and the possible transitions from one type to another.
+<br /><br />
+All the transitions requires a direct action from the user like <code>rmdir</code> a folder to delete a cgroup or writing <code>"threaded"</code> in <code>cgroup.type</code> to turn that <code>cgroup</code> into a <code>threaded</code> cgroup.
+<br /><br />
+There are 2 exceptions: a <code>domain</code> goes to <code>domain invalid</code> or to <code>domain threaded</code> based on the type of its parent and children. The same with the reverse transitions.
+</span></figcaption>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-states.svg' type='image/svg+xml'></object></figure></p>
+<h2 id="cgroup-hierarchical-organization"><code>cgroup</code> hierarchical organization</h2>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBjZ3JvdXAgKnR5cGUqIGFuZCB0aGUgYXJyb3dzCnJlcHJlc2VudHMgd2hpY2ggY2dyb3VwIHR5cGUgY2FuICpjb250YWluKiB3aGljaCAoc3ViKSBgY2dyb3VwYC4KRm9yIGV4YW1wbGUgb25lIGBkb21haW4gdGhyZWFkZWRgIGNhbiBoYXZlIG9uZSBvciBtb3JlIGB0aHJlYWRlZGAKY2dyb3Vwcy4KCipSb290KiBpcyBhIHZlcnkgc3BlY2lhbCBjZ3JvdXAgd2hpY2ggY2FuIGNvbnRhaW4gYW55IG90aGVyIHR5cGUgb2YKY2dyb3VwOiBgZG9tYWluYCwgYGRvbWFpbiB0aHJlYWRlZGAgYW5kIGB0aHJlYWRlZGAuCgpUaGUgZGlhZ3JhbSBmb2xsb3dzIHRoZSBzZW1hbnRpY3Mgb2YgYW4gVU1MIGRpYWdyYW0ubWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBjZ3JvdXAgKnR5cGUqIGFuZCB0aGUgYXJyb3dzCnJlcHJlc2VudHMgd2hpY2ggY2dyb3VwIHR5cGUgY2FuICpjb250YWluKiB3aGljaCAoc3ViKSBgY2dyb3VwYC4KRm9yIGV4YW1wbGUgb25lIGBkb21haW4gdGhyZWFkZWRgIGNhbiBoYXZlIG9uZSBvciBtb3JlIGB0aHJlYWRlZGAKY2dyb3Vwcy4KCipSb290KiBpcyBhIHZlcnkgc3BlY2lhbCBjZ3JvdXAgd2hpY2ggY2FuIGNvbnRhaW4gYW55IG90aGVyIHR5cGUgb2YKY2dyb3VwOiBgZG9tYWluYCwgYGRvbWFpbiB0aHJlYWRlZGAgYW5kIGB0aHJlYWRlZGAuCgpUaGUgZGlhZ3JhbSBmb2xsb3dzIHRoZSBzZW1hbnRpY3Mgb2YgYW4gVU1MIGRpYWdyYW0ubWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-hierarchical-org.svg' type='image/svg+xml'></object>
+<br /> Each box represents a cgroup <em>type</em> and the arrows represents which cgroup type can <em>contain</em> which (sub) <code>cgroup</code>. For example one <code>domain threaded</code> can have one or more <code>threaded</code> cgroups.
+<br /><br />
+<em>Root</em> is a very special cgroup which can contain any other type of cgroup: <code>domain</code>, <code>domain threaded</code> and <code>threaded</code>.
+<br /><br />
+The diagram follows the semantics of an UML diagram.
+</span></p>
+<p>We can summarize all the above in the following:</p>
+<ul>
+<li>A domain can be divided into more (sub) <code>domains</code> just creating more (sub) cgroups with <code>mkdir</code>.</li>
+<li>A cgroup can be turned into a <code>threaded</code> cgroup; its parent cgroup is automatically turned into a <code>domain threaded</code>.</li>
+<li>If a <code>domain threaded</code> is left without <code>threaded</code> cgroups, automatically changes to <code>domain</code>.</li>
+<li>A <code>domain threaded</code> is divided into <code>threaded</code> cgroups and these can be further divided in more (sub) <code>threaded</code> cgroups.</li>
+</ul>
+<p>The mount point or <em>root</em> is a special cgroup that works as a <code>domain</code> but also as a <code>domain threaded</code> so it can have (sub) cgroups of <code>domain</code> type and of <code>threaded</code> type as well.</p>
+<h2 id="further-reading">Further reading</h2>
+<p>We mentioned <code>mount</code> but nothing else. <code>cgroup v2</code> has a few options for the <code>mount</code> call but I didn’t covered them.</p>
+<p>The kernel also has a few parameters to disable certain controllers but I totally skipped them :)</p>
+<p>In general, the default setting of your distro should be fine.</p>
+<h2 id="next-stuff">Next stuff</h2>
+<p>We shown how the <code>cgroup</code> hierarchy is organized. In the next post we will see how the resources are distributed among the cgroups and which constraints do we have.</p>
+<!--
+Delete recursively every cgroup (folder) from the leaves to the
+root.
+
+$ cd /sys/fs/cgroup/                                              # byexample: +pass -skip
+$ rmdir $(find /sys/fs/cgroup/test/ -type d | sort -r)         # byexample: +pass -skip
+-->
+</article>
+<span class="print-footer">Control Group - Hierarchical Organization - April 23, 2022 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

@@ -8,7 +8,238 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 20 Apr 2022 22:00:43 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 23 Apr 2022 21:21:56 +0000</lastBuildDate>
+    <item>
+      <title>Control Group - Hierarchical Organization</title>
+      <link>https://book-of-gehn.github.io/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html</link>
+      <description>&lt;p&gt;Control group or &lt;code&gt;cgroup&lt;/code&gt; is a mechanism to distribute and enforce limits over the resources of the system.&lt;/p&gt;
+&lt;p&gt;It was introduced in Linux kernel around 2007 but its complexity leaded to inconsistent behaviour and hard adoption.&lt;/p&gt;
+&lt;p&gt;Fast forwarding 9 years, in kernel 4.5 a rewrite of &lt;code&gt;cgroup&lt;/code&gt; revamp the idea, making it simpler and consistent.&lt;/p&gt;
+&lt;p&gt;This post focus in the organization of cgroups and it is the first of a 3-posts series about &lt;code&gt;cgroup&lt;/code&gt; in its new &lt;code&gt;v2&lt;/code&gt; version. &lt;!--more--&gt;&lt;/p&gt;
+&lt;h2 id="overview-of-cgroup-organization"&gt;Overview of &lt;code&gt;cgroup&lt;/code&gt; organization&lt;/h2&gt;
+&lt;p&gt;&lt;label for='CioqTm90YXRpb246KiogSSB3aWxsIHdyaXRlIGBjZ3JvdXBgIHRvIGRlbm90ZSB0aGUgQ29udHJvbCBHcm91cAppbXBsZW1lbnRhdGlvbiBvciBoaWVyYXJjaHkgd2hpbGUgSSB3aWxsIHdyaXRlIGNncm91cCBvciBjZ3JvdXBzIHRvCnJlZmVyIGFib3V0IG9uZSBvciBtb3JlIGdyb3VwcyBpbiBwYXJ0aWN1bGFyLgptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CioqTm90YXRpb246KiogSSB3aWxsIHdyaXRlIGBjZ3JvdXBgIHRvIGRlbm90ZSB0aGUgQ29udHJvbCBHcm91cAppbXBsZW1lbnRhdGlvbiBvciBoaWVyYXJjaHkgd2hpbGUgSSB3aWxsIHdyaXRlIGNncm91cCBvciBjZ3JvdXBzIHRvCnJlZmVyIGFib3V0IG9uZSBvciBtb3JlIGdyb3VwcyBpbiBwYXJ0aWN1bGFyLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;strong&gt;Notation:&lt;/strong&gt; I will write &lt;code&gt;cgroup&lt;/code&gt; to denote the Control Group implementation or hierarchy while I will write cgroup or cgroups to refer about one or more groups in particular.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cgroup&lt;/code&gt; can be split into two components: the &lt;em&gt;core&lt;/em&gt; which mandates how the cgroups, processes and controllers are organized and the &lt;em&gt;resource controllers&lt;/em&gt; which do the real resource distribution and enforce limits.&lt;/p&gt;
+&lt;p&gt;In this post I’ll focus on the core only.&lt;/p&gt;
+&lt;p&gt;In the &lt;code&gt;v1&lt;/code&gt; version, the &lt;code&gt;cgroup&lt;/code&gt; system supported multiple hierarchies of cgroups and processes but this flexibility didn’t pay off.&lt;/p&gt;
+&lt;p&gt;In v2, &lt;code&gt;cgroup&lt;/code&gt; has a single hierarchy where all the cgroups, processes and controllers live and that’s what we are going to explore here.&lt;/p&gt;
+&lt;p&gt;Let’s get into!&lt;/p&gt;
+&lt;h3 id="mount-point"&gt;Mount point&lt;/h3&gt;
+&lt;p&gt;To access the control interface of &lt;code&gt;cgroup&lt;/code&gt; we need to have mounted the (pseudo) file system.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ mount &lt;span class="p"&gt;|&lt;/span&gt; grep cgroup                               &lt;span class="c1"&gt;# byexample: +fail-fast&lt;/span&gt;
+cgroup2 on /sys/fs/cgroup &lt;span class="nb"&gt;type&lt;/span&gt; cgroup2 &lt;span class="o"&gt;(&lt;/span&gt;&amp;lt;...&amp;gt;&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;In my case it is mounted on &lt;code&gt;/sys/fs/cgroup&lt;/code&gt;; in some other distros it is mounted under &lt;code&gt;/sys/fs/cgroup/unified&lt;/code&gt;: just check where the (pseudo) &lt;code&gt;cgroup2&lt;/code&gt; file system is mounted.&lt;/p&gt;
+&lt;h3 id="creating-new-cgroups"&gt;Creating new cgroups&lt;/h3&gt;
+&lt;p&gt;A hierarchy is divided into cgroups and those into more sub cgroups.&lt;/p&gt;
+&lt;p&gt;These can be easily created just creating subfolders inside the mount point.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; /sys/fs/cgroup
+$ mkdir -p &lt;span class="nb"&gt;test&lt;/span&gt;
+
+$ ls -1 test/
+&amp;lt;...&amp;gt;
+cgroup.procs
+&amp;lt;...&amp;gt;
+cgroup.threads
+cgroup.type
+&amp;lt;...&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code&gt;cgroup.procs&lt;/code&gt; lists the processes’ ids that belongs to the &lt;code&gt;test/&lt;/code&gt; cgroup and, as you may guessed, &lt;code&gt;cgroup.threads&lt;/code&gt; lists the threads’ ids of the processes in the cgroup.&lt;/p&gt;
+&lt;p&gt;No process is in my &lt;code&gt;test/&lt;/code&gt; cgroup so both files are empty.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cat test/cgroup.procs
+
+$ cat test/cgroup.threads
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;At the moment (kernel 5.17) there is no limit on how much nested a cgroup can be: we can create as many (sub) cgroups as we may please.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ mkdir -p test/cg1
+$ mkdir -p test/cg2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="domain-cgroups"&gt;&lt;code&gt;domain&lt;/code&gt; cgroups&lt;/h2&gt;
+&lt;p&gt;The file &lt;code&gt;cgroup.type&lt;/code&gt; says which kind of cgroup we have:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cat test/cgroup.type
+domain
+
+$ cat test/cg1/cgroup.type
+domain
+
+$ cat test/cg2/cgroup.type
+domain
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A cgroup that operates with processes is called a &lt;em&gt;domain&lt;/em&gt; and it is the default type for each newly created cgroup.&lt;/p&gt;
+&lt;p&gt;&lt;label for='ClRoZSB0ZXJtICpzbGljZSogaXMgYm9ycm93ZWQgZnJvbSBgc3lzdGVtZGA6IGBzeXN0ZW1kYCB1c2VzIGBjZ3JvdXBgIHRvCm1hbmFnZSB0aGUgcmVzb3VyY2VzIG9mIHByb2Nlc3NlcyBhbmQgbmFtZXMgYC5zbGljZWAgdGhlIGZpbGVzIHRvCmNvbmZpZ3VyZSB0aGUgcmVzb3VyY2UgZGlzdHJpYnV0aW9uLgptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='ClRoZSB0ZXJtICpzbGljZSogaXMgYm9ycm93ZWQgZnJvbSBgc3lzdGVtZGA6IGBzeXN0ZW1kYCB1c2VzIGBjZ3JvdXBgIHRvCm1hbmFnZSB0aGUgcmVzb3VyY2VzIG9mIHByb2Nlc3NlcyBhbmQgbmFtZXMgYC5zbGljZWAgdGhlIGZpbGVzIHRvCmNvbmZpZ3VyZSB0aGUgcmVzb3VyY2UgZGlzdHJpYnV0aW9uLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+The term &lt;em&gt;slice&lt;/em&gt; is borrowed from &lt;code&gt;systemd&lt;/code&gt;: &lt;code&gt;systemd&lt;/code&gt; uses &lt;code&gt;cgroup&lt;/code&gt; to manage the resources of processes and names &lt;code&gt;.slice&lt;/code&gt; the files to configure the resource distribution.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;It is our main way to organize processes into different domains to assign them different amounts of a resource, different &lt;em&gt;slices&lt;/em&gt; of the cake.&lt;/p&gt;
+&lt;h2 id="domain-threaded-and-threaded-cgroups"&gt;&lt;code&gt;domain threaded&lt;/code&gt; and &lt;code&gt;threaded&lt;/code&gt; cgroups&lt;/h2&gt;
+&lt;p&gt;However there are some resources that still make sense to distribute them even further, at the thread level.&lt;/p&gt;
+&lt;p&gt;In these cases we can turn one &lt;em&gt;normal&lt;/em&gt; &lt;code&gt;domain&lt;/code&gt; into a &lt;code&gt;domain threaded&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CioqU3VtbWFyeToqKiBhIGBkb21haW5gIG9yIGBkb21haW4gdGhyZWFkZWRgIGFyZSBgY2dyb3Vwc2AgdGhhdCBvcGVyYXRlIGF0IHByb2Nlc3MKbGV2ZWwgd2hpbGUgYHRocmVhZGVkIGNncm91cHNgIG9wZXJhdGVzIGF0IHRocmVhZCBsZXZlbC4KbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CioqU3VtbWFyeToqKiBhIGBkb21haW5gIG9yIGBkb21haW4gdGhyZWFkZWRgIGFyZSBgY2dyb3Vwc2AgdGhhdCBvcGVyYXRlIGF0IHByb2Nlc3MKbGV2ZWwgd2hpbGUgYHRocmVhZGVkIGNncm91cHNgIG9wZXJhdGVzIGF0IHRocmVhZCBsZXZlbC4KbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;strong&gt;Summary:&lt;/strong&gt; a &lt;code&gt;domain&lt;/code&gt; or &lt;code&gt;domain threaded&lt;/code&gt; are &lt;code&gt;cgroups&lt;/code&gt; that operate at process level while &lt;code&gt;threaded cgroups&lt;/code&gt; operates at thread level.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;The domain threaded still operates at the process level but further divisions are for &lt;em&gt;partitioning the threads&lt;/em&gt; of the processes in the domain.&lt;/p&gt;
+&lt;p&gt;These divisions are neither normal &lt;code&gt;domain&lt;/code&gt; nor &lt;code&gt;domain threaded&lt;/code&gt;, these are &lt;code&gt;threaded&lt;/code&gt; cgroups.&lt;/p&gt;
+&lt;p&gt;Let’s create first a few normal &lt;code&gt;domain&lt;/code&gt;s:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ mkdir -p test/cg1/t1
+$ cat test/cg1/t1/cgroup.type
+domain
+
+$ mkdir -p test/cg1/t2
+$ cat test/cg1/t2/cgroup.type
+domain
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now we turn one of the domains into a &lt;code&gt;threaded&lt;/code&gt; cgroup and that will automatically turn &lt;em&gt;its parent&lt;/em&gt; into a &lt;code&gt;domain threaded&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="c1"&gt;# The parent cgroup, before&lt;/span&gt;
+$ cat test/cg1/cgroup.type
+domain
+
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;threaded&amp;quot;&lt;/span&gt; &amp;gt; test/cg1/t1/cgroup.type
+$ cat test/cg1/t1/cgroup.type
+threaded
+
+$ &lt;span class="c1"&gt;# The parent cgroup, after&lt;/span&gt;
+$ cat test/cg1/cgroup.type
+domain threaded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;While we can still use &lt;code&gt;test/cg1/&lt;/code&gt; to control the resources of the processes that belong to the group, we can now use &lt;code&gt;test/cg1/t1/&lt;/code&gt; and &lt;code&gt;test/cg1/t2/&lt;/code&gt; to distribute the resources differently among the &lt;em&gt;threads&lt;/em&gt; of the processes.&lt;/p&gt;
+&lt;p&gt;Of course this is possible only if the resource controller supports such distribution, if it is meaningful.&lt;/p&gt;
+&lt;p&gt;A resource controller that can distribute the resource among threads is a &lt;em&gt;thread controller&lt;/em&gt;. A resource controller that operates only at the process level is a &lt;em&gt;domain controller&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;A main difference with &lt;code&gt;cgroup v1&lt;/code&gt; is that in &lt;code&gt;v2&lt;/code&gt; all the threads of a process belong to the &lt;em&gt;same&lt;/em&gt; domain and hence they are subject to the control of a domain controller.&lt;/p&gt;
+&lt;p&gt;We can distribute the resources even further creating &lt;code&gt;threaded&lt;/code&gt; partitions but all of them are inside the &lt;em&gt;same&lt;/em&gt; &lt;code&gt;domain threaded&lt;/code&gt; group.&lt;/p&gt;
+&lt;p&gt;In &lt;code&gt;v1&lt;/code&gt; the threads of a process could live in a different, totally unrelated part of the hierarchy which made the implementation of the controllers much complex.&lt;/p&gt;
+&lt;h2 id="domain-invalid"&gt;&lt;code&gt;domain invalid&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;We made &lt;code&gt;test/cg1/t1/&lt;/code&gt; into a &lt;code&gt;threaded&lt;/code&gt; and that turned its parent &lt;code&gt;test/cg1/&lt;/code&gt; into a &lt;code&gt;domain threaded&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;What happen with the sibling of &lt;code&gt;test/cg1/t1/&lt;/code&gt;, the &lt;code&gt;test/cg1/t2/&lt;/code&gt; cgroup?&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="c1"&gt;# The parent cgroup&lt;/span&gt;
+$ cat test/cg1/cgroup.type
+domain threaded
+
+$ &lt;span class="c1"&gt;# The threaded cgroup&lt;/span&gt;
+$ cat test/cg1/t1/cgroup.type
+threaded
+
+$ &lt;span class="c1"&gt;# Its sibling&lt;/span&gt;
+$ cat test/cg1/t2/cgroup.type
+domain invalid
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code&gt;test/cg1/t2/&lt;/code&gt; is in an invalid state because we said that any subfolder of a &lt;code&gt;domain threaded&lt;/code&gt; must be of the &lt;code&gt;threaded&lt;/code&gt; kind.&lt;/p&gt;
+&lt;p&gt;By default &lt;code&gt;test/cg1/t2/&lt;/code&gt; was &lt;code&gt;domain&lt;/code&gt; so this is incompatible.&lt;/p&gt;
+&lt;p&gt;The same would happen if we create a new cgroup, because the default is of type &lt;code&gt;domain&lt;/code&gt;, the resulting will be invalid too.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="c1"&gt;# The parent cgroup&lt;/span&gt;
+$ cat test/cg1/cgroup.type
+domain threaded
+
+$ &lt;span class="c1"&gt;# Create a new cgroup&lt;/span&gt;
+$ mkdir test/cg1/t3
+
+$ &lt;span class="c1"&gt;# The default type is always &amp;#39;domain&amp;#39; so it makes&lt;/span&gt;
+$ &lt;span class="c1"&gt;# it invalid here inside of the &amp;#39;domain threaded&amp;#39;&lt;/span&gt;
+$ cat test/cg1/t3/cgroup.type
+domain invalid
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We can turn these invalid domains into &lt;code&gt;threaded&lt;/code&gt; cgroups just writing in their &lt;code&gt;cgroup.type&lt;/code&gt; the value &lt;code&gt;threaded&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;threaded&amp;#39;&lt;/span&gt; &amp;gt; test/cg1/t2/cgroup.type
+$ cat test/cg1/t2/cgroup.type
+threaded
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="life-time-of-a-domain-threaded"&gt;Life time of a &lt;code&gt;domain threaded&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;As we saw earlier, a &lt;code&gt;domain threaded&lt;/code&gt; can be created by making one of its (sub) cgroups a &lt;code&gt;threaded&lt;/code&gt; cgroup.&lt;/p&gt;
+&lt;p&gt;It is &lt;em&gt;not&lt;/em&gt; possible to write &lt;code&gt;domain threaded&lt;/code&gt; neither to change the type of a &lt;code&gt;domain invalid&lt;/code&gt; nor to change a &lt;code&gt;domain&lt;/code&gt; into a &lt;code&gt;domain threaded&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;domain threaded&amp;#39;&lt;/span&gt; &amp;gt; test/cg1/t3/cgroup.type
+bash: echo: write error: Invalid argument
+
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;domain threaded&amp;#39;&lt;/span&gt; &amp;gt; test/cg2/cgroup.type
+bash: echo: write error: Invalid argument
+
+$ cat test/cg1/t3/cgroup.type
+domain invalid
+
+$ cat test/cg2/cgroup.type
+domain
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The only way to get a &lt;code&gt;domain threaded&lt;/code&gt; is to have a (sub) cgroup of &lt;code&gt;threaded&lt;/code&gt; type.&lt;/p&gt;
+&lt;p&gt;The same restriction works on the way back: to make a &lt;code&gt;domain threaded&lt;/code&gt; back to a &lt;code&gt;domain&lt;/code&gt; you must delete the (sub) &lt;code&gt;threaded&lt;/code&gt; cgroups (changing them to &lt;code&gt;domain&lt;/code&gt; does not work).&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="c1"&gt;# this doen&amp;#39;t work&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;domain&amp;#39;&lt;/span&gt; &amp;gt; test/cg1/t1/cgroup.type
+&amp;lt;...&amp;gt;write error: Invalid argument
+
+$ rmdir test/cg1/t1
+$ rmdir test/cg1/t2
+
+$ &lt;span class="c1"&gt;# back to &amp;quot;normal&amp;quot; domain&lt;/span&gt;
+$ cat test/cg1/cgroup.type
+domain
+
+$ &lt;span class="c1"&gt;# not longer domain invalid&lt;/span&gt;
+$ cat test/cg1/t3/cgroup.type
+domain
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="cgroups-type-transitions"&gt;cgroup’s type transitions&lt;/h2&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+A summary of all the possible types that a cgroup can have and the possible transitions from one type to another.
+&lt;br /&gt;&lt;br /&gt;
+All the transitions requires a direct action from the user like &lt;code&gt;rmdir&lt;/code&gt; a folder to delete a cgroup or writing &lt;code&gt;"threaded"&lt;/code&gt; in &lt;code&gt;cgroup.type&lt;/code&gt; to turn that &lt;code&gt;cgroup&lt;/code&gt; into a &lt;code&gt;threaded&lt;/code&gt; cgroup.
+&lt;br /&gt;&lt;br /&gt;
+There are 2 exceptions: a &lt;code&gt;domain&lt;/code&gt; goes to &lt;code&gt;domain invalid&lt;/code&gt; or to &lt;code&gt;domain threaded&lt;/code&gt; based on the type of its parent and children. The same with the reverse transitions.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-states.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id="cgroup-hierarchical-organization"&gt;&lt;code&gt;cgroup&lt;/code&gt; hierarchical organization&lt;/h2&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBjZ3JvdXAgKnR5cGUqIGFuZCB0aGUgYXJyb3dzCnJlcHJlc2VudHMgd2hpY2ggY2dyb3VwIHR5cGUgY2FuICpjb250YWluKiB3aGljaCAoc3ViKSBgY2dyb3VwYC4KRm9yIGV4YW1wbGUgb25lIGBkb21haW4gdGhyZWFkZWRgIGNhbiBoYXZlIG9uZSBvciBtb3JlIGB0aHJlYWRlZGAKY2dyb3Vwcy4KCipSb290KiBpcyBhIHZlcnkgc3BlY2lhbCBjZ3JvdXAgd2hpY2ggY2FuIGNvbnRhaW4gYW55IG90aGVyIHR5cGUgb2YKY2dyb3VwOiBgZG9tYWluYCwgYGRvbWFpbiB0aHJlYWRlZGAgYW5kIGB0aHJlYWRlZGAuCgpUaGUgZGlhZ3JhbSBmb2xsb3dzIHRoZSBzZW1hbnRpY3Mgb2YgYW4gVU1MIGRpYWdyYW0ubWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBjZ3JvdXAgKnR5cGUqIGFuZCB0aGUgYXJyb3dzCnJlcHJlc2VudHMgd2hpY2ggY2dyb3VwIHR5cGUgY2FuICpjb250YWluKiB3aGljaCAoc3ViKSBgY2dyb3VwYC4KRm9yIGV4YW1wbGUgb25lIGBkb21haW4gdGhyZWFkZWRgIGNhbiBoYXZlIG9uZSBvciBtb3JlIGB0aHJlYWRlZGAKY2dyb3Vwcy4KCipSb290KiBpcyBhIHZlcnkgc3BlY2lhbCBjZ3JvdXAgd2hpY2ggY2FuIGNvbnRhaW4gYW55IG90aGVyIHR5cGUgb2YKY2dyb3VwOiBgZG9tYWluYCwgYGRvbWFpbiB0aHJlYWRlZGAgYW5kIGB0aHJlYWRlZGAuCgpUaGUgZGlhZ3JhbSBmb2xsb3dzIHRoZSBzZW1hbnRpY3Mgb2YgYW4gVU1MIGRpYWdyYW0ubWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-hierarchical-org.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;br /&gt; Each box represents a cgroup &lt;em&gt;type&lt;/em&gt; and the arrows represents which cgroup type can &lt;em&gt;contain&lt;/em&gt; which (sub) &lt;code&gt;cgroup&lt;/code&gt;. For example one &lt;code&gt;domain threaded&lt;/code&gt; can have one or more &lt;code&gt;threaded&lt;/code&gt; cgroups.
+&lt;br /&gt;&lt;br /&gt;
+&lt;em&gt;Root&lt;/em&gt; is a very special cgroup which can contain any other type of cgroup: &lt;code&gt;domain&lt;/code&gt;, &lt;code&gt;domain threaded&lt;/code&gt; and &lt;code&gt;threaded&lt;/code&gt;.
+&lt;br /&gt;&lt;br /&gt;
+The diagram follows the semantics of an UML diagram.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;We can summarize all the above in the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A domain can be divided into more (sub) &lt;code&gt;domains&lt;/code&gt; just creating more (sub) cgroups with &lt;code&gt;mkdir&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;A cgroup can be turned into a &lt;code&gt;threaded&lt;/code&gt; cgroup; its parent cgroup is automatically turned into a &lt;code&gt;domain threaded&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;If a &lt;code&gt;domain threaded&lt;/code&gt; is left without &lt;code&gt;threaded&lt;/code&gt; cgroups, automatically changes to &lt;code&gt;domain&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;domain threaded&lt;/code&gt; is divided into &lt;code&gt;threaded&lt;/code&gt; cgroups and these can be further divided in more (sub) &lt;code&gt;threaded&lt;/code&gt; cgroups.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The mount point or &lt;em&gt;root&lt;/em&gt; is a special cgroup that works as a &lt;code&gt;domain&lt;/code&gt; but also as a &lt;code&gt;domain threaded&lt;/code&gt; so it can have (sub) cgroups of &lt;code&gt;domain&lt;/code&gt; type and of &lt;code&gt;threaded&lt;/code&gt; type as well.&lt;/p&gt;
+&lt;h2 id="further-reading"&gt;Further reading&lt;/h2&gt;
+&lt;p&gt;We mentioned &lt;code&gt;mount&lt;/code&gt; but nothing else. &lt;code&gt;cgroup v2&lt;/code&gt; has a few options for the &lt;code&gt;mount&lt;/code&gt; call but I didn’t covered them.&lt;/p&gt;
+&lt;p&gt;The kernel also has a few parameters to disable certain controllers but I totally skipped them :)&lt;/p&gt;
+&lt;p&gt;In general, the default setting of your distro should be fine.&lt;/p&gt;
+&lt;h2 id="next-stuff"&gt;Next stuff&lt;/h2&gt;
+&lt;p&gt;We shown how the &lt;code&gt;cgroup&lt;/code&gt; hierarchy is organized. In the next post we will see how the resources are distributed among the cgroups and which constraints do we have.&lt;/p&gt;
+&lt;!--
+Delete recursively every cgroup (folder) from the leaves to the
+root.
+
+$ cd /sys/fs/cgroup/                                              # byexample: +pass -skip
+$ rmdir $(find /sys/fs/cgroup/test/ -type d | sort -r)         # byexample: +pass -skip
+--&gt;
+</description>
+      <guid isPermaLink="false">https://book-of-gehn.github.io/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html</guid>
+      <category>linux</category>
+      <category>kernel</category>
+      <category>cgroup</category>
+      <pubDate>Sat, 23 Apr 2022 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>Multiprocessing Spawn of Dynamically Imported Code</title>
       <link>https://book-of-gehn.github.io/articles/2022/03/06/Multiprocessing-Spawn-of-Dynamically-Imported-Code.html</link>
@@ -8859,12 +9090,12 @@ Writes (&lt;em&gt;stores&lt;/em&gt;) too: a compiler could optimize issuing only
 &lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;...&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;label for='CllvdSBjYW4gZ2VuZXJhbGl6ZSB0aGlzIGNhc3QgYXMgYSBtYWNybwpgUkVBRCh4KSAoKHZvbGF0aWxlIHR5cGVvZigoeCkpKSh4KSlgCgpUYWtlIGF0IGxvb2sgYXQgTGludXgncwpbYFJFQURfT05DRWBdKGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9ibG9iL21hc3Rlci9pbmNsdWRlL2xpbnV4L2NvbXBpbGVyLmgpCmZvciBhIG1vcmUgY29tcGxldGUgY29uc3RydWN0aW9uIGV2ZW4gZm9yIG5vbi1hdG9taWMvbm9uLXByaW1pdGl2ZSB2YXJpYWJsZXMuIG1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='CllvdSBjYW4gZ2VuZXJhbGl6ZSB0aGlzIGNhc3QgYXMgYSBtYWNybwpgUkVBRCh4KSAoKHZvbGF0aWxlIHR5cGVvZigoeCkpKSh4KSlgCgpUYWtlIGF0IGxvb2sgYXQgTGludXgncwpbYFJFQURfT05DRWBdKGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9ibG9iL21hc3Rlci9pbmNsdWRlL2xpbnV4L2NvbXBpbGVyLmgpCmZvciBhIG1vcmUgY29tcGxldGUgY29uc3RydWN0aW9uIGV2ZW4gZm9yIG5vbi1hdG9taWMvbm9uLXByaW1pdGl2ZSB2YXJpYWJsZXMuIG1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='CllvdSBjYW4gZ2VuZXJhbGl6ZSB0aGlzIGNhc3QgYXMgYSBtYWNybwpgUkVBRCh4KSAoKHZvbGF0aWxlIHR5cGVvZigoeCkpKSh4KSlgCgpUYWtlIGF0IGxvb2sgYXQgTGludXgncwpbYFJFQURfT05DRWBdKGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9ibG9iL2YxNDNjMTFiYjdiOTI0NDAzZWEyZDViNWM5OTA3MTc3NzIyOTM2MjAvaW5jbHVkZS9saW51eC9jb21waWxlci5oI0wyNzUtTDI5MykKZm9yIGEgbW9yZSBjb21wbGV0ZSBjb25zdHJ1Y3Rpb24gZXZlbiBmb3Igbm9uLWF0b21pYy9ub24tcHJpbWl0aXZlIHZhcmlhYmxlcy4gbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CllvdSBjYW4gZ2VuZXJhbGl6ZSB0aGlzIGNhc3QgYXMgYSBtYWNybwpgUkVBRCh4KSAoKHZvbGF0aWxlIHR5cGVvZigoeCkpKSh4KSlgCgpUYWtlIGF0IGxvb2sgYXQgTGludXgncwpbYFJFQURfT05DRWBdKGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxkcy9saW51eC9ibG9iL2YxNDNjMTFiYjdiOTI0NDAzZWEyZDViNWM5OTA3MTc3NzIyOTM2MjAvaW5jbHVkZS9saW51eC9jb21waWxlci5oI0wyNzUtTDI5MykKZm9yIGEgbW9yZSBjb21wbGV0ZSBjb25zdHJ1Y3Rpb24gZXZlbiBmb3Igbm9uLWF0b21pYy9ub24tcHJpbWl0aXZlIHZhcmlhYmxlcy4gbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 You can generalize this cast as a macro &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;READ&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="k"&gt;volatile&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;typeof&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)))(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;
 &lt;br /&gt;&lt;br /&gt;
-Take at look at Linux’s &lt;a href="https://github.com/torvalds/linux/blob/master/include/linux/compiler.h"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;READ_ONCE&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/a&gt; for a more complete construction even for non-atomic/non-primitive variables.
+Take at look at Linux’s &lt;a href="https://github.com/torvalds/linux/blob/f143c11bb7b924403ea2d5b5c990717772293620/include/linux/compiler.h#L275-L293"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;READ_ONCE&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/a&gt; for a more complete construction even for non-atomic/non-primitive variables.
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Or we could use &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;volatile&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in a cast:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
