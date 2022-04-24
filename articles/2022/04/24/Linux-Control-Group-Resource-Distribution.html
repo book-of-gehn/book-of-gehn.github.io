@@ -1,0 +1,327 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Control Group - Resource Distribution</title>
+  <meta name="description" content="Control Group - Resource Distribution">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      //root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Control Group - Resource Distribution
+</h1>
+<p class="subtitle">
+April 24, 2022
+</p>
+<p>A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.</p>
+<p>We’ll use the simplest resource to understand: the amount of process ids or pids.</p>
+<p>While CPU and memory are the most common resources that can be exhausted, the process id <em>space</em> is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).</p>
+<p><label for='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+<a href="https://en.wikipedia.org/wiki/Fork_bomb">Fork bomb reference</a>.
+</span></p>
+<p>A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads <em>long before</em> other resource get exhausted. This the so called <em>fork bomb</em>.</p>
+<p>Once you run out of pids, no other process can be started leaving the system unusable.</p>
+<p>In this post we will explore the rules of resources distribution in a <code>cgroup</code> hierarchy and in particular how to avoid fork bombs to explode. <!--more--></p>
+<!--
+$ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byexample: +fail-fast
+-->
+<h2 id="limit-the-resource-pid-count-on-a-cgroup">Limit the resource (pid count) on a cgroup</h2>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGwuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5gY2dyb3VwYCBoaWVyYXJjaHkgYWZ0ZXIgYWRkaW5nIHRoZSBgc2hlbGxgIHByb2Nlc3MgdG8gYHRlc3QvYC4KPGJyIC8+CkJveGVzIHJlcHJlc2VudCBjZ3JvdXBzIGFuZCB0aGUgYXJyb3dzIGJldHdlZW4gdGhlIG5lc3RpbmcgKGhlcmUsIGB0ZXN0L2AgaXMKaW5zaWRlIG9mIHRoZSByb290IGAvYCBjZ3JvdXApLiBDaXJjbGVzIGFyZSBwcm9jZXNzZXMgYW5kIHRoZSBzbWFsbCBwdXJwbGUKZG90cyBhcmUgdGhlIHJlc291cmNlIGNvbnRyb2xsZXIncyBzZXR0aW5nICh0aGUgbGltaXQgb2YgcGlkcyBpbiB0aGlzCmNhc2UpLm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGwuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5gY2dyb3VwYCBoaWVyYXJjaHkgYWZ0ZXIgYWRkaW5nIHRoZSBgc2hlbGxgIHByb2Nlc3MgdG8gYHRlc3QvYC4KPGJyIC8+CkJveGVzIHJlcHJlc2VudCBjZ3JvdXBzIGFuZCB0aGUgYXJyb3dzIGJldHdlZW4gdGhlIG5lc3RpbmcgKGhlcmUsIGB0ZXN0L2AgaXMKaW5zaWRlIG9mIHRoZSByb290IGAvYCBjZ3JvdXApLiBDaXJjbGVzIGFyZSBwcm9jZXNzZXMgYW5kIHRoZSBzbWFsbCBwdXJwbGUKZG90cyBhcmUgdGhlIHJlc291cmNlIGNvbnRyb2xsZXIncyBzZXR0aW5nICh0aGUgbGltaXQgb2YgcGlkcyBpbiB0aGlzCmNhc2UpLm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_shell.svg' type='image/svg+xml'></object>
+<code>cgroup</code> hierarchy after adding the <code>shell</code> process to <code>test/</code>. <br /> Boxes represent cgroups and the arrows between the nesting (here, <code>test/</code> is inside of the root <code>/</code> cgroup). Circles are processes and the small purple dots are the resource controller’s setting (the limit of pids in this case).
+</span></p>
+<p>Let’s create a <code>test/</code> cgroup:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">cd</span> /sys/fs/cgroup
+$ mkdir <span class="nb">test</span>
+</code></pre></div>
+
+<p>Let’s add ourselves to <code>test/</code>: we add the <em>shell process</em> to <code>test/</code> by adding its process id into <code>cgroup.procs</code> file.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="nv">$$</span> &gt; test/cgroup.procs
+</code></pre></div>
+
+<p>Now we can query how many pids are being used in the cgroup. The expected count is 2: one for the shell that we added and other for the <code>cat</code> program that it is reading <code>pids.current</code>:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ cat test/pids.current
+<span class="m">2</span>
+</code></pre></div>
+
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfZWNob19jYXQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5gY2dyb3VwYCBoaWVyYXJjaHkgZHVyaW5nIHRoZSBleGVjdXRpb24gb2YgYGVjaG8gIkhlbGxvIiB8IGNhdGAuCkJvdGggYGVjaG9gIGFuZCBgY2F0YCBhcmUgY2hpbGRyZW4gb2YgYHNoZWxsYCBzbyB0aGV5IGluaGVyaXQKdGhlIHBhcmVudCdzIGNncm91cCBieSBkZWZhdWx0IGJ1dCBkdWUgdGhlIGxpbWl0IG9uIGBwaWRzIOKJpCAyYCwKdGhlIHNwYXduIG9mIGBjYXRgIGZhaWxzICh0aGUgYGZvcmtgIHN5c2NhbGwgZmFpbHMpIGFuZCB0aGUgcHJvY2VzcwpuZXZlciBnZXRzIGFsaXZlLm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfZWNob19jYXQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5gY2dyb3VwYCBoaWVyYXJjaHkgZHVyaW5nIHRoZSBleGVjdXRpb24gb2YgYGVjaG8gIkhlbGxvIiB8IGNhdGAuCkJvdGggYGVjaG9gIGFuZCBgY2F0YCBhcmUgY2hpbGRyZW4gb2YgYHNoZWxsYCBzbyB0aGV5IGluaGVyaXQKdGhlIHBhcmVudCdzIGNncm91cCBieSBkZWZhdWx0IGJ1dCBkdWUgdGhlIGxpbWl0IG9uIGBwaWRzIOKJpCAyYCwKdGhlIHNwYXduIG9mIGBjYXRgIGZhaWxzICh0aGUgYGZvcmtgIHN5c2NhbGwgZmFpbHMpIGFuZCB0aGUgcHJvY2VzcwpuZXZlciBnZXRzIGFsaXZlLm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_shell_echo_cat.svg' type='image/svg+xml'></object>
+<code>cgroup</code> hierarchy during the execution of <code>echo "Hello" | cat</code>. Both <code>echo</code> and <code>cat</code> are children of <code>shell</code> so they inherit the parent’s cgroup by default but due the limit on <code>pids ≤ 2</code>, the spawn of <code>cat</code> fails (the <code>fork</code> syscall fails) and the process never gets alive.
+</span></p>
+<p>The <code>+pids</code> controller allows us to set a maximum: once reached calls to <code>fork</code> or <code>clone</code> will fail because they will not be able to reserve another pid.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="m">2</span> &gt; test/pids.max
+
+$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span>
+Hello
+
+$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat        <span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork: Resource temporarily unavailable
+</code></pre></div>
+
+<h2 id="resource-distribution-over-a-subtree">Resource distribution over a subtree</h2>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfY2cxX2NnMi5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pk5vdGljZSBob3cgYHRlc3QvY2cxL2AgYW5kIGB0ZXN0L2NnMi9gIGFyZSAoc3ViKSBjZ3JvdXBzIG9mIGB0ZXN0L2AubWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfY2cxX2NnMi5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pk5vdGljZSBob3cgYHRlc3QvY2cxL2AgYW5kIGB0ZXN0L2NnMi9gIGFyZSAoc3ViKSBjZ3JvdXBzIG9mIGB0ZXN0L2AubWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_shell_cg1_cg2.svg' type='image/svg+xml'></object>
+Notice how <code>test/cg1/</code> and <code>test/cg2/</code> are (sub) cgroups of <code>test/</code>.
+</span></p>
+<p>We can divide <code>test/</code> in more sub cgroups however there are no <code>pids.max</code> there by default:</p>
+<div class="highlight-candombe"><pre><span></span><code>$ mkdir test/cg1
+$ mkdir test/cg2
+
+$ ls -1 test/cg1/pids*
+&lt;...&gt;No such file or directory
+
+$ ls -1 test/cg2/pids*
+&lt;...&gt;No such file or directory
+</code></pre></div>
+
+<p>Each new (sub) cgroup will <em>not</em> inherit the controllers of its parent. The parent must explicitly select which controllers its children will administrate.</p>
+<p>Nevertheless, the sub cgroups are subject to the limits of the controller.</p>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkX2J5X3BhcmVudC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PkRlc3BpdGUgK3BpZHMgbm90IGJlIGVuYWJsZWQgb24gdGVzdC9jZzEvIHRoZSBsaW1pdCBpbXBvc2VkIGJ5IHRlc3QvCipzdGlsbCBhcHBsaWVzKi4KPGJyIC8+Ck5vdGljZSBhbHNvIHRoYXQgd3JpdGluZyBzaGVsbCdzIHBpZCB0byBgdGVzdC9jZzEvY2dyb3VwLnByb2NzYApsaXRlcmFsbHkgbW92ZWQgaXQgZnJvbSBgdGVzdC9gIHRvIGB0ZXN0L2NnMS9gOiAqZWFjaCBwcm9jZXNzIGJlbG9uZ3MKdG8gb25lIGFuZCBvbmx5IG9uZSBjZ3JvdXAqLm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkX2J5X3BhcmVudC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PkRlc3BpdGUgK3BpZHMgbm90IGJlIGVuYWJsZWQgb24gdGVzdC9jZzEvIHRoZSBsaW1pdCBpbXBvc2VkIGJ5IHRlc3QvCipzdGlsbCBhcHBsaWVzKi4KPGJyIC8+Ck5vdGljZSBhbHNvIHRoYXQgd3JpdGluZyBzaGVsbCdzIHBpZCB0byBgdGVzdC9jZzEvY2dyb3VwLnByb2NzYApsaXRlcmFsbHkgbW92ZWQgaXQgZnJvbSBgdGVzdC9gIHRvIGB0ZXN0L2NnMS9gOiAqZWFjaCBwcm9jZXNzIGJlbG9uZ3MKdG8gb25lIGFuZCBvbmx5IG9uZSBjZ3JvdXAqLm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_echo_cat_cg2_limited_by_parent.svg' type='image/svg+xml'></object>
+Despite +pids not be enabled on test/cg1/ the limit imposed by test/ <em>still applies</em>. <br /> Notice also that writing shell’s pid to <code>test/cg1/cgroup.procs</code> literally moved it from <code>test/</code> to <code>test/cg1/</code>: <em>each process belongs to one and only one cgroup</em>.
+</span></p>
+<p>To prove this, let’s move our shell to <code>test/cg1/</code> and try to spawn more than 2 processes there.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="nv">$$</span> &gt; test/cg1/cgroup.procs
+$ cat test/cgroup.procs
+
+$ <span class="c1"># the limit of 2 processes on test/ applies to test/&#39;s children too</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat        <span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork: Resource temporarily unavailable
+</code></pre></div>
+
+<p>In fact the whole subtree works as <em>single unit</em>: the <em>sum</em> of the consumed resources by the processes in the subtree is subject to the limits of the controller.</p>
+<p>Let’s extend the limit to 3 processes, create a long running process in <code>test/cg2/</code> and try to spawn more processes on <code>test/cg1/</code> as before.</p>
+<p>While neither the amount of processes in <code>test/cg1/</code> nor <code>test/cg2/</code> exceed the limit of 3 processes, <em>the sum does</em>.</p>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9zbGVlcF9saW1pdGVkX2J5X3BhcmVudC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9zbGVlcF9saW1pdGVkX2J5X3BhcmVudC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_echo_cat_cg2_sleep_limited_by_parent.svg' type='image/svg+xml'></object>
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># limit on our parent (test/)</span>
+$ <span class="nb">echo</span> <span class="m">3</span> &gt; test/pids.max
+
+$ <span class="c1"># we can spawn 2 processes without problem</span>
+$ <span class="c1"># because we under the limit (2+1 &lt;= 3)</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat
+Hello
+
+$ <span class="c1"># let&#39;s add a process to our sibling (test/cg2)</span>
+$ sleep <span class="m">1000</span> <span class="p">&amp;</span>
+<span class="o">[</span>&lt;job-id-proc1&gt;<span class="o">]</span> &lt;pid-proc1&gt;
+$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg2/cgroup.procs      <span class="c1"># byexample: +paste</span>
+
+$ <span class="c1"># limit exceeded: our shell, the sleep process and these</span>
+$ <span class="c1"># 2 spawned processes exceeds the limit of 3 for the whole</span>
+$ <span class="c1"># subtree of test/</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat        <span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork: Resource temporarily unavailable
+</code></pre></div>
+
+<h2 id="further-resource-distribution-top-down-constraint">Further resource distribution: top-down constraint</h2>
+<p>Having sub cgroups makes more sense if we enable controllers there allowing us to have a better discretion to distribute the resources.</p>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2NnMi5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PldyaXRpbmcgdG8gYCtwaWRzYCB0byBgdGVzdC9jZ3JvdXAuc3VidHJlZV9jb250cm9sYCBlbmFibGVzIHRoZQpyZXNvdXJjZSBjb250cm9sbGVyIG9uIHRoZSBpbW1lZGlhdGUgY2hpbGRyZW4ubWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2NnMi5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PldyaXRpbmcgdG8gYCtwaWRzYCB0byBgdGVzdC9jZ3JvdXAuc3VidHJlZV9jb250cm9sYCBlbmFibGVzIHRoZQpyZXNvdXJjZSBjb250cm9sbGVyIG9uIHRoZSBpbW1lZGlhdGUgY2hpbGRyZW4ubWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_cg2.svg' type='image/svg+xml'></object>
+Writing to <code>+pids</code> to <code>test/cgroup.subtree_control</code> enables the resource controller on the immediate children.
+</span></p>
+<p>If we want to define (sub) limits in the <code>test/</code> immediate children, we need to <em>enable the <code>+pids</code> controller on the subtree</em>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># kill the sleep process, not of much interest from now on</span>
+$ <span class="nb">kill</span> -15 &lt;pid-proc1&gt;                          <span class="c1"># byexample: +paste +pass</span>
+
+$ <span class="c1"># enable the controller to the test/ children</span>
+$ <span class="nb">echo</span> <span class="s1">&#39;+pids&#39;</span> &gt; test/cgroup.subtree_control
+</code></pre></div>
+
+<p>The <code>cgroup.subtree_control</code> lists which controllers the immediate children will have access and control over.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ ls -1 test/cg1/pids*
+test/cg1/pids.current
+test/cg1/pids.events
+test/cg1/pids.max
+
+$ ls -1 test/cg2/pids*
+test/cg2/pids.current
+test/cg2/pids.events
+test/cg2/pids.max
+</code></pre></div>
+
+<p>By default the sub cgroups will have no limit on <em>their</em> <code>pids.max</code> file but the are still subject to the limit set in <code>test/</code>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ cat test/cg1/pids.max      <span class="c1"># apparently no limit on the child (test/cg1)</span>
+max
+
+$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat <span class="p">|</span> cat   <span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork: Resource temporarily unavailable
+</code></pre></div>
+
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_echo_cat_cg2_limited.svg' type='image/svg+xml'></object>
+</span></p>
+<p>The controller can never enlarge or relax the limits on the resource <em>beyond</em> the limits given by the parent, it can only <em>restrict</em> it further.</p>
+<p>This is the <em>top-down constraint</em>.</p>
+<p>So let’s try that!</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># limit on the parent (test/)</span>
+$ <span class="nb">echo</span> <span class="m">6</span> &gt; test/pids.max
+
+$ <span class="c1"># we can perfectly spawn these two process now</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat
+Hello
+
+$ <span class="c1"># limit further on the child (cg1/)</span>
+$ <span class="nb">echo</span> <span class="m">2</span> &gt; test/cg1/pids.max
+
+$ <span class="c1"># now we can&#39;t: we are hitting the limit not of test/ but of test/cg1/</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat        <span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork: Resource temporarily unavailable
+</code></pre></div>
+
+<h2 id="explosion-contained">Explosion contained</h2>
+<p>Not really sure why, but a fork bomb in my machine tends to eat all the CPU so it is not just eating all the pids.</p>
+<p>Thankfully, there is a resource controller for the CPU in <code>cgroup</code> too.</p>
+<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="m">3</span> &gt; test/pids.max                <span class="c1"># byexample: +fail-fast</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;1000 100000&quot;</span> &gt; test/cpu.max     <span class="c1"># byexample: +fail-fast</span>
+
+$ <span class="nb">echo</span> max &gt; test/cg1/pids.max
+
+$ bomb<span class="o">()</span> <span class="o">{</span>
+&gt;  bomb <span class="p">|</span> bomb
+&gt; <span class="o">}</span>
+
+$ bomb       <span class="c1"># byexample: +timeout=90</span>
+&lt;...&gt;Resource temporarily unavailable&lt;...&gt;
+</code></pre></div>
+
+<h2 id="further-reading">Further reading</h2>
+<p>With <code>+pids</code> we set a limit on a resource but <em>limiting</em> is just one of other possible ways to control a resource.</p>
+<p>We could set for <em>weights</em> to balance the resource usage between cgroups or we could set minimum levels of a resource (<em>protection</em>) to mention a few other ways to control a resource.</p>
+<p>All of them are out of the scope for this post as well which resources and controllers exist.</p>
+<h2 id="next-stuff">Next stuff</h2>
+<p>In the past post we talked about how we can organize the <code>cgroup</code> hierarchy and in this post how we can control and distribute resources over it.</p>
+<p>But we talked little about where the processes should be put in the hierarchy. It may seem that they could be put anywhere and for <code>v1</code> that is true.</p>
+<p>In <code>v2</code> however, the things will get a bit hairy and weird with the no internal process constraint.</p>
+<!--
+Move our shell(s) to the root
+$ echo $$ > /sys/fs/cgroup/cgroup.procs                     # byexample: +pass -skip
+
+Limit the test/ cgroup in case the bomb is still exploding and
+it is out of control
+$ echo 0 > /sys/fs/cgroup/test/pids.max                     # byexample: +pass -skip
+$ echo "1000 100000" > /sys/fs/cgroup/test/cpu.max          # byexample: +pass -skip
+
+Kill any subprocess
+$ kill -9 $(jobs -p) && wait                                    # byexample: -skip +pass
+$ sleep 2                                                       # byexample: -skip +pass +timeout=8
+$ kill -9 $(cat /sys/fs/cgroup/test/cg1/cgroup.procs) && wait   # byexample: -skip +pass
+$ kill -9 $(cat /sys/fs/cgroup/test/cg2/cgroup.procs) && wait   # byexample: -skip +pass
+$ kill -9 $(cat /sys/fs/cgroup/test/cgroup.procs) && wait       # byexample: -skip +pass
+$ sleep 2                                                       # byexample: -skip +pass +timeout=8
+
+$ echo '-pids' > /sys/fs/cgroup/test/cgroup.subtree_control     # byexample: -skip +pass
+
+Delete recursively every cgroup (folder) from the leaves to the
+root. All of them should be empty by now
+$ cd /sys/fs/cgroup/                                     # byexample: +pass -skip
+$ rmdir $(find /sys/fs/cgroup/test/ -type d | sort -r)   # byexample: +pass -skip
+-->
+</article>
+<span class="print-footer">Control Group - Resource Distribution - April 24, 2022 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

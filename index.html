@@ -84,6 +84,27 @@
 </h1>
 <span class="index-single-post">
 <hr class="slender post-layout">
+<a href="https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">
+<h2 class="larger">
+Control Group - Resource Distribution
+</h2>
+</a> <br><span class="smaller">April 24, 2022</span> <br/>
+<div>
+<p>A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.</p>
+<p>We’ll use the simplest resource to understand: the amount of process ids or pids.</p>
+<p>While CPU and memory are the most common resources that can be exhausted, the process id <em>space</em> is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).</p>
+<p><label for='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+<a href="https://en.wikipedia.org/wiki/Fork_bomb">Fork bomb reference</a>.
+</span></p>
+<p>A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads <em>long before</em> other resource get exhausted. This the so called <em>fork bomb</em>.</p>
+<p>Once you run out of pids, no other process can be started leaving the system unusable.</p>
+<p>In this post we will explore the rules of resources distribution in a <code>cgroup</code> hierarchy and in particular how to avoid fork bombs to explode.</p>
+</div>
+<p></span></p>
+<span class="index-single-post">
+<hr class="slender post-layout">
 <a href="https://book-of-gehn.github.io/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">
 <h2 class="larger">
 Control Group - Hierarchical Organization
@@ -94,7 +115,6 @@ Control Group - Hierarchical Organization
 <input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1zdGF0ZXMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-states.svg' type='image/svg+xml'></object>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>Control group or <code>cgroup</code> is a mechanism to distribute and enforce limits over the resources of the system.</p>
 <p>It was introduced in Linux kernel around 2007 but its complexity leaded to inconsistent behaviour and hard adoption.</p>
@@ -264,7 +284,6 @@ Assuming that the packet goes straight-forward to us. If there are <em>loops</em
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vaXAtdHRsLXJhbmdlLWFuZC10aW1lLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/network/internet_scan/ip-ttl-range-and-time.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>We cannot know exactly which route/s the packets taken but we can <em>count for how many hops they went through</em>: any change in the <em>hop-count</em> and we will get different TTLs and that’s evidence that they taken different routes.</p>
 <p>The inverse is not true: a constant hop-count does not imply that the route taken is the same, only the route/s have the same hops.</p>
@@ -473,7 +492,6 @@ Seaborn Cheatsheet
 <p>So I challenge myself: could I build a <em>cheatsheet</em> about plotting?</p>
 <p>Yes, yes I could.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/stats/seaborn-cheatsheet-v1.svg' /></figure></p>
 <p><a href="https://seaborn.pydata.org/">Seaborn</a> is a very simple but powerful plotting library on top of <a href="https://matplotlib.org/">matplotlib</a> designed for statistical analysis.</p>
@@ -942,7 +960,6 @@ Self-Licensing
 </a> <br><span class="smaller">December 5, 2020</span> <br/>
 <div>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img style="max-width: 60%" class='' alt='' src='/img/sociology/self-licensing-small.png' /></figure></p>
 </div>
@@ -959,7 +976,6 @@ RC-on-XDP-RX-Queue
 <input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlIiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RlYnVnL3hkcC1yeC1yYy9yeC1yYy1xdWV1ZXMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
 <img style="max-width: 120%" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>Picture this: you’d been developing for six months a network sniffer using XDP, a kernel <em>in-pass</em> in Linux.</p>
 <p>Six months and when you are about to release it, you find not one but three bugs that shake all your understanding of XDP.</p>
@@ -979,7 +995,6 @@ Qubes OS Networking
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLWlwcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/network/qubes/qubes-ips.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>These last ones have the drivers required to handle ethernet and wifi cards which expose them to a potentially deathly bug lurking in the drivers.</p>
 <p>An additional VM is put in the middle between App VMs and Net VMs. This absolute trusted <em>proxy</em> VM serves as a safe firewall (Proxy).</p>
@@ -1014,7 +1029,6 @@ Kasiski Test - Part I
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8va2FzaXNraS9rYXNpc2tpX3NjYW5fcG9zaXRpb25zLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>We discussed this in the <a href="/articles/2018/05/01/Breaking-Vigenere.html">breaking Vigenere</a> post.</p>
 <p>In that occasion we used the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming distance</a> and the <a href="/articles/2019/10/04/Index-of-Coincidence.html">Index of Coincidence</a>.</p>
@@ -1091,7 +1105,6 @@ Sidenote: Identifiers
 <div>
 <p>What would be a nice identifier for the people in, let’s say, a database?</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img style="max-width: 40%" class='' alt='' src='/img/misc/ids/email.png' /></figure></p>
 </div>
@@ -1106,7 +1119,6 @@ Lock-Free Queue - Part I
 <div>
 <p>While implementing a bounded queue or <em>ring buffer</em> in a single-thread universe is relatively easy, doing the same when you have two threads, the implementation of a lock-free queue is <em>more challenging</em>.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/lock-free/queue/queue-sp-sc.png' /></figure></p>
 <p>In this first part will analyse and implement a lock-free single-producer single-consumer queue. A multi-producer multi-consumer queue is described in the <a href="/articles/2020/04/28/Lock-Free-Queue-Part-II.html">second part</a>.</p>
@@ -1124,7 +1136,6 @@ Effects of CPU Cache Coherence
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvY2FjaGUtY29oZXJlbmNlL2NudC1jcHUtMm5kY3B1LWhlYXRtYXAucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/threading/cache-coherence/cnt-cpu-2ndcpu-heatmap.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>Most modern cpus see a single <em>shared</em> main memory seeing the same thing, <em>eventually</em>.</p>
 <p>This post explores what is behind this <em>“eventually”</em> term.</p>
@@ -1142,7 +1153,6 @@ Compiler Optimizations under a Race Condition
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvb3B0aW1pemF0aW9uLXVuZGVyLXJjL3JjTzAtYnVzeS1sb29wLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/threading/optimization-under-rc/rcO0-busy-loop.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>When two or more concurrent tasks perform non-atomic read/write operations over the same data we have a <em>race condition</em> and the system will be in an undefined state.</p>
 <p>But what exactly does that suppose to mean? What is behind the generic <em>undefined state</em>?</p>
@@ -1175,11 +1185,9 @@ Constant Rate Loop
 Same animation that last 1 second in a loop. From top to down, the first is an animation without any frame lost, the second had lost some frames but <code>draw()</code> is still in sync, the last one lost the same amount of frames but <code>draw()</code> used its own notion of time an got out of sync. <a href="/assets/drop_iterations.py"><i class="fab fa-github"></i> code</a>
 </span></p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/game/constant-rate-loop/rest-nodrop.png' /></figure></p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/game/constant-rate-loop/rest-drop.png' /></figure></p>
 </div>
@@ -1435,7 +1443,6 @@ Ouroboros - Circular Buffer
 <p><code>struct circular_buffer</code> is a simple but quite efficient implementation of a circular buffer over a continuous and finite memory slice.</p>
 <p>The name <a href="https://en.wikipedia.org/wiki/Ouroboros">Ouroboros</a> comes from the Ancient Greek and symbolize a snake eating its own tail – a convenient image for a circular buffer.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_10.png' /></figure></p>
 <p>Source code can be found in the <a href="https://github.com/eldipa/tiburoncin">tiburoncin project</a>. Enjoy it!</p>
@@ -1453,7 +1460,6 @@ CBC Bitflipping
 <input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjLWRlYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
 <img style="max-width: 60%" class='fullwidth' alt='' src='/img/matasano/cbc-dec.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>CBC does not offer any protection against an active attacker.</p>
 <p>Flipping some bits in a ciphertext block totally scrambles its plaintext but it has a very specific effect in the <em>next</em> plaintext block.</p>
@@ -1610,7 +1616,6 @@ Isolate a wifi card and keep your traffic out of the Big Brother sight
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2lzb2xhdGVfd2lmaV9iaWdfYnJvdGhlcl9zaWdodC5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/network/isolate_wifi_big_brother_sight.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>HTTP Proxies blacklisting evil domains, firewalls blocking weird traffic and IDSs looking for someone that shouldn’t be there are reasonable and understandable policies for a corporate environment.</p>
 <p>But when a friend opened his browser this week and went to <code>google.com</code> the things got odd.</p>
@@ -1629,7 +1634,6 @@ Forensics 911 - recovering a thesis of one year work
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9mb3JlbnNpY3MvdGhlc2lzLXJlY292ZXJpbmcvdHJpbW1pbmdfc2NyYXBpbmdfZGRyZXNjdWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>A friend of mine called me: a girl friend of him was hopeless trying to recover her thesis from a corrupted usb stick <em>three days</em> before her presentation.</p>
 <p>She was working in her thesis for almost a year, saving all the progresses in that usb stick. But what she didn’t know was that an usb memory has a limited number of writes and with more writes eventually the file system gets corrupted.</p>

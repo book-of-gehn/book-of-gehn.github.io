@@ -90,6 +90,9 @@ April 23, 2022
 <p>It was introduced in Linux kernel around 2007 but its complexity leaded to inconsistent behaviour and hard adoption.</p>
 <p>Fast forwarding 9 years, in kernel 4.5 a rewrite of <code>cgroup</code> revamp the idea, making it simpler and consistent.</p>
 <p>This post focus in the organization of cgroups and it is the first of a 3-posts series about <code>cgroup</code> in its new <code>v2</code> version. <!--more--></p>
+<!--
+$ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byexample: +fail-fast
+-->
 <h2 id="overview-of-cgroup-organization">Overview of <code>cgroup</code> organization</h2>
 <p><label for='CioqTm90YXRpb246KiogSSB3aWxsIHdyaXRlIGBjZ3JvdXBgIHRvIGRlbm90ZSB0aGUgQ29udHJvbCBHcm91cAppbXBsZW1lbnRhdGlvbiBvciBoaWVyYXJjaHkgd2hpbGUgSSB3aWxsIHdyaXRlIGNncm91cCBvciBjZ3JvdXBzIHRvCnJlZmVyIGFib3V0IG9uZSBvciBtb3JlIGdyb3VwcyBpbiBwYXJ0aWN1bGFyLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CioqTm90YXRpb246KiogSSB3aWxsIHdyaXRlIGBjZ3JvdXBgIHRvIGRlbm90ZSB0aGUgQ29udHJvbCBHcm91cAppbXBsZW1lbnRhdGlvbiBvciBoaWVyYXJjaHkgd2hpbGUgSSB3aWxsIHdyaXRlIGNncm91cCBvciBjZ3JvdXBzIHRvCnJlZmVyIGFib3V0IG9uZSBvciBtb3JlIGdyb3VwcyBpbiBwYXJ0aWN1bGFyLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>

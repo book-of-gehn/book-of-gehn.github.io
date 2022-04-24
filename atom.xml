@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2022-04-23T21:21:56.206947+00:00</updated>
+  <updated>2022-04-24T20:09:03.634901+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -11,6 +11,242 @@
   <link href="https://book-of-gehn.github.io/atom.xml" rel="self"/>
   <generator uri="https://lkiesow.github.io/python-feedgen" version="0.9.0">python-feedgen</generator>
   <subtitle>blog</subtitle>
+  <entry>
+    <id>https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html</id>
+    <title>Control Group - Resource Distribution</title>
+    <updated>2022-04-24T00:00:00+00:00</updated>
+    <author>
+      <name>Martin Di Paola</name>
+    </author>
+    <content type="html">&lt;p&gt;A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.&lt;/p&gt;
+&lt;p&gt;We’ll use the simplest resource to understand: the amount of process ids or pids.&lt;/p&gt;
+&lt;p&gt;While CPU and memory are the most common resources that can be exhausted, the process id &lt;em&gt;space&lt;/em&gt; is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).&lt;/p&gt;
+&lt;p&gt;&lt;label for='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;a href="https://en.wikipedia.org/wiki/Fork_bomb"&gt;Fork bomb reference&lt;/a&gt;.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads &lt;em&gt;long before&lt;/em&gt; other resource get exhausted. This the so called &lt;em&gt;fork bomb&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Once you run out of pids, no other process can be started leaving the system unusable.&lt;/p&gt;
+&lt;p&gt;In this post we will explore the rules of resources distribution in a &lt;code&gt;cgroup&lt;/code&gt; hierarchy and in particular how to avoid fork bombs to explode. &lt;!--more--&gt;&lt;/p&gt;
+&lt;!--
+$ test -d /sys/fs/cgroup/test &amp;&amp; echo "cgroup test/ already created!"     # byexample: +fail-fast
+--&gt;
+&lt;h2 id="limit-the-resource-pid-count-on-a-cgroup"&gt;Limit the resource (pid count) on a cgroup&lt;/h2&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGwuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5gY2dyb3VwYCBoaWVyYXJjaHkgYWZ0ZXIgYWRkaW5nIHRoZSBgc2hlbGxgIHByb2Nlc3MgdG8gYHRlc3QvYC4KPGJyIC8+CkJveGVzIHJlcHJlc2VudCBjZ3JvdXBzIGFuZCB0aGUgYXJyb3dzIGJldHdlZW4gdGhlIG5lc3RpbmcgKGhlcmUsIGB0ZXN0L2AgaXMKaW5zaWRlIG9mIHRoZSByb290IGAvYCBjZ3JvdXApLiBDaXJjbGVzIGFyZSBwcm9jZXNzZXMgYW5kIHRoZSBzbWFsbCBwdXJwbGUKZG90cyBhcmUgdGhlIHJlc291cmNlIGNvbnRyb2xsZXIncyBzZXR0aW5nICh0aGUgbGltaXQgb2YgcGlkcyBpbiB0aGlzCmNhc2UpLm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGwuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5gY2dyb3VwYCBoaWVyYXJjaHkgYWZ0ZXIgYWRkaW5nIHRoZSBgc2hlbGxgIHByb2Nlc3MgdG8gYHRlc3QvYC4KPGJyIC8+CkJveGVzIHJlcHJlc2VudCBjZ3JvdXBzIGFuZCB0aGUgYXJyb3dzIGJldHdlZW4gdGhlIG5lc3RpbmcgKGhlcmUsIGB0ZXN0L2AgaXMKaW5zaWRlIG9mIHRoZSByb290IGAvYCBjZ3JvdXApLiBDaXJjbGVzIGFyZSBwcm9jZXNzZXMgYW5kIHRoZSBzbWFsbCBwdXJwbGUKZG90cyBhcmUgdGhlIHJlc291cmNlIGNvbnRyb2xsZXIncyBzZXR0aW5nICh0aGUgbGltaXQgb2YgcGlkcyBpbiB0aGlzCmNhc2UpLm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_shell.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;code&gt;cgroup&lt;/code&gt; hierarchy after adding the &lt;code&gt;shell&lt;/code&gt; process to &lt;code&gt;test/&lt;/code&gt;. &lt;br /&gt; Boxes represent cgroups and the arrows between the nesting (here, &lt;code&gt;test/&lt;/code&gt; is inside of the root &lt;code&gt;/&lt;/code&gt; cgroup). Circles are processes and the small purple dots are the resource controller’s setting (the limit of pids in this case).
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Let’s create a &lt;code&gt;test/&lt;/code&gt; cgroup:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; /sys/fs/cgroup
+$ mkdir &lt;span class="nb"&gt;test&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s add ourselves to &lt;code&gt;test/&lt;/code&gt;: we add the &lt;em&gt;shell process&lt;/em&gt; to &lt;code&gt;test/&lt;/code&gt; by adding its process id into &lt;code&gt;cgroup.procs&lt;/code&gt; file.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$$&lt;/span&gt; &amp;gt; test/cgroup.procs
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now we can query how many pids are being used in the cgroup. The expected count is 2: one for the shell that we added and other for the &lt;code&gt;cat&lt;/code&gt; program that it is reading &lt;code&gt;pids.current&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cat test/pids.current
+&lt;span class="m"&gt;2&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfZWNob19jYXQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5gY2dyb3VwYCBoaWVyYXJjaHkgZHVyaW5nIHRoZSBleGVjdXRpb24gb2YgYGVjaG8gIkhlbGxvIiB8IGNhdGAuCkJvdGggYGVjaG9gIGFuZCBgY2F0YCBhcmUgY2hpbGRyZW4gb2YgYHNoZWxsYCBzbyB0aGV5IGluaGVyaXQKdGhlIHBhcmVudCdzIGNncm91cCBieSBkZWZhdWx0IGJ1dCBkdWUgdGhlIGxpbWl0IG9uIGBwaWRzIOKJpCAyYCwKdGhlIHNwYXduIG9mIGBjYXRgIGZhaWxzICh0aGUgYGZvcmtgIHN5c2NhbGwgZmFpbHMpIGFuZCB0aGUgcHJvY2VzcwpuZXZlciBnZXRzIGFsaXZlLm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfZWNob19jYXQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5gY2dyb3VwYCBoaWVyYXJjaHkgZHVyaW5nIHRoZSBleGVjdXRpb24gb2YgYGVjaG8gIkhlbGxvIiB8IGNhdGAuCkJvdGggYGVjaG9gIGFuZCBgY2F0YCBhcmUgY2hpbGRyZW4gb2YgYHNoZWxsYCBzbyB0aGV5IGluaGVyaXQKdGhlIHBhcmVudCdzIGNncm91cCBieSBkZWZhdWx0IGJ1dCBkdWUgdGhlIGxpbWl0IG9uIGBwaWRzIOKJpCAyYCwKdGhlIHNwYXduIG9mIGBjYXRgIGZhaWxzICh0aGUgYGZvcmtgIHN5c2NhbGwgZmFpbHMpIGFuZCB0aGUgcHJvY2VzcwpuZXZlciBnZXRzIGFsaXZlLm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_shell_echo_cat.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;code&gt;cgroup&lt;/code&gt; hierarchy during the execution of &lt;code&gt;echo "Hello" | cat&lt;/code&gt;. Both &lt;code&gt;echo&lt;/code&gt; and &lt;code&gt;cat&lt;/code&gt; are children of &lt;code&gt;shell&lt;/code&gt; so they inherit the parent’s cgroup by default but due the limit on &lt;code&gt;pids ≤ 2&lt;/code&gt;, the spawn of &lt;code&gt;cat&lt;/code&gt; fails (the &lt;code&gt;fork&lt;/code&gt; syscall fails) and the process never gets alive.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;+pids&lt;/code&gt; controller allows us to set a maximum: once reached calls to &lt;code&gt;fork&lt;/code&gt; or &lt;code&gt;clone&lt;/code&gt; will fail because they will not be able to reserve another pid.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="m"&gt;2&lt;/span&gt; &amp;gt; test/pids.max
+
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt;
+Hello
+
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat        &lt;span class="c1"&gt;# byexample: +timeout=30&lt;/span&gt;
+&amp;lt;...&amp;gt;fork: Resource temporarily unavailable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="resource-distribution-over-a-subtree"&gt;Resource distribution over a subtree&lt;/h2&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfY2cxX2NnMi5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pk5vdGljZSBob3cgYHRlc3QvY2cxL2AgYW5kIGB0ZXN0L2NnMi9gIGFyZSAoc3ViKSBjZ3JvdXBzIG9mIGB0ZXN0L2AubWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfY2cxX2NnMi5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pk5vdGljZSBob3cgYHRlc3QvY2cxL2AgYW5kIGB0ZXN0L2NnMi9gIGFyZSAoc3ViKSBjZ3JvdXBzIG9mIGB0ZXN0L2AubWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_shell_cg1_cg2.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+Notice how &lt;code&gt;test/cg1/&lt;/code&gt; and &lt;code&gt;test/cg2/&lt;/code&gt; are (sub) cgroups of &lt;code&gt;test/&lt;/code&gt;.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;We can divide &lt;code&gt;test/&lt;/code&gt; in more sub cgroups however there are no &lt;code&gt;pids.max&lt;/code&gt; there by default:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ mkdir test/cg1
+$ mkdir test/cg2
+
+$ ls -1 test/cg1/pids*
+&amp;lt;...&amp;gt;No such file or directory
+
+$ ls -1 test/cg2/pids*
+&amp;lt;...&amp;gt;No such file or directory
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Each new (sub) cgroup will &lt;em&gt;not&lt;/em&gt; inherit the controllers of its parent. The parent must explicitly select which controllers its children will administrate.&lt;/p&gt;
+&lt;p&gt;Nevertheless, the sub cgroups are subject to the limits of the controller.&lt;/p&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkX2J5X3BhcmVudC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PkRlc3BpdGUgK3BpZHMgbm90IGJlIGVuYWJsZWQgb24gdGVzdC9jZzEvIHRoZSBsaW1pdCBpbXBvc2VkIGJ5IHRlc3QvCipzdGlsbCBhcHBsaWVzKi4KPGJyIC8+Ck5vdGljZSBhbHNvIHRoYXQgd3JpdGluZyBzaGVsbCdzIHBpZCB0byBgdGVzdC9jZzEvY2dyb3VwLnByb2NzYApsaXRlcmFsbHkgbW92ZWQgaXQgZnJvbSBgdGVzdC9gIHRvIGB0ZXN0L2NnMS9gOiAqZWFjaCBwcm9jZXNzIGJlbG9uZ3MKdG8gb25lIGFuZCBvbmx5IG9uZSBjZ3JvdXAqLm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkX2J5X3BhcmVudC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PkRlc3BpdGUgK3BpZHMgbm90IGJlIGVuYWJsZWQgb24gdGVzdC9jZzEvIHRoZSBsaW1pdCBpbXBvc2VkIGJ5IHRlc3QvCipzdGlsbCBhcHBsaWVzKi4KPGJyIC8+Ck5vdGljZSBhbHNvIHRoYXQgd3JpdGluZyBzaGVsbCdzIHBpZCB0byBgdGVzdC9jZzEvY2dyb3VwLnByb2NzYApsaXRlcmFsbHkgbW92ZWQgaXQgZnJvbSBgdGVzdC9gIHRvIGB0ZXN0L2NnMS9gOiAqZWFjaCBwcm9jZXNzIGJlbG9uZ3MKdG8gb25lIGFuZCBvbmx5IG9uZSBjZ3JvdXAqLm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_echo_cat_cg2_limited_by_parent.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+Despite +pids not be enabled on test/cg1/ the limit imposed by test/ &lt;em&gt;still applies&lt;/em&gt;. &lt;br /&gt; Notice also that writing shell’s pid to &lt;code&gt;test/cg1/cgroup.procs&lt;/code&gt; literally moved it from &lt;code&gt;test/&lt;/code&gt; to &lt;code&gt;test/cg1/&lt;/code&gt;: &lt;em&gt;each process belongs to one and only one cgroup&lt;/em&gt;.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;To prove this, let’s move our shell to &lt;code&gt;test/cg1/&lt;/code&gt; and try to spawn more than 2 processes there.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$$&lt;/span&gt; &amp;gt; test/cg1/cgroup.procs
+$ cat test/cgroup.procs
+
+$ &lt;span class="c1"&gt;# the limit of 2 processes on test/ applies to test/&amp;#39;s children too&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat        &lt;span class="c1"&gt;# byexample: +timeout=30&lt;/span&gt;
+&amp;lt;...&amp;gt;fork: Resource temporarily unavailable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;In fact the whole subtree works as &lt;em&gt;single unit&lt;/em&gt;: the &lt;em&gt;sum&lt;/em&gt; of the consumed resources by the processes in the subtree is subject to the limits of the controller.&lt;/p&gt;
+&lt;p&gt;Let’s extend the limit to 3 processes, create a long running process in &lt;code&gt;test/cg2/&lt;/code&gt; and try to spawn more processes on &lt;code&gt;test/cg1/&lt;/code&gt; as before.&lt;/p&gt;
+&lt;p&gt;While neither the amount of processes in &lt;code&gt;test/cg1/&lt;/code&gt; nor &lt;code&gt;test/cg2/&lt;/code&gt; exceed the limit of 3 processes, &lt;em&gt;the sum does&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9zbGVlcF9saW1pdGVkX2J5X3BhcmVudC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9zbGVlcF9saW1pdGVkX2J5X3BhcmVudC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_echo_cat_cg2_sleep_limited_by_parent.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="c1"&gt;# limit on our parent (test/)&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &amp;gt; test/pids.max
+
+$ &lt;span class="c1"&gt;# we can spawn 2 processes without problem&lt;/span&gt;
+$ &lt;span class="c1"&gt;# because we under the limit (2+1 &amp;lt;= 3)&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat
+Hello
+
+$ &lt;span class="c1"&gt;# let&amp;#39;s add a process to our sibling (test/cg2)&lt;/span&gt;
+$ sleep &lt;span class="m"&gt;1000&lt;/span&gt; &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;&amp;lt;job-id-proc1&amp;gt;&lt;span class="o"&gt;]&lt;/span&gt; &amp;lt;pid-proc1&amp;gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &amp;lt;pid-proc1&amp;gt; &amp;gt; test/cg2/cgroup.procs      &lt;span class="c1"&gt;# byexample: +paste&lt;/span&gt;
+
+$ &lt;span class="c1"&gt;# limit exceeded: our shell, the sleep process and these&lt;/span&gt;
+$ &lt;span class="c1"&gt;# 2 spawned processes exceeds the limit of 3 for the whole&lt;/span&gt;
+$ &lt;span class="c1"&gt;# subtree of test/&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat        &lt;span class="c1"&gt;# byexample: +timeout=30&lt;/span&gt;
+&amp;lt;...&amp;gt;fork: Resource temporarily unavailable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="further-resource-distribution-top-down-constraint"&gt;Further resource distribution: top-down constraint&lt;/h2&gt;
+&lt;p&gt;Having sub cgroups makes more sense if we enable controllers there allowing us to have a better discretion to distribute the resources.&lt;/p&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2NnMi5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PldyaXRpbmcgdG8gYCtwaWRzYCB0byBgdGVzdC9jZ3JvdXAuc3VidHJlZV9jb250cm9sYCBlbmFibGVzIHRoZQpyZXNvdXJjZSBjb250cm9sbGVyIG9uIHRoZSBpbW1lZGlhdGUgY2hpbGRyZW4ubWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2NnMi5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PldyaXRpbmcgdG8gYCtwaWRzYCB0byBgdGVzdC9jZ3JvdXAuc3VidHJlZV9jb250cm9sYCBlbmFibGVzIHRoZQpyZXNvdXJjZSBjb250cm9sbGVyIG9uIHRoZSBpbW1lZGlhdGUgY2hpbGRyZW4ubWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_cg2.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+Writing to &lt;code&gt;+pids&lt;/code&gt; to &lt;code&gt;test/cgroup.subtree_control&lt;/code&gt; enables the resource controller on the immediate children.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;If we want to define (sub) limits in the &lt;code&gt;test/&lt;/code&gt; immediate children, we need to &lt;em&gt;enable the &lt;code&gt;+pids&lt;/code&gt; controller on the subtree&lt;/em&gt;.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="c1"&gt;# kill the sleep process, not of much interest from now on&lt;/span&gt;
+$ &lt;span class="nb"&gt;kill&lt;/span&gt; -15 &amp;lt;pid-proc1&amp;gt;                          &lt;span class="c1"&gt;# byexample: +paste +pass&lt;/span&gt;
+
+$ &lt;span class="c1"&gt;# enable the controller to the test/ children&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;+pids&amp;#39;&lt;/span&gt; &amp;gt; test/cgroup.subtree_control
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code&gt;cgroup.subtree_control&lt;/code&gt; lists which controllers the immediate children will have access and control over.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ ls -1 test/cg1/pids*
+test/cg1/pids.current
+test/cg1/pids.events
+test/cg1/pids.max
+
+$ ls -1 test/cg2/pids*
+test/cg2/pids.current
+test/cg2/pids.events
+test/cg2/pids.max
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;By default the sub cgroups will have no limit on &lt;em&gt;their&lt;/em&gt; &lt;code&gt;pids.max&lt;/code&gt; file but the are still subject to the limit set in &lt;code&gt;test/&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ cat test/cg1/pids.max      &lt;span class="c1"&gt;# apparently no limit on the child (test/cg1)&lt;/span&gt;
+max
+
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat &lt;span class="p"&gt;|&lt;/span&gt; cat   &lt;span class="c1"&gt;# byexample: +timeout=30&lt;/span&gt;
+&amp;lt;...&amp;gt;fork: Resource temporarily unavailable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_echo_cat_cg2_limited.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;The controller can never enlarge or relax the limits on the resource &lt;em&gt;beyond&lt;/em&gt; the limits given by the parent, it can only &lt;em&gt;restrict&lt;/em&gt; it further.&lt;/p&gt;
+&lt;p&gt;This is the &lt;em&gt;top-down constraint&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;So let’s try that!&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="c1"&gt;# limit on the parent (test/)&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="m"&gt;6&lt;/span&gt; &amp;gt; test/pids.max
+
+$ &lt;span class="c1"&gt;# we can perfectly spawn these two process now&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat
+Hello
+
+$ &lt;span class="c1"&gt;# limit further on the child (cg1/)&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="m"&gt;2&lt;/span&gt; &amp;gt; test/cg1/pids.max
+
+$ &lt;span class="c1"&gt;# now we can&amp;#39;t: we are hitting the limit not of test/ but of test/cg1/&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat        &lt;span class="c1"&gt;# byexample: +timeout=30&lt;/span&gt;
+&amp;lt;...&amp;gt;fork: Resource temporarily unavailable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="explosion-contained"&gt;Explosion contained&lt;/h2&gt;
+&lt;p&gt;Not really sure why, but a fork bomb in my machine tends to eat all the CPU so it is not just eating all the pids.&lt;/p&gt;
+&lt;p&gt;Thankfully, there is a resource controller for the CPU in &lt;code&gt;cgroup&lt;/code&gt; too.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &amp;gt; test/pids.max                &lt;span class="c1"&gt;# byexample: +fail-fast&lt;/span&gt;
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;1000 100000&amp;quot;&lt;/span&gt; &amp;gt; test/cpu.max     &lt;span class="c1"&gt;# byexample: +fail-fast&lt;/span&gt;
+
+$ &lt;span class="nb"&gt;echo&lt;/span&gt; max &amp;gt; test/cg1/pids.max
+
+$ bomb&lt;span class="o"&gt;()&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+&amp;gt;  bomb &lt;span class="p"&gt;|&lt;/span&gt; bomb
+&amp;gt; &lt;span class="o"&gt;}&lt;/span&gt;
+
+$ bomb       &lt;span class="c1"&gt;# byexample: +timeout=90&lt;/span&gt;
+&amp;lt;...&amp;gt;Resource temporarily unavailable&amp;lt;...&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="further-reading"&gt;Further reading&lt;/h2&gt;
+&lt;p&gt;With &lt;code&gt;+pids&lt;/code&gt; we set a limit on a resource but &lt;em&gt;limiting&lt;/em&gt; is just one of other possible ways to control a resource.&lt;/p&gt;
+&lt;p&gt;We could set for &lt;em&gt;weights&lt;/em&gt; to balance the resource usage between cgroups or we could set minimum levels of a resource (&lt;em&gt;protection&lt;/em&gt;) to mention a few other ways to control a resource.&lt;/p&gt;
+&lt;p&gt;All of them are out of the scope for this post as well which resources and controllers exist.&lt;/p&gt;
+&lt;h2 id="next-stuff"&gt;Next stuff&lt;/h2&gt;
+&lt;p&gt;In the past post we talked about how we can organize the &lt;code&gt;cgroup&lt;/code&gt; hierarchy and in this post how we can control and distribute resources over it.&lt;/p&gt;
+&lt;p&gt;But we talked little about where the processes should be put in the hierarchy. It may seem that they could be put anywhere and for &lt;code&gt;v1&lt;/code&gt; that is true.&lt;/p&gt;
+&lt;p&gt;In &lt;code&gt;v2&lt;/code&gt; however, the things will get a bit hairy and weird with the no internal process constraint.&lt;/p&gt;
+&lt;!--
+Move our shell(s) to the root
+$ echo $$ &gt; /sys/fs/cgroup/cgroup.procs                     # byexample: +pass -skip
+
+Limit the test/ cgroup in case the bomb is still exploding and
+it is out of control
+$ echo 0 &gt; /sys/fs/cgroup/test/pids.max                     # byexample: +pass -skip
+$ echo "1000 100000" &gt; /sys/fs/cgroup/test/cpu.max          # byexample: +pass -skip
+
+Kill any subprocess
+$ kill -9 $(jobs -p) &amp;&amp; wait                                    # byexample: -skip +pass
+$ sleep 2                                                       # byexample: -skip +pass +timeout=8
+$ kill -9 $(cat /sys/fs/cgroup/test/cg1/cgroup.procs) &amp;&amp; wait   # byexample: -skip +pass
+$ kill -9 $(cat /sys/fs/cgroup/test/cg2/cgroup.procs) &amp;&amp; wait   # byexample: -skip +pass
+$ kill -9 $(cat /sys/fs/cgroup/test/cgroup.procs) &amp;&amp; wait       # byexample: -skip +pass
+$ sleep 2                                                       # byexample: -skip +pass +timeout=8
+
+$ echo '-pids' &gt; /sys/fs/cgroup/test/cgroup.subtree_control     # byexample: -skip +pass
+
+Delete recursively every cgroup (folder) from the leaves to the
+root. All of them should be empty by now
+$ cd /sys/fs/cgroup/                                     # byexample: +pass -skip
+$ rmdir $(find /sys/fs/cgroup/test/ -type d | sort -r)   # byexample: +pass -skip
+--&gt;
+</content>
+    <link href="https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html" rel="alternate" type="text/html" title="Control Group - Resource Distribution"/>
+    <category term="linux" label="linux"/>
+    <category term="kernel" label="kernel"/>
+    <category term="cgroup" label="cgroup"/>
+    <category term="fork bomb" label="fork bomb"/>
+    <published>2022-04-24T00:00:00+00:00</published>
+  </entry>
   <entry>
     <id>https://book-of-gehn.github.io/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html</id>
     <title>Control Group - Hierarchical Organization</title>
@@ -22,6 +258,9 @@
 &lt;p&gt;It was introduced in Linux kernel around 2007 but its complexity leaded to inconsistent behaviour and hard adoption.&lt;/p&gt;
 &lt;p&gt;Fast forwarding 9 years, in kernel 4.5 a rewrite of &lt;code&gt;cgroup&lt;/code&gt; revamp the idea, making it simpler and consistent.&lt;/p&gt;
 &lt;p&gt;This post focus in the organization of cgroups and it is the first of a 3-posts series about &lt;code&gt;cgroup&lt;/code&gt; in its new &lt;code&gt;v2&lt;/code&gt; version. &lt;!--more--&gt;&lt;/p&gt;
+&lt;!--
+$ test -d /sys/fs/cgroup/test &amp;&amp; echo "cgroup test/ already created!"     # byexample: +fail-fast
+--&gt;
 &lt;h2 id="overview-of-cgroup-organization"&gt;Overview of &lt;code&gt;cgroup&lt;/code&gt; organization&lt;/h2&gt;
 &lt;p&gt;&lt;label for='CioqTm90YXRpb246KiogSSB3aWxsIHdyaXRlIGBjZ3JvdXBgIHRvIGRlbm90ZSB0aGUgQ29udHJvbCBHcm91cAppbXBsZW1lbnRhdGlvbiBvciBoaWVyYXJjaHkgd2hpbGUgSSB3aWxsIHdyaXRlIGNncm91cCBvciBjZ3JvdXBzIHRvCnJlZmVyIGFib3V0IG9uZSBvciBtb3JlIGdyb3VwcyBpbiBwYXJ0aWN1bGFyLgptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='CioqTm90YXRpb246KiogSSB3aWxsIHdyaXRlIGBjZ3JvdXBgIHRvIGRlbm90ZSB0aGUgQ29udHJvbCBHcm91cAppbXBsZW1lbnRhdGlvbiBvciBoaWVyYXJjaHkgd2hpbGUgSSB3aWxsIHdyaXRlIGNncm91cCBvciBjZ3JvdXBzIHRvCnJlZmVyIGFib3V0IG9uZSBvciBtb3JlIGdyb3VwcyBpbiBwYXJ0aWN1bGFyLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
@@ -725,7 +964,6 @@ The dataset does not include hosts scanned only once. The vertical axis is in lo
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vbXVsdGlyb3VuZHNfdHRsX3JhbmdlX3VuYmlhc2VkX19oaXN0LnN2ZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Let’s ignore the peak at 0 (those are the stable routes). Why do we have 3 secondary peaks?&lt;/p&gt;
 &lt;p&gt;Focus on the peak at TTL range of 191 (the right most).&lt;/p&gt;
@@ -1989,14 +2227,12 @@ $$
 &lt;h2 id="proof-graphs-search-graphs"&gt;Proof graphs / Search graphs&lt;/h2&gt;
 &lt;p&gt;The successive application of tactics generates subgoals that induce a tree structure know as the &lt;em&gt;proof tree&lt;/em&gt;:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/z3/prooftree.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Formally, to say proof &lt;em&gt;tree&lt;/em&gt; we need to restrict the tactics to not generate repeated goals (so we don’t have cycles).&lt;/p&gt;
 &lt;p&gt;Having then a &lt;em&gt;single&lt;/em&gt; starting goal, the &lt;em&gt;successive application&lt;/em&gt; of the tactics forms a &lt;em&gt;tree&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;We can extend this and have &lt;em&gt;multiple&lt;/em&gt; starting goals in which case we will have an &lt;em&gt;acyclic graph&lt;/em&gt; like described in [3]. (in [3] is more specific and refers to &lt;em&gt;goals&lt;/em&gt; and &lt;em&gt;tactics&lt;/em&gt; as &lt;em&gt;states&lt;/em&gt; (of a proof) and &lt;em&gt;rules of induction&lt;/em&gt; but they are the same idea).&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/z3/tree2.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;With &lt;em&gt;subgoal-reduction&lt;/em&gt; tactics, the graph is generated edge by edge; with &lt;em&gt;ordering-based&lt;/em&gt; tactics, the graph is generated by multiple edges at time.&lt;/p&gt;
@@ -2607,7 +2843,6 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kb2Mvc2VhYm9ybi1jaGVhdHNoZWV0LXYxLnN2ZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/doc/seaborn-cheatsheet-v1.svg' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;I make a lot of diagrams, state machines and plots but I try to not make them by hand.&lt;/p&gt;
 &lt;p&gt;Tools that requires a human to do the layout are a waste of time (there are exceptions like me &lt;a href="/articles/2021/06/05/Seaborn-Cheatsheet.html"&gt;Seaborn Cheatsheet&lt;/a&gt;).&lt;/p&gt;
@@ -2618,7 +2853,6 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2RvYy9xdWJlcy1uZXQtcGF0aC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/doc/qubes-net-path.svg' type='image/svg+xml'&gt;&lt;/object&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;So far I’m using these tools for by blog so I write the PlantUML/Ditaa/Graphviz diagrams (text) inside a Liquid tag in the same Markdown.&lt;/p&gt;
 &lt;p&gt;During the building, the correct tool is called and the image is generated while the Liquid tag is replaced by some HTML &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt; link.&lt;/p&gt;
@@ -2662,7 +2896,6 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;p&gt;There are a lot of gaps and problems without solution but I bet that this is going to improve my workflow.&lt;/p&gt;
 &lt;p&gt;So far, this is want I think it may work:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/doc/build-blog.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Fingers crossed.&lt;/p&gt;
@@ -2683,7 +2916,6 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;p&gt;So I challenge myself: could I build a &lt;em&gt;cheatsheet&lt;/em&gt; about plotting?&lt;/p&gt;
 &lt;p&gt;Yes, yes I could.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/stats/seaborn-cheatsheet-v1.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://seaborn.pydata.org/"&gt;Seaborn&lt;/a&gt; is a very simple but powerful plotting library on top of &lt;a href="https://matplotlib.org/"&gt;matplotlib&lt;/a&gt; designed for statistical analysis.&lt;/p&gt;
@@ -4848,12 +5080,10 @@ $$ \frac{(k!)^{k^{n-1}}}{k^n} $$
 &lt;p&gt;The resulting edge is labeled with the appended symbol.&lt;/p&gt;
 &lt;p&gt;For instance, for the given binary strings 00 and 01 we have:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/math/00-01.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;In general for the alphabet \({0,1}\) and the strings of length \(n=2\) we have:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/math/00-01-10-11.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;These are the &lt;a href="https://en.wikipedia.org/wiki/De_Bruijn_graph"&gt;De Bruijn graphs&lt;/a&gt;.&lt;/p&gt;
@@ -4986,7 +5216,6 @@ $$ \frac{(k!)^{k^{n-1}}}{k^n} $$
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/arm/azeria-arm-challenges/before-bo.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The stack pointer &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nf"&gt;sp&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; after &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;getpath&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; returns will be at &lt;em&gt;4 bytes more&lt;/em&gt; than &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nf"&gt;fp&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;em&gt;before&lt;/em&gt; the return:&lt;/p&gt;
@@ -4999,7 +5228,6 @@ $$ \frac{(k!)^{k^{n-1}}}{k^n} $$
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/arm/azeria-arm-challenges/after-bo.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="the-attack-without-dep-and-aslr"&gt;The attack (without DEP and ASLR)&lt;/h2&gt;
@@ -5112,7 +5340,6 @@ exit_group  0xf8    num&lt;/code&gt;&lt;/pre&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;No problem! We can design a single array in the stack to fulfill both:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/arm/azeria-arm-challenges/argv.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;In assembly this translates to:&lt;/p&gt;
@@ -5252,7 +5479,6 @@ The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nf
 
 &lt;p&gt;We can write the egg in the stack and then jump to it. The content of the stack should be:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/arm/azeria-arm-challenges/stack.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;addr1&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nf"&gt;sp&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. But what value is?&lt;/p&gt;
@@ -6963,7 +7189,6 @@ Addresses of free frames are consumed from the FQ queue by the kernel (1). XDP t
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtZnJhbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-frame.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The UMEM is a memory pool divided evenly by 2048 or 4096 bytes, the frame size and addresses are aligned to the frame size plus an offset for a headroom.&lt;/p&gt;
 &lt;p&gt;The headroom is an application defined space reserved at the begin of the frame for whatever the user wants to do. By default it’s zero.&lt;/p&gt;
@@ -7094,7 +7319,6 @@ If you didn’t realize, the timestamp was not zero’d either.
 &lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlIiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RlYnVnL3hkcC1yeC1yYy9yeC1yYy1xdWV1ZXMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img style="max-width: 120%" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;No problem when XDP runs in the driver but when it does in the generic mode, the kernel may be receiving several packets and pushing them &lt;strong&gt;concurrently&lt;/strong&gt; into the RX queue.&lt;/p&gt;
 &lt;blockquote&gt;
@@ -7192,7 +7416,6 @@ The “firewall” VM is isolated except for the firewall/routing processing so 
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLWlwcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/network/qubes/qubes-ips.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;“The virtual interfaces in client VMs are called &lt;code&gt;ethX&lt;/code&gt;, and are provided by the &lt;code&gt;xen_netfront&lt;/code&gt; kernel module, and the corresponding interfaces in the Net/Proxy VM are called &lt;code&gt;vifX.Y&lt;/code&gt; and are created by the &lt;code&gt;xen_netback&lt;/code&gt; module.” &lt;br /&gt;–&lt;a href="https://theinvisiblethings.blogspot.com/2011/09/playing-with-qubes-networking-for-fun.html"&gt;Playing with Qubes networking for fun&lt;/a&gt;&lt;/p&gt;
@@ -7229,7 +7452,6 @@ The second most-right bit of the same byte is odd so it is a locally administrat
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLWFycC5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/network/qubes/qubes-arp.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The ARP request/reply is the App VM asking for the MAC address of its configured gateway, the &lt;code&gt;10.137.7.1&lt;/code&gt; which it is the IP of the Proxy VM’s &lt;code&gt;vif37.0&lt;/code&gt; interface.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;root@appvm:# ip route show
@@ -7253,7 +7475,6 @@ If you are quickly enough you may see &lt;code&gt;DELAY&lt;/code&gt;: the learni
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLWZpcnN0LXBhcnQtcGluZy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/network/qubes/qubes-first-part-ping.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Once the App VM knows the Link Layer address (aka &lt;code&gt;lladdr&lt;/code&gt;), it sends the ICMP echo request, the Proxy VM &lt;em&gt;forwards&lt;/em&gt; it and forwards back the response.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;root@appvm:# tcpdump -n -i eth0
@@ -7353,7 +7574,6 @@ The reply takes the same path but the source address is &lt;strong&gt;not&lt;/st
 &lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvcXViZXMvcGF0aC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/network/qubes/path.svg' type='image/svg+xml'&gt;&lt;/object&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;App VM does a ping to &lt;code&gt;8.8.8.8&lt;/code&gt;, this is the walk-through&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;App VM
@@ -7837,13 +8057,11 @@ This is an example of &lt;a href="https://en.wikipedia.org/wiki/Dynamic_programm
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8va2FzaXNraS9rYXNpc2tpX3NjYW5fY291bnQucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/crypto/kasiski/kasiski_scan_count.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;We need to count how many instances of the same ngram are, so we can know which are unique; and we need to track their position, so we can later know the distance between them.&lt;/p&gt;
 &lt;p&gt;Storing every ngram instance in memory is expensive (for a 2 characters ngram you will have to store twice the source string).&lt;/p&gt;
 &lt;p&gt;A simple solution is to use an id: different ngrams will have different ids while the instances of the &lt;em&gt;same&lt;/em&gt; ngram will have the same id.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img style="max-width: 45%" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The following Python fragment summarizes the above:&lt;/p&gt;
@@ -7873,7 +8091,6 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img style="max-width: 60%" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_count_filter.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The final result is a list of tuples &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;position&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; with the positions of the ngrams and their identifiers &lt;em&gt;sorted&lt;/em&gt; by their position.&lt;/p&gt;
@@ -7883,7 +8100,6 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 &lt;p&gt;The idea is that two ngrams &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;g_1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;g_2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; characters at positions &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;p_1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;p_2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in the original string can be &lt;em&gt;merged&lt;/em&gt; and build a ngram of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes at &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;p_1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; if and only if &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;p_1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;p_2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;In other words, they are consecutive.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img style="max-width: 60%" class='' alt='' src='/img/crypto/kasiski/kasiski_merge.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;A merged ngram not necessary means that it is a repeated ngram but we know that any repeated ngram will be a merged one.&lt;/p&gt;
@@ -7932,7 +8148,6 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8va2FzaXNraS9rYXNpc2tpX3Bvc19ncm91cGVkLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/crypto/kasiski/kasiski_pos_grouped.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;# group first&lt;/span&gt;
 &lt;span class="n"&gt;pos_grouped&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -7950,7 +8165,6 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8va2FzaXNraS9rYXNpc2tpX2Rpc3RhbmNlcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/crypto/kasiski/kasiski_distances.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;We simplify the maths and calculate then the difference between &lt;em&gt;consecutive&lt;/em&gt; positions for a given ngram.&lt;/p&gt;
 &lt;p&gt;We assume that difference between non-consecutive values will yield a multiple of the previous shorter difference hence it will be also a multiple of the key length.&lt;/p&gt;
@@ -8220,7 +8434,6 @@ Metrics: in and out over time, plus drops and queue’s length. When two queues 
 &lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA0MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvcmVhbGx5Y29vbHN0dWZmLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img style="max-width: 40%" class='fullwidth' alt='' src='/img/design/red-blue-arch/reallycoolstuff.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;For analyzing the performance &lt;a href="http://www.brendangregg.com/usemethod.html"&gt;Brendan Gregg’s USE method&lt;/a&gt; states that every resource must be characterized by three metrics:&lt;/p&gt;
 &lt;ul&gt;
@@ -8328,7 +8541,6 @@ In short, some reorders are &lt;em&gt;still&lt;/em&gt; possible: things before a
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;What did we get? &lt;em&gt;Most&lt;/em&gt; of the possible reorders and subtle race conditions are out.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/threading/lock-free/mutex.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;If you still have a bug then it is more likely to be a &lt;em&gt;classic&lt;/em&gt; bug like mistaking &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="o"&gt;&amp;lt;=&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; or a missing &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; somewhere –&lt;em&gt;and trust me, you will make this kind of errors too&lt;/em&gt;.&lt;/p&gt;
@@ -8578,7 +8790,6 @@ If the producer 2 updates the tail before the producer 1, the consumers may read
 &lt;p&gt;The code can be found in &lt;a href="https://github.com/eldipa/loki"&gt;the loki library&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img  class='fullwidth' alt='' src='/img/threading/lock-free/queue/relativity-quantic-concurrent-programming.png' /&gt;
 &lt;figcaption&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="future-research-on-the-busy-waits"&gt;Future research on the busy waits&lt;/h2&gt;
 &lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;push&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, and analogously the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, has two busy waits: the CAS loop for update the head and the wait-for-others for updating the tail in order.&lt;/p&gt;
@@ -8655,24 +8866,20 @@ If the producer 2 updates the tail before the producer 1, the consumers may read
 &lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWlzYy9pZHMvbmFtZS5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img style="max-width: 70%" class='fullwidth' alt='' src='/img/misc/ids/name.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Their names and addresses? Quite old fashion. Collisions are possible and can be very frequent. &lt;br /&gt; Building an id based on the attributes of the person is not good in any case: it is a matter of time that the person change in some way (like change her address) to make the id &lt;em&gt;schema&lt;/em&gt; inconsistent.&lt;/p&gt;
 &lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWlzYy9pZHMvc3NuLnBuZycgLz5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWlzYy9pZHMvc3NuLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img style="max-width: 70%" class='fullwidth' alt='' src='/img/misc/ids/ssn.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Their government-level id, like the Social Security Number? Better but no, different countries have different identifier systems like &lt;a href="https://en.wikipedia.org/wiki/INSEE_code"&gt;INSEE&lt;/a&gt; in France. If you plan to use the software world-wide this will not work. &lt;br /&gt; And you are still depending on &lt;a href="https://www.ssa.gov/history/ssn/misused.html"&gt;humans&lt;/a&gt; to ensure uniqueness.&lt;/p&gt;
 &lt;p&gt;Their email? Everyone has an email, right? Yea… well. It is more nation agnostic but &lt;a href="https://gist.github.com/adamloving/4401361"&gt;still…&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img style="max-width: 40%" class='' alt='' src='/img/misc/ids/email.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Their DNA? That’s unique right?&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img style="max-width: 40%" class='' alt='' src='/img/misc/ids/sheep.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Keep it simple. Use a plain number.&lt;/em&gt;&lt;/p&gt;
@@ -8740,7 +8947,6 @@ We cannot longer guarantee that the head was moved &lt;em&gt;after&lt;/em&gt; wr
 &lt;p&gt;At the same time the consumer will not forward beyond the &lt;em&gt;producer’s tail&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;Only when the producer finishes, she will move forward her &lt;em&gt;tail&lt;/em&gt;, &lt;em&gt;commiting&lt;/em&gt; the change and allowing the readers to proceed.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/threading/lock-free/queue/queue-sp-sc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The consumer does something similar: moving the consumer’s head &lt;em&gt;reserves&lt;/em&gt; the entries to read so other readers will not pop the same data; and the consumer’s tail serves as a stop-marker for the writers.&lt;/p&gt;
@@ -8838,7 +9044,6 @@ We require the size of the queue to be a power of 2: entry access through the he
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3Jlb3JkZXItMnN0b3Jlcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/threading/lock-free/queue/reorder-2stores.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;This is a &lt;em&gt;store reorder&lt;/em&gt;. A store is typically much expensive than a load and they are moved &lt;em&gt;upwards&lt;/em&gt; to start them sooner or &lt;em&gt;downwards&lt;/em&gt; to be delayed hoping to be merged with a further store.&lt;/p&gt;
 &lt;p&gt;Loads are subject of similar optimizations and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;volatile&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; keyword will not prevent that: &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;volatile&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; works at the compiler level, has no effect on the reorder made by the CPU.&lt;/p&gt;
@@ -9396,7 +9601,6 @@ User not created.
 If the player was not created, the options 1 to 4 print &lt;code&gt;User not created.&lt;/code&gt;; if the player was created selecting 0 again yields a &lt;code&gt;User created, first delete it.&lt;/code&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/writeups/eko2019/reversing/mentalmodel.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Other strings shown up. Of course, I’m speculating the &lt;em&gt;conversion specifier&lt;/em&gt; like &lt;code&gt;%s&lt;/code&gt; and &lt;code&gt;%d&lt;/code&gt;:&lt;/p&gt;
@@ -9431,7 +9635,6 @@ To get the pointer to the players name the code does a &lt;em&gt;second&lt;/em&g
 &lt;p&gt;&lt;code&gt;printf&lt;/code&gt;-like function call with four arguments: the format string, the name of the monster, name of the player and the damage.&lt;/p&gt;
 &lt;p&gt;What about the code that &lt;em&gt;reads&lt;/em&gt; the player’s name?&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/writeups/eko2019/reversing/enter_player_name_loc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Three calls happen after the print of the message. One of them should be a &lt;code&gt;read&lt;/code&gt; like function:&lt;/p&gt;
@@ -9468,7 +9671,6 @@ No, there are not memory leaks here. The &lt;em&gt;delete player&lt;/em&gt; func
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;If this is correct, &lt;code&gt;mov     cs:player_struct, rax&lt;/code&gt; saves the &lt;em&gt;pointer&lt;/em&gt; to the struct globally, struct allocated at the begin of the block.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/writeups/eko2019/reversing/enter_player_name_loc_struct_labeled.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The key note here is that &lt;em&gt;we don’t know&lt;/em&gt;. We can just guess.&lt;/p&gt;
@@ -9484,7 +9686,6 @@ No, there are not memory leaks here. The &lt;em&gt;delete player&lt;/em&gt; func
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9yYW5kX2xvYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/rand_loc.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;We found &lt;code&gt;srand&lt;/code&gt;, and we found the &lt;em&gt;global state&lt;/em&gt; of the PRNG at &lt;code&gt;6CC100h&lt;/code&gt;, now we can find who &lt;em&gt;updates&lt;/em&gt; that global state: the guy will probably be the &lt;code&gt;rand&lt;/code&gt; function.&lt;/p&gt;
 &lt;h2 id="nice-findings"&gt;Nice Findings&lt;/h2&gt;
@@ -9492,7 +9693,6 @@ No, there are not memory leaks here. The &lt;em&gt;delete player&lt;/em&gt; func
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9nZXRfdGltZV9sb2MucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/get_time_loc.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The &lt;em&gt;get time&lt;/em&gt; function is quite short: it is just a call to the &lt;code&gt;date&lt;/code&gt; program and no command injection is possible.&lt;/p&gt;
 &lt;p&gt;However this gives us two pieces of information:&lt;/p&gt;
@@ -9505,7 +9705,6 @@ No, there are not memory leaks here. The &lt;em&gt;delete player&lt;/em&gt; func
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9wbGF5ZXJfYXR0YWNrX2xvYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/player_attack_loc.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;It choose a monster name and if it is &lt;code&gt;NULL&lt;/code&gt;, jumps to a block that copy the player’s name into the heap and &lt;em&gt;stores&lt;/em&gt; it in the array that initially has the names of the &lt;em&gt;monsters&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;Then it is passed as the first argument of a indirect call. Initially the only function that should be called is &lt;code&gt;monster_attack&lt;/code&gt; but we may point to somewhere.&lt;/p&gt;
@@ -9609,7 +9808,6 @@ Plot the difference between the real time &lt;code&gt;&lt;span class="highlight-
 &lt;p&gt;In a normal situation, this should be &lt;em&gt;less&lt;/em&gt; than the expected rate and the loop sleeps the remaining time to complete the current iteration.&lt;/p&gt;
 &lt;p&gt;The &lt;em&gt;next&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;t1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is increased by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;rate&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;: we don’t call &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;now&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; again otherwise will be introducing a clock drift due the extra delays of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;sleep&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/game/constant-rate-loop/rest-nodrop.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;That’s the happy path.&lt;/p&gt;
@@ -9658,7 +9856,6 @@ The iteration 1 took too long and the iteration 2 was lost. &lt;br /&gt; Note ho
 
 &lt;p&gt;Like in &lt;em&gt;drop &amp;amp; rest&lt;/em&gt;, the happy path is the same: if we finish an iteration before the deadline we take some rest until the next iteration.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/game/constant-rate-loop/rest-nodrop.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9ub3Jlc3Qtbm9sb3N0LnBuZycgLz4KSXRlcmF0aW9uIDIgaXMgbm90IGRyb3BwZWQgYW5kIGJlZ2lucyBhcyBzb29uIGFzIHBvc3NpYmxlLgo8YnIgLz4KQ29udHJhc3QgdGhpcyB3aXRoIHRoZSAqZHJvcCAmIHJlc3QqIHN0cmF0ZWd5OgoKbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
@@ -9671,7 +9868,6 @@ Iteration 2 is not dropped and begins as soon as possible. &lt;br /&gt; Contrast
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9yZXN0LWRyb3AucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/game/constant-rate-loop/rest-drop.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;But if we are behind schedule we do something different: the last partially consumed iteration is not considered lost.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    &lt;span class="n"&gt;lost&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;behind&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;behind&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;rate&lt;/span&gt;
@@ -10363,7 +10559,6 @@ Action Message Format
 &lt;p&gt;First, we say that the NFA can &lt;em&gt;move&lt;/em&gt; from one state to another if there is a &lt;em&gt;transition&lt;/em&gt; between the states and it is labeled with the same &lt;em&gt;character&lt;/em&gt; that was read.&lt;/p&gt;
 &lt;p&gt;We represent this with a simple arrow connecting the two states labeled with the particular character.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/label.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;A NFA allows the use of &lt;em&gt;epsilon&lt;/em&gt; transitions or \(\epsilon\)-transitions for short.&lt;/p&gt;
@@ -10375,7 +10570,6 @@ We are going to drop the label in some cases for clarity in the following diagra
 &lt;h2 id="optional-match"&gt;Optional match&lt;/h2&gt;
 &lt;p&gt;We this two simple definitions we can build an &lt;em&gt;optional match&lt;/em&gt; represented in regex syntax as &lt;code&gt;a?&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/regex/optional.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The optional part can be as complex as we want like another NFA, no necessary must be a simple &lt;em&gt;literal&lt;/em&gt;.&lt;/p&gt;
@@ -12314,7 +12508,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;The circular buffer has 2 pointers, the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; that mark the end of the data and the begin of the &lt;em&gt;free space&lt;/em&gt; and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, which it is the opposite of the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;At the begin, both pointers point to the same place, the &lt;em&gt;free space&lt;/em&gt; has the size of the whole buffer and the &lt;em&gt;ready space&lt;/em&gt; is empty:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_0.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;?:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
@@ -12329,7 +12522,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 
 &lt;p&gt;When more data is written in the buffer, the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; pointer moves forward, the &lt;em&gt;free space&lt;/em&gt; is reduced and the &lt;em&gt;ready space&lt;/em&gt; is increased, all of them in the same proportion.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_10.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The implementation does not track how many bytes are written. It is up to the caller to write in the buffer from the buffer’s &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and notify the circular buffer how many bytes wrote.&lt;/p&gt;
@@ -12353,7 +12545,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;We can keep writing and reading from the buffer.&lt;/p&gt;
 &lt;p&gt;As we did with the write, once we read the data from the buffer’s &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we need to notify to the circular buffer that the data can be discarded.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_14.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;?:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;FFGG&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
@@ -12382,7 +12573,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;When the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; pointer reaches the end of the buffer, the pointer is restarted and set back to the begin.&lt;/p&gt;
 &lt;p&gt;The &lt;em&gt;free space&lt;/em&gt; is expanded from the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is in front of the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_0.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;?:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;circular_buffer_advance_head&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
@@ -12401,7 +12591,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;If we keep writing (moving the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;), the &lt;em&gt;ready space&lt;/em&gt; will not increase because the circular buffer will always inform how many &lt;em&gt;contiguous&lt;/em&gt; bytes are &lt;em&gt;ready&lt;/em&gt; (for reading) or &lt;em&gt;free&lt;/em&gt; (for writing).&lt;/p&gt;
 &lt;p&gt;The &lt;em&gt;ready space&lt;/em&gt; is limited by the end of the buffer in this case:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_2.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;?:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;circular_buffer_advance_head&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
@@ -12420,7 +12609,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;The critical point happens when the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; reaches the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Now, this is exactly the same situation that happen at the begin, when the buffer was empty, but now it means that it is full.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_8.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;To differentiate these two cases, internally there is a flag that tracks when the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;em&gt;behind&lt;/em&gt; the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;:&lt;/p&gt;
@@ -12441,7 +12629,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 
 &lt;p&gt;If we move the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to the end of the buffer, the rest of the bytes written are &lt;em&gt;ready&lt;/em&gt; to be consumed and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is in front of the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; again:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_8.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;?:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;circular_buffer_advance_tail&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
@@ -12461,7 +12648,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 
 &lt;p&gt;If we move the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to the end we will reach again to the ambiguous cases but the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;hbehind&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; variable tell us that the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is behind the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tail&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; again:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_0_full.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;?:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;circular_buffer_advance_head&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
@@ -12546,7 +12732,6 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;Recall that in CBC a ciphertext block is xored with the output of the decryption of the &lt;em&gt;next&lt;/em&gt; ciphertext block to get the &lt;em&gt;next&lt;/em&gt; plaintext block.&lt;/p&gt;
 &lt;p&gt;If we modify one ciphertext block its decryption will be totally scrambled but we will have control of the &lt;em&gt;next&lt;/em&gt; plaintext block.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img style="max-width: 60%" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;label for='CldlIGRvbid0IGtub3cgaWYgb3VyIGluamVjdCBwbGFpbnRleHQKd2lsbCBiZSBhbGlnbmVkIHRvIHRoZSBibG9jayBzaXplIGJvdW5kYXJ5LiBUbyBlbnN1cmUgdGhhdCB3ZSBpbmplY3QKcGFkZGluZyBvZiB0d2ljZSB0aGUgYmxvY2sgc2l6ZSB3aGljaCB3YXJyYW50aWVzIHRoYXQgYXQgbGVhc3Qgb25lIGJsb2NrCndpbGwgYmUgZnVsbCB3aXRoIG91ciBgYEFgYHMKbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
@@ -12950,7 +13135,6 @@ Yeup, &lt;a href="https://cryptopals.com/sets/2/challenges/15"&gt;PKCS#7 padding
 &lt;p&gt;At difference with the ECB, the CBC mode uses the previous ciphertext block to XOR the current plaintext block before encrypting it.&lt;/p&gt;
 &lt;p&gt;For the first plaintext block we use an &lt;a href="https://en.wikipedia.org/wiki/Initialization_vector"&gt;Initialization Vector&lt;/a&gt; for the XOR operation.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img style="max-width: 60%" class='' alt='' src='/img/matasano/cbc-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;This IV should be random but for the sake of the test it will be full of zeros.&lt;/p&gt;
@@ -13108,7 +13292,6 @@ The ECB encrypted image on the right and its plaintext original version on the l
 &lt;p&gt;The following ciphertext was encrypted with AES in ECB mode (Electronic Code Book) with the given key.&lt;/p&gt;
 &lt;p&gt;In ECB each plaintext block is encrypted using the same key.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img style="max-width: 60%" class='' alt='' src='/img/matasano/ecb-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Decrypting is a piece of cake; this is just to get practice about &lt;a href="https://cryptopals.com/sets/1/challenges/7"&gt;AES in ECB mode&lt;/a&gt;&lt;/p&gt;
@@ -13745,7 +13928,6 @@ These last two examples solve the challenges &lt;a href="https://cryptopals.com/
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2lzb2xhdGVfd2lmaV9iaWdfYnJvdGhlcl9zaWdodC5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 &lt;img  class='fullwidth' alt='' src='/img/network/isolate_wifi_big_brother_sight.png' /&gt;
-&lt;pre data-input_format="markdown" data-output_format="plain-block"&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;All his credentials, emails and documents could be read by someone else. That was unacceptable.&lt;/p&gt;
 &lt;p&gt;Fortunately he has a Starbucks near with a decent wifi signal strength.&lt;/p&gt;
