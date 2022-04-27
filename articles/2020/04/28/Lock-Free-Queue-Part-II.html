@@ -215,7 +215,6 @@ If the producer 2 updates the tail before the producer 1, the consumers may read
 <p>The code can be found in <a href="https://github.com/eldipa/loki">the loki library</a>.</p>
 <p><figure class='fullwidth'><img  class='fullwidth' alt='' src='/img/threading/lock-free/queue/relativity-quantic-concurrent-programming.png' />
 <figcaption>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </figcaption></figure></p>
 <h2 id="future-research-on-the-busy-waits">Future research on the busy waits</h2>
 <p>The <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code>, and analogously the <code><span class="highlight-candombe-inline"><span class="n">pop</span><span class="p">()</span><span class="w"></span></span></code>, has two busy waits: the CAS loop for update the head and the wait-for-others for updating the tail in order.</p>

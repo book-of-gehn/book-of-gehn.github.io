@@ -156,7 +156,6 @@ Plot the difference between the real time <code><span class="highlight-candombe-
 <p>In a normal situation, this should be <em>less</em> than the expected rate and the loop sleeps the remaining time to complete the current iteration.</p>
 <p>The <em>next</em> <code><span class="highlight-candombe-inline"><span class="n">t1</span></span></code> is increased by <code><span class="highlight-candombe-inline"><span class="n">rate</span></span></code>: we don’t call <code><span class="highlight-candombe-inline"><span class="n">now</span><span class="p">()</span></span></code> again otherwise will be introducing a clock drift due the extra delays of <code><span class="highlight-candombe-inline"><span class="n">sleep</span><span class="p">()</span></span></code>.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/game/constant-rate-loop/rest-nodrop.png' /></figure></p>
 <p>That’s the happy path.</p>
@@ -205,7 +204,6 @@ The iteration 1 took too long and the iteration 2 was lost. <br /> Note how the 
 
 <p>Like in <em>drop &amp; rest</em>, the happy path is the same: if we finish an iteration before the deadline we take some rest until the next iteration.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/game/constant-rate-loop/rest-nodrop.png' /></figure></p>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9ub3Jlc3Qtbm9sb3N0LnBuZycgLz4KSXRlcmF0aW9uIDIgaXMgbm90IGRyb3BwZWQgYW5kIGJlZ2lucyBhcyBzb29uIGFzIHBvc3NpYmxlLgo8YnIgLz4KQ29udHJhc3QgdGhpcyB3aXRoIHRoZSAqZHJvcCAmIHJlc3QqIHN0cmF0ZWd5OgoKbWFyZ2lu' class='margin-toggle'>&#8853;</label>
@@ -218,7 +216,6 @@ Iteration 2 is not dropped and begins as soon as possible. <br /> Contrast this 
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9yZXN0LWRyb3AucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/game/constant-rate-loop/rest-drop.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>But if we are behind schedule we do something different: the last partially consumed iteration is not considered lost.</p>
 <div class="highlight-candombe"><pre><span></span><code>    <span class="n">lost</span> <span class="o">=</span> <span class="n">behind</span> <span class="o">-</span> <span class="n">behind</span> <span class="o">%</span> <span class="n">rate</span>

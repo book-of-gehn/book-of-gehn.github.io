@@ -117,7 +117,6 @@ Addresses of free frames are consumed from the FQ queue by the kernel (1). XDP t
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtZnJhbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-frame.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>The UMEM is a memory pool divided evenly by 2048 or 4096 bytes, the frame size and addresses are aligned to the frame size plus an offset for a headroom.</p>
 <p>The headroom is an application defined space reserved at the begin of the frame for whatever the user wants to do. By default it’s zero.</p>
@@ -248,7 +247,6 @@ If you didn’t realize, the timestamp was not zero’d either.
 <input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlIiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RlYnVnL3hkcC1yeC1yYy9yeC1yYy1xdWV1ZXMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
 <img style="max-width: 120%" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>No problem when XDP runs in the driver but when it does in the generic mode, the kernel may be receiving several packets and pushing them <strong>concurrently</strong> into the RX queue.</p>
 <blockquote>

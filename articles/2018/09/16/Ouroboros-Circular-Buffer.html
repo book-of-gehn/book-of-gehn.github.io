@@ -109,7 +109,6 @@ You can run this code with <a href="https://github.com/root-project/cling">cling
 <p>The circular buffer has 2 pointers, the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> that mark the end of the data and the begin of the <em>free space</em> and the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code>, which it is the opposite of the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code>.</p>
 <p>At the begin, both pointers point to the same place, the <em>free space</em> has the size of the whole buffer and the <em>ready space</em> is empty:</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_0.png' /></figure></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span><span class="w"></span>
@@ -124,7 +123,6 @@ You can run this code with <a href="https://github.com/root-project/cling">cling
 
 <p>When more data is written in the buffer, the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> pointer moves forward, the <em>free space</em> is reduced and the <em>ready space</em> is increased, all of them in the same proportion.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_10.png' /></figure></p>
 <p>The implementation does not track how many bytes are written. It is up to the caller to write in the buffer from the buffer’s <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> and notify the circular buffer how many bytes wrote.</p>
@@ -148,7 +146,6 @@ You can run this code with <a href="https://github.com/root-project/cling">cling
 <p>We can keep writing and reading from the buffer.</p>
 <p>As we did with the write, once we read the data from the buffer’s <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> we need to notify to the circular buffer that the data can be discarded.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_14.png' /></figure></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">.</span><span class="n">buf</span><span class="p">[</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">],</span><span class="w"> </span><span class="s">&quot;FFGG&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span><span class="w"></span>
@@ -177,7 +174,6 @@ You can run this code with <a href="https://github.com/root-project/cling">cling
 <p>When the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> pointer reaches the end of the buffer, the pointer is restarted and set back to the begin.</p>
 <p>The <em>free space</em> is expanded from the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> to the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> and the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> is in front of the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code>:</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_0.png' /></figure></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
@@ -196,7 +192,6 @@ You can run this code with <a href="https://github.com/root-project/cling">cling
 <p>If we keep writing (moving the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code>), the <em>ready space</em> will not increase because the circular buffer will always inform how many <em>contiguous</em> bytes are <em>ready</em> (for reading) or <em>free</em> (for writing).</p>
 <p>The <em>ready space</em> is limited by the end of the buffer in this case:</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_2.png' /></figure></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
@@ -215,7 +210,6 @@ You can run this code with <a href="https://github.com/root-project/cling">cling
 <p>The critical point happens when the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> reaches the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code>.</p>
 <p>Now, this is exactly the same situation that happen at the begin, when the buffer was empty, but now it means that it is full.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_8.png' /></figure></p>
 <p>To differentiate these two cases, internally there is a flag that tracks when the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> is <em>behind</em> the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code>:</p>
@@ -236,7 +230,6 @@ You can run this code with <a href="https://github.com/root-project/cling">cling
 
 <p>If we move the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> to the end of the buffer, the rest of the bytes written are <em>ready</em> to be consumed and the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> is in front of the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> again:</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_8.png' /></figure></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_tail</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span><span class="w"></span>
@@ -256,7 +249,6 @@ You can run this code with <a href="https://github.com/root-project/cling">cling
 
 <p>If we move the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> to the end we will reach again to the ambiguous cases but the <code><span class="highlight-candombe-inline"><span class="n">hbehind</span><span class="w"></span></span></code> variable tell us that the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> is behind the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> again:</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_0_full.png' /></figure></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span><span class="w"></span>

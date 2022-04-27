@@ -123,7 +123,6 @@ User not created.
 If the player was not created, the options 1 to 4 print <code>User not created.</code>; if the player was created selecting 0 again yields a <code>User created, first delete it.</code>
 </span></p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/writeups/eko2019/reversing/mentalmodel.svg' type='image/svg+xml'></object></figure></p>
 <p>Other strings shown up. Of course, I’m speculating the <em>conversion specifier</em> like <code>%s</code> and <code>%d</code>:</p>
@@ -158,7 +157,6 @@ To get the pointer to the players name the code does a <em>second</em> indirecti
 <p><code>printf</code>-like function call with four arguments: the format string, the name of the monster, name of the player and the damage.</p>
 <p>What about the code that <em>reads</em> the player’s name?</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/writeups/eko2019/reversing/enter_player_name_loc.png' /></figure></p>
 <p>Three calls happen after the print of the message. One of them should be a <code>read</code> like function:</p>
@@ -195,7 +193,6 @@ No, there are not memory leaks here. The <em>delete player</em> function is a go
 </span></p>
 <p>If this is correct, <code>mov     cs:player_struct, rax</code> saves the <em>pointer</em> to the struct globally, struct allocated at the begin of the block.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/writeups/eko2019/reversing/enter_player_name_loc_struct_labeled.png' /></figure></p>
 <p>The key note here is that <em>we don’t know</em>. We can just guess.</p>
@@ -211,7 +208,6 @@ No, there are not memory leaks here. The <em>delete player</em> function is a go
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9yYW5kX2xvYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/rand_loc.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>We found <code>srand</code>, and we found the <em>global state</em> of the PRNG at <code>6CC100h</code>, now we can find who <em>updates</em> that global state: the guy will probably be the <code>rand</code> function.</p>
 <h2 id="nice-findings">Nice Findings</h2>
@@ -219,7 +215,6 @@ No, there are not memory leaks here. The <em>delete player</em> function is a go
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9nZXRfdGltZV9sb2MucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/get_time_loc.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>The <em>get time</em> function is quite short: it is just a call to the <code>date</code> program and no command injection is possible.</p>
 <p>However this gives us two pieces of information:</p>
@@ -232,7 +227,6 @@ No, there are not memory leaks here. The <em>delete player</em> function is a go
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy93cml0ZXVwcy9la28yMDE5L3JldmVyc2luZy9wbGF5ZXJfYXR0YWNrX2xvYy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/writeups/eko2019/reversing/player_attack_loc.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>It choose a monster name and if it is <code>NULL</code>, jumps to a block that copy the player’s name into the heap and <em>stores</em> it in the array that initially has the names of the <em>monsters</em>.</p>
 <p>Then it is passed as the first argument of a indirect call. Initially the only function that should be called is <code>monster_attack</code> but we may point to somewhere.</p>

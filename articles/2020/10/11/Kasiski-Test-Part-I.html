@@ -151,13 +151,11 @@ This is an example of <a href="https://en.wikipedia.org/wiki/Dynamic_programming
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8va2FzaXNraS9rYXNpc2tpX3NjYW5fY291bnQucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/crypto/kasiski/kasiski_scan_count.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>We need to count how many instances of the same ngram are, so we can know which are unique; and we need to track their position, so we can later know the distance between them.</p>
 <p>Storing every ngram instance in memory is expensive (for a 2 characters ngram you will have to store twice the source string).</p>
 <p>A simple solution is to use an id: different ngrams will have different ids while the instances of the <em>same</em> ngram will have the same id.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img style="max-width: 45%" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' /></figure></p>
 <p>The following Python fragment summarizes the above:</p>
@@ -187,7 +185,6 @@ Input-size/time-taken relationship of <code><span class="highlight-candombe-inli
 </code></pre></div>
 
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img style="max-width: 60%" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_count_filter.png' /></figure></p>
 <p>The final result is a list of tuples <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span></span></code> with the positions of the ngrams and their identifiers <em>sorted</em> by their position.</p>
@@ -197,7 +194,6 @@ Input-size/time-taken relationship of <code><span class="highlight-candombe-inli
 <p>The idea is that two ngrams <code><span class="highlight-candombe-inline"><span class="n">g_1</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">g_2</span></span></code> of <code><span class="highlight-candombe-inline"><span class="n">n</span></span></code> characters at positions <code><span class="highlight-candombe-inline"><span class="n">p_1</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">p_2</span></span></code> in the original string can be <em>merged</em> and build a ngram of <code><span class="highlight-candombe-inline"><span class="n">n</span><span class="o">+</span><span class="mi">1</span></span></code> bytes at <code><span class="highlight-candombe-inline"><span class="n">p_1</span></span></code> if and only if <code><span class="highlight-candombe-inline"><span class="n">p_1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">p_2</span></span></code>.</p>
 <p>In other words, they are consecutive.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img style="max-width: 60%" class='' alt='' src='/img/crypto/kasiski/kasiski_merge.png' /></figure></p>
 <p>A merged ngram not necessary means that it is a repeated ngram but we know that any repeated ngram will be a merged one.</p>
@@ -246,7 +242,6 @@ Input-size/time-taken relationship of <code><span class="highlight-candombe-inli
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8va2FzaXNraS9rYXNpc2tpX3Bvc19ncm91cGVkLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/crypto/kasiski/kasiski_pos_grouped.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="c1"># group first</span>
 <span class="n">pos_grouped</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
@@ -264,7 +259,6 @@ Input-size/time-taken relationship of <code><span class="highlight-candombe-inli
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8va2FzaXNraS9rYXNpc2tpX2Rpc3RhbmNlcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/crypto/kasiski/kasiski_distances.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>We simplify the maths and calculate then the difference between <em>consecutive</em> positions for a given ngram.</p>
 <p>We assume that difference between non-consecutive values will yield a multiple of the previous shorter difference hence it will be also a multiple of the key length.</p>

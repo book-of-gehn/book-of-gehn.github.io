@@ -123,7 +123,6 @@ In short, some reorders are <em>still</em> possible: things before and after the
 </span></p>
 <p>What did we get? <em>Most</em> of the possible reorders and subtle race conditions are out.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/lock-free/mutex.png' /></figure></p>
 <p>If you still have a bug then it is more likely to be a <em>classic</em> bug like mistaking <code><span class="highlight-candombe-inline"><span class="o">&lt;</span><span class="w"></span></span></code> by <code><span class="highlight-candombe-inline"><span class="o">&lt;=</span><span class="w"></span></span></code> or a missing <code><span class="highlight-candombe-inline"><span class="o">+</span><span class="mi">1</span><span class="w"></span></span></code> somewhere –<em>and trust me, you will make this kind of errors too</em>.</p>

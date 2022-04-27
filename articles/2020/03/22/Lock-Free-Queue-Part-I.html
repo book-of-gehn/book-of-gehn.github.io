@@ -130,7 +130,6 @@ We cannot longer guarantee that the head was moved <em>after</em> writing the da
 <p>At the same time the consumer will not forward beyond the <em>producer’s tail</em>.</p>
 <p>Only when the producer finishes, she will move forward her <em>tail</em>, <em>commiting</em> the change and allowing the readers to proceed.</p>
 <p><figure><figcaption><span markdown='1'>
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/lock-free/queue/queue-sp-sc.png' /></figure></p>
 <p>The consumer does something similar: moving the consumer’s head <em>reserves</em> the entries to read so other readers will not pop the same data; and the consumer’s tail serves as a stop-marker for the writers.</p>
@@ -228,7 +227,6 @@ We require the size of the queue to be a power of 2: entry access through the he
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3Jlb3JkZXItMnN0b3Jlcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/threading/lock-free/queue/reorder-2stores.png' />
-<pre data-input_format="markdown" data-output_format="plain-block"><code></code></pre>
 </span></p>
 <p>This is a <em>store reorder</em>. A store is typically much expensive than a load and they are moved <em>upwards</em> to start them sooner or <em>downwards</em> to be delayed hoping to be merged with a further store.</p>
 <p>Loads are subject of similar optimizations and the <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> keyword will not prevent that: <code><span class="highlight-candombe-inline"><span class="k">volatile</span><span class="w"></span></span></code> works at the compiler level, has no effect on the reorder made by the CPU.</p>
