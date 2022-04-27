@@ -89,13 +89,13 @@ April 27, 2022
 <!--
 $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byexample: +fail-fast
 -->
-<p>In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder.</p>
-<p>In <code>v2</code> the hierarchy is subject to the <em>no internal process</em> constraint which ensures that a controller will have all the processes in leaves of its domain tree.</p>
 <p><label for='ClByZXZpb3VzIHBvc3RzOiBbaGllcmFyY2hpY2FsIG9yZ2FuaXphdGlvbl0oL2FydGljbGVzLzIwMjIvMDQvMjMvTGludXgtQ29udHJvbC1Hcm91cC1IaWVyYXJjaGljYWwtT3JnYW5pemF0aW9uLmh0bWwpCjxiciAvPgphbmQgW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='ClByZXZpb3VzIHBvc3RzOiBbaGllcmFyY2hpY2FsIG9yZ2FuaXphdGlvbl0oL2FydGljbGVzLzIwMjIvMDQvMjMvTGludXgtQ29udHJvbC1Hcm91cC1IaWVyYXJjaGljYWwtT3JnYW5pemF0aW9uLmh0bWwpCjxiciAvPgphbmQgW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
 <span class='marginnote'>
 Previous posts: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">hierarchical organization</a> <br /> and <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">resources distribution</a>
 </span></p>
+<p>In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder.</p>
+<p>In <code>v2</code> the hierarchy is subject to the <em>no internal process</em> constraint which ensures that a controller will have all the processes in leaves of its domain tree.</p>
 <p>This is the last of a 3-post series about <code>cgroup</code> and certainly, this <em>no internal process</em> constraint was the hardest to understand. <!--more--></p>
 <p>Let’s create the following <code>cgroup</code> hierarchy to play with. Notice how we enable the resource controller <code>+cpu</code> on <code>test/</code>’s and <code>test/cg1/</code>’s subtrees but not on <code>test/cg2/</code>’s.</p>
 <p><label for='CmBgYHNoZWxsCiQgY2QgL3N5cy9mcy9jZ3JvdXAKJCBta2RpciAtcCB0ZXN0L2NnMS9jZzFfMQokIG1rZGlyIC1wIHRlc3QvY2cxL2NnMV8yCiQgbWtkaXIgLXAgdGVzdC9jZzIvY2cyXzEKJCBta2RpciAtcCB0ZXN0L2NnMi9jZzJfMgoKJCBlY2hvICcrY3B1JyA+IHRlc3QvY2dyb3VwLnN1YnRyZWVfY29udHJvbAokIGVjaG8gJytjcHUnID4gdGVzdC9jZzEvY2dyb3VwLnN1YnRyZWVfY29udHJvbApgYGAKbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
@@ -267,21 +267,18 @@ This is a sketch and by no means it is a fully specification.
 </span></figcaption>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/enable-controller-in-no-internal-process.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="no-internal-process-constraint-from-a-controllers-perspective"><em>No internal process</em> constraint, from a controller’s perspective</h2>
-<p>Consider the scenario seen earlier when we tried and failed to add a process <code>p2</code> to different cgroups in the hierarchy</p>
+<p>Consider the scenario seen earlier:</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_with_proc_in_cg1.svg' type='image/svg+xml'></object></figure></p>
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_with_proc_in_cg1_simple.svg' type='image/svg+xml'></object></figure></p>
 <p>Let’s see it from the <code>+cpu</code> controller’s perspective.</p>
 <p>You are at <code>test/cg1/</code> with some processes there. The cgroup has the controller’s files to control/distribute the resources (<code>cpu.max</code> in this case).</p>
-<p>It is easy to see how <code>cpu.max</code> can be interpreted: just limit the CPU usage among <code>p1</code> and <code>p2</code>.</p>
-<p>Roughly speaking, a half to each.</p>
+<p>It is easy to see how <code>cpu.max</code> can be interpreted: just control the CPU usage among <code>p1</code> and <code>p2</code>.</p>
 <p>But what would you if a process is added to <code>test/cg1/cg1_1/</code>. The problem is not that you have another process, the problem is that <code>test/cg1/cg1_1/</code> also has its own control file.</p>
 <p>How would you interpret that control file in <code>test/cg1/cg1_1/</code> and at the same time the file in <code>test/cg1/</code> and distribute the CPU among the processes of both cgroups?</p>
 <p>It is not easy.</p>
 <p>In <code>v1</code> this situation added a lot of complexity to the controllers and eventually added inconsistencies between them about how to treat these cases.</p>
 <p>In <code>v2</code> these cases are just forbidden: you cannot have processes in one cgroup and in its subtree <em>and at the same time</em> have a control file in the cgroup and another in the subtree.</p>
-<p>Or you have processes in the cgroup and in its subtree but the control file are only in the cgroup (subtree’s root)…</p>
-<p>…or you have a control file in a cgroup and in each of its children but no cgroup can have a single process if one of its ancestors has already processes, with the obvious exception of the <em>root</em>.</p>
 <p>From the controller’s perspective, in term of the location of its control file, all the processes are at the <em>leaves of its domain</em>. Even if the processes are in different sub cgroups, these sub cgroups <em>will not distribute the resource further</em> (they don’t have a control file to do it!).</p>
 <h2 id="final-comments">Final comments</h2>
 <p>We grasped how <code>cgroup</code> works, how it is <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">organized</a> and how the resources are <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">distributed</a>.</p>

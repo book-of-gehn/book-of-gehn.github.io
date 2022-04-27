@@ -8,20 +8,20 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 27 Apr 2022 21:58:30 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 27 Apr 2022 23:51:31 +0000</lastBuildDate>
     <item>
       <title>Control Group - No Internal Process Constraint</title>
       <link>https://book-of-gehn.github.io/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html</link>
       <description>&lt;!--
 $ test -d /sys/fs/cgroup/test &amp;&amp; echo "cgroup test/ already created!"     # byexample: +fail-fast
 --&gt;
-&lt;p&gt;In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder.&lt;/p&gt;
-&lt;p&gt;In &lt;code&gt;v2&lt;/code&gt; the hierarchy is subject to the &lt;em&gt;no internal process&lt;/em&gt; constraint which ensures that a controller will have all the processes in leaves of its domain tree.&lt;/p&gt;
 &lt;p&gt;&lt;label for='ClByZXZpb3VzIHBvc3RzOiBbaGllcmFyY2hpY2FsIG9yZ2FuaXphdGlvbl0oL2FydGljbGVzLzIwMjIvMDQvMjMvTGludXgtQ29udHJvbC1Hcm91cC1IaWVyYXJjaGljYWwtT3JnYW5pemF0aW9uLmh0bWwpCjxiciAvPgphbmQgW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='ClByZXZpb3VzIHBvc3RzOiBbaGllcmFyY2hpY2FsIG9yZ2FuaXphdGlvbl0oL2FydGljbGVzLzIwMjIvMDQvMjMvTGludXgtQ29udHJvbC1Hcm91cC1IaWVyYXJjaGljYWwtT3JnYW5pemF0aW9uLmh0bWwpCjxiciAvPgphbmQgW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 Previous posts: &lt;a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html"&gt;hierarchical organization&lt;/a&gt; &lt;br /&gt; and &lt;a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html"&gt;resources distribution&lt;/a&gt;
 &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder.&lt;/p&gt;
+&lt;p&gt;In &lt;code&gt;v2&lt;/code&gt; the hierarchy is subject to the &lt;em&gt;no internal process&lt;/em&gt; constraint which ensures that a controller will have all the processes in leaves of its domain tree.&lt;/p&gt;
 &lt;p&gt;This is the last of a 3-post series about &lt;code&gt;cgroup&lt;/code&gt; and certainly, this &lt;em&gt;no internal process&lt;/em&gt; constraint was the hardest to understand. &lt;!--more--&gt;&lt;/p&gt;
 &lt;p&gt;Let’s create the following &lt;code&gt;cgroup&lt;/code&gt; hierarchy to play with. Notice how we enable the resource controller &lt;code&gt;+cpu&lt;/code&gt; on &lt;code&gt;test/&lt;/code&gt;’s and &lt;code&gt;test/cg1/&lt;/code&gt;’s subtrees but not on &lt;code&gt;test/cg2/&lt;/code&gt;’s.&lt;/p&gt;
 &lt;p&gt;&lt;label for='CmBgYHNoZWxsCiQgY2QgL3N5cy9mcy9jZ3JvdXAKJCBta2RpciAtcCB0ZXN0L2NnMS9jZzFfMQokIG1rZGlyIC1wIHRlc3QvY2cxL2NnMV8yCiQgbWtkaXIgLXAgdGVzdC9jZzIvY2cyXzEKJCBta2RpciAtcCB0ZXN0L2NnMi9jZzJfMgoKJCBlY2hvICcrY3B1JyA+IHRlc3QvY2dyb3VwLnN1YnRyZWVfY29udHJvbAokIGVjaG8gJytjcHUnID4gdGVzdC9jZzEvY2dyb3VwLnN1YnRyZWVfY29udHJvbApgYGAKbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
@@ -193,21 +193,18 @@ This is a sketch and by no means it is a fully specification.
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/enable-controller-in-no-internal-process.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="no-internal-process-constraint-from-a-controllers-perspective"&gt;&lt;em&gt;No internal process&lt;/em&gt; constraint, from a controller’s perspective&lt;/h2&gt;
-&lt;p&gt;Consider the scenario seen earlier when we tried and failed to add a process &lt;code&gt;p2&lt;/code&gt; to different cgroups in the hierarchy&lt;/p&gt;
+&lt;p&gt;Consider the scenario seen earlier:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_with_proc_in_cg1.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_with_proc_in_cg1_simple.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Let’s see it from the &lt;code&gt;+cpu&lt;/code&gt; controller’s perspective.&lt;/p&gt;
 &lt;p&gt;You are at &lt;code&gt;test/cg1/&lt;/code&gt; with some processes there. The cgroup has the controller’s files to control/distribute the resources (&lt;code&gt;cpu.max&lt;/code&gt; in this case).&lt;/p&gt;
-&lt;p&gt;It is easy to see how &lt;code&gt;cpu.max&lt;/code&gt; can be interpreted: just limit the CPU usage among &lt;code&gt;p1&lt;/code&gt; and &lt;code&gt;p2&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;Roughly speaking, a half to each.&lt;/p&gt;
+&lt;p&gt;It is easy to see how &lt;code&gt;cpu.max&lt;/code&gt; can be interpreted: just control the CPU usage among &lt;code&gt;p1&lt;/code&gt; and &lt;code&gt;p2&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;But what would you if a process is added to &lt;code&gt;test/cg1/cg1_1/&lt;/code&gt;. The problem is not that you have another process, the problem is that &lt;code&gt;test/cg1/cg1_1/&lt;/code&gt; also has its own control file.&lt;/p&gt;
 &lt;p&gt;How would you interpret that control file in &lt;code&gt;test/cg1/cg1_1/&lt;/code&gt; and at the same time the file in &lt;code&gt;test/cg1/&lt;/code&gt; and distribute the CPU among the processes of both cgroups?&lt;/p&gt;
 &lt;p&gt;It is not easy.&lt;/p&gt;
 &lt;p&gt;In &lt;code&gt;v1&lt;/code&gt; this situation added a lot of complexity to the controllers and eventually added inconsistencies between them about how to treat these cases.&lt;/p&gt;
 &lt;p&gt;In &lt;code&gt;v2&lt;/code&gt; these cases are just forbidden: you cannot have processes in one cgroup and in its subtree &lt;em&gt;and at the same time&lt;/em&gt; have a control file in the cgroup and another in the subtree.&lt;/p&gt;
-&lt;p&gt;Or you have processes in the cgroup and in its subtree but the control file are only in the cgroup (subtree’s root)…&lt;/p&gt;
-&lt;p&gt;…or you have a control file in a cgroup and in each of its children but no cgroup can have a single process if one of its ancestors has already processes, with the obvious exception of the &lt;em&gt;root&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;From the controller’s perspective, in term of the location of its control file, all the processes are at the &lt;em&gt;leaves of its domain&lt;/em&gt;. Even if the processes are in different sub cgroups, these sub cgroups &lt;em&gt;will not distribute the resource further&lt;/em&gt; (they don’t have a control file to do it!).&lt;/p&gt;
 &lt;h2 id="final-comments"&gt;Final comments&lt;/h2&gt;
 &lt;p&gt;We grasped how &lt;code&gt;cgroup&lt;/code&gt; works, how it is &lt;a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html"&gt;organized&lt;/a&gt; and how the resources are &lt;a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html"&gt;distributed&lt;/a&gt;.&lt;/p&gt;
@@ -245,16 +242,16 @@ $ rmdir $(find /sys/fs/cgroup/test/ -type d | sort -r)   # byexample: +pass -ski
     <item>
       <title>Control Group - Resource Distribution</title>
       <link>https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html</link>
-      <description>&lt;p&gt;A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.&lt;/p&gt;
-&lt;p&gt;We’ll use the simplest resource to understand: the amount of process ids or pids.&lt;/p&gt;
-&lt;p&gt;While CPU and memory are the most common resources that can be exhausted, the process id &lt;em&gt;space&lt;/em&gt; is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).&lt;/p&gt;
-&lt;p&gt;A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads &lt;em&gt;long before&lt;/em&gt; other resource get exhausted. This the so called &lt;em&gt;fork bomb&lt;/em&gt;.&lt;/p&gt;
-&lt;p&gt;Once you run out of pids, no other process can be started leaving the system unusable.&lt;/p&gt;
-&lt;p&gt;&lt;label for='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+      <description>&lt;p&gt;&lt;label for='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
 Previous post: &lt;a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html"&gt;hierarchical organization&lt;/a&gt; &lt;br /&gt; Next coming post: &lt;a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html"&gt;no internal process constraint&lt;/a&gt;
 &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.&lt;/p&gt;
+&lt;p&gt;We’ll use the simplest resource to understand: the amount of process ids or pids.&lt;/p&gt;
+&lt;p&gt;While CPU and memory are the most common resources that can be exhausted, the process id &lt;em&gt;space&lt;/em&gt; is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).&lt;/p&gt;
+&lt;p&gt;A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads &lt;em&gt;long before&lt;/em&gt; other resource get exhausted. This the so called &lt;em&gt;fork bomb&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Once you run out of pids, no other process can be started leaving the system unusable.&lt;/p&gt;
 &lt;p&gt;In this post we will explore the rules of resources distribution in a &lt;code&gt;cgroup&lt;/code&gt; hierarchy and in particular how to avoid fork bombs to explode. &lt;!--more--&gt;&lt;/p&gt;
 &lt;!--
 $ test -d /sys/fs/cgroup/test &amp;&amp; echo "cgroup test/ already created!"     # byexample: +fail-fast
@@ -487,12 +484,9 @@ $ rmdir $(find /sys/fs/cgroup/test/ -type d | sort -r)   # byexample: +pass -ski
       <description>&lt;p&gt;Control group or &lt;code&gt;cgroup&lt;/code&gt; is a mechanism to distribute and enforce limits over the resources of the system.&lt;/p&gt;
 &lt;p&gt;It was introduced in Linux kernel around 2007 but its complexity leaded to inconsistent behaviour and hard adoption.&lt;/p&gt;
 &lt;p&gt;Fast forwarding 9 years, in kernel 4.5 a rewrite of &lt;code&gt;cgroup&lt;/code&gt; revamp the idea, making it simpler and consistent.&lt;/p&gt;
-&lt;p&gt;&lt;label for='ClBvc3QgMjogW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCjxiciAvPgpQb3N0IDM6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='ClBvc3QgMjogW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCjxiciAvPgpQb3N0IDM6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
-&lt;span class='marginnote'&gt;
-Post 2: &lt;a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html"&gt;resources distribution&lt;/a&gt; &lt;br /&gt; Post 3: &lt;a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html"&gt;no internal process constraint&lt;/a&gt;
-&lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;This post focus in the organization of cgroups and it is the first of a 3-posts series about &lt;code&gt;cgroup&lt;/code&gt; in its new &lt;code&gt;v2&lt;/code&gt; version. &lt;!--more--&gt;&lt;/p&gt;
+&lt;p&gt;This post focus in the organization of cgroups and it is the first of a 3-posts series about &lt;code&gt;cgroup&lt;/code&gt; in its new &lt;code&gt;v2&lt;/code&gt; version.&lt;/p&gt;
+&lt;p&gt;In the next posts we will see how the &lt;a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html"&gt;resources are distributed&lt;/a&gt; among the cgroups and &lt;a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html"&gt;which constraints&lt;/a&gt; do we have.&lt;/p&gt;
+&lt;!--more--&gt;
 &lt;!--
 $ test -d /sys/fs/cgroup/test &amp;&amp; echo "cgroup test/ already created!"     # byexample: +fail-fast
 --&gt;

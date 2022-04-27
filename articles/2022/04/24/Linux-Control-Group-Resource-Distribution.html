@@ -86,16 +86,16 @@ Control Group - Resource Distribution
 <p class="subtitle">
 April 24, 2022
 </p>
-<p>A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.</p>
-<p>We’ll use the simplest resource to understand: the amount of process ids or pids.</p>
-<p>While CPU and memory are the most common resources that can be exhausted, the process id <em>space</em> is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).</p>
-<p>A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads <em>long before</em> other resource get exhausted. This the so called <em>fork bomb</em>.</p>
-<p>Once you run out of pids, no other process can be started leaving the system unusable.</p>
 <p><label for='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
 <span class='marginnote'>
 Previous post: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">hierarchical organization</a> <br /> Next coming post: <a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">no internal process constraint</a>
 </span></p>
+<p>A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.</p>
+<p>We’ll use the simplest resource to understand: the amount of process ids or pids.</p>
+<p>While CPU and memory are the most common resources that can be exhausted, the process id <em>space</em> is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).</p>
+<p>A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads <em>long before</em> other resource get exhausted. This the so called <em>fork bomb</em>.</p>
+<p>Once you run out of pids, no other process can be started leaving the system unusable.</p>
 <p>In this post we will explore the rules of resources distribution in a <code>cgroup</code> hierarchy and in particular how to avoid fork bombs to explode. <!--more--></p>
 <!--
 $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byexample: +fail-fast
