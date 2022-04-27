@@ -89,13 +89,13 @@ April 24, 2022
 <p>A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.</p>
 <p>We’ll use the simplest resource to understand: the amount of process ids or pids.</p>
 <p>While CPU and memory are the most common resources that can be exhausted, the process id <em>space</em> is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).</p>
-<p><label for='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
-<input type='checkbox' id='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
-<span class='marginnote'>
-<a href="https://en.wikipedia.org/wiki/Fork_bomb">Fork bomb reference</a>.
-</span></p>
 <p>A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads <em>long before</em> other resource get exhausted. This the so called <em>fork bomb</em>.</p>
 <p>Once you run out of pids, no other process can be started leaving the system unusable.</p>
+<p><label for='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Previous post: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">hierarchical organization</a> <br /> Next coming post: <a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">no internal process constraint</a>
+</span></p>
 <p>In this post we will explore the rules of resources distribution in a <code>cgroup</code> hierarchy and in particular how to avoid fork bombs to explode. <!--more--></p>
 <!--
 $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byexample: +fail-fast
@@ -260,6 +260,11 @@ $ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span c
 </code></pre></div>
 
 <h2 id="explosion-contained">Explosion contained</h2>
+<p><label for='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+<a href="https://en.wikipedia.org/wiki/Fork_bomb">Fork bomb reference</a>.
+</span></p>
 <p>Not really sure why, but a fork bomb in my machine tends to eat all the CPU so it is not just eating all the pids.</p>
 <p>Thankfully, there is a resource controller for the CPU in <code>cgroup</code> too.</p>
 <div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="m">3</span> &gt; test/pids.max                <span class="c1"># byexample: +fail-fast</span>
@@ -275,14 +280,16 @@ $ bomb       <span class="c1"># byexample: +timeout=90</span>
 &lt;...&gt;Resource temporarily unavailable&lt;...&gt;
 </code></pre></div>
 
+<p>After a few experiments I would say that the <code>+pids</code> controller is by no means the only measure to take to contain a fork explosion. Without <code>+cpu</code> I melted down my machine a few times.</p>
+<p>Run the bomb under your responsibility!</p>
 <h2 id="further-reading">Further reading</h2>
 <p>With <code>+pids</code> we set a limit on a resource but <em>limiting</em> is just one of other possible ways to control a resource.</p>
 <p>We could set for <em>weights</em> to balance the resource usage between cgroups or we could set minimum levels of a resource (<em>protection</em>) to mention a few other ways to control a resource.</p>
 <p>All of them are out of the scope for this post as well which resources and controllers exist.</p>
 <h2 id="next-stuff">Next stuff</h2>
-<p>In the past post we talked about how we can organize the <code>cgroup</code> hierarchy and in this post how we can control and distribute resources over it.</p>
+<p>In the <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">past post</a> we talked about how we can organize the <code>cgroup</code> hierarchy and in this post how we can control and distribute resources over it.</p>
 <p>But we talked little about where the processes should be put in the hierarchy. It may seem that they could be put anywhere and for <code>v1</code> that is true.</p>
-<p>In <code>v2</code> however, the things will get a bit hairy and weird with the no internal process constraint.</p>
+<p>In <code>v2</code> however, the things will get a bit hairy and weird with the <a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">no internal process constraint</a>.</p>
 <!--
 Move our shell(s) to the root
 $ echo $$ > /sys/fs/cgroup/cgroup.procs                     # byexample: +pass -skip

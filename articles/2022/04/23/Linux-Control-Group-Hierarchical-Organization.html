@@ -89,6 +89,11 @@ April 23, 2022
 <p>Control group or <code>cgroup</code> is a mechanism to distribute and enforce limits over the resources of the system.</p>
 <p>It was introduced in Linux kernel around 2007 but its complexity leaded to inconsistent behaviour and hard adoption.</p>
 <p>Fast forwarding 9 years, in kernel 4.5 a rewrite of <code>cgroup</code> revamp the idea, making it simpler and consistent.</p>
+<p><label for='ClBvc3QgMjogW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCjxiciAvPgpQb3N0IDM6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClBvc3QgMjogW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCjxiciAvPgpQb3N0IDM6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Post 2: <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">resources distribution</a> <br /> Post 3: <a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">no internal process constraint</a>
+</span></p>
 <p>This post focus in the organization of cgroups and it is the first of a 3-posts series about <code>cgroup</code> in its new <code>v2</code> version. <!--more--></p>
 <!--
 $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byexample: +fail-fast
@@ -302,7 +307,7 @@ The diagram follows the semantics of an UML diagram.
 <p>The kernel also has a few parameters to disable certain controllers but I totally skipped them :)</p>
 <p>In general, the default setting of your distro should be fine.</p>
 <h2 id="next-stuff">Next stuff</h2>
-<p>We shown how the <code>cgroup</code> hierarchy is organized. In the next post we will see how the resources are distributed among the cgroups and which constraints do we have.</p>
+<p>We shown how the <code>cgroup</code> hierarchy is organized. In the next post we will see how the <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">resources are distributed</a> among the cgroups and <a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">which constraints</a> do we have.</p>
 <!--
 Delete recursively every cgroup (folder) from the leaves to the
 root.

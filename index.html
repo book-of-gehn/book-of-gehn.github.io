@@ -84,6 +84,27 @@
 </h1>
 <span class="index-single-post">
 <hr class="slender post-layout">
+<a href="https://book-of-gehn.github.io/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">
+<h2 class="larger">
+Control Group - No Internal Process Constraint
+</h2>
+</a> <br><span class="smaller">April 27, 2022</span> <br/>
+<div>
+<!--
+$ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byexample: +fail-fast
+-->
+<p>In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder.</p>
+<p>In <code>v2</code> the hierarchy is subject to the <em>no internal process</em> constraint which ensures that a controller will have all the processes in leaves of its domain tree.</p>
+<p><label for='ClByZXZpb3VzIHBvc3RzOiBbaGllcmFyY2hpY2FsIG9yZ2FuaXphdGlvbl0oL2FydGljbGVzLzIwMjIvMDQvMjMvTGludXgtQ29udHJvbC1Hcm91cC1IaWVyYXJjaGljYWwtT3JnYW5pemF0aW9uLmh0bWwpCjxiciAvPgphbmQgW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClByZXZpb3VzIHBvc3RzOiBbaGllcmFyY2hpY2FsIG9yZ2FuaXphdGlvbl0oL2FydGljbGVzLzIwMjIvMDQvMjMvTGludXgtQ29udHJvbC1Hcm91cC1IaWVyYXJjaGljYWwtT3JnYW5pemF0aW9uLmh0bWwpCjxiciAvPgphbmQgW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Previous posts: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">hierarchical organization</a> <br /> and <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">resources distribution</a>
+</span></p>
+<p>This is the last of a 3-post series about <code>cgroup</code> and certainly, this <em>no internal process</em> constraint was the hardest to understand.</p>
+</div>
+<p></span></p>
+<span class="index-single-post">
+<hr class="slender post-layout">
 <a href="https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">
 <h2 class="larger">
 Control Group - Resource Distribution
@@ -93,13 +114,18 @@ Control Group - Resource Distribution
 <p>A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel.</p>
 <p>We’ll use the simplest resource to understand: the amount of process ids or pids.</p>
 <p>While CPU and memory are the most common resources that can be exhausted, the process id <em>space</em> is not infinite: it is an integer typically in the range of 1 to \(2^{16}\).</p>
-<p><label for='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
-<input type='checkbox' id='CltGb3JrIGJvbWIgcmVmZXJlbmNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9Gb3JrX2JvbWIpLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfZWNob19jYXQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3Rpbmdfc2hlbGxfZWNob19jYXQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<a href="https://en.wikipedia.org/wiki/Fork_bomb">Fork bomb reference</a>.
+<object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_shell_echo_cat.svg' type='image/svg+xml'></object>
 </span></p>
 <p>A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads <em>long before</em> other resource get exhausted. This the so called <em>fork bomb</em>.</p>
 <p>Once you run out of pids, no other process can be started leaving the system unusable.</p>
+<p><label for='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Previous post: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">hierarchical organization</a> <br /> Next coming post: <a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">no internal process constraint</a>
+</span></p>
 <p>In this post we will explore the rules of resources distribution in a <code>cgroup</code> hierarchy and in particular how to avoid fork bombs to explode.</p>
 </div>
 <p></span></p>
@@ -119,6 +145,11 @@ Control Group - Hierarchical Organization
 <p>Control group or <code>cgroup</code> is a mechanism to distribute and enforce limits over the resources of the system.</p>
 <p>It was introduced in Linux kernel around 2007 but its complexity leaded to inconsistent behaviour and hard adoption.</p>
 <p>Fast forwarding 9 years, in kernel 4.5 a rewrite of <code>cgroup</code> revamp the idea, making it simpler and consistent.</p>
+<p><label for='ClBvc3QgMjogW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCjxiciAvPgpQb3N0IDM6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClBvc3QgMjogW3Jlc291cmNlcyBkaXN0cmlidXRpb25dKC9hcnRpY2xlcy8yMDIyLzA0LzI0L0xpbnV4LUNvbnRyb2wtR3JvdXAtUmVzb3VyY2UtRGlzdHJpYnV0aW9uLmh0bWwpCjxiciAvPgpQb3N0IDM6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Post 2: <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">resources distribution</a> <br /> Post 3: <a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">no internal process constraint</a>
+</span></p>
 <p>This post focus in the organization of cgroups and it is the first of a 3-posts series about <code>cgroup</code> in its new <code>v2</code> version.</p>
 </div>
 <p></span></p>
