@@ -1,0 +1,299 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Sparse Aware Optimizations for Terminal Emulator Pyte</title>
+  <meta name="description" content="Sparse Aware Optimizations for Terminal Emulator Pyte">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      //root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+Sparse Aware Optimizations for Terminal Emulator Pyte
+</h1>
+<p class="subtitle">
+July 15, 2022
+</p>
+<p><a href="https://byexamples.github.io/byexample/">byexample</a> is a tool that reads snippets of code from your documentation, executes them and compares the obtained results with the expected ones, from your docs too.</p>
+<p>If a mismatch happen we say that the <em>example</em> in your documentation failed which could mean one fo two things:</p>
+<ul>
+<li>your code (the snippet) does not do what you expect so it has a bug</li>
+<li>or the code does exactly what it is supposed but you forgot to update your doc.</li>
+</ul>
+<p><em>Very useful for testing and keep your docs in sync!</em></p>
+<p>But <a href="https://byexamples.github.io/byexample/">byexample</a> does not really execute anything by itself. Having to code an interpreter for Ruby, Java, C++ and others would be <em>insane</em>.</p>
+<p>Instead, <a href="https://byexamples.github.io/byexample/">byexample</a> sends the snippets of code toa standard interpreter like <a href="https://github.com/ruby/irb">IRB</a> for Ruby or <a href="https://github.com/root-project/cling">cling</a> for C++.</p>
+<p>Interpreting the output from they is not always trivial.</p>
+<p>When a interpreter prints to the terminal, it may write special <a href="https://en.wikipedia.org/wiki/ANSI_escape_code">escape/control sequences</a>, invisible to human eyes, but interpreted by the terminal.</p>
+<p>That’s how IRB can tell your terminal to output something with reds and blues colors.</p>
+<p><label for='ClRoYXQncyBob3cgYGJ5ZXhhbXBsZWAncwpbYCt0ZXJtPWFuc2lgXShodHRwczovL2J5ZXhhbXBsZXMuZ2l0aHViLmlvL2J5ZXhhbXBsZS9hZHZhbmNlZC90ZXJtaW5hbC1lbXVsYXRpb24pCmlzIGltcGxlbWVudGVkLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoYXQncyBob3cgYGJ5ZXhhbXBsZWAncwpbYCt0ZXJtPWFuc2lgXShodHRwczovL2J5ZXhhbXBsZXMuZ2l0aHViLmlvL2J5ZXhhbXBsZS9hZHZhbmNlZC90ZXJtaW5hbC1lbXVsYXRpb24pCmlzIGltcGxlbWVudGVkLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+That’s how <code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code>’s <a href="https://byexamples.github.io/byexample/advanced/terminal-emulation"><code><span class="highlight-candombe-inline"><span class="o">+</span><span class="n">term</span><span class="o">=</span><span class="n">ansi</span></span></code></a> is implemented.
+</span></p>
+<p><a href="https://byexamples.github.io/byexample/">byexample</a> has no idea of what the hell those control sequences are and relays on a <em>terminal emulator</em>: <a href="https://github.com/selectel/pyte">pyte</a></p>
+<p><figure><figcaption><span markdown='1'>
+<code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code> sends the snippets to the correct interpreter and its output <em>feeds</em> <code><span class="highlight-candombe-inline"><span class="n">pyte</span><span class="o">.</span><span class="n">Screen</span></span></code>. It is the plain text from the emulated terminal what <code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code> uses to compare with the expected output from the example.
+</span></figcaption>
+<img  class='' alt='' src='/img/python/pyte/byexample-pyte-overview.png' /></figure></p>
+<p>But <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> may take <strong>seconds</strong> to process a single output so <code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code> never enabled it by default.</p>
+<p>This post describes the <em>why</em> and <em>how</em> of the <a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations">optimizations contributed</a> to <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> to go from seconds to <strong>microseconds</strong>.</p>
+<h2 id="artifacts-and-artificial-boundaries">Artifacts and artificial boundaries</h2>
+<p>Using an emulator like <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> saves us from interpreting the <a href="https://en.wikipedia.org/wiki/ansi_escape_code">escape/control sequences</a>, but introduces some unwanted artifacts in the output.</p>
+<p>For example, considere the following snippet that prints a <strong>single</strong> line of <code><span class="highlight-candombe-inline"><span class="s2">&quot;A&quot;</span></span></code>. If you do this in your terminal you will see that the line <strong>spans multiple lines</strong>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;A&quot;</span> <span class="o">*</span> <span class="mi">170</span><span class="p">)</span>
+<span class="n">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</span>
+<span class="n">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</span>
+<span class="n">AAAAAAAAAA</span>
+</code></pre></div>
+
+<p>Why? It’s because your terminal has boundaries, a finite width in this case and lines longer than that are <em>cut</em> and <em>continued</em> on the next line.</p>
+<p>This is super handy for a human but not for <code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code>.</p>
+<p>Another artifact is the limit of lines in the terminal: if the interpreter outputs a lot of lines only the last will be visible <em>“on the screen”</em> and the rest will be lost.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">):</span>
+<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="mi">22</span>
+<span class="mi">23</span>
+<span class="mi">24</span>
+<span class="mi">25</span>
+<span class="mi">26</span>
+<span class="mi">27</span>
+<span class="mi">28</span>
+<span class="mi">29</span>
+</code></pre></div>
+
+<p>Again, your terminal has a finite height so the same goes for the <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> emulator.</p>
+<h2 id="the-hack">The hack</h2>
+<p>If the size of the emulated screen generates unwanted artifacts, the hack is simple: increase the size!</p>
+<p>And <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> has no problem with that.</p>
+<p>Well, actually, it has….</p>
+<h2 id="bad-news-it-is-super-slow">Bad news: it is super slow!</h2>
+<p><code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> implements a sparse buffer so technically it should not have problems when we increase the size of the screen.</p>
+<p>Even if the geometry is of 2400 lines by 8000 columns, the performance of <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> should depend <strong>only</strong> on the amount of non-empty data in the screen.</p>
+<p>Sadly, the algorithms for terminal emulation are <strong>not</strong> <em>sparse aware</em> and they do <strong>full scans</strong>.</p>
+<p>To give you an example, if a line of 8000 columns has only 5 characters, only 5 characters are stored on memory (good) but displaying it iterates over the whole 8000 columns</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nd">@property</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">display</span><span class="p">:</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">):</span>
+<span class="o">...</span>         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+<span class="o">...</span>             <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">y</span><span class="p">][</span><span class="n">x</span><span class="p">]</span>  <span class="c1"># display the char</span>
+</code></pre></div>
+
+<p><code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> runtime complexity runs <em>quadratic</em> with respect the size of the terminal and not <em>linear</em> with respect the real data stored within.</p>
+<p>Moreover, the underlying implementation of <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> is a <code><span class="highlight-candombe-inline"><span class="n">defaultdict</span></span></code>.</p>
+<p>While initially it may contain only the real characters and being very <em>sparse</em>, as soon you do a <em>single full scan</em> the <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> will contain <strong>all the entries</strong> possible of 2400x8000.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> will <em>not</em> be sparse but completely <strong>dense</strong>. And this of course means the memory also grows <strong>quadratic</strong>.</p>
+<h2 id="make-pyte-really-fast">Make <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> really fast!</h2>
+<p>With 54 commits (more than 10% of the total commits that <code><span class="highlight-candombe-inline"><span class="n">pyte</span> <span class="mf">0.8.1</span></span></code> has), the <a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations">pull request</a> implements a lot of improvements.</p>
+<p>The <a href="/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html">TL;DR post</a> with the contributions and the results is posted somewhere else but here is a summary.</p>
+<h2 id="sparse-aware-scans">Sparse-aware scans</h2>
+<p>First, every time that <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> needs to iterate over non-empty lines or chars, use sparse aware iterations.</p>
+<p>Instead of doing:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">...</span>     <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="p">):</span>
+<span class="o">...</span>         <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+<span class="o">...</span>         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+<span class="o">...</span>             <span class="n">line</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>  <span class="c1"># do something</span>
+</code></pre></div>
+
+<p>Do this:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">...</span>     <span class="n">non_empty_y</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">non_empty_y</span><span class="p">:</span>
+<span class="o">...</span>         <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+<span class="o">...</span>         <span class="n">non_empty_x</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="o">...</span>         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">non_empty_x</span><span class="p">:</span>
+<span class="o">...</span>             <span class="n">line</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>  <span class="c1"># do something</span>
+</code></pre></div>
+
+<p>Both <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">line</span></span></code> are <code><span class="highlight-candombe-inline"><span class="nb">dict</span></span></code> with row indexes/column indexes as keys for each non-empty line/char respectively.</p>
+<p>The full scan with the nested <code><span class="highlight-candombe-inline"><span class="nb">range</span></span></code> is \(s^2\) in terms of any possible slot in the buffer, empty or not.</p>
+<p>In contrast, the sparse-aware variant has the cost of <code><span class="highlight-candombe-inline"><span class="nb">sorted</span></span></code> (\(n log(n)\)) and the iteration (\(n\)) both in terms of the non-empty data.</p>
+<p>When the <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> is sparse we expect \(n ≪ s\) and the second code is way faster than the first.</p>
+<p>If <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> is not sparse, both code are quadratic.</p>
+<h2 id="sparsity">Sparsity</h2>
+<p>So it is critical to maintain the sparsity of the <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code>, not only because it consumes less memory (less real entries in the <code><span class="highlight-candombe-inline"><span class="nb">dict</span></span></code>) but because the runtime of other algorithms depend on that!</p>
+<p>Now, in <code><span class="highlight-candombe-inline"><span class="n">pyte</span> <span class="mf">0.8.1</span></span></code>, the <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> is a <code><span class="highlight-candombe-inline"><span class="n">defaultdict</span></span></code> so any <em>read</em> may potentially <strong>write</strong> an entry.</p>
+<p>Consider the following <code><span class="highlight-candombe-inline"><span class="n">index</span></span></code> method that moves all the lines one row up so a line at coordinate <code><span class="highlight-candombe-inline"><span class="n">y</span><span class="o">=</span><span class="mi">8</span></span></code> will be moved to <code><span class="highlight-candombe-inline"><span class="n">y</span><span class="o">=</span><span class="mi">7</span></span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
+    <span class="c1"># [...]</span>
+    <span class="n">bottom</span><span class="p">,</span> <span class="n">top</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">top</span><span class="p">,</span> <span class="n">bottom</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">bottom</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Simple, elegant but…. for each <em>empty entry</em> at <code><span class="highlight-candombe-inline"><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span></span></code>, we will creating 2 real entries into the buffer: one for writing into index <code><span class="highlight-candombe-inline"><span class="n">y</span></span></code> and one for reading <code><span class="highlight-candombe-inline"><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span></span></code>.</p>
+<p>These are what I called <strong>false entries</strong>.</p>
+<p>A single call to <code><span class="highlight-candombe-inline"><span class="n">index</span></span></code> will turn the <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> into a <em>dense</em>, full of false entries <code><span class="highlight-candombe-inline"><span class="nb">dict</span></span></code>.</p>
+<p>The solution is to replace the full scan <code><span class="highlight-candombe-inline"><span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">top</span><span class="p">,</span> <span class="n">bottom</span><span class="p">)</span></span></code> for one that that iterate only the non-empty entries (avoiding then reading empty entries):</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
+    <span class="c1"># [...]</span>
+    <span class="n">bottom</span><span class="p">,</span> <span class="n">top</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lines</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">non_empty_y</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">top</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">to_move</span> <span class="o">=</span> <span class="n">non_empty_y</span><span class="p">[</span><span class="n">begin</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">to_move</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">[</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The call to <code><span class="highlight-candombe-inline"><span class="n">buffer</span><span class="o">.</span><span class="n">pop</span></span></code> removes the entry and the <code><span class="highlight-candombe-inline"><span class="n">buffer</span><span class="p">[</span><span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span></span></code> stores it back in the new index avoiding reading or writing any false entry.</p>
+<p>Once all the algorithms are reimplemented, we must change <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> from a <code><span class="highlight-candombe-inline"><span class="n">defaultdict</span></span></code> to a <code><span class="highlight-candombe-inline"><span class="nb">dict</span></span></code> to prevent any accidental false entry.</p>
+<h2 id="binary-searches">Binary searches</h2>
+<p>When <code><span class="highlight-candombe-inline"><span class="n">resize</span></span></code> is called and if the screen shrinks, all the lines of the screen are truncated to the new width.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">columns</span><span class="p">):</span>
+    <span class="c1"># [...]</span>
+    <span class="k">if</span> <span class="n">columns</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># [...]</span>
+</code></pre></div>
+
+<p>Popping out all the <code><span class="highlight-candombe-inline"><span class="n">x</span></span></code> entries that are greater than the new <code><span class="highlight-candombe-inline"><span class="n">columns</span></span></code> is correct but we can do it better.</p>
+<p>You see, most of the entries in the line will not exist really and <code><span class="highlight-candombe-inline"><span class="n">pop</span></span></code> will have no effect on the <code><span class="highlight-candombe-inline"><span class="n">line</span></span></code> (except consuming time!).</p>
+<p>With a binary search we can find in \(log(n)\) the first non-empty <code><span class="highlight-candombe-inline"><span class="n">x</span></span></code> and delete from there.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">columns</span><span class="p">):</span>
+    <span class="c1"># [...]</span>
+    <span class="k">if</span> <span class="n">columns</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">non_empty_x</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">begin</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">non_empty_x</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">non_empty_x</span><span class="p">[</span><span class="n">begin</span><span class="p">:]:</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="c1"># [...]</span>
+</code></pre></div>
+
+<p>Technically this is still \(O(n)\) but it should be iterate over lesser entries than the former <code><span class="highlight-candombe-inline"><span class="mf">0.8.1</span></span></code> version.</p>
+<h2 id="the-good-old-python-tricks">The good old Python tricks</h2>
+<p>At least for <code><span class="highlight-candombe-inline"><span class="mf">3.10</span></span></code>, Python still does not cache any attribute lookup so a easy win is to it ourselves, specially with the lookup is in a <code><span class="highlight-candombe-inline"><span class="k">for</span></span></code>-loop:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">columns</span><span class="p">):</span>
+    <span class="c1"># [...]</span>
+    <span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span>
+    <span class="k">if</span> <span class="n">columns</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">buffer</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">non_empty_x</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">pop</span> <span class="o">-</span> <span class="n">line</span><span class="o">.</span><span class="n">pop</span>
+            <span class="n">begin</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">non_empty_x</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">non_empty_x</span><span class="p">[</span><span class="n">begin</span><span class="p">:]:</span>
+                <span class="n">pop</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="c1"># [...]</span>
+</code></pre></div>
+
+<p>Now, we have an additional low-hanging fruit: the inner <code><span class="highlight-candombe-inline"><span class="k">for</span></span></code>-loop calls repetitively the same function over a sequence.</p>
+<p>Does that ring any bells to you?</p>
+<p>Replacing a loop with a <code><span class="highlight-candombe-inline"><span class="nb">map</span></span></code> moves the loop into C and because <code><span class="highlight-candombe-inline"><span class="nb">dict</span><span class="o">.</span><span class="n">pop</span></span></code> is in <code><span class="highlight-candombe-inline"><span class="n">C</span></span></code> too, it is even faster:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">columns</span><span class="p">):</span>
+    <span class="c1"># [...]</span>
+    <span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span>
+    <span class="k">if</span> <span class="n">columns</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">buffer</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">non_empty_x</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">pop</span> <span class="o">-</span> <span class="n">line</span><span class="o">.</span><span class="n">pop</span>
+            <span class="n">begin</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">non_empty_x</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
+
+            <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">pop</span><span class="p">,</span> <span class="n">non_empty_x</span><span class="p">[</span><span class="n">begin</span><span class="p">:]))</span>
+    <span class="c1"># [...]</span>
+</code></pre></div>
+
+<h2 id="dont-do-what-you-dont-need">Don’t do what you don’t need</h2>
+<p><code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> tracks which lines were modified in a <code><span class="highlight-candombe-inline"><span class="n">dirty</span></span></code> set but <code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code> (and maybe other users) does not need it.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">byexample</span></span></code> <em>renders</em> the whole screen as a single string calling screen.display so it does not care what lines changed or not.</p>
+<p>For the same reason emulating things like colores and styles is pointless.</p>
+<p>As part of the optimizations now <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> can optionally disable those.</p>
+<h2 id="faster-but-how-much-faster"><em>“faster”</em>, but how <em>much</em> faster?</h2>
+<p>All the gory details are in the <a href="/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html">TL;DR post</a> but here is a quick summary:</p>
+<p>At minimum, a humble 2 times faster for small geometries but for large geometries the speed up goes up to 7 times faster and if the screen is tuned, up to 12 times.</p>
+<p>An for <code><span class="highlight-candombe-inline"><span class="n">screen</span><span class="o">.</span><span class="n">display</span></span></code>, the speed up is insanely huge: 600000 times! But it has a more modest common case of 10 to 200 times faster.</p>
+<p>Memory usage was also optimized from 1.10 and 50 times better.</p>
+<p>Not everything was improved however: some test cases had a small regression and one had up to 5 times slower (boomers) but in general there was a lot of profit on the improvements.</p>
+</article>
+<span class="print-footer">Sparse Aware Optimizations for Terminal Emulator Pyte - July 15, 2022 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>

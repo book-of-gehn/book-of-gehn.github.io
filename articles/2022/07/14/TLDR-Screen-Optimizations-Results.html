@@ -1,0 +1,405 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>TL;DR Screen Optimizations Results for Terminal Emulator Pyte</title>
+  <meta name="description" content="TL;DR Screen Optimizations Results for Terminal Emulator Pyte">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      //root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+    <nav class="group">
+            <form id="blog-search-form">
+                <input type="search" placeholder="+must -not *fuzzy*"></input>
+                <span class="query-error"></span>
+                <span class="controls">
+                    <button type="submit">Filter</button>
+                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
+                </span>
+            </form>
+    </nav>
+
+    <div style="display: none;" id="search_error"></div>
+    <article style="display: none;" class="group" id="search_results">
+    </article>
+</header>
+<article class="group">
+<h1>
+TL;DR Screen Optimizations Results for Terminal Emulator Pyte
+</h1>
+<p class="subtitle">
+July 14, 2022
+</p>
+<p>This post describes to some level of detail all the performance boosts and speedups due the <a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations">optimizations contributed</a> to <a href="https://github.com/selectel/pyte">pyte</a> and <a href="/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html">summarized here</a></p>
+<p>At the moment of writing this post, the PR is still pending to review.</p>
+<h1 id="what-is-this-pr-about">What is this PR about?</h1>
+<p>Optimization. My goal was to make <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> faster and lighter specially for large geometries (think in a screen of 240x800 or 2400x8000 size).</p>
+<h1 id="context-background">Context (background)</h1>
+<p>While <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> implements a sparse buffer, most of its algorithms are not aware and they don’t take advantage of that making the terminal emulation really slow and consuming a lot of memory.</p>
+<h1 id="contributions">Contributions</h1>
+<ul>
+<li>Upgrade <code><span class="highlight-candombe-inline"><span class="n">pyperf</span></span></code></li>
+<li>Extended the benchmark tests to test <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">resize</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">reset</span></span></code> under different geometries (24x80, 240x800, 2400x8000, 24x8000, 2400x80). With these the benchmark takes much more time (sorry!) but it gives a deeper view of how <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> works.</li>
+<li>Fixed a bug in the benchmarks that used <code><span class="highlight-candombe-inline"><span class="n">Stream</span></span></code> instead of <code><span class="highlight-candombe-inline"><span class="n">ByteStream</span></span></code>. The use of the former led to an incorrect interpretation of the new lines; the use of <code><span class="highlight-candombe-inline"><span class="n">ByteStream</span></span></code> fixed that and it is aligned with the <code><span class="highlight-candombe-inline"><span class="n">test_input_output</span><span class="o">.</span><span class="n">py</span></span></code> tests.</li>
+<li>Optimize <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code> to work (approx) linearly with the input and not with the size of the screen (quadratic). Improved by a lot both for runtime and memory (specially for large geometries).</li>
+<li>Implement <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">compressed_display</span></span></code> that works similar to <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code> but it allows to <em>“strip”</em> empty space from the left or right and <em>“filter”</em> empty lines on top and bottom of the screen reducing time and memory.</li>
+<li>Optimize <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">draw</span></span></code> with caching of attributes and methods (the same optimizations already present in <code><span class="highlight-candombe-inline"><span class="n">Stream</span><span class="o">.</span><span class="n">_parser_fsm</span></span></code>).</li>
+<li>Refactor out <code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code>’s foreground, bold, blink (…) into a separated <code><span class="highlight-candombe-inline"><span class="n">namedtuple</span></span></code> <code><span class="highlight-candombe-inline"><span class="n">CharStyle</span></span></code>. When possible, reuse the same style for multiple characters reducing the memory usage at the expense of an additional lookup (instead of <code><span class="highlight-candombe-inline"><span class="n">char</span><span class="o">.</span><span class="n">fg</span></span></code> you have <code><span class="highlight-candombe-inline"><span class="n">char</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">fg</span></span></code>).</li>
+<li>Make <code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code> a mutable object allowing changes in the <code><span class="highlight-candombe-inline"><span class="n">data</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">width</span></span></code> fields to be in-place instead of creating a new <code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code> object.</li>
+<li>Sparse-aware algorithms for <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">index</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">reverse_index</span></span></code> which improved indirectly <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">draw</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Stream</span><span class="o">.</span><span class="n">feed</span></span></code>.</li>
+<li>Sparse-aware algorithms for <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">resize</span></span></code></li>
+<li>Sparse-aware algorithms for <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">tabstop</span></span></code></li>
+<li>Sparse-aware algorithms for <code><span class="highlight-candombe-inline"><span class="n">ScreenHistory</span><span class="o">.</span><span class="n">prev_page</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">ScreenHistory</span><span class="o">.</span><span class="n">next_page</span></span></code>.</li>
+<li>Sparse-aware algorithms for <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">insert_characters</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">delete_characters</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">insert_lines</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">delete_characters</span></span></code> which improved the performance of <em>“terminal aware”</em> programs.</li>
+<li>Statistics about <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code>’s buffer and lines to have insight about the sparsity and usage of these elements. (The API is not not standard like <code><span class="highlight-candombe-inline"><span class="n">DebugScreen</span></span></code>).</li>
+<li>Make the public attribute <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">buffer</span></span></code> return a <code><span class="highlight-candombe-inline"><span class="n">BufferView</span></span></code>. Retrieve of lines from it yield <code><span class="highlight-candombe-inline"><span class="n">LineView</span></span></code> instead of <code><span class="highlight-candombe-inline"><span class="n">Line</span></span></code> objects. This adds an overhead on user code but allows a separation between the public part and the internals. Iterate over <code><span class="highlight-candombe-inline"><span class="n">LineView</span></span></code> still yields <code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code> objects as usual (to much high penalty otherwise).</li>
+<li>Make the public <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">history</span></span></code>’s <code><span class="highlight-candombe-inline"><span class="n">top</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">bottom</span></span></code> queues return <code><span class="highlight-candombe-inline"><span class="n">LineView</span></span></code> and not <code><span class="highlight-candombe-inline"><span class="n">Line</span></span></code> objects</li>
+<li>Make the private attribute <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">_buffer</span></span></code> a <code><span class="highlight-candombe-inline"><span class="nb">dict</span></span></code> and not a <code><span class="highlight-candombe-inline"><span class="n">defaultdict</span></span></code>. This prevent adding entries unintentionally which would make the buffer less sparse and therefore slow.</li>
+<li>If the current cursor attributes (style) matches the default attributes of the screen, do not write explicit spaces on erase methods (<code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">erase_characters</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">erase_in_line</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">erase_in_display</span></span></code>)</li>
+<li>When <code><span class="highlight-candombe-inline"><span class="n">disable_display_graphic</span></span></code> is <code><span class="highlight-candombe-inline"><span class="kc">True</span></span></code> prevent <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">select_graphic_rendition</span></span></code> to change the cursor attributes (style). If the cursor attrs don’t change, we can optimize the erase methods. The flag is <code><span class="highlight-candombe-inline"><span class="kc">False</span></span></code> by default. but just remove the chars from the buffer. This makes speedup other algorithms and maintain high the sparsity (and consume less memory).</li>
+<li>When <code><span class="highlight-candombe-inline"><span class="n">track_dirty_lines</span></span></code> is <code><span class="highlight-candombe-inline"><span class="kc">False</span></span></code> use a <code><span class="highlight-candombe-inline"><span class="n">NullSet</span></span></code> for <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">dirty</span></span></code> attribute to not consume any memory and discard any element, disabling effectively the dirty functionality. This saves time and memory for large geometries. The flag is <code><span class="highlight-candombe-inline"><span class="kc">True</span></span></code> by default.</li>
+<li>Make <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">margin</span></span></code> always a <code><span class="highlight-candombe-inline"><span class="n">Margin</span></span></code> object so we can avoid checking if it is <code><span class="highlight-candombe-inline"><span class="kc">None</span></span></code> or not.</li>
+</ul>
+<h2 id="compatibility-changes">Compatibility changes</h2>
+<p>The following are changes in the API that may break user code. A special care was taken to avoid this situation.</p>
+<ul>
+<li><code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code> is not longer a <code><span class="highlight-candombe-inline"><span class="n">namedtuple</span></span></code> so things like <code><span class="highlight-candombe-inline"><span class="n">_replace</span></span></code> are gone. If necessary we could reimplement the API of <code><span class="highlight-candombe-inline"><span class="n">namedtuple</span></span></code> but I don’t think users will use.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code> is mutable but the user must not relay on this: changes to character will have undefined behaviour. The user must use always the API provided by <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code>.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code> not longer has attributes for <code><span class="highlight-candombe-inline"><span class="n">fg</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">bg</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">bold</span></span></code>. Instead, it has a single read-only <code><span class="highlight-candombe-inline"><span class="n">CharStyle</span></span></code>. The <code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code> class implements <code><span class="highlight-candombe-inline"><span class="n">fg</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">bg</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">bold</span></span></code> as <em>properties</em> to do the lookup to the style behind the scene. User code should not break then.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">buffer</span></span></code> now is a property that returns a <code><span class="highlight-candombe-inline"><span class="n">BufferView</span></span></code> with a similar API to a dictionary. It yields <code><span class="highlight-candombe-inline"><span class="n">LineView</span></span></code> objects instead of <code><span class="highlight-candombe-inline"><span class="n">Line</span></span></code> objects. These in turn yield <code><span class="highlight-candombe-inline"><span class="n">Char</span></span></code> objects (not views). User can still iterate over the lines and chars as if the buffer were a dense array and not a sparse array as it is really. Like any view, these are valid until the next modification of the screen. This change may break user code if it uses <code><span class="highlight-candombe-inline"><span class="n">buffer</span></span></code> in another way.</li>
+<li>The queues <code><span class="highlight-candombe-inline"><span class="n">top</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">bottom</span></span></code> of <code><span class="highlight-candombe-inline"><span class="n">ScreenHistory</span><span class="o">.</span><span class="n">history</span></span></code> contain <code><span class="highlight-candombe-inline"><span class="n">LineView</span></span></code> and not <code><span class="highlight-candombe-inline"><span class="n">Line</span></span></code> objects. This may break user code.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">margin</span></span></code> is always a <code><span class="highlight-candombe-inline"><span class="n">Margin</span></span></code> object: the <code><span class="highlight-candombe-inline"><span class="kc">None</span></span></code> value is not longer supported.</li>
+</ul>
+<h1 id="results">Results</h1>
+<h2 id="high-level-results">High level results</h2>
+<p>For large geometries (240x800, 2400x8000), <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code> runs orders of magnitud faster and consumes between 1.10 and 50.0 times less memory.</p>
+<p>For smaller geometries the minimum improvement was of 2 times faster.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">Stream</span><span class="o">.</span><span class="n">feed</span></span></code> is now between 1.10 and 7.30 times faster and if <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code> is tuned, the speedup is between 1.14 and 12.0.</p>
+<p>However there is a regression for the <code><span class="highlight-candombe-inline"><span class="n">mc</span><span class="o">.</span><span class="n">input</span></span></code> test of up to 4 times slower.</p>
+<p>For memory usage, <code><span class="highlight-candombe-inline"><span class="n">Stream</span><span class="o">.</span><span class="n">feed</span></span></code> is between 1.10 and 17.0 times lighter and up to 44.0 times lighter if <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code> is tuned.</p>
+<p>Screen.reset is between 1.10 and 1.50 slower but several cases improve if the <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code> is tuned (but not all).</p>
+<h2 id="tldr---numbers-overview">TL;DR - Numbers overview</h2>
+<p>The following is a overview of the numbers got. To make this post as short as possible, the some results were omitted (rows omitted are marked with <code><span class="highlight-candombe-inline"><span class="p">:::</span></span></code>).</p>
+<p>Full benchmark results are listed below; people is encouraged to do their own benchmarks for cross validation.</p>
+<ul>
+<li><a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1.json">0.8.1 - runtime</a></li>
+<li><a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1.tracemalloc.json">0.8.1 - tracemalloc</a></li>
+<li><a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1+screen-optimizations+default-conf.json">optimized (default) - runtime</a></li>
+<li><a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1+screen-optimizations+default-conf.tracemalloc.json">optimized (default) - tracemalloc</a></li>
+<li><a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1+screen-optimizations+custom-conf.json">optimized (tuned) - runtime</a></li>
+<li><a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1+screen-optimizations+custom-conf.tracemalloc.json">optimized (tuned) - tracemalloc</a></li>
+</ul>
+<h3 id="screen.display"><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code></h3>
+<p><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code> was optimized to generate large chunks of spaces very quickly.</p>
+<p>For large geometries, this has an huge impact on the performance:</p>
+<pre><code>+----------------------------------------------------------+----------+-----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+default-conf |
++==========================================================+==========+=========================================+
+| [screen_display 2400x8000] mc.input-&gt;Screen              | 6.69 sec | 9.95 us: 672459.98x faster              |
+| [screen_display 2400x8000] mc.input-&gt;HistoryScreen       | 6.60 sec | 10.3 us: 638209.07x faster              |
+| [screen_display 2400x8000] vi.input-&gt;HistoryScreen       | 6.80 sec | 132 us: 51648.56x faster                |
+| [screen_display 2400x8000] vi.input-&gt;Screen              | 6.60 sec | 130 us: 50691.68x faster                |
+    :::                 ::::                                    ::::         :::
+| [screen_display 240x800] ls.input-&gt;HistoryScreen         | 70.1 ms  | 248 us: 283.21x faster                  |
+| [screen_display 240x800] ls.input-&gt;Screen                | 69.1 ms  | 244 us: 282.76x faster                  |
+| [screen_display 240x800] top.input-&gt;Screen               | 68.2 ms  | 249 us: 273.98x faster                  |
+| [screen_display 240x800] top.input-&gt;HistoryScreen        | 67.3 ms  | 257 us: 261.64x faster                  |
+    :::                 ::::                                    ::::         :::
+| [screen_display 24x80] find-etc.input-&gt;HistoryScreen     | 670 us   | 101 us: 6.63x faster                    |
+| [screen_display 24x80] find-etc.input-&gt;Screen            | 640 us   | 97.9 us: 6.54x faster                   |
+| [screen_display 24x80] vi.input-&gt;HistoryScreen           | 606 us   | 115 us: 5.27x faster                    |
+| [screen_display 24x80] vi.input-&gt;Screen                  | 584 us   | 117 us: 5.00x faster                    |
+| [screen_display 24x80] cat-gpl3.input-&gt;Screen            | 605 us   | 189 us: 3.21x faster                    |
+| [screen_display 24x80] cat-gpl3.input-&gt;HistoryScreen     | 605 us   | 195 us: 3.11x faster                    |
+| [screen_display 24x80] ls.input-&gt;HistoryScreen           | 609 us   | 221 us: 2.75x faster                    |
+| [screen_display 24x80] ls.input-&gt;Screen                  | 585 us   | 221 us: 2.65x faster                    |
+| [screen_display 24x80] top.input-&gt;Screen                 | 567 us   | 244 us: 2.33x faster                    |
+| [screen_display 24x80] top.input-&gt;HistoryScreen          | 580 us   | 251 us: 2.32x faster                    |
+| [screen_display 24x80] htop.input-&gt;HistoryScreen         | 564 us   | 269 us: 2.10x faster                    |
+| [screen_display 24x80] htop.input-&gt;Screen                | 559 us   | 273 us: 2.05x faster                    |</code></pre>
+<p><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code> takes advantage of the sparsity of the screen and therefore it was indirectly beneficed by the optimizations done across <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code> to avoid filling it with <em>false entries</em>.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code> it was also optimized on memory (<code><span class="highlight-candombe-inline"><span class="n">tracemalloc</span></span></code>) avoiding then append of each space character separately when they could be appended in a single chunk.</p>
+<pre><code>+--------------------------------------------------------------+-------------------+-----------------------------------------------------+
+| Benchmark                                                    | 0.8.1.tracemalloc | 0.8.1+screen-optimizations+default-conf.tracemalloc |
++==============================================================+===================+=====================================================+
+| [screen_display 2400x8000] ls.input-&gt;HistoryScreen           | 19.7 MB           | 408.1 kB: 49.43x faster                             |
+| [screen_display 2400x8000] mc.input-&gt;HistoryScreen           | 19.7 MB           | 411.4 kB: 49.04x faster                             |
+| [screen_display 2400x8000] mc.input-&gt;Screen                  | 19.7 MB           | 411.4 kB: 49.04x faster                             |
+| [screen_display 2400x8000] ls.input-&gt;Screen                  | 19.7 MB           | 411.5 kB: 49.03x faster                             |
+| [screen_display 2400x8000] vi.input-&gt;HistoryScreen           | 18.5 MB           | 404.7 kB: 46.84x faster                             |
+| [screen_display 2400x8000] top.input-&gt;HistoryScreen          | 18.5 MB           | 408.3 kB: 46.43x faster                             |
+| [screen_display 2400x8000] vi.input-&gt;Screen                  | 18.5 MB           | 408.5 kB: 46.40x faster                             |
+| [screen_display 2400x8000] top.input-&gt;Screen                 | 18.5 MB           | 411.5 kB: 46.07x faster                             |
+| [screen_display 2400x8000] htop.input-&gt;Screen                | 18.5 MB           | 1102.6 kB: 17.19x faster                            |
+| [screen_display 2400x8000] htop.input-&gt;HistoryScreen         | 18.5 MB           | 1103.2 kB: 17.18x faster                            |
+| [screen_display 2400x8000] cat-gpl3.input-&gt;HistoryScreen     | 19.5 MB           | 5392.6 kB: 3.70x faster                             |
+| [screen_display 2400x8000] cat-gpl3.input-&gt;Screen            | 19.5 MB           | 5392.0 kB: 3.70x faster                             |
+| [screen_display 240x800] mc.input-&gt;Screen                    | 513.2 kB          | 403.5 kB: 1.27x faster                              |
+| [screen_display 240x800] ls.input-&gt;Screen                    | 517.0 kB          | 411.5 kB: 1.26x faster                              |
+| [screen_display 240x800] ls.input-&gt;HistoryScreen             | 511.7 kB          | 408.1 kB: 1.25x faster                              |
+| [screen_display 240x800] mc.input-&gt;HistoryScreen             | 510.4 kB          | 411.4 kB: 1.24x faster                              |
+| [screen_display 2400x8000] find-etc.input-&gt;HistoryScreen     | 18.7 MB           | 16.6 MB: 1.12x faster                               |
+| [screen_display 2400x8000] find-etc.input-&gt;Screen            | 18.7 MB           | 16.6 MB: 1.12x faster                               |</code></pre>
+<p>The only two regressions are:</p>
+<pre><code>| [screen_display 240x800] htop.input-&gt;HistoryScreen           | 408.7 kB          | 487.3 kB: 1.19x slower                              |
+| [screen_display 240x800] htop.input-&gt;Screen                  | 405.8 kB          | 486.2 kB: 1.20x slower                              |</code></pre>
+<p>Not sure why this happen.</p>
+<h3 id="stream.feed"><code><span class="highlight-candombe-inline"><span class="n">Stream</span><span class="o">.</span><span class="n">feed</span></span></code></h3>
+<p><code><span class="highlight-candombe-inline"><span class="n">stream</span><span class="o">.</span><span class="n">feed</span></span></code> was not modified but its runtime depends on <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code>’s performance.</p>
+<p>For terminal programs that just write into then terminal, like <code><span class="highlight-candombe-inline"><span class="n">cat</span><span class="o">-</span><span class="n">gpl3</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">find</span><span class="o">-</span><span class="n">etc</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">stream</span><span class="o">.</span><span class="n">feed</span></span></code> merely sends then input to <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">draw</span></span></code> for rendering.</p>
+<p>The method <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">draw</span></span></code> was optimized to avoid the modification of the cursor internally and update it only at the exit. This saved a few lookups.</p>
+<p>While not been frequently called, <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">index</span></span></code> was the next bottleneck for <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">draw</span></span></code>: it moves all the lines of the screen which it means that all the entries of the buffer are rewritten.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">index</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">reverse_index</span></span></code> were optimized to take advantage of the sparsity and to avoid adding false entries.</p>
+<p>This resulted on a speedup across the tests:</p>
+<pre><code>+----------------------------------------------------------+----------+-----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+default-conf |
++==========================================================+==========+=========================================+
+| [stream_feed 2400x8000] vi.input-&gt;HistoryScreen          | 49.4 ms  | 6.70 ms: 7.38x faster                   |
+| [stream_feed 2400x8000] top.input-&gt;HistoryScreen         | 7.35 ms  | 1.31 ms: 5.62x faster                   |
+| [stream_feed 2400x8000] find-etc.input-&gt;HistoryScreen    | 2.92 sec | 543 ms: 5.38x faster                    |
+| [stream_feed 240x800] ls.input-&gt;HistoryScreen            | 9.29 ms  | 1.75 ms: 5.31x faster                   |
+| [stream_feed 24x80] top.input-&gt;HistoryScreen             | 6.61 ms  | 1.25 ms: 5.30x faster                   |
+| [stream_feed 240x800] top.input-&gt;HistoryScreen           | 6.57 ms  | 1.24 ms: 5.29x faster                   |
+| [stream_feed 240x800] cat-gpl3.input-&gt;HistoryScreen      | 215 ms   | 43.3 ms: 4.97x faster                   |
+| [stream_feed 24x80] ls.input-&gt;HistoryScreen              | 6.26 ms  | 1.34 ms: 4.68x faster                   |
+| [stream_feed 24x80] cat-gpl3.input-&gt;HistoryScreen        | 140 ms   | 31.9 ms: 4.38x faster                   |
+| [stream_feed 240x800] find-etc.input-&gt;HistoryScreen      | 532 ms   | 123 ms: 4.32x faster                    |
+| [stream_feed 2400x8000] vi.input-&gt;Screen                 | 13.7 ms  | 3.53 ms: 3.88x faster                   |
+| [stream_feed 24x80] find-etc.input-&gt;HistoryScreen        | 294 ms   | 81.1 ms: 3.62x faster                   |
+| [stream_feed 2400x8000] htop.input-&gt;HistoryScreen        | 122 ms   | 34.4 ms: 3.54x faster                   |
+    :::                 ::::                                    ::::         :::
+| [stream_feed 240x800] vi.input-&gt;Screen                   | 5.39 ms  | 2.67 ms: 2.02x faster                   |
+| [stream_feed 24x80] mc.input-&gt;HistoryScreen              | 44.3 ms  | 24.4 ms: 1.82x faster                   |
+| [stream_feed 2400x8000] htop.input-&gt;Screen               | 38.1 ms  | 21.4 ms: 1.78x faster                   |
+| [stream_feed 240x800] htop.input-&gt;Screen                 | 23.2 ms  | 13.2 ms: 1.76x faster                   |
+| [stream_feed 240x800] find-etc.input-&gt;Screen             | 134 ms   | 77.0 ms: 1.74x faster                   |
+| [stream_feed 24x80] vi.input-&gt;Screen                     | 4.45 ms  | 2.57 ms: 1.73x faster                   |
+| [stream_feed 24x80] htop.input-&gt;Screen                   | 20.8 ms  | 12.2 ms: 1.71x faster                   |
+| [stream_feed 2400x8000] cat-gpl3.input-&gt;HistoryScreen    | 262 ms   | 157 ms: 1.67x faster                    |
+| [stream_feed 240x800] mc.input-&gt;HistoryScreen            | 63.7 ms  | 43.8 ms: 1.45x faster                   |
+| [stream_feed 2400x8000] ls.input-&gt;Screen                 | 7.77 ms  | 5.61 ms: 1.38x faster                   |
+| [stream_feed 24x80] mc.input-&gt;Screen                     | 17.6 ms  | 13.1 ms: 1.34x faster                   |
+| [stream_feed 2400x8000] find-etc.input-&gt;Screen           | 616 ms   | 501 ms: 1.23x faster                    |
+| [stream_feed 2400x8000] cat-gpl3.input-&gt;Screen           | 170 ms   | 143 ms: 1.19x faster                    |
+| [stream_feed 2400x8000] mc.input-&gt;HistoryScreen          | 259 ms   | 285 ms: 1.10x slower                    |
+| [stream_feed 240x800] mc.input-&gt;Screen                   | 23.3 ms  | 32.3 ms: 1.39x slower                   |
+| [stream_feed 2400x8000] mc.input-&gt;Screen                 | 71.2 ms  | 281 ms: 3.94x slower                    |</code></pre>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">mc</span><span class="o">.</span><span class="n">input</span></span></code> however took much more time.</p>
+<p>When <code><span class="highlight-candombe-inline"><span class="n">track_dirty_lines</span></span></code> is <code><span class="highlight-candombe-inline"><span class="kc">False</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">disable_display_graphic</span></span></code> is <code><span class="highlight-candombe-inline"><span class="kc">True</span></span></code>, the overall performance increases even further.</p>
+<pre><code>+----------------------------------------------------------+----------+----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+custom-conf |
++==========================================================+==========+========================================+
+| [stream_feed 2400x8000] mc.input-&gt;HistoryScreen          | 259 ms   | 21.2 ms: 12.19x faster                 |
+| [stream_feed 2400x8000] vi.input-&gt;HistoryScreen          | 49.4 ms  | 5.52 ms: 8.95x faster                  |
+| [stream_feed 2400x8000] mc.input-&gt;Screen                 | 71.2 ms  | 10.8 ms: 6.60x faster                  |
+| [stream_feed 2400x8000] find-etc.input-&gt;HistoryScreen    | 2.92 sec | 464 ms: 6.29x faster                   |
+| [stream_feed 2400x8000] top.input-&gt;HistoryScreen         | 7.35 ms  | 1.27 ms: 5.80x faster                  |
+| [stream_feed 2400x8000] htop.input-&gt;HistoryScreen        | 122 ms   | 22.3 ms: 5.45x faster                  |
+| [stream_feed 2400x8000] vi.input-&gt;Screen                 | 13.7 ms  | 2.52 ms: 5.43x faster                  |
+| [stream_feed 24x80] top.input-&gt;HistoryScreen             | 6.61 ms  | 1.23 ms: 5.38x faster                  |
+| [stream_feed 240x800] ls.input-&gt;HistoryScreen            | 9.29 ms  | 1.73 ms: 5.37x faster                  |
+| [stream_feed 240x800] cat-gpl3.input-&gt;HistoryScreen      | 215 ms   | 42.0 ms: 5.12x faster                  |
+    :::                 ::::                                    ::::         :::
+| [stream_feed 24x80] cat-gpl3.input-&gt;Screen               | 46.3 ms  | 17.2 ms: 2.69x faster                  |
+| [stream_feed 240x800] top.input-&gt;Screen                  | 2.39 ms  | 913 us: 2.61x faster                   |
+| [stream_feed 24x80] top.input-&gt;Screen                    | 2.36 ms  | 914 us: 2.58x faster                   |
+| [stream_feed 2400x8000] ls.input-&gt;HistoryScreen          | 13.4 ms  | 5.39 ms: 2.50x faster                  |
+| [stream_feed 24x80] htop.input-&gt;HistoryScreen            | 55.3 ms  | 22.6 ms: 2.44x faster                  |
+    :::                 ::::                                    ::::         :::
+| [stream_feed 240x800] vi.input-&gt;Screen                   | 5.39 ms  | 2.57 ms: 2.10x faster                  |
+| [stream_feed 24x80] mc.input-&gt;HistoryScreen              | 44.3 ms  | 21.3 ms: 2.08x faster                  |
+| [stream_feed 2400x8000] cat-gpl3.input-&gt;HistoryScreen    | 262 ms   | 132 ms: 1.99x faster                   |
+| [stream_feed 240x800] find-etc.input-&gt;Screen             | 134 ms   | 76.3 ms: 1.76x faster                  |
+| [stream_feed 24x80] vi.input-&gt;Screen                     | 4.45 ms  | 2.54 ms: 1.75x faster                  |
+| [stream_feed 24x80] mc.input-&gt;Screen                     | 17.6 ms  | 10.6 ms: 1.66x faster                  |
+| [stream_feed 2400x8000] ls.input-&gt;Screen                 | 7.77 ms  | 4.85 ms: 1.60x faster                  |
+| [stream_feed 2400x8000] find-etc.input-&gt;Screen           | 616 ms   | 422 ms: 1.46x faster                   |
+| [stream_feed 2400x8000] cat-gpl3.input-&gt;Screen           | 170 ms   | 118 ms: 1.44x faster                   |</code></pre>
+<p>On memory there is an improvement too:</p>
+<pre><code>+--------------------------------------------------------------+-------------------+-----------------------------------------------------+
+| Benchmark                                                    | 0.8.1.tracemalloc | 0.8.1+screen-optimizations+default-conf.tracemalloc |
++==============================================================+===================+=====================================================+
+| [stream_feed 2400x8000] vi.input-&gt;HistoryScreen              | 11.7 MB           | 686.8 kB: 17.45x faster                             |
+| [stream_feed 2400x8000] vi.input-&gt;Screen                     | 4742.1 kB         | 538.0 kB: 8.81x faster                              |
+| [stream_feed 2400x8000] htop.input-&gt;HistoryScreen            | 14.5 MB           | 3552.1 kB: 4.18x faster                             |
+| [stream_feed 240x800] vi.input-&gt;HistoryScreen                | 2679.0 kB         | 686.8 kB: 3.90x faster                              |
+| [stream_feed 2400x8000] top.input-&gt;HistoryScreen             | 2120.7 kB         | 611.8 kB: 3.47x faster                              |
+| [stream_feed 2400x8000] htop.input-&gt;Screen                   | 11.5 MB           | 3408.2 kB: 3.45x faster                             |
+| [stream_feed 2400x8000] top.input-&gt;Screen                    | 2155.1 kB         | 680.2 kB: 3.17x faster                              |
+| [stream_feed 240x800] htop.input-&gt;HistoryScreen              | 2189.7 kB         | 1005.8 kB: 2.18x faster                             |
+| [stream_feed 240x800] vi.input-&gt;Screen                       | 1107.7 kB         | 536.1 kB: 2.07x faster                              |
+| [stream_feed 240x800] htop.input-&gt;Screen                     | 1782.7 kB         | 990.6 kB: 1.80x faster                              |
+            :::                 ::::                                    ::::         :::
+| [stream_feed 240x800] find-etc.input-&gt;HistoryScreen          | 2233.5 kB         | 1502.4 kB: 1.49x faster                             |
+| [stream_feed 24x80] ls.input-&gt;HistoryScreen                  | 1554.3 kB         | 1086.0 kB: 1.43x faster                             |
+| [stream_feed 24x80] cat-gpl3.input-&gt;HistoryScreen            | 1354.0 kB         | 960.1 kB: 1.41x faster                              |
+| [stream_feed 24x80] top.input-&gt;Screen                        | 948.2 kB          | 680.2 kB: 1.39x faster                              |
+| [stream_feed 24x80] vi.input-&gt;HistoryScreen                  | 954.7 kB          | 686.8 kB: 1.39x faster                              |
+| [stream_feed 24x80] find-etc.input-&gt;HistoryScreen            | 1017.6 kB         | 774.9 kB: 1.31x faster                              |
+| [stream_feed 240x800] top.input-&gt;HistoryScreen               | 763.6 kB          | 653.6 kB: 1.17x faster                              |
+| [stream_feed 24x80] mc.input-&gt;HistoryScreen                  | 485.0 kB          | 417.6 kB: 1.16x faster                              |
+| [stream_feed 24x80] htop.input-&gt;Screen                       | 936.1 kB          | 814.3 kB: 1.15x faster                              |
+| [stream_feed 24x80] mc.input-&gt;Screen                         | 722.3 kB          | 651.6 kB: 1.11x faster                              |</code></pre>
+<p>The following are the tests that show regression on memory usage.</p>
+<pre><code>| [stream_feed 240x800] mc.input-&gt;Screen                       | 1842.2 kB         | 2577.4 kB: 1.40x slower                             |
+| [stream_feed 240x800] mc.input-&gt;HistoryScreen                | 1793.2 kB         | 2548.1 kB: 1.42x slower                             |
+| [stream_feed 2400x8000] mc.input-&gt;HistoryScreen              | 13.6 MB           | 22.3 MB: 1.64x slower                               |
+| [stream_feed 2400x8000] ls.input-&gt;HistoryScreen              | 8422.1 kB         | 13.7 MB: 1.67x slower                               |
+| [stream_feed 2400x8000] mc.input-&gt;Screen                     | 12.2 MB           | 22.3 MB: 1.82x slower                               |</code></pre>
+<p>When <code><span class="highlight-candombe-inline"><span class="n">track_dirty_lines</span></span></code> is <code><span class="highlight-candombe-inline"><span class="kc">False</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">disable_display_graphic</span></span></code> is <code><span class="highlight-candombe-inline"><span class="kc">True</span></span></code>, this is even better:</p>
+<pre><code>+--------------------------------------------------------------+-------------------+----------------------------------------------------+
+| Benchmark                                                    | 0.8.1.tracemalloc | 0.8.1+screen-optimizations+custom-conf.tracemalloc |
++==============================================================+===================+====================================================+
+| [stream_feed 2400x8000] mc.input-&gt;HistoryScreen              | 13.6 MB           | 414.1 kB: 33.60x faster                            |
+| [stream_feed 2400x8000] mc.input-&gt;Screen                     | 12.2 MB           | 447.6 kB: 27.98x faster                            |
+| [stream_feed 2400x8000] htop.input-&gt;Screen                   | 11.5 MB           | 600.5 kB: 19.59x faster                            |
+| [stream_feed 2400x8000] vi.input-&gt;HistoryScreen              | 11.7 MB           | 665.4 kB: 18.01x faster                            |
+| [stream_feed 2400x8000] htop.input-&gt;HistoryScreen            | 14.5 MB           | 1009.0 kB: 14.73x faster                           |
+| [stream_feed 2400x8000] vi.input-&gt;Screen                     | 4742.1 kB         | 522.4 kB: 9.08x faster                             |
+| [stream_feed 240x800] mc.input-&gt;HistoryScreen                | 1793.2 kB         | 417.4 kB: 4.30x faster                             |
+| [stream_feed 240x800] mc.input-&gt;Screen                       | 1842.2 kB         | 447.6 kB: 4.12x faster                             |
+| [stream_feed 240x800] vi.input-&gt;HistoryScreen                | 2679.0 kB         | 652.6 kB: 4.11x faster                             |
+| [stream_feed 2400x8000] top.input-&gt;HistoryScreen             | 2120.7 kB         | 653.6 kB: 3.24x faster                             |
+| [stream_feed 2400x8000] top.input-&gt;Screen                    | 2155.1 kB         | 680.6 kB: 3.17x faster                             |
+| [stream_feed 240x800] htop.input-&gt;Screen                     | 1782.7 kB         | 600.5 kB: 2.97x faster                             |
+| [stream_feed 240x800] htop.input-&gt;HistoryScreen              | 2189.7 kB         | 785.0 kB: 2.79x faster                             |
+| [stream_feed 240x800] vi.input-&gt;Screen                       | 1107.7 kB         | 522.4 kB: 2.12x faster                             |
+| [stream_feed 2400x8000] cat-gpl3.input-&gt;HistoryScreen        | 20.3 MB           | 11.8 MB: 1.72x faster                              |
+            :::                 ::::                                    ::::         :::
+| [stream_feed 24x80] find-etc.input-&gt;HistoryScreen            | 1017.6 kB         | 774.8 kB: 1.31x faster                             |
+| [stream_feed 240x800] top.input-&gt;HistoryScreen               | 763.6 kB          | 653.6 kB: 1.17x faster                             |
+| [stream_feed 24x80] mc.input-&gt;HistoryScreen                  | 485.0 kB          | 422.0 kB: 1.15x faster                             |</code></pre>
+<p>However, we still have some regressions:</p>
+<pre><code>| [stream_feed 24x80] htop.input-&gt;HistoryScreen                | 863.7 kB          | 1009.0 kB: 1.17x slower                            |
+| [stream_feed 2400x8000] ls.input-&gt;HistoryScreen              | 8422.1 kB         | 13.7 MB: 1.67x slower                              |</code></pre>
+<h3 id="screen.reset"><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">reset</span></span></code></h3>
+<p>For <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">reset</span></span></code> we have a regressions, some minor, some not-so-much minor:</p>
+<pre><code>+----------------------------------------------------------+----------+-----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+default-conf |
++==========================================================+==========+=========================================+
+| [screen_reset 2400x8000] ls.input-&gt;HistoryScreen         | 65.4 us  | 68.9 us: 1.05x slower                   |
+| [screen_reset 2400x8000] mc.input-&gt;Screen                | 51.9 us  | 54.8 us: 1.06x slower                   |
+| [screen_reset 2400x8000] top.input-&gt;HistoryScreen        | 65.6 us  | 69.5 us: 1.06x slower                   |
+    :::                 ::::                                    ::::         :::
+| [screen_reset 24x80] cat-gpl3.input-&gt;HistoryScreen       | 13.2 us  | 15.4 us: 1.17x slower                   |
+| [screen_reset 24x80] vi.input-&gt;HistoryScreen             | 13.0 us  | 15.3 us: 1.18x slower                   |
+| [screen_reset 240x800] htop.input-&gt;Screen                | 4.87 us  | 5.78 us: 1.19x slower                   |
+| [screen_reset 24x80] mc.input-&gt;HistoryScreen             | 13.1 us  | 15.7 us: 1.19x slower                   |
+| [screen_reset 240x800] mc.input-&gt;Screen                  | 4.81 us  | 5.75 us: 1.20x slower                   |
+| [screen_reset 24x80] ls.input-&gt;HistoryScreen             | 13.0 us  | 15.5 us: 1.20x slower                   |
+| [screen_reset 24x80] find-etc.input-&gt;HistoryScreen       | 13.0 us  | 15.6 us: 1.20x slower                   |
+| [screen_reset 24x80] htop.input-&gt;HistoryScreen           | 12.9 us  | 15.5 us: 1.21x slower                   |
+| [screen_reset 240x800] find-etc.input-&gt;Screen            | 4.86 us  | 5.87 us: 1.21x slower                   |
+| [screen_reset 240x800] htop.input-&gt;HistoryScreen         | 15.6 us  | 18.9 us: 1.21x slower                   |
+| [screen_reset 240x800] vi.input-&gt;Screen                  | 4.83 us  | 5.87 us: 1.22x slower                   |
+| [screen_reset 240x800] top.input-&gt;Screen                 | 4.72 us  | 5.77 us: 1.22x slower                   |
+    :::                 ::::                                    ::::         :::
+| [screen_reset 240x800] ls.input-&gt;Screen                  | 4.79 us  | 5.86 us: 1.22x slower                   |
+| [screen_reset 240x800] cat-gpl3.input-&gt;Screen            | 4.79 us  | 5.89 us: 1.23x slower                   |
+| [screen_reset 24x80] vi.input-&gt;Screen                    | 2.05 us  | 3.05 us: 1.49x slower                   |
+| [screen_reset 24x80] mc.input-&gt;Screen                    | 2.04 us  | 3.05 us: 1.49x slower                   |
+| [screen_reset 24x80] ls.input-&gt;Screen                    | 2.01 us  | 3.01 us: 1.50x slower                   |
+| [screen_reset 24x80] htop.input-&gt;Screen                  | 2.02 us  | 3.06 us: 1.51x slower                   |
+| [screen_reset 24x80] cat-gpl3.input-&gt;Screen              | 2.03 us  | 3.07 us: 1.52x slower                   |
+| [screen_reset 24x80] top.input-&gt;Screen                   | 2.03 us  | 3.11 us: 1.53x slower                   |
+| [screen_reset 24x80] find-etc.input-&gt;Screen              | 2.00 us  | 3.06 us: 1.53x slower                   |</code></pre>
+<p>However when <code><span class="highlight-candombe-inline"><span class="n">track_dirty_lines</span></span></code> is <code><span class="highlight-candombe-inline"><span class="kc">False</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">disable_display_graphic</span></span></code> is <code><span class="highlight-candombe-inline"><span class="kc">True</span></span></code>, the things improves (but we still have regressions):</p>
+<pre><code>+----------------------------------------------------------+----------+----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+custom-conf |
++==========================================================+==========+========================================+
+| [screen_reset 2400x8000] find-etc.input-&gt;Screen          | 51.3 us  | 15.2 us: 3.38x faster                  |
+| [screen_reset 2400x8000] mc.input-&gt;Screen                | 51.9 us  | 15.5 us: 3.35x faster                  |
+| [screen_reset 2400x8000] vi.input-&gt;Screen                | 52.8 us  | 15.9 us: 3.32x faster                  |
+    :::                 ::::                                    ::::         :::
+| [screen_reset 2400x8000] cat-gpl3.input-&gt;HistoryScreen   | 66.5 us  | 29.9 us: 2.22x faster                  |
+| [screen_reset 2400x8000] htop.input-&gt;HistoryScreen       | 64.6 us  | 29.4 us: 2.20x faster                  |
+| [screen_reset 240x800] htop.input-&gt;Screen                | 4.87 us  | 4.58 us: 1.06x faster                  |
+| [screen_reset 240x800] find-etc.input-&gt;Screen            | 4.86 us  | 4.62 us: 1.05x faster                  |
+| [screen_reset 240x800] cat-gpl3.input-&gt;HistoryScreen     | 16.0 us  | 17.0 us: 1.06x slower                  |
+| [screen_reset 240x800] mc.input-&gt;HistoryScreen           | 16.0 us  | 17.1 us: 1.07x slower                  |
+| [screen_reset 240x800] find-etc.input-&gt;HistoryScreen     | 16.1 us  | 17.3 us: 1.07x slower                  |
+| [screen_reset 240x800] top.input-&gt;HistoryScreen          | 15.9 us  | 17.1 us: 1.08x slower                  |
+| [screen_reset 240x800] htop.input-&gt;HistoryScreen         | 15.6 us  | 17.5 us: 1.12x slower                  |
+    :::                 ::::                                    ::::         :::
+| [screen_reset 24x80] htop.input-&gt;HistoryScreen           | 12.9 us  | 15.3 us: 1.19x slower                  |
+| [screen_reset 24x80] htop.input-&gt;Screen                  | 2.02 us  | 2.89 us: 1.43x slower                  |
+| [screen_reset 24x80] top.input-&gt;Screen                   | 2.03 us  | 2.92 us: 1.44x slower                  |
+| [screen_reset 24x80] mc.input-&gt;Screen                    | 2.04 us  | 2.94 us: 1.44x slower                  |
+| [screen_reset 24x80] ls.input-&gt;Screen                    | 2.01 us  | 2.90 us: 1.44x slower                  |
+| [screen_reset 24x80] vi.input-&gt;Screen                    | 2.05 us  | 2.96 us: 1.44x slower                  |
+| [screen_reset 24x80] find-etc.input-&gt;Screen              | 2.00 us  | 2.90 us: 1.45x slower                  |
+| [screen_reset 24x80] cat-gpl3.input-&gt;Screen              | 2.03 us  | 2.96 us: 1.46x slower                  |</code></pre>
+</article>
+<span class="print-footer">TL;DR Screen Optimizations Results for Terminal Emulator Pyte - July 14, 2022 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
+</body>
+</html>
