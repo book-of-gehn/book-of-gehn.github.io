@@ -106,7 +106,7 @@ The ECB encrypted image on the right and its plaintext original version on the l
 <p>Decrypting is a piece of cake; this is just to get practice about <a href="https://cryptopals.com/sets/1/challenges/7">AES in ECB mode</a></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./assets/matasano/7.txt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/7.txt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">blocks</span> <span class="o">=</span> <span class="n">ciphertext</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">key</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;YELLOW SUBMARINE&#39;</span><span class="p">)</span>
@@ -126,9 +126,9 @@ The ECB encrypted image on the right and its plaintext original version on the l
 <p>If two plaintext <em>blocks</em> are the same, ECB will encrypt them to the <em>same</em> ciphertext block.</p>
 <p><a href="https://cryptopals.com/sets/1/challenges/8">Detecting AES in ECB mode</a> from a pool of random strings is therefore trivial: if the plaintext has two or more equal blocks, the ciphertext will have the same blocks repeated, something unlikely for a truly random string.</p>
 <p>We can use the same technique done in <a href="/articles/2018/04/01/A-string-of-coincidences-is-not-a-coincidence.html">the previous post</a> for detecting coincidences.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./assets/matasano/8.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/8.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">icoincidences</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.metrics</span> <span class="kn">import</span> <span class="n">icoincidences</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">icoincidences</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ciphertexts</span><span class="p">]</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">scores_and_indexes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
@@ -160,7 +160,7 @@ Scores by method. For the Nblocks method, the size of the block is of 16 bytes.
 <p><br /></p>
 <!--
 >>> import sys
->>> sys.path.append("./assets/plotting")
+>>> sys.path.append("./z/py/plotting")
 
 >>> from plotting import plt, show                      # byexample: +timeout=10
 >>> import pandas as pd                                 # byexample: +timeout=10
@@ -172,7 +172,7 @@ Scores by method. For the Nblocks method, the size of the block is of 16 bytes.
 
 >>> methods = methods.apply(min_max_normalizer, axis=0)
 
->>> with show(save='./assets/matasano/score_pinguins.png', latexify_kargs={'columns':2}): # byexample: +timeout=600 +skip
+>>> with show(save='./posts/matasano/assets/score_pinguins.png', latexify_kargs={'columns':2}): # byexample: +timeout=600 +skip
 ...     axes = methods.plot(style='o', subplots=True, layout=(2, 1))
 ...
 ...     _ = [ax.vlines(132, 0, 1, linestyles='dashed') for ax in axes.flat]

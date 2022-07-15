@@ -101,7 +101,7 @@ In fact, there are two challenges: the <a href="https://cryptopals.com/sets/2/ch
 </span></p>
 <p>Remember that we will have a secret payload appended to the attacker-controlled plaintext and it is the objective for the <a href="https://cryptopals.com/sets/2/challenges/14">byte-at-a-time ECB decryption challenge</a>..</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./assets/matasano&quot;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./posts/matasano/assets&quot;</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">challenge</span> <span class="kn">import</span> <span class="n">enc_ecb</span><span class="p">,</span> <span class="n">generate_config</span>

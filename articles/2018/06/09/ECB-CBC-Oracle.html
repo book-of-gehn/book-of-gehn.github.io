@@ -123,11 +123,11 @@ Yeup, <a href="https://cryptopals.com/sets/2/challenges/15">PKCS#7 padding valid
 <img style="max-width: 60%" class='' alt='' src='/img/matasano/cbc-enc.png' /></figure></p>
 <p>This IV should be random but for the sake of the test it will be full of zeros.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./assets/matasano&quot;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./posts/matasano/assets&quot;</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">challenge</span> <span class="kn">import</span> <span class="n">dec_cbc</span><span class="p">,</span> <span class="n">enc_cbc</span><span class="p">,</span> <span class="n">enc_ecb</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./assets/matasano/10.txt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/10.txt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">iv</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">16</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">key</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s2">&quot;YELLOW SUBMARINE&quot;</span><span class="p">)</span>

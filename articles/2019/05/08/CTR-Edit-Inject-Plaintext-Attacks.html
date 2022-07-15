@@ -97,7 +97,7 @@ May 8, 2019
 <p>But this beautiful property of a CTR mode (and any other stream cipher) is actually a booby-trap. <!--more--></p>
 <!--
 >>> import sys
->>> sys.path.append("./assets/matasano")
+>>> sys.path.append("./posts/matasano/assets")
 >>> from challenge import generate_config, enc_ctr, dec_ctr # byexample: +timeout=10
 
 >>> seed = 20190508
@@ -121,7 +121,7 @@ This unlocks the <a href="https://cryptopals.com/sets/1/challenges/25">Break “
 <p>This generates two different ciphertexts encrypted with the <strong>same</strong> key stream which breaks CTR with a simple known-plaintext attack.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ptext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./assets/matasano/25.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ptext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/25.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ctext</span> <span class="o">=</span> <span class="n">enc_ctr</span><span class="p">(</span><span class="n">ptext</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">patch</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">)</span>

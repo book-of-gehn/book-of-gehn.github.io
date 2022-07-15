@@ -101,11 +101,11 @@ December 4, 2018
 <span class='marginnote'>
 <a href="https://cryptopals.com/sets/3/challenges/18">Implement CTR, the stream cipher mode</a>
 </span></p>
-<p>Let’s implement a CTR</p>
+<p>Let’s implement a CTR. As usual we generate a pseudo-random configuration to parametrize the CTR.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./assets/matasano&quot;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./posts/matasano/assets&quot;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">challenge</span> <span class="kn">import</span> <span class="n">generate_config</span><span class="p">,</span> <span class="n">enc_ctr</span><span class="p">,</span> <span class="n">dec_ctr</span>  <span class="c1"># byexample: +timeout=10</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">seed</span> <span class="o">=</span> <span class="mi">20181204</span>
@@ -124,9 +124,9 @@ December 4, 2018
 
 <h2 id="break-fixed-nonce-ctr">Break fixed-nonce CTR</h2>
 <p>If the nonce is fixed, then several <em>independent</em> ciphertext will be encrypted with the same key stream.</p>
-<p>Let’s load some plaintexts and let’s encrypt them in that way and see if we can break the encryption.</p>
+<p>Let’s load some plaintexts and let’s encrypt them reusing the same nonce over and over and see if we can break the encryption later.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.conv</span> <span class="kn">import</span> <span class="n">transpose</span><span class="p">,</span> <span class="n">uniform_length</span>    <span class="c1"># byexample: +timeout=10</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">plaintexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./assets/matasano/20.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">plaintexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/20.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">))</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="p">[</span><span class="n">enc_ctr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plaintexts</span><span class="p">]</span>
 </code></pre></div>
@@ -134,7 +134,10 @@ December 4, 2018
 <p>The vulnerability resides in reusing the nonce.</p>
 <p>With the same nonce, CTR generates the same random sequence that uses to xor the payload.</p>
 <p>In other words, it performs a xor <em>reusing</em> the key stream and we already know how to <a href="/articles/2018/03/01/In-XOR-We-Trust.html">break a repeating xor key cipher</a>.</p>
-<p>But first, not all the ciphertexts are of the same length so to simplify we need to uniform their lengths.</p>
+<blockquote>
+<p>Quick recap: because the key stream was reused, the ith byte of all the ciphertexts was xor’d with the <em>same</em> key byte and therefore, xor’ing two ciphertexts will remove the key stream leaving us the xor of the two underlying plaintexts.</p>
+</blockquote>
+<p>We notice that not all the ciphertexts are of the same length so to simplify we need to uniform their lengths.</p>
 <p>For example, we could truncate all the ciphertexts to the length of the smallest.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">tciphertexts</span> <span class="o">=</span> <span class="n">uniform_length</span><span class="p">(</span><span class="n">ciphertexts</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">tplaintexts</span> <span class="o">=</span> <span class="n">uniform_length</span><span class="p">(</span><span class="n">plaintexts</span><span class="p">)</span>
@@ -162,10 +165,15 @@ December 4, 2018
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring.freq</span> <span class="kn">import</span> <span class="n">tsamcin_brped</span>
 </code></pre></div>
 
+<blockquote>
+<p>Yes, I know, <code><span class="highlight-candombe-inline"><span class="n">tsamcin_brped</span></span></code> is a terrible name but it is aligned with <code><span class="highlight-candombe-inline"><span class="n">etaoin_shrdlu</span></span></code>.</p>
+</blockquote>
 <h3 id="score-a-decryption-using-chi-square-test">Score a decryption using Chi-square test</h3>
 <p>The frequency attack (<code><span class="highlight-candombe-inline"><span class="n">freq_attack</span></span></code>) implemented in <a href="https://pypi.org/project/cryptonita/">cryptonita</a> returns a guess: a set of possible key bytes.</p>
-<p>To narrow this down we try each one (brute force) and score each potential plaintext.</p>
-<p>For this we take the frequency of the letters in the plaintext and compare them with the expected frequency using a <a href="https://en.wikipedia.org/wiki/Chi-squared_test">Chi-square test</a>.</p>
+<p>To determine the correct key we need to try each of them by brute force (<code><span class="highlight-candombe-inline"><span class="n">brute_force</span></span></code>) and <em>“see”</em> which looks more “human text”.</p>
+<p>This could be done by hand but we want to fully automate this… so no deal!</p>
+<p>The idea is to automate which deciphered text looks more or less like English text (the expected for our plaintexts) and discard any other.</p>
+<p>For this we <em>observe</em> the frequency of the letters in the deciphered plaintext and compare them with the <em>expected</em> frequency using a <a href="https://en.wikipedia.org/wiki/Chi-squared_test">Chi-square test</a>.</p>
 <p>In <a href="https://pypi.org/project/cryptonita/">cryptonita</a>, this is implemented in the <code><span class="highlight-candombe-inline"><span class="n">fit_freq_score</span></span></code> function:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">fit_freq_score</span>
 </code></pre></div>
@@ -174,21 +182,39 @@ December 4, 2018
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">all_ascii_printable</span>
 </code></pre></div>
 
+<p>As you may guess, <code><span class="highlight-candombe-inline"><span class="n">all_ascii_printable</span></span></code> returns <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> if all the characters in the deciphered plaintext are ASCII and <code><span class="highlight-candombe-inline"><span class="mi">0</span></span></code> otherwise.</p>
 <h3 id="guess-the-ctr-key-stream">Guess the CTR key stream</h3>
 <p>Mixing all this together:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">brute_force</span><span class="p">,</span> <span class="n">freq_attack</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">guesses</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># we iterate over each column (the i==0 correspond to the first letter)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tciphertexts_transposed</span><span class="p">):</span>
 <span class="o">...</span>     <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># first letter, use a special statistical model</span>
-<span class="o">...</span>         <span class="n">most_common</span> <span class="o">=</span> <span class="n">etaoin_shrdlu</span><span class="p">()</span> <span class="o">|</span> <span class="n">tsamcin_brped</span><span class="p">()</span>
+<span class="o">...</span>         <span class="n">most_common</span> <span class="o">=</span> <span class="n">tsamcin_brped</span><span class="p">()</span>
 <span class="o">...</span>     <span class="k">else</span><span class="p">:</span>
 <span class="o">...</span>         <span class="n">most_common</span> <span class="o">=</span> <span class="n">etaoin_shrdlu</span><span class="p">()</span>
 <span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># frequency attack, try to find the most likely key bytes</span>
+<span class="o">...</span>     <span class="c1"># for the ith letter</span>
 <span class="o">...</span>     <span class="n">byte_guess</span> <span class="o">=</span> <span class="n">freq_attack</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">most_common</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="o">...</span>     <span class="n">g</span> <span class="o">=</span> <span class="n">brute_force</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">fit_freq_score</span><span class="p">,</span> <span class="n">expected_prob</span><span class="o">=</span><span class="n">most_common</span><span class="p">),</span> <span class="n">byte_guess</span><span class="p">)</span>
-<span class="o">...</span>     <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>   <span class="c1"># fit_freq_score was too hard, rollback to a more soft score func</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># build a score function using the fit_freq_score parametrized</span>
+<span class="o">...</span>     <span class="c1"># with the &quot;expected&quot; probabilities from our model</span>
+<span class="o">...</span>     <span class="c1"># fit_freq_score will take an input and from there it will obtain</span>
+<span class="o">...</span>     <span class="c1"># the &quot;observed&quot; probabilities and will compare them with the</span>
+<span class="o">...</span>     <span class="c1"># expected using Chi-Square.</span>
+<span class="o">...</span>     <span class="n">score_fun</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">fit_freq_score</span><span class="p">,</span> <span class="n">expected_prob</span><span class="o">=</span><span class="n">most_common</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># Try every possible key byte from our freq_attack scoring</span>
+<span class="o">...</span>     <span class="c1"># the deciphered outputs with the fit_freq_score. Poor scored</span>
+<span class="o">...</span>     <span class="c1"># are drop so we should only have left the most likely keys.</span>
+<span class="o">...</span>     <span class="n">g</span> <span class="o">=</span> <span class="n">brute_force</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">score_fun</span><span class="p">,</span> <span class="n">byte_guess</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+<span class="o">...</span>         <span class="c1"># but may be fit_freq_score is too restrictive.</span>
+<span class="o">...</span>         <span class="c1"># rollback to a much lax/loose score function (but with</span>
+<span class="o">...</span>         <span class="c1"># more false positives)</span>
 <span class="o">...</span>         <span class="n">g</span> <span class="o">=</span> <span class="n">brute_force</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">all_ascii_printable</span><span class="p">,</span> <span class="n">byte_guess</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="n">byte_guess</span> <span class="o">=</span> <span class="n">g</span>
@@ -202,10 +228,12 @@ December 4, 2018
 
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.fuzzy_set</span> <span class="kn">import</span> <span class="n">len_join_fuzzy_sets</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">len_join_fuzzy_sets</span><span class="p">(</span><span class="n">guesses</span><span class="p">)</span>
-<span class="mi">10985</span>
+<span class="mi">1690</span>
 </code></pre></div>
 
-<h3 id="correct-the-key-stream">Correct the key stream</h3>
+<p>Considere for a moment those numbers. Of 53 characters we initially have a key space of \(256^53\), a number which has more than 100 digits.</p>
+<p>But with a frequency attack and a good score function we managed to reduce the key space to only 1690.</p>
+<h3 id="how-close-are-out-guesses">How close are out guesses?</h3>
 <p>Let’s build the key stream (still a guess):</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.fuzzy_set</span> <span class="kn">import</span> <span class="n">join_fuzzy_sets</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">kstream_guess</span> <span class="o">=</span> <span class="n">join_fuzzy_sets</span><span class="p">(</span><span class="n">guesses</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">))</span>
@@ -225,61 +253,54 @@ December 4, 2018
 <span class="mf">0.9811</span><span class="o">&lt;...&gt;</span>
 </code></pre></div>
 
-<p>So our current key stream is <em>almost</em> correct, only a few bytes need to be tweaked.</p>
-<p>Some possible next steps:</p>
-<ul>
-<li>Use <code><span class="highlight-candombe-inline"><span class="n">etaoin_shrdlu</span></span></code> to correct them? No really. We used this to build the initial key stream so it is unlikely that we can fix the key stream using this or any other model at the <em>character level</em>.</li>
-<li>Then use a bigram model? Much better but a bigram model uses only two characters and may not be robust enough. Worst, we are working with a very short plaintexts/ciphertexts (~50 characters) and this is too short for a bigram model (the model is too sparse and mostly flat so it will be hard to draw any conclusion.</li>
-<li>So, what about some a more <em>specific</em> model? Bingo!</li>
-</ul>
-<p>With a more specific model we can get more info from the short sequences but this requires to know much about the plaintext.</p>
-<p>If we assume that most of the plaintext is built from English words then we could use a <em>spell checker</em> to correct any misspelled word product of a incorrect key.</p>
+<p>Not only it is very close, the true key stream is there, in one of our guesses!</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">any</span><span class="p">(</span><span class="n">tplaintexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">^</span> <span class="n">kstream</span> <span class="k">for</span> <span class="n">kstream</span> <span class="ow">in</span> <span class="n">kstream_guess</span><span class="p">)</span>
+<span class="kc">True</span>
+</code></pre></div>
+
+<p>But how we can pick it without cheating? without using <code><span class="highlight-candombe-inline"><span class="n">tplaintexts</span></span></code> as it is supposed to be the unknown here?</p>
+<p>Yes, with more brute force!</p>
+<h3 id="speller-based-score">Speller based score</h3>
+<p>Brute force, but clever.</p>
+<p>We can use a score based on well English written text using a <em>speller</em></p>
+<p>In this case, <code><span class="highlight-candombe-inline"><span class="n">good_written_word_score</span></span></code> takes a <code><span class="highlight-candombe-inline"><span class="n">aspell</span><span class="o">.</span><span class="n">Speller</span></span></code> and it will return a score based on how many words in the deciphered text are correctly spelled (weighting each word by its length)</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">aspell</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.suggesters</span> <span class="kn">import</span> <span class="n">good_written_word_suggester</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">good_written_word_score</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">gword_suggester</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">good_written_word_suggester</span><span class="p">,</span> <span class="n">speller</span><span class="o">=</span><span class="n">aspell</span><span class="o">.</span><span class="n">Speller</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">score</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">good_written_word_score</span><span class="p">,</span> <span class="n">speller</span><span class="o">=</span><span class="n">aspell</span><span class="o">.</span><span class="n">Speller</span><span class="p">(),</span> <span class="n">word_weight_fun</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>
 </code></pre></div>
 
-<p>With this <em>suggester</em> we can try to <em>correct</em> the key:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">correct_key</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">kstream_guess</span> <span class="o">=</span> <span class="n">brute_force</span><span class="p">(</span><span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">score</span><span class="p">,</span> <span class="n">kstream_guess</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream_guess</span><span class="o">.</span><span class="n">cut_off</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">tmp</span> <span class="o">=</span> <span class="n">correct_key</span><span class="p">(</span><span class="n">kstream</span><span class="p">,</span> <span class="n">ciphertexts</span><span class="p">,</span> <span class="n">gword_suggester</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">correction</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">most_likely</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">^</span> <span class="n">kstr</span><span class="p">)</span> <span class="k">for</span> <span class="n">kstr</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">kstream_guess</span><span class="o">.</span><span class="n">sorted_items</span><span class="p">()]</span>     <span class="c1"># byexample: +norm-ws</span>
+<span class="p">[(</span><span class="mf">1.4946588552783956e-56</span><span class="p">,</span>   <span class="s1">&#39;I</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...this is a warning, ya better void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">1.4036747792866314e-56</span><span class="p">,</span>   <span class="s1">&#39;N</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...this is a warning, ya better void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">7.026934200276732e-57</span><span class="p">,</span>    <span class="s1">&#39;I</span><span class="se">\&#39;</span><span class="s1">m ratede&quot;R&quot;...this is a warning, ya better void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">6.374212793632498e-57</span><span class="p">,</span>    <span class="s1">&#39;N</span><span class="se">\&#39;</span><span class="s1">m ratede&quot;R&quot;...this is a warning, ya better void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">5.972894070235226e-57</span><span class="p">,</span>    <span class="s1">&#39;I</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...this is a warning, yaebetter void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">5.490470454496446e-57</span><span class="p">,</span>    <span class="s1">&#39;I</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...t</span><span class="se">\&#39;</span><span class="s1">is is a warning, ya better void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">5.265568867883322e-57</span><span class="p">,</span>    <span class="s1">&#39;I</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...t&amp;is is a warning, ya better void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">5.25603393501155e-57</span><span class="p">,</span>     <span class="s1">&#39;I</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...t!is is a warning, ya better void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">5.249351712403237e-57</span><span class="p">,</span>    <span class="s1">&#39;N</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...this is a warning, yaebetter void / P&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="mf">5.156250121008111e-57</span><span class="p">,</span>    <span class="s1">&#39;N</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...t</span><span class="se">\&#39;</span><span class="s1">is is a warning, ya better void / P&#39;</span><span class="p">)]</span>
 </code></pre></div>
 
-<p>The <code><span class="highlight-candombe-inline"><span class="n">correct_key</span></span></code> method works like <code><span class="highlight-candombe-inline"><span class="n">brute_force</span></span></code> but from another point of view.</p>
-<p><code><span class="highlight-candombe-inline"><span class="n">brute_force</span></span></code> tries each possible key, decrypting the same ciphertext and then scoring each decryption independently.</p>
-<p><code><span class="highlight-candombe-inline"><span class="n">correct_key</span></span></code>, instead, try the same key to decrypt several different ciphertexts and try to get the most likely corrections that improve all the decryption (it does not score independently).</p>
-<p>Okay, how well was our correction? How many bytes did we correct? And how the decrypted texts looks like?</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">correction</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">])</span>
-<span class="mi">1</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">^</span> <span class="n">kstream</span>
-<span class="s1">&#39;:</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...this is a warning, ya better void / P&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">^</span> <span class="n">kstream</span> <span class="o">^</span> <span class="n">correction</span>
-<span class="s1">&#39;i</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...this is a warning, ya better void / P&#39;</span>
+<p>Our winner is on the top!</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">kstream_guess</span><span class="o">.</span><span class="n">most_likely</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">^</span> <span class="n">kstream</span> <span class="o">==</span> <span class="n">tplaintexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="kc">True</span>
 </code></pre></div>
 
-<p>So we got the correct key stream? Well, we didn’t:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">tplaintexts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="s1">&#39;I</span><span class="se">\&#39;</span><span class="s1">m rated &quot;R&quot;...this is a warning, ya better void / P&#39;</span>
-</code></pre></div>
-
-<h3 id="undistinguishable">Undistinguishable</h3>
+<h3 id="about-undistinguishable">About undistinguishable</h3>
 <p>Unless we have more knowledge about the plaintexts, we cannot distinguish between <code class="none">i'm rated</code> and <code class="none">I'm rated</code>. <code class="none">:´|</code></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">fix</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;i&#39;</span><span class="p">)</span> <span class="o">^</span> <span class="n">B</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;I&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">kstream</span> <span class="o">^</span> <span class="n">correction</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="p">(</span><span class="n">kstream</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">^</span> <span class="n">fix</span><span class="p">)</span> <span class="o">+</span> <span class="n">kstream</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-</code></pre></div>
-
+<p>The fact that we hit the correct key stream comes from <em>“we guessed”</em> that the first letter was in uppercase.</p>
+<h2 id="full-break-enjoy">Full break (enjoy!)</h2>
 <p><label for='CltCcmVhayBmaXhlZC1ub25jZSBDVFIgc3RhdGlzdGljYWxseV0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzMvY2hhbGxlbmdlcy8yMCkKbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CltCcmVhayBmaXhlZC1ub25jZSBDVFIgc3RhdGlzdGljYWxseV0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzMvY2hhbGxlbmdlcy8yMCkKbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
 <a href="https://cryptopals.com/sets/3/challenges/20">Break fixed-nonce CTR statistically</a>
 </span></p>
-<p>And we are done!</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">all</span><span class="p">(</span><span class="n">p</span> <span class="o">==</span> <span class="n">c</span> <span class="o">^</span> <span class="n">kstream</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tplaintexts</span><span class="p">,</span> <span class="n">tciphertexts</span><span class="p">))</span>
 <span class="kc">True</span>
 
@@ -353,7 +374,7 @@ December 4, 2018
 <a href="https://cryptopals.com/sets/3/challenges/19">Break fixed-nonce CTR mode using substitutions</a>
 </span></p>
 <p>Let’s take another set of plaintexts, encrypt them with a fixed-nonce CTR and break the encryption.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">plaintexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./assets/matasano/19.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">))</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">plaintexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/19.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="p">[</span><span class="n">enc_ctr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plaintexts</span><span class="p">]</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">tplaintexts</span> <span class="o">=</span> <span class="n">uniform_length</span><span class="p">(</span><span class="n">plaintexts</span><span class="p">)</span>
@@ -364,7 +385,7 @@ December 4, 2018
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">guesses</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tciphertexts_transposed</span><span class="p">):</span>
 <span class="o">...</span>     <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># first letter, use a special statistical model</span>
-<span class="o">...</span>         <span class="n">most_common</span> <span class="o">=</span> <span class="n">etaoin_shrdlu</span><span class="p">()</span> <span class="o">|</span> <span class="n">tsamcin_brped</span><span class="p">()</span>
+<span class="o">...</span>         <span class="n">most_common</span> <span class="o">=</span> <span class="n">etaoin_shrdlu</span><span class="p">()</span>
 <span class="o">...</span>     <span class="k">else</span><span class="p">:</span>
 <span class="o">...</span>         <span class="n">most_common</span> <span class="o">=</span> <span class="n">etaoin_shrdlu</span><span class="p">()</span>
 <span class="o">...</span>
@@ -381,13 +402,13 @@ December 4, 2018
 <span class="mi">20</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">len_join_fuzzy_sets</span><span class="p">(</span><span class="n">guesses</span><span class="p">)</span>
-<span class="mi">23712</span>
+<span class="mi">2496</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">kstream_guess</span> <span class="o">=</span> <span class="n">join_fuzzy_sets</span><span class="p">(</span><span class="n">guesses</span><span class="p">,</span> <span class="n">cut_off</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">kstream_guess</span><span class="o">.</span><span class="n">most_likely</span><span class="p">()</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">tciphertexts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">^</span> <span class="n">kstream</span>
-<span class="s1">&#39;7*ming {ith vivid fa&#39;</span>
+<span class="s1">&#39;c*ming {ith vivid fa&#39;</span>
 </code></pre></div>
 
 <p>Quite close. By manual inspection the correct plaintext should be <code class="none">Coming with vivid fa</code>.</p>

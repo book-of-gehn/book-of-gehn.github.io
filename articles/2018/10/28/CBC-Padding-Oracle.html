@@ -145,7 +145,7 @@ October 28, 2018
 <p>Armed with this we can build a padding oracle for CBC: a function that will tell us if an encrypted plaintext has a valid pad or not.</p>
 <!--
 >>> import sys
->>> sys.path.append("./assets/matasano")
+>>> sys.path.append("./posts/matasano/assets")
 >>> from challenge import generate_config, enc_cbc, dec_cbc  # byexample: +timeout=10
 
 >>> seed = 20181028
@@ -291,7 +291,7 @@ $$\begin{align*}
 This unlocks the <a href="https://cryptopals.com/sets/3/challenges/17">The CBC padding oracle</a> challenge.
 </span></p>
 <p>Enjoy!</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">plaintexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./assets/matasano/17.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">))</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">plaintexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/17.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="p">[</span><span class="n">cfg</span><span class="o">.</span><span class="n">iv</span> <span class="o">+</span> <span class="n">enc_cbc</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">bsize</span><span class="p">,</span> <span class="s1">&#39;pkcs#7&#39;</span><span class="p">),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">iv</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plaintexts</span><span class="p">]</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks.block_ciphers</span> <span class="kn">import</span> <span class="n">decrypt_cbc_padding_attack</span>

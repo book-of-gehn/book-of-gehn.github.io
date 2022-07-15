@@ -90,7 +90,7 @@ April 1, 2018
 <p>Detecting a ciphertext from a pool is enough to consider the cipher as not secure even of we can’t break it.</p>
 <p>In the following pool of random strings one is actually a ciphertext that is the <code><span class="highlight-candombe-inline"><span class="n">xor</span></span></code> encryption of a plaintext using a single-byte key.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./assets/matasano/4.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertexts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">load_bytes</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/4.txt&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">16</span><span class="p">))</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">methods</span> <span class="o">=</span> <span class="p">{}</span>
 </code></pre></div>
@@ -112,7 +112,7 @@ April 1, 2018
 <p>One possibility could be that the ciphertext shows more repeated bytes (something that clearly is not random).</p>
 <p>A string with a <em>lot of coincidences is not a coincidence</em>.</p>
 <p>For this we can calculate the <a href="https://en.wikipedia.org/wiki/Index_of_coincidence">index of coincidences</a>.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">icoincidences</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.metrics</span> <span class="kn">import</span> <span class="n">icoincidences</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">icoincidences</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ciphertexts</span><span class="p">]</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">scores_and_indexes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scores</span><span class="p">)]</span>
@@ -271,7 +271,7 @@ Scores by method. Notice how the element 170th gets the lower value in most case
 <p><br /></p>
 <!--
 >>> import sys
->>> sys.path.append("./assets/plotting")
+>>> sys.path.append("./z/py/plotting")
 
 >>> from plotting import plt, show                      # byexample: +timeout=20
 >>> import pandas as pd                                 # byexample: +timeout=20
@@ -283,7 +283,7 @@ Scores by method. Notice how the element 170th gets the lower value in most case
 
 >>> methods = methods.apply(min_max_normalizer, axis=0)
 
->>> with show(save='./assets/matasano/scores_by_method.png', latexify_kargs={'columns':2}): # byexample: +timeout=600 +skip
+>>> with show(save='./posts/matasano/assets/scores_by_method.png', latexify_kargs={'columns':2}): # byexample: +timeout=600 +skip
 ...     axes = methods.plot(style='o', subplots=True, layout=(3, 2))
 ...
 ...     _ = [ax.vlines(170, 0, 1, linestyles='dashed') for ax in axes.flat]
