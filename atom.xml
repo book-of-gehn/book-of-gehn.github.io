@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2022-07-16T02:07:54.001751+00:00</updated>
+  <updated>2022-07-16T18:04:52.226263+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -41,7 +41,7 @@ That’s how &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span 
 &lt;/span&gt;&lt;/figcaption&gt;
 &lt;img  class='' alt='' src='/img/python/pyte/byexample-pyte-overview.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;But &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; may take &lt;strong&gt;seconds&lt;/strong&gt; to process a single output so &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;byexample&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; never enabled it by default.&lt;/p&gt;
-&lt;p&gt;This post describes the &lt;em&gt;why&lt;/em&gt; and &lt;em&gt;how&lt;/em&gt; of the &lt;a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations"&gt;optimizations contributed&lt;/a&gt; to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to go from seconds to &lt;strong&gt;microseconds&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;This post describes the &lt;em&gt;why&lt;/em&gt; and &lt;em&gt;how&lt;/em&gt; of the &lt;a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations"&gt;optimizations contributed&lt;/a&gt; to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to go from seconds to &lt;strong&gt;microseconds&lt;/strong&gt;. &lt;!--more--&gt;&lt;/p&gt;
 &lt;h2 id="artifacts-and-artificial-boundaries"&gt;Artifacts and artificial boundaries&lt;/h2&gt;
 &lt;p&gt;Using an emulator like &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; saves us from interpreting the &lt;a href="https://en.wikipedia.org/wiki/ansi_escape_code"&gt;escape/control sequences&lt;/a&gt;, but introduces some unwanted artifacts in the output.&lt;/p&gt;
 &lt;p&gt;For example, considere the following snippet that prints a &lt;strong&gt;single&lt;/strong&gt; line of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="s2"&gt;&amp;quot;A&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. If you do this in your terminal you will see that the line &lt;strong&gt;spans multiple lines&lt;/strong&gt;.&lt;/p&gt;
@@ -228,7 +228,13 @@ That’s how &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span 
       <name>Martin Di Paola</name>
     </author>
     <content type="html">&lt;p&gt;This post describes to some level of detail all the performance boosts and speedups due the &lt;a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations"&gt;optimizations contributed&lt;/a&gt; to &lt;a href="https://github.com/selectel/pyte"&gt;pyte&lt;/a&gt; and &lt;a href="/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html"&gt;summarized here&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;At the moment of writing this post, the PR is still pending to review.&lt;/p&gt;
+&lt;p&gt;For large geometries (240x800, 2400x8000), &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; runs orders of magnitud faster and consumes between 1.10 and 50.0 times less memory.&lt;/p&gt;
+&lt;p&gt;For smaller geometries the minimum improvement was of 2 times faster.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is now between 1.10 and 7.30 times faster and if &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is tuned, the speedup is between 1.14 and 12.0.&lt;/p&gt;
+&lt;p&gt;For memory usage, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is between 1.10 and 17.0 times lighter and up to 44.0 times lighter if &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is tuned.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reset&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is between 1.10 and 1.50 slower but several cases improve if the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is tuned (but not all).&lt;/p&gt;
+&lt;p&gt;However there are a few regressions, most of them small but some up to 4 times.&lt;/p&gt;
+&lt;p&gt;At the moment of writing this post, the PR is still pending to review. &lt;!--more--&gt;&lt;/p&gt;
 &lt;h1 id="what-is-this-pr-about"&gt;What is this PR about?&lt;/h1&gt;
 &lt;p&gt;Optimization. My goal was to make &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; faster and lighter specially for large geometries (think in a screen of 240x800 or 2400x8000 size).&lt;/p&gt;
 &lt;h1 id="context-background"&gt;Context (background)&lt;/h1&gt;

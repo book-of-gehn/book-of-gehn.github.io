@@ -90,7 +90,30 @@ Sparse Aware Optimizations for Terminal Emulator Pyte
 </h2>
 </a> <br><span class="smaller">July 15, 2022</span> <br/>
 <div>
-
+<p><a href="https://byexamples.github.io/byexample/">byexample</a> is a tool that reads snippets of code from your documentation, executes them and compares the obtained results with the expected ones, from your docs too.</p>
+<p>If a mismatch happen we say that the <em>example</em> in your documentation failed which could mean one fo two things:</p>
+<ul>
+<li>your code (the snippet) does not do what you expect so it has a bug</li>
+<li>or the code does exactly what it is supposed but you forgot to update your doc.</li>
+</ul>
+<p><em>Very useful for testing and keep your docs in sync!</em></p>
+<p>But <a href="https://byexamples.github.io/byexample/">byexample</a> does not really execute anything by itself. Having to code an interpreter for Ruby, Java, C++ and others would be <em>insane</em>.</p>
+<p>Instead, <a href="https://byexamples.github.io/byexample/">byexample</a> sends the snippets of code toa standard interpreter like <a href="https://github.com/ruby/irb">IRB</a> for Ruby or <a href="https://github.com/root-project/cling">cling</a> for C++.</p>
+<p>Interpreting the output from they is not always trivial.</p>
+<p>When a interpreter prints to the terminal, it may write special <a href="https://en.wikipedia.org/wiki/ANSI_escape_code">escape/control sequences</a>, invisible to human eyes, but interpreted by the terminal.</p>
+<p>That’s how IRB can tell your terminal to output something with reds and blues colors.</p>
+<p><label for='ClRoYXQncyBob3cgYGJ5ZXhhbXBsZWAncwpbYCt0ZXJtPWFuc2lgXShodHRwczovL2J5ZXhhbXBsZXMuZ2l0aHViLmlvL2J5ZXhhbXBsZS9hZHZhbmNlZC90ZXJtaW5hbC1lbXVsYXRpb24pCmlzIGltcGxlbWVudGVkLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoYXQncyBob3cgYGJ5ZXhhbXBsZWAncwpbYCt0ZXJtPWFuc2lgXShodHRwczovL2J5ZXhhbXBsZXMuZ2l0aHViLmlvL2J5ZXhhbXBsZS9hZHZhbmNlZC90ZXJtaW5hbC1lbXVsYXRpb24pCmlzIGltcGxlbWVudGVkLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+That’s how <code>byexample</code>’s <a href="https://byexamples.github.io/byexample/advanced/terminal-emulation"><code>+term=ansi</code></a> is implemented.
+</span></p>
+<p><a href="https://byexamples.github.io/byexample/">byexample</a> has no idea of what the hell those control sequences are and relays on a <em>terminal emulator</em>: <a href="https://github.com/selectel/pyte">pyte</a></p>
+<p><figure><figcaption><span markdown='1'>
+<code>byexample</code> sends the snippets to the correct interpreter and its output <em>feeds</em> <code>pyte.Screen</code>. It is the plain text from the emulated terminal what <code>byexample</code> uses to compare with the expected output from the example.
+</span></figcaption>
+<img  class='' alt='' src='/img/python/pyte/byexample-pyte-overview.png' /></figure></p>
+<p>But <code>pyte</code> may take <strong>seconds</strong> to process a single output so <code>byexample</code> never enabled it by default.</p>
+<p>This post describes the <em>why</em> and <em>how</em> of the <a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations">optimizations contributed</a> to <code>pyte</code> to go from seconds to <strong>microseconds</strong>.</p>
 </div>
 <p></span></p>
 <span class="index-single-post">
@@ -101,7 +124,14 @@ TL;DR Screen Optimizations Results for Terminal Emulator Pyte
 </h2>
 </a> <br><span class="smaller">July 14, 2022</span> <br/>
 <div>
-
+<p>This post describes to some level of detail all the performance boosts and speedups due the <a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations">optimizations contributed</a> to <a href="https://github.com/selectel/pyte">pyte</a> and <a href="/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html">summarized here</a></p>
+<p>For large geometries (240x800, 2400x8000), <code>Screen.display</code> runs orders of magnitud faster and consumes between 1.10 and 50.0 times less memory.</p>
+<p>For smaller geometries the minimum improvement was of 2 times faster.</p>
+<p><code>Stream.feed</code> is now between 1.10 and 7.30 times faster and if <code>Screen</code> is tuned, the speedup is between 1.14 and 12.0.</p>
+<p>For memory usage, <code>Stream.feed</code> is between 1.10 and 17.0 times lighter and up to 44.0 times lighter if <code>Screen</code> is tuned.</p>
+<p><code>Screen.reset</code> is between 1.10 and 1.50 slower but several cases improve if the <code>Screen</code> is tuned (but not all).</p>
+<p>However there are a few regressions, most of them small but some up to 4 times.</p>
+<p>At the moment of writing this post, the PR is still pending to review.</p>
 </div>
 <p></span></p>
 <span class="index-single-post">

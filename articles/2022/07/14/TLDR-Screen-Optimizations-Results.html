@@ -87,7 +87,13 @@ TL;DR Screen Optimizations Results for Terminal Emulator Pyte
 July 14, 2022
 </p>
 <p>This post describes to some level of detail all the performance boosts and speedups due the <a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations">optimizations contributed</a> to <a href="https://github.com/selectel/pyte">pyte</a> and <a href="/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html">summarized here</a></p>
-<p>At the moment of writing this post, the PR is still pending to review.</p>
+<p>For large geometries (240x800, 2400x8000), <code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">display</span></span></code> runs orders of magnitud faster and consumes between 1.10 and 50.0 times less memory.</p>
+<p>For smaller geometries the minimum improvement was of 2 times faster.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">Stream</span><span class="o">.</span><span class="n">feed</span></span></code> is now between 1.10 and 7.30 times faster and if <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code> is tuned, the speedup is between 1.14 and 12.0.</p>
+<p>For memory usage, <code><span class="highlight-candombe-inline"><span class="n">Stream</span><span class="o">.</span><span class="n">feed</span></span></code> is between 1.10 and 17.0 times lighter and up to 44.0 times lighter if <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code> is tuned.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">Screen</span><span class="o">.</span><span class="n">reset</span></span></code> is between 1.10 and 1.50 slower but several cases improve if the <code><span class="highlight-candombe-inline"><span class="n">Screen</span></span></code> is tuned (but not all).</p>
+<p>However there are a few regressions, most of them small but some up to 4 times.</p>
+<p>At the moment of writing this post, the PR is still pending to review. <!--more--></p>
 <h1 id="what-is-this-pr-about">What is this PR about?</h1>
 <p>Optimization. My goal was to make <code><span class="highlight-candombe-inline"><span class="n">pyte</span></span></code> faster and lighter specially for large geometries (think in a screen of 240x800 or 2400x8000 size).</p>
 <h1 id="context-background">Context (background)</h1>
