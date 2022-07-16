@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2022-07-15T22:16:29.948734+00:00</updated>
+  <updated>2022-07-16T02:07:54.001751+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -11,6 +11,532 @@
   <link href="https://book-of-gehn.github.io/atom.xml" rel="self"/>
   <generator uri="https://lkiesow.github.io/python-feedgen" version="0.9.0">python-feedgen</generator>
   <subtitle>blog</subtitle>
+  <entry>
+    <id>https://book-of-gehn.github.io/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html</id>
+    <title>Sparse Aware Optimizations for Terminal Emulator Pyte</title>
+    <updated>2022-07-15T00:00:00+00:00</updated>
+    <author>
+      <name>Martin Di Paola</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a href="https://byexamples.github.io/byexample/"&gt;byexample&lt;/a&gt; is a tool that reads snippets of code from your documentation, executes them and compares the obtained results with the expected ones, from your docs too.&lt;/p&gt;
+&lt;p&gt;If a mismatch happen we say that the &lt;em&gt;example&lt;/em&gt; in your documentation failed which could mean one fo two things:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;your code (the snippet) does not do what you expect so it has a bug&lt;/li&gt;
+&lt;li&gt;or the code does exactly what it is supposed but you forgot to update your doc.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;em&gt;Very useful for testing and keep your docs in sync!&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;But &lt;a href="https://byexamples.github.io/byexample/"&gt;byexample&lt;/a&gt; does not really execute anything by itself. Having to code an interpreter for Ruby, Java, C++ and others would be &lt;em&gt;insane&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Instead, &lt;a href="https://byexamples.github.io/byexample/"&gt;byexample&lt;/a&gt; sends the snippets of code toa standard interpreter like &lt;a href="https://github.com/ruby/irb"&gt;IRB&lt;/a&gt; for Ruby or &lt;a href="https://github.com/root-project/cling"&gt;cling&lt;/a&gt; for C++.&lt;/p&gt;
+&lt;p&gt;Interpreting the output from they is not always trivial.&lt;/p&gt;
+&lt;p&gt;When a interpreter prints to the terminal, it may write special &lt;a href="https://en.wikipedia.org/wiki/ANSI_escape_code"&gt;escape/control sequences&lt;/a&gt;, invisible to human eyes, but interpreted by the terminal.&lt;/p&gt;
+&lt;p&gt;That’s how IRB can tell your terminal to output something with reds and blues colors.&lt;/p&gt;
+&lt;p&gt;&lt;label for='ClRoYXQncyBob3cgYGJ5ZXhhbXBsZWAncwpbYCt0ZXJtPWFuc2lgXShodHRwczovL2J5ZXhhbXBsZXMuZ2l0aHViLmlvL2J5ZXhhbXBsZS9hZHZhbmNlZC90ZXJtaW5hbC1lbXVsYXRpb24pCmlzIGltcGxlbWVudGVkLgptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='ClRoYXQncyBob3cgYGJ5ZXhhbXBsZWAncwpbYCt0ZXJtPWFuc2lgXShodHRwczovL2J5ZXhhbXBsZXMuZ2l0aHViLmlvL2J5ZXhhbXBsZS9hZHZhbmNlZC90ZXJtaW5hbC1lbXVsYXRpb24pCmlzIGltcGxlbWVudGVkLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+That’s how &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;byexample&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;’s &lt;a href="https://byexamples.github.io/byexample/advanced/terminal-emulation"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;term&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;ansi&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/a&gt; is implemented.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://byexamples.github.io/byexample/"&gt;byexample&lt;/a&gt; has no idea of what the hell those control sequences are and relays on a &lt;em&gt;terminal emulator&lt;/em&gt;: &lt;a href="https://github.com/selectel/pyte"&gt;pyte&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;byexample&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; sends the snippets to the correct interpreter and its output &lt;em&gt;feeds&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. It is the plain text from the emulated terminal what &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;byexample&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; uses to compare with the expected output from the example.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img  class='' alt='' src='/img/python/pyte/byexample-pyte-overview.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;But &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; may take &lt;strong&gt;seconds&lt;/strong&gt; to process a single output so &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;byexample&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; never enabled it by default.&lt;/p&gt;
+&lt;p&gt;This post describes the &lt;em&gt;why&lt;/em&gt; and &lt;em&gt;how&lt;/em&gt; of the &lt;a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations"&gt;optimizations contributed&lt;/a&gt; to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to go from seconds to &lt;strong&gt;microseconds&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id="artifacts-and-artificial-boundaries"&gt;Artifacts and artificial boundaries&lt;/h2&gt;
+&lt;p&gt;Using an emulator like &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; saves us from interpreting the &lt;a href="https://en.wikipedia.org/wiki/ansi_escape_code"&gt;escape/control sequences&lt;/a&gt;, but introduces some unwanted artifacts in the output.&lt;/p&gt;
+&lt;p&gt;For example, considere the following snippet that prints a &lt;strong&gt;single&lt;/strong&gt; line of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="s2"&gt;&amp;quot;A&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. If you do this in your terminal you will see that the line &lt;strong&gt;spans multiple lines&lt;/strong&gt;.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;A&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;170&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&lt;/span&gt;
+&lt;span class="n"&gt;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&lt;/span&gt;
+&lt;span class="n"&gt;AAAAAAAAAA&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Why? It’s because your terminal has boundaries, a finite width in this case and lines longer than that are &lt;em&gt;cut&lt;/em&gt; and &lt;em&gt;continued&lt;/em&gt; on the next line.&lt;/p&gt;
+&lt;p&gt;This is super handy for a human but not for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;byexample&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Another artifact is the limit of lines in the terminal: if the interpreter outputs a lot of lines only the last will be visible &lt;em&gt;“on the screen”&lt;/em&gt; and the rest will be lost.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="mi"&gt;22&lt;/span&gt;
+&lt;span class="mi"&gt;23&lt;/span&gt;
+&lt;span class="mi"&gt;24&lt;/span&gt;
+&lt;span class="mi"&gt;25&lt;/span&gt;
+&lt;span class="mi"&gt;26&lt;/span&gt;
+&lt;span class="mi"&gt;27&lt;/span&gt;
+&lt;span class="mi"&gt;28&lt;/span&gt;
+&lt;span class="mi"&gt;29&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Again, your terminal has a finite height so the same goes for the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; emulator.&lt;/p&gt;
+&lt;h2 id="the-hack"&gt;The hack&lt;/h2&gt;
+&lt;p&gt;If the size of the emulated screen generates unwanted artifacts, the hack is simple: increase the size!&lt;/p&gt;
+&lt;p&gt;And &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; has no problem with that.&lt;/p&gt;
+&lt;p&gt;Well, actually, it has….&lt;/p&gt;
+&lt;h2 id="bad-news-it-is-super-slow"&gt;Bad news: it is super slow!&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implements a sparse buffer so technically it should not have problems when we increase the size of the screen.&lt;/p&gt;
+&lt;p&gt;Even if the geometry is of 2400 lines by 8000 columns, the performance of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; should depend &lt;strong&gt;only&lt;/strong&gt; on the amount of non-empty data in the screen.&lt;/p&gt;
+&lt;p&gt;Sadly, the algorithms for terminal emulation are &lt;strong&gt;not&lt;/strong&gt; &lt;em&gt;sparse aware&lt;/em&gt; and they do &lt;strong&gt;full scans&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;To give you an example, if a line of 8000 columns has only 5 characters, only 5 characters are stored on memory (good) but displaying it iterates over the whole 8000 columns&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="nd"&gt;@property&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;display&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;             &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;  &lt;span class="c1"&gt;# display the char&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; runtime complexity runs &lt;em&gt;quadratic&lt;/em&gt; with respect the size of the terminal and not &lt;em&gt;linear&lt;/em&gt; with respect the real data stored within.&lt;/p&gt;
+&lt;p&gt;Moreover, the underlying implementation of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;While initially it may contain only the real characters and being very &lt;em&gt;sparse&lt;/em&gt;, as soon you do a &lt;em&gt;single full scan&lt;/em&gt; the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will contain &lt;strong&gt;all the entries&lt;/strong&gt; possible of 2400x8000.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will &lt;em&gt;not&lt;/em&gt; be sparse but completely &lt;strong&gt;dense&lt;/strong&gt;. And this of course means the memory also grows &lt;strong&gt;quadratic&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id="make-pyte-really-fast"&gt;Make &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; really fast!&lt;/h2&gt;
+&lt;p&gt;With 54 commits (more than 10% of the total commits that &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt; &lt;span class="mf"&gt;0.8.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; has), the &lt;a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations"&gt;pull request&lt;/a&gt; implements a lot of improvements.&lt;/p&gt;
+&lt;p&gt;The &lt;a href="/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html"&gt;TL;DR post&lt;/a&gt; with the contributions and the results is posted somewhere else but here is a summary.&lt;/p&gt;
+&lt;h2 id="sparse-aware-scans"&gt;Sparse-aware scans&lt;/h2&gt;
+&lt;p&gt;First, every time that &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; needs to iterate over non-empty lines or chars, use sparse aware iterations.&lt;/p&gt;
+&lt;p&gt;Instead of doing:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;             &lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;  &lt;span class="c1"&gt;# do something&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Do this:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;non_empty_y&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;sorted&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;non_empty_y&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="n"&gt;non_empty_x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;sorted&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;non_empty_x&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;             &lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;  &lt;span class="c1"&gt;# do something&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Both &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;line&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; are &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;dict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; with row indexes/column indexes as keys for each non-empty line/char respectively.&lt;/p&gt;
+&lt;p&gt;The full scan with the nested &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is \(s^2\) in terms of any possible slot in the buffer, empty or not.&lt;/p&gt;
+&lt;p&gt;In contrast, the sparse-aware variant has the cost of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;sorted&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (\(n log(n)\)) and the iteration (\(n\)) both in terms of the non-empty data.&lt;/p&gt;
+&lt;p&gt;When the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is sparse we expect \(n ≪ s\) and the second code is way faster than the first.&lt;/p&gt;
+&lt;p&gt;If &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is not sparse, both code are quadratic.&lt;/p&gt;
+&lt;h2 id="sparsity"&gt;Sparsity&lt;/h2&gt;
+&lt;p&gt;So it is critical to maintain the sparsity of the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, not only because it consumes less memory (less real entries in the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;dict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;) but because the runtime of other algorithms depend on that!&lt;/p&gt;
+&lt;p&gt;Now, in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt; &lt;span class="mf"&gt;0.8.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; so any &lt;em&gt;read&lt;/em&gt; may potentially &lt;strong&gt;write&lt;/strong&gt; an entry.&lt;/p&gt;
+&lt;p&gt;Consider the following &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; method that moves all the lines one row up so a line at coordinate &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will be moved to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;index&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+    &lt;span class="n"&gt;bottom&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;top&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;top&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;bottom&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;bottom&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Simple, elegant but…. for each &lt;em&gt;empty entry&lt;/em&gt; at &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, we will creating 2 real entries into the buffer: one for writing into index &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and one for reading &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;These are what I called &lt;strong&gt;false entries&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;A single call to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will turn the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; into a &lt;em&gt;dense&lt;/em&gt;, full of false entries &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;dict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The solution is to replace the full scan &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;top&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;bottom&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for one that that iterate only the non-empty entries (avoiding then reading empty entries):&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;index&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+    &lt;span class="n"&gt;bottom&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;top&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;
+    &lt;span class="n"&gt;non_empty_y&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;sorted&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;top&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="n"&gt;to_move&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;non_empty_y&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;begin&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="n"&gt;end&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;to_move&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The call to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; removes the entry and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; stores it back in the new index avoiding reading or writing any false entry.&lt;/p&gt;
+&lt;p&gt;Once all the algorithms are reimplemented, we must change &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; from a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;dict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to prevent any accidental false entry.&lt;/p&gt;
+&lt;h2 id="binary-searches"&gt;Binary searches&lt;/h2&gt;
+&lt;p&gt;When &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;resize&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is called and if the screen shrinks, all the lines of the screen are truncated to the new width.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;resize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+            &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+                &lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Popping out all the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; entries that are greater than the new &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is correct but we can do it better.&lt;/p&gt;
+&lt;p&gt;You see, most of the entries in the line will not exist really and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will have no effect on the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;line&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (except consuming time!).&lt;/p&gt;
+&lt;p&gt;With a binary search we can find in \(log(n)\) the first non-empty &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and delete from there.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;resize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+            &lt;span class="n"&gt;non_empty_x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;sorted&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;begin&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;bisect_left&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;non_empty_x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;non_empty_x&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;begin&lt;/span&gt;&lt;span class="p"&gt;:]:&lt;/span&gt;
+                &lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Technically this is still \(O(n)\) but it should be iterate over lesser entries than the former &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mf"&gt;0.8.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; version.&lt;/p&gt;
+&lt;h2 id="the-good-old-python-tricks"&gt;The good old Python tricks&lt;/h2&gt;
+&lt;p&gt;At least for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mf"&gt;3.10&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, Python still does not cache any attribute lookup so a easy win is to it ourselves, specially with the lookup is in a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;-loop:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;resize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+    &lt;span class="n"&gt;buffer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+            &lt;span class="n"&gt;non_empty_x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;sorted&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;pop&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;
+            &lt;span class="n"&gt;begin&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;bisect_left&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;non_empty_x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;non_empty_x&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;begin&lt;/span&gt;&lt;span class="p"&gt;:]:&lt;/span&gt;
+                &lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now, we have an additional low-hanging fruit: the inner &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;-loop calls repetitively the same function over a sequence.&lt;/p&gt;
+&lt;p&gt;Does that ring any bells to you?&lt;/p&gt;
+&lt;p&gt;Replacing a loop with a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;map&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; moves the loop into C and because &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;dict&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;C&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; too, it is even faster:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;resize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+    &lt;span class="n"&gt;buffer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+            &lt;span class="n"&gt;non_empty_x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;sorted&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;pop&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;
+            &lt;span class="n"&gt;begin&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;bisect_left&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;non_empty_x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+            &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;map&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;non_empty_x&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;begin&lt;/span&gt;&lt;span class="p"&gt;:]))&lt;/span&gt;
+    &lt;span class="c1"&gt;# [...]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="dont-do-what-you-dont-need"&gt;Don’t do what you don’t need&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; tracks which lines were modified in a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dirty&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; set but &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;byexample&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (and maybe other users) does not need it.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;byexample&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;em&gt;renders&lt;/em&gt; the whole screen as a single string calling screen.display so it does not care what lines changed or not.&lt;/p&gt;
+&lt;p&gt;For the same reason emulating things like colores and styles is pointless.&lt;/p&gt;
+&lt;p&gt;As part of the optimizations now &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; can optionally disable those.&lt;/p&gt;
+&lt;h2 id="faster-but-how-much-faster"&gt;&lt;em&gt;“faster”&lt;/em&gt;, but how &lt;em&gt;much&lt;/em&gt; faster?&lt;/h2&gt;
+&lt;p&gt;All the gory details are in the &lt;a href="/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html"&gt;TL;DR post&lt;/a&gt; but here is a quick summary:&lt;/p&gt;
+&lt;p&gt;At minimum, a humble 2 times faster for small geometries but for large geometries the speed up goes up to 7 times faster and if the screen is tuned, up to 12 times.&lt;/p&gt;
+&lt;p&gt;An for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, the speed up is insanely huge: 600000 times! But it has a more modest common case of 10 to 200 times faster.&lt;/p&gt;
+&lt;p&gt;Memory usage was also optimized from 1.10 and 50 times better.&lt;/p&gt;
+&lt;p&gt;Not everything was improved however: some test cases had a small regression and one had up to 5 times slower (boomers) but in general there was a lot of profit on the improvements.&lt;/p&gt;
+</content>
+    <link href="https://book-of-gehn.github.io/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html" rel="alternate" type="text/html" title="Sparse Aware Optimizations for Terminal Emulator Pyte"/>
+    <category term="python" label="python"/>
+    <category term="pyte" label="pyte"/>
+    <category term="byexample" label="byexample"/>
+    <category term="optimization" label="optimization"/>
+    <category term="performance" label="performance"/>
+    <published>2022-07-15T00:00:00+00:00</published>
+  </entry>
+  <entry>
+    <id>https://book-of-gehn.github.io/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html</id>
+    <title>TL;DR Screen Optimizations Results for Terminal Emulator Pyte</title>
+    <updated>2022-07-14T00:00:00+00:00</updated>
+    <author>
+      <name>Martin Di Paola</name>
+    </author>
+    <content type="html">&lt;p&gt;This post describes to some level of detail all the performance boosts and speedups due the &lt;a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations"&gt;optimizations contributed&lt;/a&gt; to &lt;a href="https://github.com/selectel/pyte"&gt;pyte&lt;/a&gt; and &lt;a href="/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html"&gt;summarized here&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;At the moment of writing this post, the PR is still pending to review.&lt;/p&gt;
+&lt;h1 id="what-is-this-pr-about"&gt;What is this PR about?&lt;/h1&gt;
+&lt;p&gt;Optimization. My goal was to make &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; faster and lighter specially for large geometries (think in a screen of 240x800 or 2400x8000 size).&lt;/p&gt;
+&lt;h1 id="context-background"&gt;Context (background)&lt;/h1&gt;
+&lt;p&gt;While &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implements a sparse buffer, most of its algorithms are not aware and they don’t take advantage of that making the terminal emulation really slow and consuming a lot of memory.&lt;/p&gt;
+&lt;h1 id="contributions"&gt;Contributions&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;Upgrade &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyperf&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Extended the benchmark tests to test &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;resize&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reset&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; under different geometries (24x80, 240x800, 2400x8000, 24x8000, 2400x80). With these the benchmark takes much more time (sorry!) but it gives a deeper view of how &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;pyte&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; works.&lt;/li&gt;
+&lt;li&gt;Fixed a bug in the benchmarks that used &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Stream&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; instead of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;ByteStream&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. The use of the former led to an incorrect interpretation of the new lines; the use of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;ByteStream&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; fixed that and it is aligned with the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;test_input_output&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;py&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; tests.&lt;/li&gt;
+&lt;li&gt;Optimize &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to work (approx) linearly with the input and not with the size of the screen (quadratic). Improved by a lot both for runtime and memory (specially for large geometries).&lt;/li&gt;
+&lt;li&gt;Implement &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;compressed_display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; that works similar to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; but it allows to &lt;em&gt;“strip”&lt;/em&gt; empty space from the left or right and &lt;em&gt;“filter”&lt;/em&gt; empty lines on top and bottom of the screen reducing time and memory.&lt;/li&gt;
+&lt;li&gt;Optimize &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; with caching of attributes and methods (the same optimizations already present in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_parser_fsm&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Refactor out &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;’s foreground, bold, blink (…) into a separated &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;namedtuple&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;CharStyle&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. When possible, reuse the same style for multiple characters reducing the memory usage at the expense of an additional lookup (instead of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;char&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fg&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; you have &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;char&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;style&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fg&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Make &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; a mutable object allowing changes in the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;width&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; fields to be in-place instead of creating a new &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; object.&lt;/li&gt;
+&lt;li&gt;Sparse-aware algorithms for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reverse_index&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; which improved indirectly &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Sparse-aware algorithms for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;resize&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Sparse-aware algorithms for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tabstop&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Sparse-aware algorithms for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;ScreenHistory&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;prev_page&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;ScreenHistory&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;next_page&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Sparse-aware algorithms for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;insert_characters&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;delete_characters&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;insert_lines&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;delete_characters&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; which improved the performance of &lt;em&gt;“terminal aware”&lt;/em&gt; programs.&lt;/li&gt;
+&lt;li&gt;Statistics about &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;’s buffer and lines to have insight about the sparsity and usage of these elements. (The API is not not standard like &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;DebugScreen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Make the public attribute &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; return a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;BufferView&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. Retrieve of lines from it yield &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;LineView&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; instead of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Line&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; objects. This adds an overhead on user code but allows a separation between the public part and the internals. Iterate over &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;LineView&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; still yields &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; objects as usual (to much high penalty otherwise).&lt;/li&gt;
+&lt;li&gt;Make the public &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;history&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;’s &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;top&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bottom&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; queues return &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;LineView&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and not &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Line&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; objects&lt;/li&gt;
+&lt;li&gt;Make the private attribute &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nb"&gt;dict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and not a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. This prevent adding entries unintentionally which would make the buffer less sparse and therefore slow.&lt;/li&gt;
+&lt;li&gt;If the current cursor attributes (style) matches the default attributes of the screen, do not write explicit spaces on erase methods (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;erase_characters&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;erase_in_line&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;erase_in_display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;When &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;disable_display_graphic&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; prevent &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;select_graphic_rendition&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to change the cursor attributes (style). If the cursor attrs don’t change, we can optimize the erase methods. The flag is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; by default. but just remove the chars from the buffer. This makes speedup other algorithms and maintain high the sparsity (and consume less memory).&lt;/li&gt;
+&lt;li&gt;When &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;track_dirty_lines&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; use a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;NullSet&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;dirty&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; attribute to not consume any memory and discard any element, disabling effectively the dirty functionality. This saves time and memory for large geometries. The flag is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; by default.&lt;/li&gt;
+&lt;li&gt;Make &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;margin&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; always a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Margin&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; object so we can avoid checking if it is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;None&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; or not.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="compatibility-changes"&gt;Compatibility changes&lt;/h2&gt;
+&lt;p&gt;The following are changes in the API that may break user code. A special care was taken to avoid this situation.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is not longer a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;namedtuple&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; so things like &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;_replace&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; are gone. If necessary we could reimplement the API of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;namedtuple&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; but I don’t think users will use.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is mutable but the user must not relay on this: changes to character will have undefined behaviour. The user must use always the API provided by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; not longer has attributes for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;fg&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bg&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bold&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. Instead, it has a single read-only &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;CharStyle&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; class implements &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;fg&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bg&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bold&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; as &lt;em&gt;properties&lt;/em&gt; to do the lookup to the style behind the scene. User code should not break then.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; now is a property that returns a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;BufferView&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; with a similar API to a dictionary. It yields &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;LineView&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; objects instead of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Line&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; objects. These in turn yield &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Char&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; objects (not views). User can still iterate over the lines and chars as if the buffer were a dense array and not a sparse array as it is really. Like any view, these are valid until the next modification of the screen. This change may break user code if it uses &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in another way.&lt;/li&gt;
+&lt;li&gt;The queues &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;top&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bottom&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;ScreenHistory&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;history&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; contain &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;LineView&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and not &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Line&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; objects. This may break user code.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;margin&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is always a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Margin&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; object: the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;None&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; value is not longer supported.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id="results"&gt;Results&lt;/h1&gt;
+&lt;h2 id="high-level-results"&gt;High level results&lt;/h2&gt;
+&lt;p&gt;For large geometries (240x800, 2400x8000), &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; runs orders of magnitud faster and consumes between 1.10 and 50.0 times less memory.&lt;/p&gt;
+&lt;p&gt;For smaller geometries the minimum improvement was of 2 times faster.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is now between 1.10 and 7.30 times faster and if &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is tuned, the speedup is between 1.14 and 12.0.&lt;/p&gt;
+&lt;p&gt;However there is a regression for the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;mc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; test of up to 4 times slower.&lt;/p&gt;
+&lt;p&gt;For memory usage, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is between 1.10 and 17.0 times lighter and up to 44.0 times lighter if &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is tuned.&lt;/p&gt;
+&lt;p&gt;Screen.reset is between 1.10 and 1.50 slower but several cases improve if the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is tuned (but not all).&lt;/p&gt;
+&lt;h2 id="tldr---numbers-overview"&gt;TL;DR - Numbers overview&lt;/h2&gt;
+&lt;p&gt;The following is a overview of the numbers got. To make this post as short as possible, the some results were omitted (rows omitted are marked with &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="p"&gt;:::&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;Full benchmark results are listed below; people is encouraged to do their own benchmarks for cross validation.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1.json"&gt;0.8.1 - runtime&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1.tracemalloc.json"&gt;0.8.1 - tracemalloc&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1+screen-optimizations+default-conf.json"&gt;optimized (default) - runtime&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1+screen-optimizations+default-conf.tracemalloc.json"&gt;optimized (default) - tracemalloc&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1+screen-optimizations+custom-conf.json"&gt;optimized (tuned) - runtime&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/assets/python/pyte/screen-optimizations-benchmark-results/0.8.1+screen-optimizations+custom-conf.tracemalloc.json"&gt;optimized (tuned) - tracemalloc&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="screen.display"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; was optimized to generate large chunks of spaces very quickly.&lt;/p&gt;
+&lt;p&gt;For large geometries, this has an huge impact on the performance:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;+----------------------------------------------------------+----------+-----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+default-conf |
++==========================================================+==========+=========================================+
+| [screen_display 2400x8000] mc.input-&amp;gt;Screen              | 6.69 sec | 9.95 us: 672459.98x faster              |
+| [screen_display 2400x8000] mc.input-&amp;gt;HistoryScreen       | 6.60 sec | 10.3 us: 638209.07x faster              |
+| [screen_display 2400x8000] vi.input-&amp;gt;HistoryScreen       | 6.80 sec | 132 us: 51648.56x faster                |
+| [screen_display 2400x8000] vi.input-&amp;gt;Screen              | 6.60 sec | 130 us: 50691.68x faster                |
+    :::                 ::::                                    ::::         :::
+| [screen_display 240x800] ls.input-&amp;gt;HistoryScreen         | 70.1 ms  | 248 us: 283.21x faster                  |
+| [screen_display 240x800] ls.input-&amp;gt;Screen                | 69.1 ms  | 244 us: 282.76x faster                  |
+| [screen_display 240x800] top.input-&amp;gt;Screen               | 68.2 ms  | 249 us: 273.98x faster                  |
+| [screen_display 240x800] top.input-&amp;gt;HistoryScreen        | 67.3 ms  | 257 us: 261.64x faster                  |
+    :::                 ::::                                    ::::         :::
+| [screen_display 24x80] find-etc.input-&amp;gt;HistoryScreen     | 670 us   | 101 us: 6.63x faster                    |
+| [screen_display 24x80] find-etc.input-&amp;gt;Screen            | 640 us   | 97.9 us: 6.54x faster                   |
+| [screen_display 24x80] vi.input-&amp;gt;HistoryScreen           | 606 us   | 115 us: 5.27x faster                    |
+| [screen_display 24x80] vi.input-&amp;gt;Screen                  | 584 us   | 117 us: 5.00x faster                    |
+| [screen_display 24x80] cat-gpl3.input-&amp;gt;Screen            | 605 us   | 189 us: 3.21x faster                    |
+| [screen_display 24x80] cat-gpl3.input-&amp;gt;HistoryScreen     | 605 us   | 195 us: 3.11x faster                    |
+| [screen_display 24x80] ls.input-&amp;gt;HistoryScreen           | 609 us   | 221 us: 2.75x faster                    |
+| [screen_display 24x80] ls.input-&amp;gt;Screen                  | 585 us   | 221 us: 2.65x faster                    |
+| [screen_display 24x80] top.input-&amp;gt;Screen                 | 567 us   | 244 us: 2.33x faster                    |
+| [screen_display 24x80] top.input-&amp;gt;HistoryScreen          | 580 us   | 251 us: 2.32x faster                    |
+| [screen_display 24x80] htop.input-&amp;gt;HistoryScreen         | 564 us   | 269 us: 2.10x faster                    |
+| [screen_display 24x80] htop.input-&amp;gt;Screen                | 559 us   | 273 us: 2.05x faster                    |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; takes advantage of the sparsity of the screen and therefore it was indirectly beneficed by the optimizations done across &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to avoid filling it with &lt;em&gt;false entries&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;display&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; it was also optimized on memory (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;tracemalloc&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;) avoiding then append of each space character separately when they could be appended in a single chunk.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;+--------------------------------------------------------------+-------------------+-----------------------------------------------------+
+| Benchmark                                                    | 0.8.1.tracemalloc | 0.8.1+screen-optimizations+default-conf.tracemalloc |
++==============================================================+===================+=====================================================+
+| [screen_display 2400x8000] ls.input-&amp;gt;HistoryScreen           | 19.7 MB           | 408.1 kB: 49.43x faster                             |
+| [screen_display 2400x8000] mc.input-&amp;gt;HistoryScreen           | 19.7 MB           | 411.4 kB: 49.04x faster                             |
+| [screen_display 2400x8000] mc.input-&amp;gt;Screen                  | 19.7 MB           | 411.4 kB: 49.04x faster                             |
+| [screen_display 2400x8000] ls.input-&amp;gt;Screen                  | 19.7 MB           | 411.5 kB: 49.03x faster                             |
+| [screen_display 2400x8000] vi.input-&amp;gt;HistoryScreen           | 18.5 MB           | 404.7 kB: 46.84x faster                             |
+| [screen_display 2400x8000] top.input-&amp;gt;HistoryScreen          | 18.5 MB           | 408.3 kB: 46.43x faster                             |
+| [screen_display 2400x8000] vi.input-&amp;gt;Screen                  | 18.5 MB           | 408.5 kB: 46.40x faster                             |
+| [screen_display 2400x8000] top.input-&amp;gt;Screen                 | 18.5 MB           | 411.5 kB: 46.07x faster                             |
+| [screen_display 2400x8000] htop.input-&amp;gt;Screen                | 18.5 MB           | 1102.6 kB: 17.19x faster                            |
+| [screen_display 2400x8000] htop.input-&amp;gt;HistoryScreen         | 18.5 MB           | 1103.2 kB: 17.18x faster                            |
+| [screen_display 2400x8000] cat-gpl3.input-&amp;gt;HistoryScreen     | 19.5 MB           | 5392.6 kB: 3.70x faster                             |
+| [screen_display 2400x8000] cat-gpl3.input-&amp;gt;Screen            | 19.5 MB           | 5392.0 kB: 3.70x faster                             |
+| [screen_display 240x800] mc.input-&amp;gt;Screen                    | 513.2 kB          | 403.5 kB: 1.27x faster                              |
+| [screen_display 240x800] ls.input-&amp;gt;Screen                    | 517.0 kB          | 411.5 kB: 1.26x faster                              |
+| [screen_display 240x800] ls.input-&amp;gt;HistoryScreen             | 511.7 kB          | 408.1 kB: 1.25x faster                              |
+| [screen_display 240x800] mc.input-&amp;gt;HistoryScreen             | 510.4 kB          | 411.4 kB: 1.24x faster                              |
+| [screen_display 2400x8000] find-etc.input-&amp;gt;HistoryScreen     | 18.7 MB           | 16.6 MB: 1.12x faster                               |
+| [screen_display 2400x8000] find-etc.input-&amp;gt;Screen            | 18.7 MB           | 16.6 MB: 1.12x faster                               |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The only two regressions are:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;| [screen_display 240x800] htop.input-&amp;gt;HistoryScreen           | 408.7 kB          | 487.3 kB: 1.19x slower                              |
+| [screen_display 240x800] htop.input-&amp;gt;Screen                  | 405.8 kB          | 486.2 kB: 1.20x slower                              |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Not sure why this happen.&lt;/p&gt;
+&lt;h3 id="stream.feed"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; was not modified but its runtime depends on &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;’s performance.&lt;/p&gt;
+&lt;p&gt;For terminal programs that just write into then terminal, like &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cat&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;gpl3&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;find&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;stream&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;feed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; merely sends then input to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for rendering.&lt;/p&gt;
+&lt;p&gt;The method &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; was optimized to avoid the modification of the cursor internally and update it only at the exit. This saved a few lookups.&lt;/p&gt;
+&lt;p&gt;While not been frequently called, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; was the next bottleneck for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;: it moves all the lines of the screen which it means that all the entries of the buffer are rewritten.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reverse_index&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; were optimized to take advantage of the sparsity and to avoid adding false entries.&lt;/p&gt;
+&lt;p&gt;This resulted on a speedup across the tests:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;+----------------------------------------------------------+----------+-----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+default-conf |
++==========================================================+==========+=========================================+
+| [stream_feed 2400x8000] vi.input-&amp;gt;HistoryScreen          | 49.4 ms  | 6.70 ms: 7.38x faster                   |
+| [stream_feed 2400x8000] top.input-&amp;gt;HistoryScreen         | 7.35 ms  | 1.31 ms: 5.62x faster                   |
+| [stream_feed 2400x8000] find-etc.input-&amp;gt;HistoryScreen    | 2.92 sec | 543 ms: 5.38x faster                    |
+| [stream_feed 240x800] ls.input-&amp;gt;HistoryScreen            | 9.29 ms  | 1.75 ms: 5.31x faster                   |
+| [stream_feed 24x80] top.input-&amp;gt;HistoryScreen             | 6.61 ms  | 1.25 ms: 5.30x faster                   |
+| [stream_feed 240x800] top.input-&amp;gt;HistoryScreen           | 6.57 ms  | 1.24 ms: 5.29x faster                   |
+| [stream_feed 240x800] cat-gpl3.input-&amp;gt;HistoryScreen      | 215 ms   | 43.3 ms: 4.97x faster                   |
+| [stream_feed 24x80] ls.input-&amp;gt;HistoryScreen              | 6.26 ms  | 1.34 ms: 4.68x faster                   |
+| [stream_feed 24x80] cat-gpl3.input-&amp;gt;HistoryScreen        | 140 ms   | 31.9 ms: 4.38x faster                   |
+| [stream_feed 240x800] find-etc.input-&amp;gt;HistoryScreen      | 532 ms   | 123 ms: 4.32x faster                    |
+| [stream_feed 2400x8000] vi.input-&amp;gt;Screen                 | 13.7 ms  | 3.53 ms: 3.88x faster                   |
+| [stream_feed 24x80] find-etc.input-&amp;gt;HistoryScreen        | 294 ms   | 81.1 ms: 3.62x faster                   |
+| [stream_feed 2400x8000] htop.input-&amp;gt;HistoryScreen        | 122 ms   | 34.4 ms: 3.54x faster                   |
+    :::                 ::::                                    ::::         :::
+| [stream_feed 240x800] vi.input-&amp;gt;Screen                   | 5.39 ms  | 2.67 ms: 2.02x faster                   |
+| [stream_feed 24x80] mc.input-&amp;gt;HistoryScreen              | 44.3 ms  | 24.4 ms: 1.82x faster                   |
+| [stream_feed 2400x8000] htop.input-&amp;gt;Screen               | 38.1 ms  | 21.4 ms: 1.78x faster                   |
+| [stream_feed 240x800] htop.input-&amp;gt;Screen                 | 23.2 ms  | 13.2 ms: 1.76x faster                   |
+| [stream_feed 240x800] find-etc.input-&amp;gt;Screen             | 134 ms   | 77.0 ms: 1.74x faster                   |
+| [stream_feed 24x80] vi.input-&amp;gt;Screen                     | 4.45 ms  | 2.57 ms: 1.73x faster                   |
+| [stream_feed 24x80] htop.input-&amp;gt;Screen                   | 20.8 ms  | 12.2 ms: 1.71x faster                   |
+| [stream_feed 2400x8000] cat-gpl3.input-&amp;gt;HistoryScreen    | 262 ms   | 157 ms: 1.67x faster                    |
+| [stream_feed 240x800] mc.input-&amp;gt;HistoryScreen            | 63.7 ms  | 43.8 ms: 1.45x faster                   |
+| [stream_feed 2400x8000] ls.input-&amp;gt;Screen                 | 7.77 ms  | 5.61 ms: 1.38x faster                   |
+| [stream_feed 24x80] mc.input-&amp;gt;Screen                     | 17.6 ms  | 13.1 ms: 1.34x faster                   |
+| [stream_feed 2400x8000] find-etc.input-&amp;gt;Screen           | 616 ms   | 501 ms: 1.23x faster                    |
+| [stream_feed 2400x8000] cat-gpl3.input-&amp;gt;Screen           | 170 ms   | 143 ms: 1.19x faster                    |
+| [stream_feed 2400x8000] mc.input-&amp;gt;HistoryScreen          | 259 ms   | 285 ms: 1.10x slower                    |
+| [stream_feed 240x800] mc.input-&amp;gt;Screen                   | 23.3 ms  | 32.3 ms: 1.39x slower                   |
+| [stream_feed 2400x8000] mc.input-&amp;gt;Screen                 | 71.2 ms  | 281 ms: 3.94x slower                    |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;mc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; however took much more time.&lt;/p&gt;
+&lt;p&gt;When &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;track_dirty_lines&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;disable_display_graphic&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, the overall performance increases even further.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;+----------------------------------------------------------+----------+----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+custom-conf |
++==========================================================+==========+========================================+
+| [stream_feed 2400x8000] mc.input-&amp;gt;HistoryScreen          | 259 ms   | 21.2 ms: 12.19x faster                 |
+| [stream_feed 2400x8000] vi.input-&amp;gt;HistoryScreen          | 49.4 ms  | 5.52 ms: 8.95x faster                  |
+| [stream_feed 2400x8000] mc.input-&amp;gt;Screen                 | 71.2 ms  | 10.8 ms: 6.60x faster                  |
+| [stream_feed 2400x8000] find-etc.input-&amp;gt;HistoryScreen    | 2.92 sec | 464 ms: 6.29x faster                   |
+| [stream_feed 2400x8000] top.input-&amp;gt;HistoryScreen         | 7.35 ms  | 1.27 ms: 5.80x faster                  |
+| [stream_feed 2400x8000] htop.input-&amp;gt;HistoryScreen        | 122 ms   | 22.3 ms: 5.45x faster                  |
+| [stream_feed 2400x8000] vi.input-&amp;gt;Screen                 | 13.7 ms  | 2.52 ms: 5.43x faster                  |
+| [stream_feed 24x80] top.input-&amp;gt;HistoryScreen             | 6.61 ms  | 1.23 ms: 5.38x faster                  |
+| [stream_feed 240x800] ls.input-&amp;gt;HistoryScreen            | 9.29 ms  | 1.73 ms: 5.37x faster                  |
+| [stream_feed 240x800] cat-gpl3.input-&amp;gt;HistoryScreen      | 215 ms   | 42.0 ms: 5.12x faster                  |
+    :::                 ::::                                    ::::         :::
+| [stream_feed 24x80] cat-gpl3.input-&amp;gt;Screen               | 46.3 ms  | 17.2 ms: 2.69x faster                  |
+| [stream_feed 240x800] top.input-&amp;gt;Screen                  | 2.39 ms  | 913 us: 2.61x faster                   |
+| [stream_feed 24x80] top.input-&amp;gt;Screen                    | 2.36 ms  | 914 us: 2.58x faster                   |
+| [stream_feed 2400x8000] ls.input-&amp;gt;HistoryScreen          | 13.4 ms  | 5.39 ms: 2.50x faster                  |
+| [stream_feed 24x80] htop.input-&amp;gt;HistoryScreen            | 55.3 ms  | 22.6 ms: 2.44x faster                  |
+    :::                 ::::                                    ::::         :::
+| [stream_feed 240x800] vi.input-&amp;gt;Screen                   | 5.39 ms  | 2.57 ms: 2.10x faster                  |
+| [stream_feed 24x80] mc.input-&amp;gt;HistoryScreen              | 44.3 ms  | 21.3 ms: 2.08x faster                  |
+| [stream_feed 2400x8000] cat-gpl3.input-&amp;gt;HistoryScreen    | 262 ms   | 132 ms: 1.99x faster                   |
+| [stream_feed 240x800] find-etc.input-&amp;gt;Screen             | 134 ms   | 76.3 ms: 1.76x faster                  |
+| [stream_feed 24x80] vi.input-&amp;gt;Screen                     | 4.45 ms  | 2.54 ms: 1.75x faster                  |
+| [stream_feed 24x80] mc.input-&amp;gt;Screen                     | 17.6 ms  | 10.6 ms: 1.66x faster                  |
+| [stream_feed 2400x8000] ls.input-&amp;gt;Screen                 | 7.77 ms  | 4.85 ms: 1.60x faster                  |
+| [stream_feed 2400x8000] find-etc.input-&amp;gt;Screen           | 616 ms   | 422 ms: 1.46x faster                   |
+| [stream_feed 2400x8000] cat-gpl3.input-&amp;gt;Screen           | 170 ms   | 118 ms: 1.44x faster                   |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;On memory there is an improvement too:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;+--------------------------------------------------------------+-------------------+-----------------------------------------------------+
+| Benchmark                                                    | 0.8.1.tracemalloc | 0.8.1+screen-optimizations+default-conf.tracemalloc |
++==============================================================+===================+=====================================================+
+| [stream_feed 2400x8000] vi.input-&amp;gt;HistoryScreen              | 11.7 MB           | 686.8 kB: 17.45x faster                             |
+| [stream_feed 2400x8000] vi.input-&amp;gt;Screen                     | 4742.1 kB         | 538.0 kB: 8.81x faster                              |
+| [stream_feed 2400x8000] htop.input-&amp;gt;HistoryScreen            | 14.5 MB           | 3552.1 kB: 4.18x faster                             |
+| [stream_feed 240x800] vi.input-&amp;gt;HistoryScreen                | 2679.0 kB         | 686.8 kB: 3.90x faster                              |
+| [stream_feed 2400x8000] top.input-&amp;gt;HistoryScreen             | 2120.7 kB         | 611.8 kB: 3.47x faster                              |
+| [stream_feed 2400x8000] htop.input-&amp;gt;Screen                   | 11.5 MB           | 3408.2 kB: 3.45x faster                             |
+| [stream_feed 2400x8000] top.input-&amp;gt;Screen                    | 2155.1 kB         | 680.2 kB: 3.17x faster                              |
+| [stream_feed 240x800] htop.input-&amp;gt;HistoryScreen              | 2189.7 kB         | 1005.8 kB: 2.18x faster                             |
+| [stream_feed 240x800] vi.input-&amp;gt;Screen                       | 1107.7 kB         | 536.1 kB: 2.07x faster                              |
+| [stream_feed 240x800] htop.input-&amp;gt;Screen                     | 1782.7 kB         | 990.6 kB: 1.80x faster                              |
+            :::                 ::::                                    ::::         :::
+| [stream_feed 240x800] find-etc.input-&amp;gt;HistoryScreen          | 2233.5 kB         | 1502.4 kB: 1.49x faster                             |
+| [stream_feed 24x80] ls.input-&amp;gt;HistoryScreen                  | 1554.3 kB         | 1086.0 kB: 1.43x faster                             |
+| [stream_feed 24x80] cat-gpl3.input-&amp;gt;HistoryScreen            | 1354.0 kB         | 960.1 kB: 1.41x faster                              |
+| [stream_feed 24x80] top.input-&amp;gt;Screen                        | 948.2 kB          | 680.2 kB: 1.39x faster                              |
+| [stream_feed 24x80] vi.input-&amp;gt;HistoryScreen                  | 954.7 kB          | 686.8 kB: 1.39x faster                              |
+| [stream_feed 24x80] find-etc.input-&amp;gt;HistoryScreen            | 1017.6 kB         | 774.9 kB: 1.31x faster                              |
+| [stream_feed 240x800] top.input-&amp;gt;HistoryScreen               | 763.6 kB          | 653.6 kB: 1.17x faster                              |
+| [stream_feed 24x80] mc.input-&amp;gt;HistoryScreen                  | 485.0 kB          | 417.6 kB: 1.16x faster                              |
+| [stream_feed 24x80] htop.input-&amp;gt;Screen                       | 936.1 kB          | 814.3 kB: 1.15x faster                              |
+| [stream_feed 24x80] mc.input-&amp;gt;Screen                         | 722.3 kB          | 651.6 kB: 1.11x faster                              |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The following are the tests that show regression on memory usage.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;| [stream_feed 240x800] mc.input-&amp;gt;Screen                       | 1842.2 kB         | 2577.4 kB: 1.40x slower                             |
+| [stream_feed 240x800] mc.input-&amp;gt;HistoryScreen                | 1793.2 kB         | 2548.1 kB: 1.42x slower                             |
+| [stream_feed 2400x8000] mc.input-&amp;gt;HistoryScreen              | 13.6 MB           | 22.3 MB: 1.64x slower                               |
+| [stream_feed 2400x8000] ls.input-&amp;gt;HistoryScreen              | 8422.1 kB         | 13.7 MB: 1.67x slower                               |
+| [stream_feed 2400x8000] mc.input-&amp;gt;Screen                     | 12.2 MB           | 22.3 MB: 1.82x slower                               |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;When &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;track_dirty_lines&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;disable_display_graphic&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, this is even better:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;+--------------------------------------------------------------+-------------------+----------------------------------------------------+
+| Benchmark                                                    | 0.8.1.tracemalloc | 0.8.1+screen-optimizations+custom-conf.tracemalloc |
++==============================================================+===================+====================================================+
+| [stream_feed 2400x8000] mc.input-&amp;gt;HistoryScreen              | 13.6 MB           | 414.1 kB: 33.60x faster                            |
+| [stream_feed 2400x8000] mc.input-&amp;gt;Screen                     | 12.2 MB           | 447.6 kB: 27.98x faster                            |
+| [stream_feed 2400x8000] htop.input-&amp;gt;Screen                   | 11.5 MB           | 600.5 kB: 19.59x faster                            |
+| [stream_feed 2400x8000] vi.input-&amp;gt;HistoryScreen              | 11.7 MB           | 665.4 kB: 18.01x faster                            |
+| [stream_feed 2400x8000] htop.input-&amp;gt;HistoryScreen            | 14.5 MB           | 1009.0 kB: 14.73x faster                           |
+| [stream_feed 2400x8000] vi.input-&amp;gt;Screen                     | 4742.1 kB         | 522.4 kB: 9.08x faster                             |
+| [stream_feed 240x800] mc.input-&amp;gt;HistoryScreen                | 1793.2 kB         | 417.4 kB: 4.30x faster                             |
+| [stream_feed 240x800] mc.input-&amp;gt;Screen                       | 1842.2 kB         | 447.6 kB: 4.12x faster                             |
+| [stream_feed 240x800] vi.input-&amp;gt;HistoryScreen                | 2679.0 kB         | 652.6 kB: 4.11x faster                             |
+| [stream_feed 2400x8000] top.input-&amp;gt;HistoryScreen             | 2120.7 kB         | 653.6 kB: 3.24x faster                             |
+| [stream_feed 2400x8000] top.input-&amp;gt;Screen                    | 2155.1 kB         | 680.6 kB: 3.17x faster                             |
+| [stream_feed 240x800] htop.input-&amp;gt;Screen                     | 1782.7 kB         | 600.5 kB: 2.97x faster                             |
+| [stream_feed 240x800] htop.input-&amp;gt;HistoryScreen              | 2189.7 kB         | 785.0 kB: 2.79x faster                             |
+| [stream_feed 240x800] vi.input-&amp;gt;Screen                       | 1107.7 kB         | 522.4 kB: 2.12x faster                             |
+| [stream_feed 2400x8000] cat-gpl3.input-&amp;gt;HistoryScreen        | 20.3 MB           | 11.8 MB: 1.72x faster                              |
+            :::                 ::::                                    ::::         :::
+| [stream_feed 24x80] find-etc.input-&amp;gt;HistoryScreen            | 1017.6 kB         | 774.8 kB: 1.31x faster                             |
+| [stream_feed 240x800] top.input-&amp;gt;HistoryScreen               | 763.6 kB          | 653.6 kB: 1.17x faster                             |
+| [stream_feed 24x80] mc.input-&amp;gt;HistoryScreen                  | 485.0 kB          | 422.0 kB: 1.15x faster                             |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;However, we still have some regressions:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;| [stream_feed 24x80] htop.input-&amp;gt;HistoryScreen                | 863.7 kB          | 1009.0 kB: 1.17x slower                            |
+| [stream_feed 2400x8000] ls.input-&amp;gt;HistoryScreen              | 8422.1 kB         | 13.7 MB: 1.67x slower                              |&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id="screen.reset"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reset&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;For &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Screen&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reset&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we have a regressions, some minor, some not-so-much minor:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;+----------------------------------------------------------+----------+-----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+default-conf |
++==========================================================+==========+=========================================+
+| [screen_reset 2400x8000] ls.input-&amp;gt;HistoryScreen         | 65.4 us  | 68.9 us: 1.05x slower                   |
+| [screen_reset 2400x8000] mc.input-&amp;gt;Screen                | 51.9 us  | 54.8 us: 1.06x slower                   |
+| [screen_reset 2400x8000] top.input-&amp;gt;HistoryScreen        | 65.6 us  | 69.5 us: 1.06x slower                   |
+    :::                 ::::                                    ::::         :::
+| [screen_reset 24x80] cat-gpl3.input-&amp;gt;HistoryScreen       | 13.2 us  | 15.4 us: 1.17x slower                   |
+| [screen_reset 24x80] vi.input-&amp;gt;HistoryScreen             | 13.0 us  | 15.3 us: 1.18x slower                   |
+| [screen_reset 240x800] htop.input-&amp;gt;Screen                | 4.87 us  | 5.78 us: 1.19x slower                   |
+| [screen_reset 24x80] mc.input-&amp;gt;HistoryScreen             | 13.1 us  | 15.7 us: 1.19x slower                   |
+| [screen_reset 240x800] mc.input-&amp;gt;Screen                  | 4.81 us  | 5.75 us: 1.20x slower                   |
+| [screen_reset 24x80] ls.input-&amp;gt;HistoryScreen             | 13.0 us  | 15.5 us: 1.20x slower                   |
+| [screen_reset 24x80] find-etc.input-&amp;gt;HistoryScreen       | 13.0 us  | 15.6 us: 1.20x slower                   |
+| [screen_reset 24x80] htop.input-&amp;gt;HistoryScreen           | 12.9 us  | 15.5 us: 1.21x slower                   |
+| [screen_reset 240x800] find-etc.input-&amp;gt;Screen            | 4.86 us  | 5.87 us: 1.21x slower                   |
+| [screen_reset 240x800] htop.input-&amp;gt;HistoryScreen         | 15.6 us  | 18.9 us: 1.21x slower                   |
+| [screen_reset 240x800] vi.input-&amp;gt;Screen                  | 4.83 us  | 5.87 us: 1.22x slower                   |
+| [screen_reset 240x800] top.input-&amp;gt;Screen                 | 4.72 us  | 5.77 us: 1.22x slower                   |
+    :::                 ::::                                    ::::         :::
+| [screen_reset 240x800] ls.input-&amp;gt;Screen                  | 4.79 us  | 5.86 us: 1.22x slower                   |
+| [screen_reset 240x800] cat-gpl3.input-&amp;gt;Screen            | 4.79 us  | 5.89 us: 1.23x slower                   |
+| [screen_reset 24x80] vi.input-&amp;gt;Screen                    | 2.05 us  | 3.05 us: 1.49x slower                   |
+| [screen_reset 24x80] mc.input-&amp;gt;Screen                    | 2.04 us  | 3.05 us: 1.49x slower                   |
+| [screen_reset 24x80] ls.input-&amp;gt;Screen                    | 2.01 us  | 3.01 us: 1.50x slower                   |
+| [screen_reset 24x80] htop.input-&amp;gt;Screen                  | 2.02 us  | 3.06 us: 1.51x slower                   |
+| [screen_reset 24x80] cat-gpl3.input-&amp;gt;Screen              | 2.03 us  | 3.07 us: 1.52x slower                   |
+| [screen_reset 24x80] top.input-&amp;gt;Screen                   | 2.03 us  | 3.11 us: 1.53x slower                   |
+| [screen_reset 24x80] find-etc.input-&amp;gt;Screen              | 2.00 us  | 3.06 us: 1.53x slower                   |&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;However when &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;track_dirty_lines&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;disable_display_graphic&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, the things improves (but we still have regressions):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;+----------------------------------------------------------+----------+----------------------------------------+
+| Benchmark                                                | 0.8.1    | 0.8.1+screen-optimizations+custom-conf |
++==========================================================+==========+========================================+
+| [screen_reset 2400x8000] find-etc.input-&amp;gt;Screen          | 51.3 us  | 15.2 us: 3.38x faster                  |
+| [screen_reset 2400x8000] mc.input-&amp;gt;Screen                | 51.9 us  | 15.5 us: 3.35x faster                  |
+| [screen_reset 2400x8000] vi.input-&amp;gt;Screen                | 52.8 us  | 15.9 us: 3.32x faster                  |
+    :::                 ::::                                    ::::         :::
+| [screen_reset 2400x8000] cat-gpl3.input-&amp;gt;HistoryScreen   | 66.5 us  | 29.9 us: 2.22x faster                  |
+| [screen_reset 2400x8000] htop.input-&amp;gt;HistoryScreen       | 64.6 us  | 29.4 us: 2.20x faster                  |
+| [screen_reset 240x800] htop.input-&amp;gt;Screen                | 4.87 us  | 4.58 us: 1.06x faster                  |
+| [screen_reset 240x800] find-etc.input-&amp;gt;Screen            | 4.86 us  | 4.62 us: 1.05x faster                  |
+| [screen_reset 240x800] cat-gpl3.input-&amp;gt;HistoryScreen     | 16.0 us  | 17.0 us: 1.06x slower                  |
+| [screen_reset 240x800] mc.input-&amp;gt;HistoryScreen           | 16.0 us  | 17.1 us: 1.07x slower                  |
+| [screen_reset 240x800] find-etc.input-&amp;gt;HistoryScreen     | 16.1 us  | 17.3 us: 1.07x slower                  |
+| [screen_reset 240x800] top.input-&amp;gt;HistoryScreen          | 15.9 us  | 17.1 us: 1.08x slower                  |
+| [screen_reset 240x800] htop.input-&amp;gt;HistoryScreen         | 15.6 us  | 17.5 us: 1.12x slower                  |
+    :::                 ::::                                    ::::         :::
+| [screen_reset 24x80] htop.input-&amp;gt;HistoryScreen           | 12.9 us  | 15.3 us: 1.19x slower                  |
+| [screen_reset 24x80] htop.input-&amp;gt;Screen                  | 2.02 us  | 2.89 us: 1.43x slower                  |
+| [screen_reset 24x80] top.input-&amp;gt;Screen                   | 2.03 us  | 2.92 us: 1.44x slower                  |
+| [screen_reset 24x80] mc.input-&amp;gt;Screen                    | 2.04 us  | 2.94 us: 1.44x slower                  |
+| [screen_reset 24x80] ls.input-&amp;gt;Screen                    | 2.01 us  | 2.90 us: 1.44x slower                  |
+| [screen_reset 24x80] vi.input-&amp;gt;Screen                    | 2.05 us  | 2.96 us: 1.44x slower                  |
+| [screen_reset 24x80] find-etc.input-&amp;gt;Screen              | 2.00 us  | 2.90 us: 1.45x slower                  |
+| [screen_reset 24x80] cat-gpl3.input-&amp;gt;Screen              | 2.03 us  | 2.96 us: 1.46x slower                  |&lt;/code&gt;&lt;/pre&gt;
+</content>
+    <link href="https://book-of-gehn.github.io/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html" rel="alternate" type="text/html" title="TL;DR Screen Optimizations Results for Terminal Emulator Pyte"/>
+    <category term="python" label="python"/>
+    <category term="pyte" label="pyte"/>
+    <category term="byexample" label="byexample"/>
+    <category term="optimization" label="optimization"/>
+    <category term="performance" label="performance"/>
+    <category term="tldr" label="tldr"/>
+    <category term="tl;dr" label="tl;dr"/>
+    <published>2022-07-14T00:00:00+00:00</published>
+  </entry>
   <entry>
     <id>https://book-of-gehn.github.io/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html</id>
     <title>Control Group - No Internal Process Constraint</title>
