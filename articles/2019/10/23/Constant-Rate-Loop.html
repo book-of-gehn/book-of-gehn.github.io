@@ -244,6 +244,11 @@ Same animation that last 1 second in a loop. From top to down, the first is an a
 <p>If <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> is too slow, the loop will drop some iterations as shown.</p>
 <p>But <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> will never notice this and instead of <em>skipping</em> some frames it will render the <em>next</em> frame <em>accordingly to him</em>.</p>
 <p>The animation will appear smooth to the user but behind the scene the <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> will be out of sync: the animation will take more time to complete or it will be cut in the middle.</p>
+<p><label for='CldlIGNvdWxkIHBhc3MgYWxzbyBob3cgbWFueSBpdGVyYXRpb24gaGFkIGhhcHBlbiBzaW5jZSB0aGUgbGFzdCB0aW1lLApzb21ldGhpbmcgbGlrZSBgZnVuYyhpdCwgaXQtbGFzdF9pdClgLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldlIGNvdWxkIHBhc3MgYWxzbyBob3cgbWFueSBpdGVyYXRpb24gaGFkIGhhcHBlbiBzaW5jZSB0aGUgbGFzdCB0aW1lLApzb21ldGhpbmcgbGlrZSBgZnVuYyhpdCwgaXQtbGFzdF9pdClgLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+We could pass also how many iteration had happen since the last time, something like <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">it</span><span class="o">-</span><span class="n">last_it</span><span class="p">)</span></span></code>.
+</span></p>
 <p>Instead, we can pass to <code><span class="highlight-candombe-inline"><span class="n">func</span><span class="p">()</span></span></code> the iteration number explicitly.</p>
 <p>The <code><span class="highlight-candombe-inline"><span class="n">draw</span><span class="p">()</span></span></code> must be updated accordingly:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="n">it</span><span class="p">):</span>

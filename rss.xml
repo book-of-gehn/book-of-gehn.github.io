@@ -8,7 +8,7 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 16 Jul 2022 18:04:52 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 16 Jul 2022 18:34:02 +0000</lastBuildDate>
     <item>
       <title>Sparse Aware Optimizations for Terminal Emulator Pyte</title>
       <link>https://book-of-gehn.github.io/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html</link>
@@ -10433,6 +10433,11 @@ Same animation that last 1 second in a loop. From top to down, the first is an a
 &lt;p&gt;If &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is too slow, the loop will drop some iterations as shown.&lt;/p&gt;
 &lt;p&gt;But &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will never notice this and instead of &lt;em&gt;skipping&lt;/em&gt; some frames it will render the &lt;em&gt;next&lt;/em&gt; frame &lt;em&gt;accordingly to him&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;The animation will appear smooth to the user but behind the scene the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will be out of sync: the animation will take more time to complete or it will be cut in the middle.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CldlIGNvdWxkIHBhc3MgYWxzbyBob3cgbWFueSBpdGVyYXRpb24gaGFkIGhhcHBlbiBzaW5jZSB0aGUgbGFzdCB0aW1lLApzb21ldGhpbmcgbGlrZSBgZnVuYyhpdCwgaXQtbGFzdF9pdClgLgptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CldlIGNvdWxkIHBhc3MgYWxzbyBob3cgbWFueSBpdGVyYXRpb24gaGFkIGhhcHBlbiBzaW5jZSB0aGUgbGFzdCB0aW1lLApzb21ldGhpbmcgbGlrZSBgZnVuYyhpdCwgaXQtbGFzdF9pdClgLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+We could pass also how many iteration had happen since the last time, something like &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;it&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;it&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;last_it&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.
+&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Instead, we can pass to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; the iteration number explicitly.&lt;/p&gt;
 &lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;draw&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; must be updated accordingly:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;draw&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;it&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
