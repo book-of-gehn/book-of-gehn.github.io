@@ -8,7 +8,82 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 17 Jul 2022 22:49:09 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 27 Aug 2022 20:39:17 +0000</lastBuildDate>
+    <item>
+      <title>Compress Old Audio Files</title>
+      <link>https://book-of-gehn.github.io/articles/2022/08/27/Compress-Old-Audio-Files.html</link>
+      <description>&lt;p&gt;We the pass of the years one keeps storing files, music in my case.&lt;/p&gt;
+&lt;p&gt;A few thousands.&lt;/p&gt;
+&lt;p&gt;But technology improved in this sense and new encoders exist that can compress (loosely) the same audio with the same quality but at a much smaller bit rate, and therefore, resulting in much smaller files.&lt;/p&gt;
+&lt;p&gt;Quick and dirty script follows!&lt;/p&gt;
+&lt;h2 id="encoders-containers"&gt;Encoders &amp;amp; containers&lt;/h2&gt;
+&lt;p&gt;The current documentation of &lt;a href="https://ffmpeg.org/"&gt;FFmpeg&lt;/a&gt; gives a ranking of the encoders available, from best (left) to not so good (right):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;libopus &amp;gt; libvorbis &amp;gt;= libfdk_aac &amp;gt; libmp3lame &amp;gt;= eac3/ac3 &amp;gt; aac &amp;gt; libtwolame &amp;gt; vorbis &amp;gt; mp2 &amp;gt; wmav2/wmav1&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So the idea is to re-encode an arbitrary audio file to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;libopus&lt;/span&gt;&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ffmpeg -i &lt;span class="nv"&gt;$fn&lt;/span&gt; -acodec libopus &lt;span class="nv"&gt;$name&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;For the output file &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;ffmpeg&lt;/span&gt;&lt;/code&gt; can save the audio into a container. Different container files exists (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;.m4a&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;.mp4&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;.ogg&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;.flv&lt;/span&gt;&lt;/code&gt;) but today’s internet stream platforms use &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;.webm&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CllvdSBjb3VsZCB3cml0ZSBkaXJlY3RseSBgLm9wdXNgLCB0aGUgcmF3IGVuY29kZWQgYXVkaW8sIHdpdGhvdXQgYQpjb250YWluZXIgYW5kIGdldCBldmVuIHNtYWxsZXIgZmlsZXMuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CllvdSBjb3VsZCB3cml0ZSBkaXJlY3RseSBgLm9wdXNgLCB0aGUgcmF3IGVuY29kZWQgYXVkaW8sIHdpdGhvdXQgYQpjb250YWluZXIgYW5kIGdldCBldmVuIHNtYWxsZXIgZmlsZXMuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+You could write directly &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;.opus&lt;/span&gt;&lt;/code&gt;, the raw encoded audio, without a container and get even smaller files.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;I’ll go with that.&lt;/p&gt;
+&lt;h2 id="bit-rates"&gt;Bit rates&lt;/h2&gt;
+&lt;p&gt;One of the things of better encoders is that we can use a lower bit rate without losing quality, as long as we are in the expected numbers for which the encoder was designed.&lt;/p&gt;
+&lt;p&gt;For &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;libopus&lt;/span&gt;&lt;/code&gt; we need bit rates of 32kbps or larger.&lt;/p&gt;
+&lt;p&gt;Doing a quick, totally subjective test, ~50k is the smallest bit rate that maintains the same quality of my files (which range between 96k and 128k MP3).&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ffmpeg -i &lt;span class="nv"&gt;$fn&lt;/span&gt; -acodec libopus -b:a 50k &lt;span class="nv"&gt;$name&lt;/span&gt;.webm
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Final tweak, I have some videos which I only care their audio. We can instruct &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;ffmpeg&lt;/span&gt;&lt;/code&gt; to get those with the “no video” option (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;-nv&lt;/span&gt;&lt;/code&gt;).&lt;/p&gt;
+&lt;h2 id="scripting"&gt;Scripting&lt;/h2&gt;
+&lt;p&gt;The &lt;a href="/assets/misc/compress-old-audio-files/compress_audio.sh"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;compress_audio.sh&lt;/span&gt;&lt;/code&gt;&lt;/a&gt; script follows:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;
+
+&lt;span class="nb"&gt;set&lt;/span&gt; -euo pipefail
+&lt;span class="nb"&gt;shopt&lt;/span&gt; -s nocaseglob
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$#&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; !&lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;1&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then&lt;/span&gt;
+    &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Usage &lt;/span&gt;&lt;span class="nv"&gt;$0&lt;/span&gt;&lt;span class="s2"&gt; &amp;lt;target dir&amp;gt;&amp;quot;&lt;/span&gt;
+    &lt;span class="nb"&gt;exit&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;
+&lt;span class="k"&gt;fi&lt;/span&gt;
+
+&lt;span class="nb"&gt;cd&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$1&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="nb"&gt;echo&lt;/span&gt;  &lt;span class="s2"&gt;&amp;quot;Processing &lt;/span&gt;&lt;span class="k"&gt;$(&lt;/span&gt;&lt;span class="nb"&gt;pwd&lt;/span&gt;&lt;span class="k"&gt;)&lt;/span&gt;&lt;span class="s2"&gt;...&amp;quot;&lt;/span&gt;
+
+&lt;span class="nv"&gt;IFS&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;$&amp;#39;\n&amp;#39;&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; fn &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="k"&gt;$(&lt;/span&gt;ls *.mp3 *.ogg *.wav *.wma *.m4a *.avi *.opus&lt;span class="k"&gt;)&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt;
+    &lt;span class="nv"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;$(&lt;/span&gt;basename -- &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$fn&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="k"&gt;)&lt;/span&gt;
+    &lt;span class="nv"&gt;ext&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;name&lt;/span&gt;&lt;span class="p"&gt;##*.&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;
+    &lt;span class="nv"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;name&lt;/span&gt;&lt;span class="p"&gt;%.*&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;
+
+    &lt;span class="c1"&gt;# Take the input (-i) file, ignore any video stream (-vn)&lt;/span&gt;
+    &lt;span class="c1"&gt;# and change its audio codec (-acodec) tto the codec libopus&lt;/span&gt;
+    &lt;span class="c1"&gt;# and change its audio bitrate (-b:a) to 50k&lt;/span&gt;
+    &lt;span class="c1"&gt;# and save it under the same name but with .webm extension&lt;/span&gt;
+    ffmpeg -i &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$fn&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; -vn -acodec libopus  -b:a 50k &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$name&lt;/span&gt;&lt;span class="s2"&gt;.webm&amp;quot;&lt;/span&gt;
+
+    rm &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$fn&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="k"&gt;done&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The script processes the files inside a folder. Any error and the processing will stop and fail so the input file will not be deleted (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;rm &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$fn&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;The script does &lt;em&gt;not&lt;/em&gt; work recursively, instead I use &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;find&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;find . -type d -exec compress_audio.sh &lt;span class="o"&gt;{}&lt;/span&gt; &lt;span class="se"&gt;\;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This is on purpose: if &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;compress_audio.sh&lt;/span&gt;&lt;/code&gt; fails, that folder is skipped (no file is further processed or removed) but the whole recursive scan keeps on (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;find&lt;/span&gt;&lt;/code&gt; will not stop on an error).&lt;/p&gt;
+&lt;h2 id="results"&gt;Results&lt;/h2&gt;
+&lt;p&gt;The ~3k audio files with a total size of ~20GB was processed in ~2hs with a final total size of ~7GB, a ~65% reduction. Not bad.&lt;/p&gt;
+&lt;p&gt;That only counted for audio files. Extracting the audio from videos and deleting the videos additionally saved a few hundred of megabytes more.&lt;/p&gt;
+</description>
+      <guid isPermaLink="false">https://book-of-gehn.github.io/articles/2022/08/27/Compress-Old-Audio-Files.html</guid>
+      <category>misc</category>
+      <category>ffmpeg</category>
+      <pubDate>Sat, 27 Aug 2022 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>Lessons Learnt Optimizing Pyte</title>
       <link>https://book-of-gehn.github.io/articles/2022/07/17/Lessons-Learnt-Optimizing-Pyte.html</link>
