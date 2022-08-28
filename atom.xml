@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2022-08-27T20:39:17.058897+00:00</updated>
+  <updated>2022-08-28T03:11:59.550977+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -21,7 +21,7 @@
     <content type="html">&lt;p&gt;We the pass of the years one keeps storing files, music in my case.&lt;/p&gt;
 &lt;p&gt;A few thousands.&lt;/p&gt;
 &lt;p&gt;But technology improved in this sense and new encoders exist that can compress (loosely) the same audio with the same quality but at a much smaller bit rate, and therefore, resulting in much smaller files.&lt;/p&gt;
-&lt;p&gt;Quick and dirty script follows!&lt;/p&gt;
+&lt;p&gt;Quick and dirty script follows!&lt;!--more--&gt;&lt;/p&gt;
 &lt;h2 id="encoders-containers"&gt;Encoders &amp;amp; containers&lt;/h2&gt;
 &lt;p&gt;The current documentation of &lt;a href="https://ffmpeg.org/"&gt;FFmpeg&lt;/a&gt; gives a ranking of the encoders available, from best (left) to not so good (right):&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;libopus &amp;gt; libvorbis &amp;gt;= libfdk_aac &amp;gt; libmp3lame &amp;gt;= eac3/ac3 &amp;gt; aac &amp;gt; libtwolame &amp;gt; vorbis &amp;gt; mp2 &amp;gt; wmav2/wmav1&lt;/code&gt;&lt;/pre&gt;
