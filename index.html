@@ -84,6 +84,22 @@
 </h1>
 <span class="index-single-post">
 <hr class="slender post-layout">
+<a href="https://book-of-gehn.github.io/articles/2022/10/01/Diff-Between-Dataframes-for-Testing.html">
+<h2 class="larger">
+Diff Between Data Frames for Testing
+</h2>
+</a> <br><span class="smaller">October 1, 2022</span> <br/>
+<div>
+<p>Let’s say that we want to compare two Pandas’ dataframes for unit testing.</p>
+<p>One is the <em>expected</em> dataframe, crafted by us and it will be the <em>source of truth</em> for the test.</p>
+<p>The other is the <em>obtained</em> dataframe which is the result of the experiment that we want to check.</p>
+<p>Doing a naive comparison will not work: first we may want to <em>tolerate</em> some minor differences due computation imprecision; and second, and most important, we don’t want to know <em>just</em> if the dataframes are different or not</p>
+<p>We want to know <strong>where are the differences</strong>.</p>
+<p>Knowing exactly what is different makes the debugging much easier – trying to figure out which column in which row there is a different by hand is <strong>not fun</strong>.</p>
+</div>
+<p></span></p>
+<span class="index-single-post">
+<hr class="slender post-layout">
 <a href="https://book-of-gehn.github.io/articles/2022/08/27/Compress-Old-Audio-Files.html">
 <h2 class="larger">
 Compress Old Audio Files
