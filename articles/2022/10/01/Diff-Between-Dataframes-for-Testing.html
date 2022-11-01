@@ -272,6 +272,11 @@ Sorting by index then will make the first row of the expected appear after the f
 <li>add to the list any <em>unexpected</em> and <em>missing</em> group</li>
 <li>if the list is not empty, raise <code><span class="highlight-candombe-inline"><span class="ne">AssertionError</span></span></code></li>
 </ul>
+<p><label for='ClVwZGF0ZWQgdmVyc2lvbjogPGEgaHJlZj0iL2Fzc2V0cy9weXRob24vZGF0YWZyYW1lcy90ZXN0aW5nL2Fzc2VydF9kZl9lcXVhbC5weSI+PHNwYW4gc3R5bGU9IndoaXRlLXNwYWNlOiBub3dyYXA7Ij48aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiZuYnNwO2NvZGU8L3NwYW4+PC9hPgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClVwZGF0ZWQgdmVyc2lvbjogPGEgaHJlZj0iL2Fzc2V0cy9weXRob24vZGF0YWZyYW1lcy90ZXN0aW5nL2Fzc2VydF9kZl9lcXVhbC5weSI+PHNwYW4gc3R5bGU9IndoaXRlLXNwYWNlOiBub3dyYXA7Ij48aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiZuYnNwO2NvZGU8L3NwYW4+PC9hPgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Updated version: <a href="/assets/python/dataframes/testing/assert_df_equal.py"><span style="white-space: nowrap;"><i class="fab fa-github"></i> code</span></a>
+</span></p>
 <p>This is the code:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">assert_df_equal</span><span class="p">(</span><span class="n">obtained_df</span><span class="p">,</span> <span class="n">expected_df</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="p">[],</span> <span class="n">sort_by</span><span class="o">=</span><span class="p">[],</span> <span class="n">check_exact</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">to_string_kwargs</span><span class="o">=</span><span class="p">{}):</span>
 <span class="o">...</span>     <span class="n">diffs</span> <span class="o">=</span> <span class="p">[]</span>

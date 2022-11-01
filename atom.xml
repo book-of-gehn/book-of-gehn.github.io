@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2022-10-02T00:42:40.733245+00:00</updated>
+  <updated>2022-11-01T11:52:19.067708+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -204,6 +204,11 @@ Sorting by index then will make the first row of the expected appear after the f
 &lt;li&gt;add to the list any &lt;em&gt;unexpected&lt;/em&gt; and &lt;em&gt;missing&lt;/em&gt; group&lt;/li&gt;
 &lt;li&gt;if the list is not empty, raise &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="ne"&gt;AssertionError&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
+&lt;p&gt;&lt;label for='ClVwZGF0ZWQgdmVyc2lvbjogPGEgaHJlZj0iL2Fzc2V0cy9weXRob24vZGF0YWZyYW1lcy90ZXN0aW5nL2Fzc2VydF9kZl9lcXVhbC5weSI+PHNwYW4gc3R5bGU9IndoaXRlLXNwYWNlOiBub3dyYXA7Ij48aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiZuYnNwO2NvZGU8L3NwYW4+PC9hPgptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='ClVwZGF0ZWQgdmVyc2lvbjogPGEgaHJlZj0iL2Fzc2V0cy9weXRob24vZGF0YWZyYW1lcy90ZXN0aW5nL2Fzc2VydF9kZl9lcXVhbC5weSI+PHNwYW4gc3R5bGU9IndoaXRlLXNwYWNlOiBub3dyYXA7Ij48aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiZuYnNwO2NvZGU8L3NwYW4+PC9hPgptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+Updated version: &lt;a href="/assets/python/dataframes/testing/assert_df_equal.py"&gt;&lt;span style="white-space: nowrap;"&gt;&lt;i class="fab fa-github"&gt;&lt;/i&gt; code&lt;/span&gt;&lt;/a&gt;
+&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;This is the code:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;assert_df_equal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;obtained_df&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;expected_df&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;group_by&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;[],&lt;/span&gt; &lt;span class="n"&gt;sort_by&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;[],&lt;/span&gt; &lt;span class="n"&gt;check_exact&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;rtol&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mf"&gt;1e-5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;atol&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mf"&gt;1e-8&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;to_string_kwargs&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;{}):&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;diffs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
