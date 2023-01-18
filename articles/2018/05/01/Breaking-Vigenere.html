@@ -55,7 +55,7 @@
                     <li><a href="https://byexamples.github.io">byexample</a></li>
                     <li><a href="https://bisturi.github.io">bisturi</a></li>
                     <li>
-                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
                         <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
                     </li>
                 </ul>
@@ -94,36 +94,78 @@ May 1, 2018
 <span class='marginnote'>
 <strong>– Spoiler Alert! –</strong>
 </span></p>
-<p>Shall we?<!--more--></p>
-<h2 id="guessing-the-length-of-the-key">Guessing the length of the key</h2>
-<p><code><span class="highlight-candombe-inline"><span class="n">guess_key_length</span></span></code> will score each possible length using a scoring function.</p>
-<p>For this, we will explore the full range of possible lengths from 1 to 40 and we will score each one with the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming Distance</a>.</p>
+<p>Shall we?</p>
+<!--more-->
+<h2 id="hamming-distance-at-bit-level">Hamming distance (at bit level)</h2>
+<p>Given two messages of the same length, the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming Distance</a> consists in counting how many bits one differ of the other.</p>
+<p>In other words, we do an xor between the messages and count how many ones we get.</p>
+$$\mbox{count-1-bits} \left( c_1 ⊕ c_2 \right) \rightarrow \mbox{hamming-distance} \left( c_1, c_2 \right)$$
+<p>Here is an example:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>                <span class="c1"># byexample: +timeout=10</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;this is a test&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">hamming_distance</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;wokka wokka!!!&#39;</span><span class="p">))</span>
+<span class="mi">37</span>
+</code></pre></div>
+
+<h2 id="guessing-the-length-of-the-key">Guessing the length of the key</h2>
+<p>We will compute the Hamming distance between blocks of different lengths.</p>
+<p>Most of the case we will be computing the distance between 2 random ciphertext blocks.</p>
+$$\begin{align*}  \\
+c_1 ⊕ c_2 & = \left( p_1 ⊕ k_i \right)  ⊕ \left( p_2 ⊕ k_j \right)  \\
+          & = \left( p_1 ⊕ p_2 \right)  ⊕ \left( k_i ⊕ k_j \right)
+\end{align*}$$
+<p>But if we hit the length of the key, \(k_i = k_j\) and the xor of 2 ciphertext blocks will cancel out the random bits from the key exposing the xor of 2 plaintext blocks.</p>
+$$\begin{align*}  \\
+c_1 ⊕ c_2 & = \left( p_1 ⊕ k_i \right)  ⊕ \left( p_2 ⊕ k_j \right)  \\
+          & = \left( p_1 ⊕ p_2 \right)  ⊕ \left( k_i ⊕ k_j \right)  \\
+          & = \left( p_1 ⊕ p_2 \right)
+\end{align*}$$
+<p>The idea is that the Hamming distance of them will be significantly shorter.</p>
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgLz4KQ29tcHV0ZSB0aGUgSGFtbWluZyBkaXN0YW5jZSBiZXR3ZWVuIGNvbnNlY3V0aXZlIGJsb2NrcyBvZiB0aGUgc2FtZQpsZW5ndGggYW5kIHRha2VzIHRoZSBtYXhpbXVtLiBUaGVuIHNjb3JlcyBpdC4KClNjb3JlcyBjbG9zZXIgdG8gMQptZWFucyBzbWFsbGVyIGRpc3RhbmNlcyBhbmQgdGhlcmVmb3JlIHRoZSBibG9ja3Mgb2YgY2lwaGVydGV4dCBsb29rcwp0aGF0IHdlcmUgeG9yJ2Qgd2l0aCAqdGhlIHNhbWUga2V5KiBhcyB0aGUgeG9yIG9mIHR3byBibG9ja3MgbG9va3MKKmxlc3MgcmFuZG9tKi4KClNjb3JlcyBjbG9zZXIgdG8gMCBhcmUgdGhlIG9wcG9zaXRlOiB0aGUgeG9yIG9mIHR3byBibG9ja3Mgc3RpbGwgbG9va3MKcmFuZG9tLgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgLz4KQ29tcHV0ZSB0aGUgSGFtbWluZyBkaXN0YW5jZSBiZXR3ZWVuIGNvbnNlY3V0aXZlIGJsb2NrcyBvZiB0aGUgc2FtZQpsZW5ndGggYW5kIHRha2VzIHRoZSBtYXhpbXVtLiBUaGVuIHNjb3JlcyBpdC4KClNjb3JlcyBjbG9zZXIgdG8gMQptZWFucyBzbWFsbGVyIGRpc3RhbmNlcyBhbmQgdGhlcmVmb3JlIHRoZSBibG9ja3Mgb2YgY2lwaGVydGV4dCBsb29rcwp0aGF0IHdlcmUgeG9yJ2Qgd2l0aCAqdGhlIHNhbWUga2V5KiBhcyB0aGUgeG9yIG9mIHR3byBibG9ja3MgbG9va3MKKmxlc3MgcmFuZG9tKi4KClNjb3JlcyBjbG9zZXIgdG8gMCBhcmUgdGhlIG9wcG9zaXRlOiB0aGUgeG9yIG9mIHR3byBibG9ja3Mgc3RpbGwgbG9va3MKcmFuZG9tLgptYXJnaW4=' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/hamming1.svg' />
+Compute the Hamming distance between consecutive blocks of the same length and takes the maximum. Then scores it.
+<br /><br />
+Scores closer to 1 means smaller distances and therefore the blocks of ciphertext looks that were xor’d with <em>the same key</em> as the xor of two blocks looks <em>less random</em>.
+<br /><br />
+Scores closer to 0 are the opposite: the xor of two blocks still looks random.
+</span></p>
+<p>This is exactly what <code><span class="highlight-candombe-inline"><span class="n">key_length_by_hamming_distance</span></span></code> does: scores how likely a length is computing the Hamming distance between blocks of a given length.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">key_length_by_hamming_distance</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/6.txt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">guess_key_length</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">key_length_by_hamming_distance</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_length_by_hamming_distance</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="mf">0.291</span><span class="o">&lt;...&gt;</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">lengths_hd</span> <span class="o">=</span> <span class="n">guess_key_length</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">length_space</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
-<span class="o">...</span>                            <span class="n">score_func</span><span class="o">=</span><span class="n">key_length_by_hamming_distance</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">key_length_by_hamming_distance</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">29</span><span class="p">)</span>
+<span class="mf">0.5818</span><span class="o">&lt;...&gt;</span>
+</code></pre></div>
+
+<p>Instead of testing by hand we can use the <code><span class="highlight-candombe-inline"><span class="n">scoring</span></span></code> function and explore the full range of possible lengths and score each one keeping only the more likely.</p>
+<p>An educated guess would be to explore the lengths between 1 and 40</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">scoring</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">lengths_hd</span> <span class="o">=</span> <span class="n">scoring</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">),</span>
+<span class="o">...</span>                      <span class="n">score_func</span><span class="o">=</span><span class="n">key_length_by_hamming_distance</span><span class="p">)</span>
 </code></pre></div>
 
 <p>There isn’t a single response, of course.</p>
 <p>This method <em>guesses</em> the length of the key so we have a set of possible values, ones more likely than others.</p>
-<p>For this, <code><span class="highlight-candombe-inline"><span class="n">guess_key_length</span></span></code> returns a <a href="https://en.wikipedia.org/wiki/Fuzzy_set">Fuzzy Set</a> where each possible length has a probability linked to it.</p>
-<p>We could cut the set further and keep only the top 5 more likely lengths:</p>
+<p>For this, <code><span class="highlight-candombe-inline"><span class="n">scoring</span></span></code> returns a <a href="https://en.wikipedia.org/wiki/Fuzzy_set">Fuzzy Set</a> where each possible length has a probability linked to it.</p>
+<p>Here are the top 5 more likely lengths that got the highest scores (and the lowest Hamming distance)</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">l</span> <span class="o">=</span> <span class="n">lengths_hd</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">l</span><span class="o">.</span><span class="n">cut_off</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">l</span>
-<span class="p">{</span><span class="mi">5</span> <span class="o">-&gt;</span> <span class="mf">0.8500</span><span class="p">,</span> <span class="mi">3</span> <span class="o">-&gt;</span> <span class="mf">0.7500</span><span class="p">,</span> <span class="mi">2</span> <span class="o">-&gt;</span> <span class="mf">0.6875</span><span class="p">,</span> <span class="mi">13</span> <span class="o">-&gt;</span> <span class="mf">0.6827</span><span class="p">,</span> <span class="mi">11</span> <span class="o">-&gt;</span> <span class="mf">0.6705</span><span class="p">}</span>
+<span class="p">{</span><span class="mi">29</span> <span class="o">-&gt;</span> <span class="mf">0.5819</span><span class="p">,</span> <span class="mi">40</span> <span class="o">-&gt;</span> <span class="mf">0.5500</span><span class="p">,</span> <span class="mi">36</span> <span class="o">-&gt;</span> <span class="mf">0.5417</span><span class="p">,</span> <span class="mi">38</span> <span class="o">-&gt;</span> <span class="mf">0.5362</span><span class="p">,</span> <span class="mi">35</span> <span class="o">-&gt;</span> <span class="mf">0.5357</span><span class="p">}</span>
 </code></pre></div>
 
+<h2 id="index-of-coincidence">Index of coincidence</h2>
 <p>But because we are rebels, we will guess the length of the key using another scoring function: the <a href="https://en.wikipedia.org/wiki/Index_of_coincidence">Index of Coincidences</a>.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">key_length_by_ic</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">lengths_ic</span> <span class="o">=</span> <span class="n">guess_key_length</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">length_space</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
-<span class="o">...</span>                            <span class="n">score_func</span><span class="o">=</span><span class="n">key_length_by_ic</span><span class="p">,</span> <span class="n">min_score</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">lengths_ic</span> <span class="o">=</span> <span class="n">scoring</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">),</span>
+<span class="o">...</span>                      <span class="n">score_func</span><span class="o">=</span><span class="n">key_length_by_ic</span><span class="p">,</span> <span class="n">min_score</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">l</span> <span class="o">=</span> <span class="n">lengths_ic</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">l</span><span class="o">.</span><span class="n">cut_off</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -131,44 +173,34 @@ May 1, 2018
 <span class="p">{</span><span class="mi">29</span> <span class="o">-&gt;</span> <span class="mf">0.0598</span><span class="p">,</span> <span class="mi">40</span> <span class="o">-&gt;</span> <span class="mf">0.0235</span><span class="p">,</span> <span class="mi">30</span> <span class="o">-&gt;</span> <span class="mf">0.0232</span><span class="p">,</span> <span class="mi">10</span> <span class="o">-&gt;</span> <span class="mf">0.0230</span><span class="p">,</span> <span class="mi">26</span> <span class="o">-&gt;</span> <span class="mf">0.0223</span><span class="p">}</span>
 </code></pre></div>
 
-<blockquote>
-<p>Interesting, both guesses have one guess that has a value higher than the rest. However both methods suggest two different sets (at least for the top 5 guesses)</p>
-</blockquote>
-<p>Before you think that I didn’t programmed the Hamming distance correctly:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;this is a test&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">hamming_distance</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;wokka wokka!!!&#39;</span><span class="p">))</span>
-<span class="mi">37</span>
-</code></pre></div>
+<p><figure><figcaption><span markdown='1'>
+Score of each guess by method.
+<br /><br />
+Both methods agree on being 29 the most likely length but as the plot shows, both methods have quite different behaviours too.
+</span></figcaption>
+<img style="width: 100%;" class='' alt='' src='/img/matasano/kl_guesses.svg' /></figure></p>
+<!--
+>>> import sys
+>>> sys.path.append("./z/py/plotting")
 
-<p><figure class='fullwidth'><img  class='fullwidth' alt='' src='/img/matasano/kl_guesses.png' />
-<figcaption>
-Score of each guess by method. The maximum score using the Hamming distance is at 5. Using the Index of Coincidence is at 29.
-</figcaption></figure></p>
-<p><br /></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./z/py/plotting&quot;</span><span class="p">)</span>
+>>> from plotting import plt, show                      # byexample: +timeout=10
+>>> import pandas as pd                                 # byexample: +timeout=10
 
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">plotting</span> <span class="kn">import</span> <span class="n">plt</span><span class="p">,</span> <span class="n">show</span>                      <span class="c1"># byexample: +timeout=10</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>                                 <span class="c1"># byexample: +timeout=10</span>
+>>> guesses = pd.DataFrame({'Hamming Distance': lengths_hd,
+...                         'Index of Coincidence': lengths_ic})
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">guesses</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;Hamming Distance&#39;</span><span class="p">:</span> <span class="n">lengths_hd</span><span class="p">,</span>
-<span class="o">...</span>                         <span class="s1">&#39;Index of Coincidence&#39;</span><span class="p">:</span> <span class="n">lengths_ic</span><span class="p">})</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">show</span><span class="p">(</span><span class="n">save</span><span class="o">=</span><span class="s1">&#39;./posts/matasano/assets/kl_guesses.png&#39;</span><span class="p">,</span> <span class="n">latexify_kargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;columns&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">}):</span> <span class="c1"># byexample: +timeout=600 +skip</span>
-<span class="o">...</span>     <span class="n">_</span> <span class="o">=</span> <span class="n">guesses</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">subplots</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="o">...</span>
-</code></pre></div>
-
-<p>I will take my changes with the length of 29 found using the IC.</p>
+>>> with show(save='./posts/matasano/kl_guesses.svg', columns = 2, transparent = True): # byexample: +timeout=600 +skip
+...     _ = guesses.plot(style='o', subplots=True, layout=(2, 1))
+...
+-->
 <h2 id="guessing-one-byte-at-time">Guessing one byte at time</h2>
 <p>What I will do now is to pick the <code><span class="highlight-candombe-inline"><span class="mi">0</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">l</span></span></code>, <code><span class="highlight-candombe-inline"><span class="mi">2</span><span class="n">l</span></span></code> … bytes from the ciphertext (multiples of the particular length <code><span class="highlight-candombe-inline"><span class="n">l</span></span></code>).</p>
 <p>If the length guessed is correct, all those bytes should had been encrypted with the same byte key.</p>
 <p>And we already know <a href="/articles/2018/03/01/In-XOR-We-Trust.html">how to break a ciphertext encrypted with a single byte key</a>!</p>
 <p>So we need to do this for all the offsets between 0 and l. In other words:</p>
-<pre><code>    0,  0+l,  0+2l    ... to break key[0]
-    1,  1+l,  1+2l    ... to break key[1]
-    2,  2+l,  2+2l    ... to break key[2]
-    :,   : ,   :           :   :
-  l-1, 2l-1,  3l-1    ... to break key[l-1]</code></pre>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 100%;" class='' alt='' src='/img/matasano/break_repeat_key_transpose.svg' /></figure></p>
 <p>To break this, we will need the frequency of <code><span class="highlight-candombe-inline"><span class="n">etaoin</span> <span class="n">shrdlu</span></span></code> (I’m assuming that the plaintext is in ASCII human plain English):</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.fuzzy_set</span> <span class="kn">import</span> <span class="n">FuzzySet</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">most_common_plain_ngrams</span> <span class="o">=</span> <span class="n">FuzzySet</span><span class="p">({</span>
@@ -185,7 +217,7 @@ Score of each guess by method. The maximum score using the Hamming distance is a
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">brute_force</span><span class="p">,</span> <span class="n">freq_attack</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">all_ascii_printable</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">length</span> <span class="o">=</span> <span class="n">lengths_ic</span><span class="o">.</span><span class="n">most_likely</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">length</span> <span class="o">=</span> <span class="p">(</span><span class="n">lengths_hd</span> <span class="o">|</span> <span class="n">lengths_ic</span><span class="p">)</span><span class="o">.</span><span class="n">most_likely</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">bytes_of_key</span> <span class="o">=</span> <span class="p">[]</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span><span class="p">):</span>
@@ -226,10 +258,10 @@ Score of each guess by method. The maximum score using the Hamming distance is a
 <span class="mi">120</span>
 </code></pre></div>
 
-<p><label for='Ck1vcmUga2V5cyB0aGFuIGdyYW1zIG9mIG9yZGluYXkgbWFzcyBpbiB0aGUKW29ic2VydmFibGUgdW5pdmVyc2VdKGh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL09ic2VydmFibGVfdW5pdmVyc2UpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
-<input type='checkbox' id='Ck1vcmUga2V5cyB0aGFuIGdyYW1zIG9mIG9yZGluYXkgbWFzcyBpbiB0aGUKW29ic2VydmFibGUgdW5pdmVyc2VdKGh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL09ic2VydmFibGVfdW5pdmVyc2UpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<p><label for='Ck1vcmUga2V5cyB0aGFuIGdyYW1zIG9mIG9yZGluYXJ5IG1hc3MgaW4gdGhlCltvYnNlcnZhYmxlIHVuaXZlcnNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9PYnNlcnZhYmxlX3VuaXZlcnNlKQptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='Ck1vcmUga2V5cyB0aGFuIGdyYW1zIG9mIG9yZGluYXJ5IG1hc3MgaW4gdGhlCltvYnNlcnZhYmxlIHVuaXZlcnNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9PYnNlcnZhYmxlX3VuaXZlcnNlKQptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-More keys than grams of ordinay mass in the <a href="https://en.wikipedia.org/wiki/Observable_universe">observable universe</a>
+More keys than grams of ordinary mass in the <a href="https://en.wikipedia.org/wiki/Observable_universe">observable universe</a>
 </span></p>
 <p><code><span class="highlight-candombe-inline"><span class="mi">120</span></span></code> is a really small number compared with the whole key space <code><span class="highlight-candombe-inline"><span class="mi">2</span><span class="o">^</span><span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="mi">29</span><span class="p">)</span></span></code></p>
 <p>And only a few of them are more likely than others:</p>
@@ -260,7 +292,7 @@ More keys than grams of ordinay mass in the <a href="https://en.wikipedia.org/wi
         <span>&copy;
             Martin Di Paola
         </span></br>
-            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
             <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
         <br>
         

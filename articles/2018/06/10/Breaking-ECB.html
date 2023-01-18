@@ -55,7 +55,7 @@
                     <li><a href="https://byexamples.github.io">byexample</a></li>
                     <li><a href="https://bisturi.github.io">bisturi</a></li>
                     <li>
-                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
                         <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
                     </li>
                 </ul>
@@ -134,13 +134,28 @@ In fact, there are two challenges: the <a href="https://cryptopals.com/sets/2/ch
 </code></pre></div>
 
 <h3 id="block-alignment">Block alignment</h3>
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_misalign_by2.svg' />
+</span></p>
 <p>The prepended payload is constant but it is still unknown to the us/adversary.</p>
 <p>Before proceed we need to know for how many bytes our attacker-controlled payload is misaligned.</p>
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_misalign_by1.svg' />
+</span></p>
 <p>Basically we start with a plaintext of <em>twice</em> the size of the block size and we add one byte at time.</p>
 <p>When we find two <em>consecutive</em> cipher blocks that are the same, we are done.</p>
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_aligned.svg' />
+</span></p>
 <p>The amount of extra bytes that we added is the answer.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">alignment</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_size</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="n">encryption_oracle</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">block_size</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">alignment</span><span class="p">)))</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="n">encryption_oracle</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;a&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">block_size</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">alignment</span><span class="p">)))</span>
 <span class="o">...</span>     <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="n">block_size</span><span class="p">)</span><span class="o">.</span><span class="n">has_duplicates</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="o">...</span>         <span class="k">break</span>
 
@@ -153,81 +168,29 @@ In fact, there are two challenges: the <a href="https://cryptopals.com/sets/2/ch
 
 <h3 id="get-the-penguin">Get the penguin!</h3>
 <p>Now, with our blocks aligned, we can set as our plaintext two identical blocks but the last one will have one byte less.</p>
-<p>This missing byte will be filled by the next plaintext byte <code class="none">?</code>, unknown by us:</p>
-<pre><code>|----|----|----|----|
- AAAA AAA? .... ....</code></pre>
-<p>These two blocks will yield the same two cipher blocks only if the last byte of the first block (<code class="none">A</code>) is equal to the last byte of the second block (<code class="none">?</code>)</p>
-<p>We can extrapolate this testing for all the possible bytes <code class="none">x</code>, until we find an <code class="none">x</code> that it is equals to <code class="none">?</code>.</p>
-<pre><code>|----|----|----|----|
- AAAx AAA? .... ....
-    ^    ^</code></pre>
-<p>The first block (<code class="none">AAAx</code>) is our <em>probe block</em> used to probe and find the unknown byte <code class="none">?</code>.</p>
-<p>The second <em>partial</em> block (<code class="none">AAA</code>) is used to align the unknown plaintext so the <em>first unknown byte</em> is in place at the end of this block, named as <em>align block</em>.</p>
-<pre><code>  align block
-      :::
-|----|----|----|----|
- AAAx AAA? .... ....
-
-AAAx    probe block
-AAA     align block (3)
-distance = 0
-
-  align block
-      :::
-|----|---:|----|----|
- AAAa AAAa .... ....    &#39;a&#39; found
-    ^    ^</code></pre>
-<p>The beauty of this is that no matter if the key used to encrypt changes, this will work.</p>
-<p>Even if the length of the prefix (plaintext <em>before</em> out controlled part) changes, as long as it changes in a small range, it is just a matter of trying more times.</p>
+<p>This missing byte will be filled by the next <em>secret</em> plaintext byte <code class="none">?</code>, unknown by us:</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_1_byte.svg' /></figure></p>
+<p>These two blocks will yield the same two cipher blocks only if the last byte of the first block (<code class="none">x</code>) is equal to the last byte of the second block (<code class="none">?</code>)</p>
+<p><label for='ClRoZSBiZWF1dHkgb2YgdGhpcyBpcyB0aGF0IG5vIG1hdHRlciBpZiB0aGUga2V5IHVzZWQgdG8gZW5jcnlwdCBjaGFuZ2VzLAp0aGlzIHdpbGwgc3RpbGwgd29yayBhcyBsb25nIGFzIHRoZSBwbGFpbnRleHQgZG9lcyBub3QgY2hhbmdlLgoKRXZlbiBpZiB0aGUgbGVuZ3RoIG9mIHRoZSBwcmVmaXggKHBsYWludGV4dCAqYmVmb3JlKiBvdXIgY29udHJvbGxlZCBwYXJ0KQpjaGFuZ2VzLCBhcyBsb25nIGFzIGl0IGNoYW5nZXMgaW4gYSBzbWFsbCByYW5nZSwgaXQgaXMganVzdCBhIG1hdHRlciBvZgp0cnlpbmcgbW9yZSB0aW1lcy4KCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBiZWF1dHkgb2YgdGhpcyBpcyB0aGF0IG5vIG1hdHRlciBpZiB0aGUga2V5IHVzZWQgdG8gZW5jcnlwdCBjaGFuZ2VzLAp0aGlzIHdpbGwgc3RpbGwgd29yayBhcyBsb25nIGFzIHRoZSBwbGFpbnRleHQgZG9lcyBub3QgY2hhbmdlLgoKRXZlbiBpZiB0aGUgbGVuZ3RoIG9mIHRoZSBwcmVmaXggKHBsYWludGV4dCAqYmVmb3JlKiBvdXIgY29udHJvbGxlZCBwYXJ0KQpjaGFuZ2VzLCBhcyBsb25nIGFzIGl0IGNoYW5nZXMgaW4gYSBzbWFsbCByYW5nZSwgaXQgaXMganVzdCBhIG1hdHRlciBvZgp0cnlpbmcgbW9yZSB0aW1lcy4KCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+The beauty of this is that no matter if the key used to encrypt changes, this will still work as long as the plaintext does not change.
+<br /><br />
+Even if the length of the prefix (plaintext <em>before</em> our controlled part) changes, as long as it changes in a small range, it is just a matter of trying more times.
+</span></p>
+<p>The first block (<code class="none">aaax</code>) is our <em>probe block</em> used to probe and find the unknown byte <code class="none">?</code>.</p>
+<p>The second <em>partial</em> block (<code class="none">aaa</code>) is used to align the unknown plaintext so the <em>first unknown byte</em> is in place at the end of this block, named as <em>align block</em>.</p>
 <p>After found the value of <code class="none">?</code> we <em>shift</em> the unknown plaintext on byte to the left and we continue breaking one byte at time.</p>
-<pre><code>  align block
-      ::
-|----|----|----|----|
- AAax AAa? .... ....    shift and test next byte
-    ^    ^
-
-AAax    probe block
-AAa     align block (2)
-distance = 0
-
-      :
-|----|----|----|----|
- Aabc Aabc .... ....    more bytes decrypted
-    ^    ^
-
-|----|----|----|----|
- abcx abc? .... ....    test next byte
-    ^    ^
-
-abcx    probe block
-        align block (0)
-distance = 0</code></pre>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_2_byte.svg' /></figure></p>
 <p>After breaking <code class="none">block_size</code> bytes, we cannot shift to the left further.</p>
 <p>But what we can do is to add an extra block: the probe block will not be testing its next block but the block that is 1 block to the right:</p>
-<pre><code>  align block
-      :::
-|----|----|----|----|
- bcdx AAAa bcd? ....    insert a pad block in the between, the test block
-    ^         ^         is 1-block far form the probe block
-
-bcdx    prob block
-AAA     align block (3)
-distance = 1
-
-
-|----|----|----|----|
- bcde AAAa bcde ....    &#39;e&#39; found
-    ^         ^</code></pre>
-<p>And the cycle repeats again:</p>
-<pre><code>  align block
-      ::
-|----|----|----|----|
- cdex AAab cde? ....    shift and test next byte
- ^^^^ ^^
-
-cdex    probe block
-AA      align block 2
-distance = 1</code></pre>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_n_byte.svg' /></figure></p>
 <p>The following is an implementation of the previous algorithm from <a href="https://pypi.org/project/cryptonita/">cryptonita</a> that breaks the ECB cipher using a oracle.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks.block_ciphers</span> <span class="kn">import</span> <span class="n">decrypt_ecb_tail</span>
 
@@ -249,7 +212,7 @@ distance = 1</code></pre>
         <span>&copy;
             Martin Di Paola
         </span></br>
-            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
             <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
         <br>
         

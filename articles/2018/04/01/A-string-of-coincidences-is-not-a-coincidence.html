@@ -55,7 +55,7 @@
                     <li><a href="https://byexamples.github.io">byexample</a></li>
                     <li><a href="https://bisturi.github.io">bisturi</a></li>
                     <li>
-                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
                         <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
                     </li>
                 </ul>
@@ -219,6 +219,11 @@ $$S=\sum_{\forall p_{x}}p_{x}\textrm{log}_{n}\left(p_{x}\right)$$
 <span class="o">&gt;&gt;&gt;</span> <span class="n">methods</span><span class="p">[</span><span class="s1">&#39;Entropy xor-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scores</span><span class="p">]</span>
 </code></pre></div>
 
+<p><label for='Ckkgd29uZGVyLCB3aGF0IHdvdWxkIGhhcHBlbiBpZiBpbnN0ZWFkIG9mIHhvcmluZyB1c2luZyB0aGUgZmlyc3QgYnl0ZQp3ZSB0cnkgdGhlbiB0aGUgc2Vjb25kIGJ5dGUgYW5kIHRoZW4gdGhlIHRoaXJkLiBXaWxsIHRoZXNlIGFncmVlPyBDb3VsZCB3ZSB1c2UKdGhlbSB0byByZW1vdmUgZmFsc2UgcG9zaXRpdmVzPwptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='Ckkgd29uZGVyLCB3aGF0IHdvdWxkIGhhcHBlbiBpZiBpbnN0ZWFkIG9mIHhvcmluZyB1c2luZyB0aGUgZmlyc3QgYnl0ZQp3ZSB0cnkgdGhlbiB0aGUgc2Vjb25kIGJ5dGUgYW5kIHRoZW4gdGhlIHRoaXJkLiBXaWxsIHRoZXNlIGFncmVlPyBDb3VsZCB3ZSB1c2UKdGhlbSB0byByZW1vdmUgZmFsc2UgcG9zaXRpdmVzPwptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+I wonder, what would happen if instead of xoring using the first byte we try then the second byte and then the third. Will these agree? Could we use them to remove false positives?
+</span></p>
 <p>Interesting, this method has more false positives than others but at the same time, this method makes a clear distinction between a few really non random strings and the rest of the strings in the pool.</p>
 <h3 id="kolmogorov-complexity">Kolmogorov complexity</h3>
 <p>As an alternative way to see this, a random string cannot be compressed. So the string with the shortest compressed version will be likely to be a non-random string.</p>
@@ -264,7 +269,7 @@ $$S=\sum_{\forall p_{x}}p_{x}\textrm{log}_{n}\left(p_{x}\right)$$
 <p>Claiming that a string is uniformly random if <em>far from trivial</em>.</p>
 <p>Even the NSA battery tests for randomness fail to measure the randomness of crafted strings.</p>
 <p>Here is the plot of the scores calculated by the different methods:</p>
-<p><figure class='fullwidth'><img  class='fullwidth' alt='' src='/img/matasano/scores_by_method.png' />
+<p><figure class='fullwidth'><img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/scores_by_method.svg' />
 <figcaption>
 Scores by method. Notice how the element 170th gets the lower value in most cases indicating that the string is not random.
 </figcaption></figure></p>
@@ -283,7 +288,7 @@ Scores by method. Notice how the element 170th gets the lower value in most case
 
 >>> methods = methods.apply(min_max_normalizer, axis=0)
 
->>> with show(save='./posts/matasano/assets/scores_by_method.png', latexify_kargs={'columns':2}): # byexample: +timeout=600 +skip
+>>> with show(save='./posts/matasano/scores_by_method.svg', columns = 2, transparent = True): # byexample: +timeout=600 +skip
 ...     axes = methods.plot(style='o', subplots=True, layout=(3, 2))
 ...
 ...     _ = [ax.vlines(170, 0, 1, linestyles='dashed') for ax in axes.flat]
@@ -296,7 +301,7 @@ Scores by method. Notice how the element 170th gets the lower value in most case
         <span>&copy;
             Martin Di Paola
         </span></br>
-            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
             <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
         <br>
         

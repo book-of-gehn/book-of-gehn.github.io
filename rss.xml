@@ -8,7 +8,7 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 01 Nov 2022 11:52:19 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 18 Jan 2023 12:44:51 +0000</lastBuildDate>
     <item>
       <title>Diff Between Data Frames for Testing</title>
       <link>https://book-of-gehn.github.io/articles/2022/10/01/Diff-Between-Dataframes-for-Testing.html</link>
@@ -2299,7 +2299,7 @@ Histogram of TTL range between rounds of scans to the same host showing how much
 &lt;br /&gt;&lt;br /&gt;
 The dataset does not include hosts scanned only once. The vertical axis is in logarithmic scale.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The histogram may be misleading at first but remember that the vertical axis is in &lt;em&gt;logarithmic scale&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;That means that the main peak at 0 is almost 3 orders of magnitude larger than the three secondary peaks on the right.&lt;/p&gt;
 &lt;p&gt;This is compatible with the analysis made previously: the routes are highly stable and only a small fraction (0.39998%) are unstable with a large variance (represented by the right side of the histogram).&lt;/p&gt;
@@ -2323,10 +2323,10 @@ The dataset does not include hosts scanned only once. The vertical axis is in lo
 &lt;p&gt;That’s why we do a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="o"&gt;.-&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Back to the numbers, &lt;em&gt;what the hell do those peaks mean?&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id="analysis-of-the-3-secondary-peaks"&gt;Analysis of the 3 secondary peaks&lt;/h2&gt;
-&lt;p&gt;&lt;label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vbXVsdGlyb3VuZHNfdHRsX3JhbmdlX3VuYmlhc2VkX19oaXN0LnN2ZycgLz5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vbXVsdGlyb3VuZHNfdHRsX3JhbmdlX3VuYmlhc2VkX19oaXN0LnN2ZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img  class='fullwidth' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /&gt;
+&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Let’s ignore the peak at 0 (those are the stable routes). Why do we have 3 secondary peaks?&lt;/p&gt;
 &lt;p&gt;Focus on the peak at TTL range of 191 (the right most).&lt;/p&gt;
@@ -2422,7 +2422,7 @@ m=-128,  M=63&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Histogram of TTL observed: the peaks indicate the different operative systems and their relative position respect the expected positions estimate the mean distance between the hosts and the scanner in hop count.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;There are three really high peaks with \(~10^6\) count with one secondary peak at the left of each main peaks.&lt;/p&gt;
 &lt;p&gt;In the &lt;em&gt;x-axis&lt;/em&gt; are marked the typical TTLs values that the operative systems set by default. For some operative systems this may different depending of the version of the OS and the protocol of the packet.&lt;/p&gt;
 &lt;p&gt;We cannot do anything about the version of the OS but we can ignore the protocol because all the probes sent were TCP.&lt;/p&gt;
@@ -2463,7 +2463,7 @@ Reference: &lt;a href="https://subinsb.com/default-device-ttl-values/"&gt;Subin'
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Histogram of TTL observed but with the values shifted to the right to compensate the fact that the TTLs are decremented during their travel through the network.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale_shifted.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale_shifted.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="ip-distribution"&gt;IP distribution&lt;/h2&gt;
 &lt;p&gt;We can get an idea of how the hosts scanned are distributed in the IP space.&lt;/p&gt;
 &lt;p&gt;Sorted by IP address, we can compute the first order difference (aka &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:ip&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:ip&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;: hosts in the same subnetwork will have very small differences.&lt;/p&gt;
@@ -2589,7 +2589,7 @@ It sends &lt;em&gt;at the same time&lt;/em&gt; the probes to &lt;em&gt;the same 
 &lt;br /&gt;&lt;br /&gt;
 Some time later it &lt;em&gt;may&lt;/em&gt; scan the same host &lt;em&gt;again&lt;/em&gt;. The collection of bursts to &lt;em&gt;the same host&lt;/em&gt; are the &lt;strong&gt;rounds&lt;/strong&gt; for that host.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 80%" class='' alt='' src='/img/network/internet_scan/ip-burst-rounds.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 80%;" class='' alt='' src='/img/network/internet_scan/ip-burst-rounds.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h3 id="ttls-extrema-values-for-each-short-burst"&gt;TTLs extrema values for each short burst&lt;/h3&gt;
 &lt;p&gt;Let’s review the short bursts first, the probes sent to a host at the same time:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;julia&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;short_bursts_g&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;groupby&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="ss"&gt;:ip&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:timestamp&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
@@ -2936,7 +2936,7 @@ Histogram of intervals between probes to the same host-port in seconds.
 &lt;br /&gt;&lt;br /&gt;
 The median (5.0) and the mean (6.89) are labeled. The vertical axis is in logarithmic scale.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/network/internet_scan/time_interval_hist.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/time_interval_hist.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;This was more spread than I expected. Most of the intervals are in the low range but there is non-negligible count for the 15 secs interval.&lt;/p&gt;
 &lt;p&gt;A quick statistics for the intervals:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;julia&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;describe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;df2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:mean&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:std&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:min&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:q25&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:median&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:q75&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;:max&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="ss"&gt;:interval&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -3484,7 +3484,7 @@ $ adb shell &lt;span class="s1"&gt;&amp;#39;/storage/sdcard0/dcow /storage/sdcar
       <description>&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Visual proof that \(b^2 - a^2\) factorizes into \((b - a)(b + 1)\).
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/math/b2-a2.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/math/b2-a2.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 </description>
       <guid isPermaLink="false">https://book-of-gehn.github.io/articles/2021/08/12/Difference-of-Two-Squares.html</guid>
       <category>math</category>
@@ -4004,7 +4004,7 @@ $$
 &lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;null_experiment&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; actually does &lt;strong&gt;not&lt;/strong&gt; use the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function and it is used to have an idea of how small the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;elapsed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; time can be.&lt;/p&gt;
 &lt;h2 id="experiments-results"&gt;Experiments results&lt;/h2&gt;
 &lt;p&gt;The first thing that we can see is how each &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; performed in each experiment.&lt;/p&gt;
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img  class='fullwidth' alt='' src='/img/z3/perf/mean-check-elapsed-per-func-experiment.svg' /&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/z3/perf/mean-check-elapsed-per-func-experiment.svg' /&gt;
 &lt;figcaption&gt;
 Mean &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;elapsed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; time (y axis) per &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function (x axis). Each subplot corresponds to a different experiment.
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -4021,7 +4021,7 @@ Mean &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Minimum &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;elapsed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; time (y axis) per &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function (x axis). Each subplot corresponds to a different experiment. Note how the plot has the same shape than before.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/z3/perf/min-check-elapsed-per-func-in-encrypt-experiment.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/z3/perf/min-check-elapsed-per-func-in-encrypt-experiment.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Nope, same thing.&lt;/p&gt;
 &lt;p&gt;Could be this discrepancy be just by luck? We need a measure independent from the time and Z3 tracks several statistics for that.&lt;/p&gt;
 &lt;p&gt;It’s unclear what they mean however.&lt;/p&gt;
@@ -4029,12 +4029,12 @@ Minimum &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Relation and linear regression between the time that &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; took and the amount of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;added&lt;/span&gt; &lt;span class="n"&gt;eqs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. They follow almost a perfect linear relationship.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/z3/perf/rel-check-elapsed-and-added-eqs.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/z3/perf/rel-check-elapsed-and-added-eqs.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Let’s see how many &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;eqs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; were &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;added&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;encrypt_rounds_experiment&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Mean &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;added&lt;/span&gt; &lt;span class="n"&gt;eqs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (y axis) per &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function (x axis). Each subplot corresponds to a different experiment. Note how the plot has the same shape than before showing a strong relationship between &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;added&lt;/span&gt; &lt;span class="n"&gt;eqs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;elapsed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; time.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/z3/perf/mean-added-eqs-per-func-in-encrypt-experiment.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/z3/perf/mean-added-eqs-per-func-in-encrypt-experiment.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Same shape that before: for some reason Z3 added more eqs in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime_broadcasted&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; than in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime_cancelled&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (both simplified) even if both are the same Z3 expressions.&lt;/p&gt;
 &lt;p&gt;So the discrepancy is not due the noise: Z3 indeed saw these two as different things.&lt;/p&gt;
 &lt;h3 id="code-and-results"&gt;Code and results&lt;/h3&gt;
@@ -4158,10 +4158,10 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;p&gt;So I resorted to use a preprocessor. Similar to Liquid I used &lt;a href="https://jinja.palletsprojects.com/en/3.0.x/"&gt;Jinja2&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;While all of these could be done, in theory, with Pandoc filters, I think that having a preprocessor and &lt;em&gt;template engine&lt;/em&gt; like Jinja2 can be quite handy.&lt;/p&gt;
 &lt;h2 id="images-and-diagrams"&gt;Images and diagrams&lt;/h2&gt;
-&lt;p&gt;&lt;label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kb2Mvc2VhYm9ybi1jaGVhdHNoZWV0LXYxLnN2ZycgLz5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kb2Mvc2VhYm9ybi1jaGVhdHNoZWV0LXYxLnN2ZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RvYy9zZWFib3JuLWNoZWF0c2hlZXQtdjEuc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RvYy9zZWFib3JuLWNoZWF0c2hlZXQtdjEuc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img  class='fullwidth' alt='' src='/img/doc/seaborn-cheatsheet-v1.svg' /&gt;
+&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/doc/seaborn-cheatsheet-v1.svg' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;I make a lot of diagrams, state machines and plots but I try to not make them by hand.&lt;/p&gt;
 &lt;p&gt;Tools that requires a human to do the layout are a waste of time (there are exceptions like me &lt;a href="/articles/2021/06/05/Seaborn-Cheatsheet.html"&gt;Seaborn Cheatsheet&lt;/a&gt;).&lt;/p&gt;
@@ -4232,7 +4232,7 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;p&gt;Yes, yes I could.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img  class='' alt='' src='/img/stats/seaborn-cheatsheet-v1.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/stats/seaborn-cheatsheet-v1.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://seaborn.pydata.org/"&gt;Seaborn&lt;/a&gt; is a very simple but powerful plotting library on top of &lt;a href="https://matplotlib.org/"&gt;matplotlib&lt;/a&gt; designed for statistical analysis.&lt;/p&gt;
 &lt;p&gt;Quick links: &lt;a href="/assets/stats/seaborn-cheatsheet-v1.pdf"&gt;PDF (no bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-bg-v1.pdf"&gt;PDF (bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-v1.svg"&gt;SVG (no bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-bg-v1.svg"&gt;SVG (bg)&lt;/a&gt; .&lt;!--more--&gt;&lt;/p&gt;
 &lt;h2 id="instructions"&gt;Instructions&lt;/h2&gt;
@@ -5838,7 +5838,7 @@ Precise values; linear, proportional and additivity relations; and variables in 
 &lt;p&gt;There are a lot.&lt;/p&gt;
 &lt;p&gt;Other processes running, the OS scheduler making your program to &lt;em&gt;yield&lt;/em&gt; the CPU, the OS interrupting to process a more urgent task (like interruptions) and more.&lt;/p&gt;
 &lt;p&gt;Graphical interfaces, network traffic and disk usage add to the mix.&lt;/p&gt;
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img  class='fullwidth' alt='' src='/img/perf/timing/all-services-up-and-down.svg' /&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/perf/timing/all-services-up-and-down.svg' /&gt;
 &lt;figcaption&gt;
 The elapsed time of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; executed 1000 times and sorted from the smallest value to the largest. The last 10 values were drop (not shown); numbers are in nanoseconds. On the left the experiment was done in a machine without any modification; on the right all the services were turned off, the CPU were isolated and the IRQ where disabled. Note not only how smaller values are obtained in the right environment (less noisy) but also the dispersion of the numbers is smaller: on the left the time goes from 0.765 to 0.8 ns (range of 0.035 ns) while on the right the time goes from 0.7635 to 0.7665 ns (range of 0.003 ns). One order of magnitude.
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -8397,7 +8397,7 @@ Even the person does not need to do anything. The boost can be transferred from 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Addresses of free frames are consumed from the FQ queue by the kernel (1). XDP then writes the incoming packet in a free frame (2) and pushes the address into the RX queue (3). The user application consumes from the RX queue (4) addresses of packets ready to be read or write (5). When it is done, the address is pushed back to the FQ for reuse (6).
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 80%" class='' alt='' src='/img/debug/xdp-rx-rc/rx-rc-umem-cycle.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 80%;" class='' alt='' src='/img/debug/xdp-rx-rc/rx-rc-umem-cycle.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The packet descriptor returned by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xsk_ring_cons__rx_desc&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; has two attributes: the packet’s address and its length.&lt;/p&gt;
 &lt;p&gt;The address is an &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint64_t&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; offset respect the UMEM’s base address.&lt;/p&gt;
 &lt;p&gt;&lt;label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtZnJhbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
@@ -8530,10 +8530,10 @@ If you didn’t realize, the timestamp was not zero’d either.
 &lt;p&gt;eBPF runs in the driver if this one supports it. If not, eBPF is executed in the kernel and the packets take a slightly larger path from the network card to user.&lt;/p&gt;
 &lt;p&gt;This path is known as the XDP generic path or just XDP generic.&lt;/p&gt;
 &lt;p&gt;Remember than the RX is a single-producer queue so it is not thread safe for concurrent pushes.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlIiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RlYnVnL3hkcC1yeC1yYy9yeC1yYy1xdWV1ZXMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlIiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RlYnVnL3hkcC1yeC1yYy9yeC1yYy1xdWV1ZXMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max-width: 120%" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' /&gt;
+&lt;img style="max_width: 120%;" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;No problem when XDP runs in the driver but when it does in the generic mode, the kernel may be receiving several packets and pushing them &lt;strong&gt;concurrently&lt;/strong&gt; into the RX queue.&lt;/p&gt;
 &lt;blockquote&gt;
@@ -9266,7 +9266,7 @@ This is an example of &lt;a href="https://en.wikipedia.org/wiki/Dynamic_programm
 &lt;p&gt;A simple solution is to use an id: different ngrams will have different ids while the instances of the &lt;em&gt;same&lt;/em&gt; ngram will have the same id.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 45%" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 45%;" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The following Python fragment summarizes the above:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;# input: s, the original text&lt;/span&gt;
 &lt;span class="n"&gt;id_of_ngram&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
@@ -9295,7 +9295,7 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 60%" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_count_filter.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 60%;" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_count_filter.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The final result is a list of tuples &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;position&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; with the positions of the ngrams and their identifiers &lt;em&gt;sorted&lt;/em&gt; by their position.&lt;/p&gt;
 &lt;p&gt;The algorithm can be generalized to find all the non-unique ngrams of length &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; changing &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ngrams&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ngrams&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;The trick is how to build the list of ngrams of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; length &lt;em&gt;reusing&lt;/em&gt; the ngrams of length &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; found by the above algorithm.&lt;/p&gt;
@@ -9304,7 +9304,7 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 &lt;p&gt;In other words, they are consecutive.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 60%" class='' alt='' src='/img/crypto/kasiski/kasiski_merge.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 60%;" class='' alt='' src='/img/crypto/kasiski/kasiski_merge.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;A merged ngram not necessary means that it is a repeated ngram but we know that any repeated ngram will be a merged one.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;id_of_ngram&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;span class="n"&gt;ngram_cnt_by_id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -9610,10 +9610,10 @@ Each thread and arrow is colored: reds for IO code and blues for CPU code.
 &lt;/ul&gt;
 &lt;h2 id="the-queues"&gt;The queues&lt;/h2&gt;
 &lt;p&gt;To make any insight the queues must track:&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvcXVldWVzLXN0YXRzLnBuZycgLz4KTWV0cmljczogaW4gYW5kIG91dCBvdmVyIHRpbWUsIHBsdXMgZHJvcHMgYW5kIHF1ZXVlJ3MgbGVuZ3RoLiBXaGVuCnR3byBxdWV1ZXMgYXJlIGNvbm5lY3RlZCwgb25lIG9mIHRoZSBtZXRyaWNzIGNhbiBiZSBkZWR1Y2VkIGZyb20gdGhlCm90aGVyLgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvcXVldWVzLXN0YXRzLnBuZycgLz4KTWV0cmljczogaW4gYW5kIG91dCBvdmVyIHRpbWUsIHBsdXMgZHJvcHMgYW5kIHF1ZXVlJ3MgbGVuZ3RoLiBXaGVuCnR3byBxdWV1ZXMgYXJlIGNvbm5lY3RlZCwgb25lIG9mIHRoZSBtZXRyaWNzIGNhbiBiZSBkZWR1Y2VkIGZyb20gdGhlCm90aGVyLgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max-width: 60%" class='fullwidth' alt='' src='/img/design/red-blue-arch/queues-stats.png' /&gt;
+&lt;img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/queues-stats.png' /&gt;
 Metrics: in and out over time, plus drops and queue’s length. When two queues are connected, one of the metrics can be deduced from the other.
 &lt;/span&gt;&lt;/p&gt;
 &lt;ul&gt;
@@ -9625,10 +9625,10 @@ Metrics: in and out over time, plus drops and queue’s length. When two queues 
 &lt;p&gt;In a architecture where there are multiple queues, it is generally redundant to have a count of the items pushed and the items popped.&lt;/p&gt;
 &lt;p&gt;We could track only the items pushed and use that metric for the exit queue to estimate the items popped from the enter queue.&lt;/p&gt;
 &lt;p&gt;For example, if the thread H is pushing 10k items per second in the exit queue (that connects H with N), we can conclude that H is popping 10k items per seconds from its enter queue (that connects R with H).&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA0MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvcmVhbGx5Y29vbHN0dWZmLnBuZycgLz5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA0MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvcmVhbGx5Y29vbHN0dWZmLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max-width: 40%" class='fullwidth' alt='' src='/img/design/red-blue-arch/reallycoolstuff.png' /&gt;
+&lt;img style="max_width: 40%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/reallycoolstuff.png' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;For analyzing the performance &lt;a href="http://www.brendangregg.com/usemethod.html"&gt;Brendan Gregg’s USE method&lt;/a&gt; states that every resource must be characterized by three metrics:&lt;/p&gt;
 &lt;ul&gt;
@@ -9644,30 +9644,30 @@ Metrics: in and out over time, plus drops and queue’s length. When two queues 
 &lt;p&gt;This is more generic way to analysis the performance of a system: using queues for statistics is a particular case.&lt;/p&gt;
 &lt;p&gt;But there is more…&lt;/p&gt;
 &lt;h2 id="batchbulk-for-free"&gt;Batch/Bulk for free&lt;/h2&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvY2hhdHR5LnBuZycgLz4KRWFjaCBtZXNzYWdlIHJlcXVpcmVzIGFuIGVuY2Fwc3VsYXRpb24gaGVhZGVyIGFuZCBhICpzeXNjYWxsKiB0byBzZW5kIGl0LgpDb3N0cyB0aGF0IHlvdSBtYXkgcGVyIG1lc3NhZ2U7IG1vcmUgbWVzc2FnZXMgbWVhbnMgbW9yZSB5b3UgcGF5LgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvY2hhdHR5LnBuZycgLz4KRWFjaCBtZXNzYWdlIHJlcXVpcmVzIGFuIGVuY2Fwc3VsYXRpb24gaGVhZGVyIGFuZCBhICpzeXNjYWxsKiB0byBzZW5kIGl0LgpDb3N0cyB0aGF0IHlvdSBtYXkgcGVyIG1lc3NhZ2U7IG1vcmUgbWVzc2FnZXMgbWVhbnMgbW9yZSB5b3UgcGF5LgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max-width: 60%" class='fullwidth' alt='' src='/img/design/red-blue-arch/chatty.png' /&gt;
+&lt;img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/chatty.png' /&gt;
 Each message requires an encapsulation header and a &lt;em&gt;syscall&lt;/em&gt; to send it. Costs that you may per message; more messages means more you pay.
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The explicit queues allows to delay the processing but in exchange they allow to process the items in batch or bulk operations.&lt;/p&gt;
 &lt;p&gt;A classic example would be the database: instead of querying each time we could query every 1k items doing a single bulk operation.&lt;/p&gt;
 &lt;p&gt;For example, we could save 1k results in a single operation.&lt;/p&gt;
 &lt;p&gt;This not only save bandwidth with the database but also IO operations.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvbGVzcy1jaGF0dHkucG5nJyAvPgpMZXNzIGlzIG1vcmUuIEFsc28gaXQgZW5hYmxlcyBzcGVjaWZpYyBwZXItYnVuZGxlIGNvbXByZXNzaW9uLgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvbGVzcy1jaGF0dHkucG5nJyAvPgpMZXNzIGlzIG1vcmUuIEFsc28gaXQgZW5hYmxlcyBzcGVjaWZpYyBwZXItYnVuZGxlIGNvbXByZXNzaW9uLgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max-width: 60%" class='fullwidth' alt='' src='/img/design/red-blue-arch/less-chatty.png' /&gt;
+&lt;img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/less-chatty.png' /&gt;
 Less is more. Also it enables specific per-bundle compression.
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The communication with the server could be also improved. Instead of sending a request per work item, we could send them in packs: less messages going back and forward through the network it is always a good deal.&lt;/p&gt;
 &lt;p&gt;Less chatty communication means more time and space for the real data, a better channel utilization.&lt;/p&gt;
 &lt;h2 id="asynchronous-for-free"&gt;Asynchronous for free&lt;/h2&gt;
 &lt;p&gt;And talking about network, sending a request and &lt;em&gt;waiting&lt;/em&gt; for the response is incredible slow.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvYXN5bmMucG5nJyAvPgpXaGlsZSBhIGJ1bGsgY2FsbHMgYW1vcnRpemUgdGhlIGNvc3QgcGVyIG1lc3NhZ2UsIGFzeW5jaHJvbm91cwpjYWxscyBtYWtlIG1vcmUgdXNlIG9mIHRoZSBjYXBhY2l0eSBvZiB0aGUgbmV0d29yayBzbyB5b3UgY2FuIHNlbmQKbW9yZSBpbiB0aGUgc2FtZSB0aW1lLgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvZGVzaWduL3JlZC1ibHVlLWFyY2gvYXN5bmMucG5nJyAvPgpXaGlsZSBhIGJ1bGsgY2FsbHMgYW1vcnRpemUgdGhlIGNvc3QgcGVyIG1lc3NhZ2UsIGFzeW5jaHJvbm91cwpjYWxscyBtYWtlIG1vcmUgdXNlIG9mIHRoZSBjYXBhY2l0eSBvZiB0aGUgbmV0d29yayBzbyB5b3UgY2FuIHNlbmQKbW9yZSBpbiB0aGUgc2FtZSB0aW1lLgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max-width: 60%" class='fullwidth' alt='' src='/img/design/red-blue-arch/async.png' /&gt;
+&lt;img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/async.png' /&gt;
 While a bulk calls amortize the cost per message, asynchronous calls make more use of the capacity of the network so you can send more in the same time.
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;We can send the requests &lt;em&gt;asynchronously&lt;/em&gt; to the server without waiting for the responses, and receive them later.&lt;/p&gt;
@@ -10045,26 +10045,26 @@ If the producer 2 updates the tail before the producer 1, the consumers may read
 &lt;!--more--&gt;
 &lt;p&gt;We need identifiers to operate the tables, make joins, and all kind of crazy data processing.&lt;/p&gt;
 &lt;p&gt;What would be a good one?&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWlzYy9pZHMvbmFtZS5wbmcnIC8+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWlzYy9pZHMvbmFtZS5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max-width: 70%" class='fullwidth' alt='' src='/img/misc/ids/name.png' /&gt;
+&lt;img style="max_width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/name.png' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Their names and addresses? Quite old fashion. Collisions are possible and can be very frequent. &lt;br /&gt; Building an id based on the attributes of the person is not good in any case: it is a matter of time that the person change in some way (like change her address) to make the id &lt;em&gt;schema&lt;/em&gt; inconsistent.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWlzYy9pZHMvc3NuLnBuZycgLz5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCUiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWlzYy9pZHMvc3NuLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max-width: 70%" class='fullwidth' alt='' src='/img/misc/ids/ssn.png' /&gt;
+&lt;img style="max_width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/ssn.png' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Their government-level id, like the Social Security Number? Better but no, different countries have different identifier systems like &lt;a href="https://en.wikipedia.org/wiki/INSEE_code"&gt;INSEE&lt;/a&gt; in France. If you plan to use the software world-wide this will not work. &lt;br /&gt; And you are still depending on &lt;a href="https://www.ssa.gov/history/ssn/misused.html"&gt;humans&lt;/a&gt; to ensure uniqueness.&lt;/p&gt;
 &lt;p&gt;Their email? Everyone has an email, right? Yea… well. It is more nation agnostic but &lt;a href="https://gist.github.com/adamloving/4401361"&gt;still…&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 40%" class='' alt='' src='/img/misc/ids/email.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 40%;" class='' alt='' src='/img/misc/ids/email.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Their DNA? That’s unique right?&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 40%" class='' alt='' src='/img/misc/ids/sheep.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 40%;" class='' alt='' src='/img/misc/ids/sheep.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Keep it simple. Use a plain number.&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Just:&lt;/p&gt;
 &lt;ul&gt;
@@ -12797,7 +12797,7 @@ And this is how we could make the MT19937 a little harder: make the operation no
 &lt;span class="mi"&gt;1690&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Considere for a moment those numbers. Of 53 characters we initially have a key space of \(256^53\), a number which has more than 100 digits.&lt;/p&gt;
+&lt;p&gt;Considere for a moment those numbers. Of 53 characters we initially have a key space of \(256^{53}\), a number which has more than 100 digits.&lt;/p&gt;
 &lt;p&gt;But with a frequency attack and a good score function we managed to reduce the key space to only 1690.&lt;/p&gt;
 &lt;h3 id="how-close-are-out-guesses"&gt;How close are out guesses?&lt;/h3&gt;
 &lt;p&gt;Let’s build the key stream (still a guess):&lt;/p&gt;
@@ -13854,7 +13854,7 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;If we modify one ciphertext block its decryption will be totally scrambled but we will have control of the &lt;em&gt;next&lt;/em&gt; plaintext block.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 60%" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;label for='CldlIGRvbid0IGtub3cgaWYgb3VyIGluamVjdCBwbGFpbnRleHQKd2lsbCBiZSBhbGlnbmVkIHRvIHRoZSBibG9jayBzaXplIGJvdW5kYXJ5LiBUbyBlbnN1cmUgdGhhdCB3ZSBpbmplY3QKcGFkZGluZyBvZiB0d2ljZSB0aGUgYmxvY2sgc2l6ZSB3aGljaCB3YXJyYW50aWVzIHRoYXQgYXQgbGVhc3Qgb25lIGJsb2NrCndpbGwgYmUgZnVsbCB3aXRoIG91ciBgYEFgYHMKbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='CldlIGRvbid0IGtub3cgaWYgb3VyIGluamVjdCBwbGFpbnRleHQKd2lsbCBiZSBhbGlnbmVkIHRvIHRoZSBibG9jayBzaXplIGJvdW5kYXJ5LiBUbyBlbnN1cmUgdGhhdCB3ZSBpbmplY3QKcGFkZGluZyBvZiB0d2ljZSB0aGUgYmxvY2sgc2l6ZSB3aGljaCB3YXJyYW50aWVzIHRoYXQgYXQgbGVhc3Qgb25lIGJsb2NrCndpbGwgYmUgZnVsbCB3aXRoIG91ciBgYEFgYHMKbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
@@ -13954,7 +13954,7 @@ We don’t know if our inject plaintext will be aligned to the block size bounda
 &lt;span class="ne"&gt;AssertionError&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Let’s forge this with &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Let’s forge &lt;strong&gt;anyways&lt;/strong&gt; with &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt;.&lt;/p&gt;
 &lt;h3 id="block-alignment"&gt;Block alignment&lt;/h3&gt;
 &lt;p&gt;We want to know how many bytes are needed so the plaintext at its right is aligned with the block boundary.&lt;/p&gt;
 &lt;p&gt;In other words, given the prefix &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;email&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we now that we need 10 bytes to append and complete the block leaving the rest of our own plaintext aligned with the block boundary:&lt;/p&gt;
@@ -14094,13 +14094,28 @@ In fact, there are two challenges: the &lt;a href="https://cryptopals.com/sets/2
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3 id="block-alignment"&gt;Block alignment&lt;/h3&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_misalign_by2.svg' /&gt;
+&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The prepended payload is constant but it is still unknown to the us/adversary.&lt;/p&gt;
 &lt;p&gt;Before proceed we need to know for how many bytes our attacker-controlled payload is misaligned.&lt;/p&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_misalign_by1.svg' /&gt;
+&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Basically we start with a plaintext of &lt;em&gt;twice&lt;/em&gt; the size of the block size and we add one byte at time.&lt;/p&gt;
 &lt;p&gt;When we find two &lt;em&gt;consecutive&lt;/em&gt; cipher blocks that are the same, we are done.&lt;/p&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_aligned.svg' /&gt;
+&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The amount of extra bytes that we added is the answer.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;encryption_oracle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;A&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;encryption_oracle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;a&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nblocks&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;has_duplicates&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;distance&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;break&lt;/span&gt;
 
@@ -14113,81 +14128,29 @@ In fact, there are two challenges: the &lt;a href="https://cryptopals.com/sets/2
 
 &lt;h3 id="get-the-penguin"&gt;Get the penguin!&lt;/h3&gt;
 &lt;p&gt;Now, with our blocks aligned, we can set as our plaintext two identical blocks but the last one will have one byte less.&lt;/p&gt;
-&lt;p&gt;This missing byte will be filled by the next plaintext byte &lt;code class="none"&gt;?&lt;/code&gt;, unknown by us:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;|----|----|----|----|
- AAAA AAA? .... ....&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;These two blocks will yield the same two cipher blocks only if the last byte of the first block (&lt;code class="none"&gt;A&lt;/code&gt;) is equal to the last byte of the second block (&lt;code class="none"&gt;?&lt;/code&gt;)&lt;/p&gt;
-&lt;p&gt;We can extrapolate this testing for all the possible bytes &lt;code class="none"&gt;x&lt;/code&gt;, until we find an &lt;code class="none"&gt;x&lt;/code&gt; that it is equals to &lt;code class="none"&gt;?&lt;/code&gt;.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;|----|----|----|----|
- AAAx AAA? .... ....
-    ^    ^&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The first block (&lt;code class="none"&gt;AAAx&lt;/code&gt;) is our &lt;em&gt;probe block&lt;/em&gt; used to probe and find the unknown byte &lt;code class="none"&gt;?&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;The second &lt;em&gt;partial&lt;/em&gt; block (&lt;code class="none"&gt;AAA&lt;/code&gt;) is used to align the unknown plaintext so the &lt;em&gt;first unknown byte&lt;/em&gt; is in place at the end of this block, named as &lt;em&gt;align block&lt;/em&gt;.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;  align block
-      :::
-|----|----|----|----|
- AAAx AAA? .... ....
-
-AAAx    probe block
-AAA     align block (3)
-distance = 0
-
-  align block
-      :::
-|----|---:|----|----|
- AAAa AAAa .... ....    &amp;#39;a&amp;#39; found
-    ^    ^&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The beauty of this is that no matter if the key used to encrypt changes, this will work.&lt;/p&gt;
-&lt;p&gt;Even if the length of the prefix (plaintext &lt;em&gt;before&lt;/em&gt; out controlled part) changes, as long as it changes in a small range, it is just a matter of trying more times.&lt;/p&gt;
+&lt;p&gt;This missing byte will be filled by the next &lt;em&gt;secret&lt;/em&gt; plaintext byte &lt;code class="none"&gt;?&lt;/code&gt;, unknown by us:&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_1_byte.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;These two blocks will yield the same two cipher blocks only if the last byte of the first block (&lt;code class="none"&gt;x&lt;/code&gt;) is equal to the last byte of the second block (&lt;code class="none"&gt;?&lt;/code&gt;)&lt;/p&gt;
+&lt;p&gt;&lt;label for='ClRoZSBiZWF1dHkgb2YgdGhpcyBpcyB0aGF0IG5vIG1hdHRlciBpZiB0aGUga2V5IHVzZWQgdG8gZW5jcnlwdCBjaGFuZ2VzLAp0aGlzIHdpbGwgc3RpbGwgd29yayBhcyBsb25nIGFzIHRoZSBwbGFpbnRleHQgZG9lcyBub3QgY2hhbmdlLgoKRXZlbiBpZiB0aGUgbGVuZ3RoIG9mIHRoZSBwcmVmaXggKHBsYWludGV4dCAqYmVmb3JlKiBvdXIgY29udHJvbGxlZCBwYXJ0KQpjaGFuZ2VzLCBhcyBsb25nIGFzIGl0IGNoYW5nZXMgaW4gYSBzbWFsbCByYW5nZSwgaXQgaXMganVzdCBhIG1hdHRlciBvZgp0cnlpbmcgbW9yZSB0aW1lcy4KCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='ClRoZSBiZWF1dHkgb2YgdGhpcyBpcyB0aGF0IG5vIG1hdHRlciBpZiB0aGUga2V5IHVzZWQgdG8gZW5jcnlwdCBjaGFuZ2VzLAp0aGlzIHdpbGwgc3RpbGwgd29yayBhcyBsb25nIGFzIHRoZSBwbGFpbnRleHQgZG9lcyBub3QgY2hhbmdlLgoKRXZlbiBpZiB0aGUgbGVuZ3RoIG9mIHRoZSBwcmVmaXggKHBsYWludGV4dCAqYmVmb3JlKiBvdXIgY29udHJvbGxlZCBwYXJ0KQpjaGFuZ2VzLCBhcyBsb25nIGFzIGl0IGNoYW5nZXMgaW4gYSBzbWFsbCByYW5nZSwgaXQgaXMganVzdCBhIG1hdHRlciBvZgp0cnlpbmcgbW9yZSB0aW1lcy4KCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+The beauty of this is that no matter if the key used to encrypt changes, this will still work as long as the plaintext does not change.
+&lt;br /&gt;&lt;br /&gt;
+Even if the length of the prefix (plaintext &lt;em&gt;before&lt;/em&gt; our controlled part) changes, as long as it changes in a small range, it is just a matter of trying more times.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;The first block (&lt;code class="none"&gt;aaax&lt;/code&gt;) is our &lt;em&gt;probe block&lt;/em&gt; used to probe and find the unknown byte &lt;code class="none"&gt;?&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The second &lt;em&gt;partial&lt;/em&gt; block (&lt;code class="none"&gt;aaa&lt;/code&gt;) is used to align the unknown plaintext so the &lt;em&gt;first unknown byte&lt;/em&gt; is in place at the end of this block, named as &lt;em&gt;align block&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;After found the value of &lt;code class="none"&gt;?&lt;/code&gt; we &lt;em&gt;shift&lt;/em&gt; the unknown plaintext on byte to the left and we continue breaking one byte at time.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;  align block
-      ::
-|----|----|----|----|
- AAax AAa? .... ....    shift and test next byte
-    ^    ^
-
-AAax    probe block
-AAa     align block (2)
-distance = 0
-
-      :
-|----|----|----|----|
- Aabc Aabc .... ....    more bytes decrypted
-    ^    ^
-
-|----|----|----|----|
- abcx abc? .... ....    test next byte
-    ^    ^
-
-abcx    probe block
-        align block (0)
-distance = 0&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_2_byte.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;After breaking &lt;code class="none"&gt;block_size&lt;/code&gt; bytes, we cannot shift to the left further.&lt;/p&gt;
 &lt;p&gt;But what we can do is to add an extra block: the probe block will not be testing its next block but the block that is 1 block to the right:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;  align block
-      :::
-|----|----|----|----|
- bcdx AAAa bcd? ....    insert a pad block in the between, the test block
-    ^         ^         is 1-block far form the probe block
-
-bcdx    prob block
-AAA     align block (3)
-distance = 1
-
-
-|----|----|----|----|
- bcde AAAa bcde ....    &amp;#39;e&amp;#39; found
-    ^         ^&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;And the cycle repeats again:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;  align block
-      ::
-|----|----|----|----|
- cdex AAab cde? ....    shift and test next byte
- ^^^^ ^^
-
-cdex    probe block
-AA      align block 2
-distance = 1&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_n_byte.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The following is an implementation of the previous algorithm from &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt; that breaks the ECB cipher using a oracle.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks.block_ciphers&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;decrypt_ecb_tail&lt;/span&gt;
 
@@ -14245,7 +14208,7 @@ Yeup, &lt;a href="https://cryptopals.com/sets/2/challenges/15"&gt;PKCS#7 padding
 &lt;p&gt;For the first plaintext block we use an &lt;a href="https://en.wikipedia.org/wiki/Initialization_vector"&gt;Initialization Vector&lt;/a&gt; for the XOR operation.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 60%" class='' alt='' src='/img/matasano/cbc-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/cbc-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;This IV should be random but for the sake of the test it will be full of zeros.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;./posts/matasano/assets&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -14265,7 +14228,7 @@ Yeup, &lt;a href="https://cryptopals.com/sets/2/challenges/15"&gt;PKCS#7 padding
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;br /&gt; At difference with the encryption, the decryption of one block doesn't depend of any other: you can decrypt any block at random or in parallel.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 60%" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h3 id="generating-secrets"&gt;Generating secrets&lt;/h3&gt;
 &lt;p&gt;&lt;label for='CldpdGggdGhlIGV4Y2VwdGlvbiBvZiB0aGUgKnNlZWQqIHRoYXQgd2lsbCBiZSBmaXggdG8gbWFrZSB0aGUgdGVzdApyZXByb2R1Y2libGUgYW5kIHRoZSAqYmxvY2sgc2lkZSogdG8gbWFrZSBpdCBhIGxpdHRsZSBlYXNpZXIuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='CldpdGggdGhlIGV4Y2VwdGlvbiBvZiB0aGUgKnNlZWQqIHRoYXQgd2lsbCBiZSBmaXggdG8gbWFrZSB0aGUgdGVzdApyZXByb2R1Y2libGUgYW5kIHRoZSAqYmxvY2sgc2lkZSogdG8gbWFrZSBpdCBhIGxpdHRsZSBlYXNpZXIuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
@@ -14294,13 +14257,16 @@ With the exception of the &lt;em&gt;seed&lt;/em&gt; that will be fix to make the
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;cfg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;generate_config&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;# update the random attributes&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;kargs&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;block_size&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;kargs&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;block_size&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;    &lt;span class="c1"&gt;# (known)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# prepend + append with two random strings; pad it later&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;plaintext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;prefix&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;partial_plaintext&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;posfix&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;#            (unknown)        (known)         (unknown)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;plaintext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;plaintext&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pad_mode&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# encrypt the plaintext with one of the available modes&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# but exactly which, ECB or CBC, is unknown to us&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;enc_mode&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;ecb&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="n"&gt;ciphertext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;enc_ecb&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;plaintext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;enc_mode&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;cbc&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
@@ -14323,39 +14289,22 @@ With the exception of the &lt;em&gt;seed&lt;/em&gt; that will be fix to make the
 &lt;p&gt;In this challenge we need to find when a secret encryption is using ECB or CBC mode.&lt;/p&gt;
 &lt;p&gt;Now, lets create a (partial) plaintext of &lt;em&gt;three times&lt;/em&gt; the block size.&lt;/p&gt;
 &lt;p&gt;With a (partial) plaintext of twice the block size we can know if the cipher is using ECB or CBC because if it is using ECB, two same plaintext blocks will be encrypted to the same ciphertext block&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;|----|----|----|----|
- AAAA AAAA .... ....    plaintext
-  |    |
-  V    V
-|----|----|----|----|
-  CA   CA  .... ....    ciphertext&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_no_prefix.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;But because we have some &lt;em&gt;extra plaintext prepended&lt;/em&gt;, we cannot know if our two blocks will be &lt;em&gt;aligned to the block boundary&lt;/em&gt;.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;|----|----|----|----|
- xAAA AAAA Ayyy ....    plaintext (not aligned)
-  |    |    |
-  V    V    V
-|----|----|----|----|
-  C1   CA   C2  ....    ciphertext
-
-
-|----|----|----|----|
- xxxx AAAA AAAA ....    plaintext (aligned)
-       |    |
-       V    V
-|----|----|----|----|
-       CA   CA  ....    ciphertext&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_prefix_unaligned.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;To workaround this we set a plaintext three times the block size:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;|----|----|----|----|
- xAAA AAAA AAAA Ayyy    plaintext (always aligned)
-  |    |    |    |
-  V    V    V    V
-|----|----|----|----|
-  C1   CA   CA   C2     ciphertext&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_prefix_aligned.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Now it is a matter of counting duplicated blocks.&lt;/p&gt;
 &lt;p&gt;In &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt; there is a convenient &lt;code class="none"&gt;iduplicates&lt;/code&gt; method for this.&lt;/p&gt;
 &lt;p&gt;If we found one block duplicated assume that we are using ECB otherwise CBC (so we will use &lt;code class="none"&gt;has_duplicates&lt;/code&gt; directly).&lt;/p&gt;
 &lt;p&gt;We will repeat this 1024 to prove that this works:&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;choosen_partial_plaintext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;A&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;choosen_partial_plaintext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;a&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1024&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;encryption_oracle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;choosen_partial_plaintext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -14394,11 +14343,11 @@ The ECB encrypted image on the right and its plaintext original version on the l
 &lt;p&gt;Can you see the penguin?&lt;/p&gt;
 &lt;!--more--&gt;
 &lt;h2 id="warming-up"&gt;Warming up&lt;/h2&gt;
-&lt;p&gt;The following ciphertext was encrypted with AES in ECB mode (Electronic Code Book) with the given key.&lt;/p&gt;
+&lt;p&gt;The following ciphertext was encrypted with AES in &lt;a href="https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation"&gt;Electronic Codebook mode (ECB)&lt;/a&gt; with the given key.&lt;/p&gt;
 &lt;p&gt;In ECB each plaintext block is encrypted using the same key.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 60%" class='' alt='' src='/img/matasano/ecb-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/ecb-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Decrypting is a piece of cake; this is just to get practice about &lt;a href="https://cryptopals.com/sets/1/challenges/7"&gt;AES in ECB mode&lt;/a&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;load_bytes&lt;/span&gt;     &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
 
@@ -14415,12 +14364,12 @@ The ECB encrypted image on the right and its plaintext original version on the l
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
-&lt;br /&gt; Note how to encryption/decryption of one block don't depend of any other: this allows the encryption/decryption to be at random places and in parallel.
+Note how to encryption/decryption of one block don’t depend of any other: this allows the encryption/decryption to be at random places and in parallel.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max-width: 60%" class='' alt='' src='/img/matasano/ecb-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/ecb-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="detecting-penguins"&gt;Detecting Penguins&lt;/h2&gt;
 &lt;p&gt;If two plaintext &lt;em&gt;blocks&lt;/em&gt; are the same, ECB will encrypt them to the &lt;em&gt;same&lt;/em&gt; ciphertext block.&lt;/p&gt;
-&lt;p&gt;&lt;a href="https://cryptopals.com/sets/1/challenges/8"&gt;Detecting AES in ECB mode&lt;/a&gt; from a pool of random strings is therefore trivial: if the plaintext has two or more equal blocks, the ciphertext will have the same blocks repeated, something unlikely for a truly random string.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://cryptopals.com/sets/1/challenges/8"&gt;Detecting AES in ECB mode&lt;/a&gt; from a pool of random strings is therefore trivial: if the plaintext has two or more equal blocks, the ciphertext will have the same blocks repeated, something &lt;strong&gt;unlikely for a truly random string&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;We can use the same technique done in &lt;a href="/articles/2018/04/01/A-string-of-coincidences-is-not-a-coincidence.html"&gt;the previous post&lt;/a&gt; for detecting coincidences.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ciphertexts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;load_bytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;./posts/matasano/assets/8.txt&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
 
@@ -14449,10 +14398,18 @@ The ECB encrypted image on the right and its plaintext original version on the l
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;methods&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;IC - Nblocks sequence&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;scores&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img  class='fullwidth' alt='' src='/img/matasano/score_pinguins.png' /&gt;
-&lt;figcaption&gt;
-Scores by method. For the Nblocks method, the size of the block is of 16 bytes.
-&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Scores by method.
+&lt;br /&gt;&lt;br /&gt;
+For the &lt;code class="none"&gt;Nblocks&lt;/code&gt; method, the size of the block is of 16 bytes.
+&lt;br /&gt;&lt;br /&gt;
+Note how the Index of Coincidence (IC) detects the non-random ciphertext in both cases but it is much clearer when the IC is computed on 16-bytes blocks.
+&lt;br /&gt;&lt;br /&gt;
+This is because ECB encrypts to the same cipher block when the plain blocks are the same.
+&lt;br /&gt;&lt;br /&gt;
+Other vulnerable encryption modes will not be as easily detectable however.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/score_pinguins.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;!--
 &gt;&gt;&gt; import sys
@@ -14468,7 +14425,7 @@ Scores by method. For the Nblocks method, the size of the block is of 16 bytes.
 
 &gt;&gt;&gt; methods = methods.apply(min_max_normalizer, axis=0)
 
-&gt;&gt;&gt; with show(save='./posts/matasano/assets/score_pinguins.png', latexify_kargs={'columns':2}): # byexample: +timeout=600 +skip
+&gt;&gt;&gt; with show(save='./posts/matasano/score_pinguins.svg', columns = 2, transparent = True): # byexample: +timeout=600 +skip
 ...     axes = methods.plot(style='o', subplots=True, layout=(2, 1))
 ...
 ...     _ = [ax.vlines(132, 0, 1, linestyles='dashed') for ax in axes.flat]
@@ -14496,36 +14453,78 @@ Scores by method. For the Nblocks method, the size of the block is of 16 bytes.
 &lt;span class='marginnote'&gt;
 &lt;strong&gt;– Spoiler Alert! –&lt;/strong&gt;
 &lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;Shall we?&lt;!--more--&gt;&lt;/p&gt;
-&lt;h2 id="guessing-the-length-of-the-key"&gt;Guessing the length of the key&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;guess_key_length&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will score each possible length using a scoring function.&lt;/p&gt;
-&lt;p&gt;For this, we will explore the full range of possible lengths from 1 to 40 and we will score each one with the &lt;a href="https://en.wikipedia.org/wiki/Hamming_distance"&gt;Hamming Distance&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Shall we?&lt;/p&gt;
+&lt;!--more--&gt;
+&lt;h2 id="hamming-distance-at-bit-level"&gt;Hamming distance (at bit level)&lt;/h2&gt;
+&lt;p&gt;Given two messages of the same length, the &lt;a href="https://en.wikipedia.org/wiki/Hamming_distance"&gt;Hamming Distance&lt;/a&gt; consists in counting how many bits one differ of the other.&lt;/p&gt;
+&lt;p&gt;In other words, we do an xor between the messages and count how many ones we get.&lt;/p&gt;
+$$\mbox{count-1-bits} \left( c_1 ⊕ c_2 \right) \rightarrow \mbox{hamming-distance} \left( c_1, c_2 \right)$$
+&lt;p&gt;Here is an example:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;                &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;this is a test&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;hamming_distance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;wokka wokka!!!&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="mi"&gt;37&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="guessing-the-length-of-the-key"&gt;Guessing the length of the key&lt;/h2&gt;
+&lt;p&gt;We will compute the Hamming distance between blocks of different lengths.&lt;/p&gt;
+&lt;p&gt;Most of the case we will be computing the distance between 2 random ciphertext blocks.&lt;/p&gt;
+$$\begin{align*}  \\
+c_1 ⊕ c_2 &amp; = \left( p_1 ⊕ k_i \right)  ⊕ \left( p_2 ⊕ k_j \right)  \\
+          &amp; = \left( p_1 ⊕ p_2 \right)  ⊕ \left( k_i ⊕ k_j \right)
+\end{align*}$$
+&lt;p&gt;But if we hit the length of the key, \(k_i = k_j\) and the xor of 2 ciphertext blocks will cancel out the random bits from the key exposing the xor of 2 plaintext blocks.&lt;/p&gt;
+$$\begin{align*}  \\
+c_1 ⊕ c_2 &amp; = \left( p_1 ⊕ k_i \right)  ⊕ \left( p_2 ⊕ k_j \right)  \\
+          &amp; = \left( p_1 ⊕ p_2 \right)  ⊕ \left( k_i ⊕ k_j \right)  \\
+          &amp; = \left( p_1 ⊕ p_2 \right)
+\end{align*}$$
+&lt;p&gt;The idea is that the Hamming distance of them will be significantly shorter.&lt;/p&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgLz4KQ29tcHV0ZSB0aGUgSGFtbWluZyBkaXN0YW5jZSBiZXR3ZWVuIGNvbnNlY3V0aXZlIGJsb2NrcyBvZiB0aGUgc2FtZQpsZW5ndGggYW5kIHRha2VzIHRoZSBtYXhpbXVtLiBUaGVuIHNjb3JlcyBpdC4KClNjb3JlcyBjbG9zZXIgdG8gMQptZWFucyBzbWFsbGVyIGRpc3RhbmNlcyBhbmQgdGhlcmVmb3JlIHRoZSBibG9ja3Mgb2YgY2lwaGVydGV4dCBsb29rcwp0aGF0IHdlcmUgeG9yJ2Qgd2l0aCAqdGhlIHNhbWUga2V5KiBhcyB0aGUgeG9yIG9mIHR3byBibG9ja3MgbG9va3MKKmxlc3MgcmFuZG9tKi4KClNjb3JlcyBjbG9zZXIgdG8gMCBhcmUgdGhlIG9wcG9zaXRlOiB0aGUgeG9yIG9mIHR3byBibG9ja3Mgc3RpbGwgbG9va3MKcmFuZG9tLgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgLz4KQ29tcHV0ZSB0aGUgSGFtbWluZyBkaXN0YW5jZSBiZXR3ZWVuIGNvbnNlY3V0aXZlIGJsb2NrcyBvZiB0aGUgc2FtZQpsZW5ndGggYW5kIHRha2VzIHRoZSBtYXhpbXVtLiBUaGVuIHNjb3JlcyBpdC4KClNjb3JlcyBjbG9zZXIgdG8gMQptZWFucyBzbWFsbGVyIGRpc3RhbmNlcyBhbmQgdGhlcmVmb3JlIHRoZSBibG9ja3Mgb2YgY2lwaGVydGV4dCBsb29rcwp0aGF0IHdlcmUgeG9yJ2Qgd2l0aCAqdGhlIHNhbWUga2V5KiBhcyB0aGUgeG9yIG9mIHR3byBibG9ja3MgbG9va3MKKmxlc3MgcmFuZG9tKi4KClNjb3JlcyBjbG9zZXIgdG8gMCBhcmUgdGhlIG9wcG9zaXRlOiB0aGUgeG9yIG9mIHR3byBibG9ja3Mgc3RpbGwgbG9va3MKcmFuZG9tLgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/hamming1.svg' /&gt;
+Compute the Hamming distance between consecutive blocks of the same length and takes the maximum. Then scores it.
+&lt;br /&gt;&lt;br /&gt;
+Scores closer to 1 means smaller distances and therefore the blocks of ciphertext looks that were xor’d with &lt;em&gt;the same key&lt;/em&gt; as the xor of two blocks looks &lt;em&gt;less random&lt;/em&gt;.
+&lt;br /&gt;&lt;br /&gt;
+Scores closer to 0 are the opposite: the xor of two blocks still looks random.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;This is exactly what &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;key_length_by_hamming_distance&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; does: scores how likely a length is computing the Hamming distance between blocks of a given length.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.scoring&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;key_length_by_hamming_distance&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ciphertext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;./posts/matasano/assets/6.txt&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;64&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;guess_key_length&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.scoring&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;key_length_by_hamming_distance&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;key_length_by_hamming_distance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;length&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="mf"&gt;0.291&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;...&amp;gt;&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;lengths_hd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;guess_key_length&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;length_space&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;                            &lt;span class="n"&gt;score_func&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;key_length_by_hamming_distance&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;key_length_by_hamming_distance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;length&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;29&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="mf"&gt;0.5818&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;...&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Instead of testing by hand we can use the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;scoring&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function and explore the full range of possible lengths and score each one keeping only the more likely.&lt;/p&gt;
+&lt;p&gt;An educated guess would be to explore the lengths between 1 and 40&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.scoring&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;scoring&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;lengths_hd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;scoring&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;space&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;41&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;                      &lt;span class="n"&gt;score_func&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;key_length_by_hamming_distance&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;There isn’t a single response, of course.&lt;/p&gt;
 &lt;p&gt;This method &lt;em&gt;guesses&lt;/em&gt; the length of the key so we have a set of possible values, ones more likely than others.&lt;/p&gt;
-&lt;p&gt;For this, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;guess_key_length&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; returns a &lt;a href="https://en.wikipedia.org/wiki/Fuzzy_set"&gt;Fuzzy Set&lt;/a&gt; where each possible length has a probability linked to it.&lt;/p&gt;
-&lt;p&gt;We could cut the set further and keep only the top 5 more likely lengths:&lt;/p&gt;
+&lt;p&gt;For this, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;scoring&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; returns a &lt;a href="https://en.wikipedia.org/wiki/Fuzzy_set"&gt;Fuzzy Set&lt;/a&gt; where each possible length has a probability linked to it.&lt;/p&gt;
+&lt;p&gt;Here are the top 5 more likely lengths that got the highest scores (and the lowest Hamming distance)&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;lengths_hd&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;copy&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cut_off&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.8500&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.7500&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.6875&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;13&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.6827&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.6705&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;29&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.5819&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;40&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.5500&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;36&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.5417&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;38&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.5362&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;35&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.5357&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
+&lt;h2 id="index-of-coincidence"&gt;Index of coincidence&lt;/h2&gt;
 &lt;p&gt;But because we are rebels, we will guess the length of the key using another scoring function: the &lt;a href="https://en.wikipedia.org/wiki/Index_of_coincidence"&gt;Index of Coincidences&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.scoring&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;key_length_by_ic&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;lengths_ic&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;guess_key_length&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;length_space&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;                            &lt;span class="n"&gt;score_func&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;key_length_by_ic&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;min_score&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mf"&gt;0.01&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;lengths_ic&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;scoring&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;space&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;41&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;                      &lt;span class="n"&gt;score_func&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;key_length_by_ic&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;min_score&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mf"&gt;0.01&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;lengths_ic&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;copy&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cut_off&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -14533,44 +14532,34 @@ Scores by method. For the Nblocks method, the size of the block is of 16 bytes.
 &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;29&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.0598&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;40&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.0235&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;30&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.0232&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.0230&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;26&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;0.0223&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;blockquote&gt;
-&lt;p&gt;Interesting, both guesses have one guess that has a value higher than the rest. However both methods suggest two different sets (at least for the top 5 guesses)&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;Before you think that I didn’t programmed the Hamming distance correctly:&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;this is a test&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;hamming_distance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;wokka wokka!!!&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
-&lt;span class="mi"&gt;37&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Score of each guess by method.
+&lt;br /&gt;&lt;br /&gt;
+Both methods agree on being 29 the most likely length but as the plot shows, both methods have quite different behaviours too.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/kl_guesses.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;!--
+&gt;&gt;&gt; import sys
+&gt;&gt;&gt; sys.path.append("./z/py/plotting")
 
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img  class='fullwidth' alt='' src='/img/matasano/kl_guesses.png' /&gt;
-&lt;figcaption&gt;
-Score of each guess by method. The maximum score using the Hamming distance is at 5. Using the Index of Coincidence is at 29.
-&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;./z/py/plotting&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&gt;&gt;&gt; from plotting import plt, show                      # byexample: +timeout=10
+&gt;&gt;&gt; import pandas as pd                                 # byexample: +timeout=10
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;plotting&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;show&lt;/span&gt;                      &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pandas&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;pd&lt;/span&gt;                                 &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&gt;&gt;&gt; guesses = pd.DataFrame({'Hamming Distance': lengths_hd,
+...                         'Index of Coincidence': lengths_ic})
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;guesses&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;DataFrame&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Hamming Distance&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;lengths_hd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;                         &lt;span class="s1"&gt;&amp;#39;Index of Coincidence&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;lengths_ic&lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;
-
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;show&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;./posts/matasano/assets/kl_guesses.png&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;latexify_kargs&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;columns&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;}):&lt;/span&gt; &lt;span class="c1"&gt;# byexample: +timeout=600 +skip&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;_&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;guesses&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;plot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;style&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;o&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;subplots&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;layout&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;I will take my changes with the length of 29 found using the IC.&lt;/p&gt;
+&gt;&gt;&gt; with show(save='./posts/matasano/kl_guesses.svg', columns = 2, transparent = True): # byexample: +timeout=600 +skip
+...     _ = guesses.plot(style='o', subplots=True, layout=(2, 1))
+...
+--&gt;
 &lt;h2 id="guessing-one-byte-at-time"&gt;Guessing one byte at time&lt;/h2&gt;
 &lt;p&gt;What I will do now is to pick the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; … bytes from the ciphertext (multiples of the particular length &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;).&lt;/p&gt;
 &lt;p&gt;If the length guessed is correct, all those bytes should had been encrypted with the same byte key.&lt;/p&gt;
 &lt;p&gt;And we already know &lt;a href="/articles/2018/03/01/In-XOR-We-Trust.html"&gt;how to break a ciphertext encrypted with a single byte key&lt;/a&gt;!&lt;/p&gt;
 &lt;p&gt;So we need to do this for all the offsets between 0 and l. In other words:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;    0,  0+l,  0+2l    ... to break key[0]
-    1,  1+l,  1+2l    ... to break key[1]
-    2,  2+l,  2+2l    ... to break key[2]
-    :,   : ,   :           :   :
-  l-1, 2l-1,  3l-1    ... to break key[l-1]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/break_repeat_key_transpose.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;To break this, we will need the frequency of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;etaoin&lt;/span&gt; &lt;span class="n"&gt;shrdlu&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (I’m assuming that the plaintext is in ASCII human plain English):&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.fuzzy_set&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;FuzzySet&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;most_common_plain_ngrams&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;FuzzySet&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
@@ -14587,7 +14576,7 @@ Score of each guess by method. The maximum score using the Hamming distance is a
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;brute_force&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;freq_attack&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.scoring&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;all_ascii_printable&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;length&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;lengths_ic&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;most_likely&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;length&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;lengths_hd&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="n"&gt;lengths_ic&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;most_likely&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;bytes_of_key&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;length&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -14628,10 +14617,10 @@ Score of each guess by method. The maximum score using the Hamming distance is a
 &lt;span class="mi"&gt;120&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;label for='Ck1vcmUga2V5cyB0aGFuIGdyYW1zIG9mIG9yZGluYXkgbWFzcyBpbiB0aGUKW29ic2VydmFibGUgdW5pdmVyc2VdKGh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL09ic2VydmFibGVfdW5pdmVyc2UpCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='Ck1vcmUga2V5cyB0aGFuIGdyYW1zIG9mIG9yZGluYXkgbWFzcyBpbiB0aGUKW29ic2VydmFibGUgdW5pdmVyc2VdKGh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtpL09ic2VydmFibGVfdW5pdmVyc2UpCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='Ck1vcmUga2V5cyB0aGFuIGdyYW1zIG9mIG9yZGluYXJ5IG1hc3MgaW4gdGhlCltvYnNlcnZhYmxlIHVuaXZlcnNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9PYnNlcnZhYmxlX3VuaXZlcnNlKQptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='Ck1vcmUga2V5cyB0aGFuIGdyYW1zIG9mIG9yZGluYXJ5IG1hc3MgaW4gdGhlCltvYnNlcnZhYmxlIHVuaXZlcnNlXShodHRwczovL2VuLndpa2lwZWRpYS5vcmcvd2lraS9PYnNlcnZhYmxlX3VuaXZlcnNlKQptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-More keys than grams of ordinay mass in the &lt;a href="https://en.wikipedia.org/wiki/Observable_universe"&gt;observable universe&lt;/a&gt;
+More keys than grams of ordinary mass in the &lt;a href="https://en.wikipedia.org/wiki/Observable_universe"&gt;observable universe&lt;/a&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;120&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a really small number compared with the whole key space &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;^&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;29&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;And only a few of them are more likely than others:&lt;/p&gt;
@@ -14798,6 +14787,11 @@ $$S=\sum_{\forall p_{x}}p_{x}\textrm{log}_{n}\left(p_{x}\right)$$
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;methods&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Entropy xor-level&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;s&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;scores&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
+&lt;p&gt;&lt;label for='Ckkgd29uZGVyLCB3aGF0IHdvdWxkIGhhcHBlbiBpZiBpbnN0ZWFkIG9mIHhvcmluZyB1c2luZyB0aGUgZmlyc3QgYnl0ZQp3ZSB0cnkgdGhlbiB0aGUgc2Vjb25kIGJ5dGUgYW5kIHRoZW4gdGhlIHRoaXJkLiBXaWxsIHRoZXNlIGFncmVlPyBDb3VsZCB3ZSB1c2UKdGhlbSB0byByZW1vdmUgZmFsc2UgcG9zaXRpdmVzPwptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='Ckkgd29uZGVyLCB3aGF0IHdvdWxkIGhhcHBlbiBpZiBpbnN0ZWFkIG9mIHhvcmluZyB1c2luZyB0aGUgZmlyc3QgYnl0ZQp3ZSB0cnkgdGhlbiB0aGUgc2Vjb25kIGJ5dGUgYW5kIHRoZW4gdGhlIHRoaXJkLiBXaWxsIHRoZXNlIGFncmVlPyBDb3VsZCB3ZSB1c2UKdGhlbSB0byByZW1vdmUgZmFsc2UgcG9zaXRpdmVzPwptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+I wonder, what would happen if instead of xoring using the first byte we try then the second byte and then the third. Will these agree? Could we use them to remove false positives?
+&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Interesting, this method has more false positives than others but at the same time, this method makes a clear distinction between a few really non random strings and the rest of the strings in the pool.&lt;/p&gt;
 &lt;h3 id="kolmogorov-complexity"&gt;Kolmogorov complexity&lt;/h3&gt;
 &lt;p&gt;As an alternative way to see this, a random string cannot be compressed. So the string with the shortest compressed version will be likely to be a non-random string.&lt;/p&gt;
@@ -14843,7 +14837,7 @@ $$S=\sum_{\forall p_{x}}p_{x}\textrm{log}_{n}\left(p_{x}\right)$$
 &lt;p&gt;Claiming that a string is uniformly random if &lt;em&gt;far from trivial&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;Even the NSA battery tests for randomness fail to measure the randomness of crafted strings.&lt;/p&gt;
 &lt;p&gt;Here is the plot of the scores calculated by the different methods:&lt;/p&gt;
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img  class='fullwidth' alt='' src='/img/matasano/scores_by_method.png' /&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/scores_by_method.svg' /&gt;
 &lt;figcaption&gt;
 Scores by method. Notice how the element 170th gets the lower value in most cases indicating that the string is not random.
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -14862,7 +14856,7 @@ Scores by method. Notice how the element 170th gets the lower value in most case
 
 &gt;&gt;&gt; methods = methods.apply(min_max_normalizer, axis=0)
 
-&gt;&gt;&gt; with show(save='./posts/matasano/assets/scores_by_method.png', latexify_kargs={'columns':2}): # byexample: +timeout=600 +skip
+&gt;&gt;&gt; with show(save='./posts/matasano/scores_by_method.svg', columns = 2, transparent = True): # byexample: +timeout=600 +skip
 ...     axes = methods.plot(style='o', subplots=True, layout=(3, 2))
 ...
 ...     _ = [ax.vlines(170, 0, 1, linestyles='dashed') for ax in axes.flat]
@@ -15183,10 +15177,10 @@ I/O size &lt;span class="o"&gt;(&lt;/span&gt;minimum/optimal&lt;span class="o"&g
 &lt;p&gt;Watch out there, there is also a tool called &lt;code&gt;dd_rescue&lt;/code&gt; (notice the underscore) that has nothing to do with &lt;code&gt;GNU ddrescue&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;GNU ddrescue&lt;/code&gt;, from now on just &lt;code&gt;ddrescue&lt;/code&gt;, will copy a disk through three stages.&lt;/p&gt;
 &lt;p&gt;In the first, it reads blocks of data and copy them to the output in the same manner that &lt;code&gt;dd&lt;/code&gt; but unlike the latter, &lt;code&gt;ddrescue&lt;/code&gt; will not stop if it found an error nor will put zeros nor discard the block if the reading fails.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9mb3JlbnNpY3MvdGhlc2lzLXJlY292ZXJpbmcvdHJpbW1pbmdfc2NyYXBpbmdfZGRyZXNjdWUucG5nJyAvPgpBZnRlciB0aGUgaW5pdGlhbCBibG9jay13aXNlIHJlYWQsIGBkZF9yZXNjdWVgIHJlLXJlYWRzIGJsb2NrcyB3aXRoCmVycm9ycy4KCkZpcnN0LCByZWFkaW5nIGZyb20gdGhlIGV4dHJlbWVzIHVudGlsIHRoZSBmaXJzdCBiYWQgc2VjdG9yCigqdHJpbW1pbmcqKSBhbmQgdGhlbiB0cnlpbmcgZWFjaCByZW1haW5pbmcgc2VjdG9yLCBvbmUgYnkgb25lICgqc2NyYXBpbmcqKS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9mb3JlbnNpY3MvdGhlc2lzLXJlY292ZXJpbmcvdHJpbW1pbmdfc2NyYXBpbmdfZGRyZXNjdWUucG5nJyAvPgpBZnRlciB0aGUgaW5pdGlhbCBibG9jay13aXNlIHJlYWQsIGBkZF9yZXNjdWVgIHJlLXJlYWRzIGJsb2NrcyB3aXRoCmVycm9ycy4KCkZpcnN0LCByZWFkaW5nIGZyb20gdGhlIGV4dHJlbWVzIHVudGlsIHRoZSBmaXJzdCBiYWQgc2VjdG9yCigqdHJpbW1pbmcqKSBhbmQgdGhlbiB0cnlpbmcgZWFjaCByZW1haW5pbmcgc2VjdG9yLCBvbmUgYnkgb25lICgqc2NyYXBpbmcqKS4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIC8+CkFmdGVyIHRoZSBpbml0aWFsIGJsb2NrLXdpc2UgcmVhZCwgYGRkX3Jlc2N1ZWAgcmUtcmVhZHMgYmxvY2tzIHdpdGgKZXJyb3JzLgoKRmlyc3QsIHJlYWRpbmcgZnJvbSB0aGUgZXh0cmVtZXMgdW50aWwgdGhlIGZpcnN0IGJhZCBzZWN0b3IKKCp0cmltbWluZyopIGFuZCB0aGVuIHRyeWluZyBlYWNoIHJlbWFpbmluZyBzZWN0b3IsIG9uZSBieSBvbmUgKCpzY3JhcGluZyopLgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIC8+CkFmdGVyIHRoZSBpbml0aWFsIGJsb2NrLXdpc2UgcmVhZCwgYGRkX3Jlc2N1ZWAgcmUtcmVhZHMgYmxvY2tzIHdpdGgKZXJyb3JzLgoKRmlyc3QsIHJlYWRpbmcgZnJvbSB0aGUgZXh0cmVtZXMgdW50aWwgdGhlIGZpcnN0IGJhZCBzZWN0b3IKKCp0cmltbWluZyopIGFuZCB0aGVuIHRyeWluZyBlYWNoIHJlbWFpbmluZyBzZWN0b3IsIG9uZSBieSBvbmUgKCpzY3JhcGluZyopLgptYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img  class='fullwidth' alt='' src='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.png' /&gt;
+&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' /&gt;
 After the initial block-wise read, &lt;code&gt;dd_rescue&lt;/code&gt; re-reads blocks with errors.
 &lt;br /&gt;&lt;br /&gt;
 First, reading from the extremes until the first bad sector (&lt;em&gt;trimming&lt;/em&gt;) and then trying each remaining sector, one by one (&lt;em&gt;scraping&lt;/em&gt;).

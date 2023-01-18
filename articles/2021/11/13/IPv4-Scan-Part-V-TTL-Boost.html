@@ -55,7 +55,7 @@
                     <li><a href="https://byexamples.github.io">byexample</a></li>
                     <li><a href="https://bisturi.github.io">bisturi</a></li>
                     <li>
-                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
                         <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
                     </li>
                 </ul>
@@ -98,7 +98,7 @@ Histogram of TTL range between rounds of scans to the same host showing how much
 <br /><br />
 The dataset does not include hosts scanned only once. The vertical axis is in logarithmic scale.
 </span></figcaption>
-<img  class='' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /></figure></p>
+<img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /></figure></p>
 <p>The histogram may be misleading at first but remember that the vertical axis is in <em>logarithmic scale</em>.</p>
 <p>That means that the main peak at 0 is almost 3 orders of magnitude larger than the three secondary peaks on the right.</p>
 <p>This is compatible with the analysis made previously: the routes are highly stable and only a small fraction (0.39998%) are unstable with a large variance (represented by the right side of the histogram).</p>
@@ -122,10 +122,10 @@ The dataset does not include hosts scanned only once. The vertical axis is in lo
 <p>That’s why we do a <code><span class="highlight-candombe-inline"><span class="o">.-</span> <span class="mi">1</span></span></code>.</p>
 <p>Back to the numbers, <em>what the hell do those peaks mean?</em></p>
 <h2 id="analysis-of-the-3-secondary-peaks">Analysis of the 3 secondary peaks</h2>
-<p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vbXVsdGlyb3VuZHNfdHRsX3JhbmdlX3VuYmlhc2VkX19oaXN0LnN2ZycgLz5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2ludGVybmV0X3NjYW4vbXVsdGlyb3VuZHNfdHRsX3JhbmdlX3VuYmlhc2VkX19oaXN0LnN2ZycgLz5tYXJnaW4=' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<img  class='fullwidth' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' />
+<img style="width: 100%;" class='fullwidth' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' />
 </span></p>
 <p>Let’s ignore the peak at 0 (those are the stable routes). Why do we have 3 secondary peaks?</p>
 <p>Focus on the peak at TTL range of 191 (the right most).</p>
@@ -194,7 +194,7 @@ m=-128,  M=63</code></pre>
         <span>&copy;
             Martin Di Paola
         </span></br>
-            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
             <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
         <br>
         

@@ -58,16 +58,16 @@
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M385.0 63.0 L385.0 119.0 ' />
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M395.0 63.0 L395.0 119.0 ' />
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M335.0 77.0 L345.0 77.0 ' />
-    <text x='61' y='83' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[main]]></text>
-    <text x='20' y='96' font-family='Courier' font-size='14' stroke='none' fill='#ffffff' ><![CDATA[AAAAAAAAA]]></text>
-    <text x='30' y='140' font-family='Courier' font-size='18' stroke='none' fill='#000000' ><![CDATA[padding]]></text>
-    <text x='141' y='139' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[sp]]></text>
-    <text x='131' y='98' font-family='Courier' font-size='18' stroke='none' fill='#000000' ><![CDATA[addr1]]></text>
-    <text x='275' y='84' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[start]]></text>
-    <text x='210' y='96' font-family='Courier' font-size='15' stroke='none' fill='#ffffff' ><![CDATA[XXXXXXX]]></text>
-    <text x='231' y='139' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[egg]]></text>
-    <text x='207' y='42' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[sp points here after func returned]]></text>
-    <text x='348' y='98' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[...]]></text>
-    <text x='412' y='97' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[bottom]]></text>
+    <text x='60' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[main]]></text>
+    <text x='20' y='96' font-family='Courier' font-size='13' stroke='none' fill='#ffffff' ><![CDATA[AAAAAAAAA]]></text>
+    <text x='33' y='138' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[padding]]></text>
+    <text x='141' y='138' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[sp]]></text>
+    <text x='132' y='96' font-family='Courier' font-size='15' stroke='none' fill='#ffffff' ><![CDATA[addr1]]></text>
+    <text x='275' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[start]]></text>
+    <text x='210' y='96' font-family='Courier' font-size='14' stroke='none' fill='#ffffff' ><![CDATA[XXXXXXX]]></text>
+    <text x='230' y='138' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[egg]]></text>
+    <text x='221' y='40' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[sp points here after func returned]]></text>
+    <text x='346' y='96' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[...]]></text>
+    <text x='410' y='96' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[bottom]]></text>
   </g>
 </svg>

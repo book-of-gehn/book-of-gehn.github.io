@@ -55,7 +55,7 @@
                     <li><a href="https://byexamples.github.io">byexample</a></li>
                     <li><a href="https://bisturi.github.io">bisturi</a></li>
                     <li>
-                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
                         <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
                     </li>
                 </ul>
@@ -120,7 +120,7 @@ Yeup, <a href="https://cryptopals.com/sets/2/challenges/15">PKCS#7 padding valid
 <p>For the first plaintext block we use an <a href="https://en.wikipedia.org/wiki/Initialization_vector">Initialization Vector</a> for the XOR operation.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max-width: 60%" class='' alt='' src='/img/matasano/cbc-enc.png' /></figure></p>
+<img style="max_width: 60%;" class='' alt='' src='/img/matasano/cbc-enc.png' /></figure></p>
 <p>This IV should be random but for the sake of the test it will be full of zeros.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./posts/matasano/assets&quot;</span><span class="p">)</span>
@@ -140,7 +140,7 @@ Yeup, <a href="https://cryptopals.com/sets/2/challenges/15">PKCS#7 padding valid
 <p><figure><figcaption><span markdown='1'>
 <br /> At difference with the encryption, the decryption of one block doesn't depend of any other: you can decrypt any block at random or in parallel.
 </span></figcaption>
-<img style="max-width: 60%" class='' alt='' src='/img/matasano/cbc-dec.png' /></figure></p>
+<img style="max_width: 60%;" class='' alt='' src='/img/matasano/cbc-dec.png' /></figure></p>
 <h3 id="generating-secrets">Generating secrets</h3>
 <p><label for='CldpdGggdGhlIGV4Y2VwdGlvbiBvZiB0aGUgKnNlZWQqIHRoYXQgd2lsbCBiZSBmaXggdG8gbWFrZSB0aGUgdGVzdApyZXByb2R1Y2libGUgYW5kIHRoZSAqYmxvY2sgc2lkZSogdG8gbWFrZSBpdCBhIGxpdHRsZSBlYXNpZXIuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CldpdGggdGhlIGV4Y2VwdGlvbiBvZiB0aGUgKnNlZWQqIHRoYXQgd2lsbCBiZSBmaXggdG8gbWFrZSB0aGUgdGVzdApyZXByb2R1Y2libGUgYW5kIHRoZSAqYmxvY2sgc2lkZSogdG8gbWFrZSBpdCBhIGxpdHRsZSBlYXNpZXIuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
@@ -169,13 +169,16 @@ With the exception of the <em>seed</em> that will be fix to make the test reprod
 <span class="o">...</span>     <span class="k">global</span> <span class="n">cfg</span>
 <span class="o">...</span>     <span class="n">cfg</span> <span class="o">=</span> <span class="n">generate_config</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span> <span class="c1"># update the random attributes</span>
 <span class="o">...</span>
-<span class="o">...</span>     <span class="n">block_size</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">kargs</span><span class="p">[</span><span class="s1">&#39;block_size&#39;</span><span class="p">]</span>
+<span class="o">...</span>     <span class="n">block_size</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">kargs</span><span class="p">[</span><span class="s1">&#39;block_size&#39;</span><span class="p">]</span>    <span class="c1"># (known)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="c1"># prepend + append with two random strings; pad it later</span>
 <span class="o">...</span>     <span class="n">plaintext</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">partial_plaintext</span> <span class="o">+</span> <span class="n">cfg</span><span class="o">.</span><span class="n">posfix</span>
+<span class="o">...</span>     <span class="c1">#            (unknown)        (known)         (unknown)</span>
+<span class="o">...</span>
 <span class="o">...</span>     <span class="n">plaintext</span> <span class="o">=</span> <span class="n">plaintext</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">pad_mode</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="c1"># encrypt the plaintext with one of the available modes</span>
+<span class="o">...</span>     <span class="c1"># but exactly which, ECB or CBC, is unknown to us</span>
 <span class="o">...</span>     <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">enc_mode</span> <span class="o">==</span> <span class="s1">&#39;ecb&#39;</span><span class="p">:</span>
 <span class="o">...</span>         <span class="n">ciphertext</span> <span class="o">=</span> <span class="n">enc_ecb</span><span class="p">(</span><span class="n">plaintext</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)</span>
 <span class="o">...</span>     <span class="k">elif</span> <span class="n">cfg</span><span class="o">.</span><span class="n">enc_mode</span> <span class="o">==</span> <span class="s1">&#39;cbc&#39;</span><span class="p">:</span>
@@ -198,39 +201,22 @@ With the exception of the <em>seed</em> that will be fix to make the test reprod
 <p>In this challenge we need to find when a secret encryption is using ECB or CBC mode.</p>
 <p>Now, lets create a (partial) plaintext of <em>three times</em> the block size.</p>
 <p>With a (partial) plaintext of twice the block size we can know if the cipher is using ECB or CBC because if it is using ECB, two same plaintext blocks will be encrypted to the same ciphertext block</p>
-<pre><code>|----|----|----|----|
- AAAA AAAA .... ....    plaintext
-  |    |
-  V    V
-|----|----|----|----|
-  CA   CA  .... ....    ciphertext</code></pre>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_no_prefix.svg' /></figure></p>
 <p>But because we have some <em>extra plaintext prepended</em>, we cannot know if our two blocks will be <em>aligned to the block boundary</em>.</p>
-<pre><code>|----|----|----|----|
- xAAA AAAA Ayyy ....    plaintext (not aligned)
-  |    |    |
-  V    V    V
-|----|----|----|----|
-  C1   CA   C2  ....    ciphertext
-
-
-|----|----|----|----|
- xxxx AAAA AAAA ....    plaintext (aligned)
-       |    |
-       V    V
-|----|----|----|----|
-       CA   CA  ....    ciphertext</code></pre>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_prefix_unaligned.svg' /></figure></p>
 <p>To workaround this we set a plaintext three times the block size:</p>
-<pre><code>|----|----|----|----|
- xAAA AAAA AAAA Ayyy    plaintext (always aligned)
-  |    |    |    |
-  V    V    V    V
-|----|----|----|----|
-  C1   CA   CA   C2     ciphertext</code></pre>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_prefix_aligned.svg' /></figure></p>
 <p>Now it is a matter of counting duplicated blocks.</p>
 <p>In <a href="https://pypi.org/project/cryptonita/">cryptonita</a> there is a convenient <code class="none">iduplicates</code> method for this.</p>
 <p>If we found one block duplicated assume that we are using ECB otherwise CBC (so we will use <code class="none">has_duplicates</code> directly).</p>
 <p>We will repeat this 1024 to prove that this works:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">choosen_partial_plaintext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="n">block_size</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">choosen_partial_plaintext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;a&#39;</span> <span class="o">*</span> <span class="n">block_size</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1024</span><span class="p">):</span>
 <span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="n">encryption_oracle</span><span class="p">(</span><span class="n">choosen_partial_plaintext</span><span class="p">)</span>
@@ -252,7 +238,7 @@ With the exception of the <em>seed</em> that will be fix to make the test reprod
         <span>&copy;
             Martin Di Paola
         </span></br>
-            <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
             <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
         <br>
         

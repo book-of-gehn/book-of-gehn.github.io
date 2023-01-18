@@ -55,18 +55,18 @@
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M245.0 147.0 L245.0 126.0 Q245.0 119.0 250.0 119.0 L260.0 119.0 L260.0 119.0 Q265.0 119.0 265.0 112.0 L265.0 91.0 L265.0 91.0 ' />
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M335.0 147.0 L335.0 126.0 Q335.0 119.0 340.0 119.0 L410.0 119.0 L410.0 119.0 Q415.0 119.0 415.0 112.0 L415.0 91.0 L415.0 91.0 ' />
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M525.0 91.0 L485.0 91.0 ' />
-    <text x='21' y='41' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[sp]]></text>
-    <text x='44' y='168' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[/bin/bash\x00]]></text>
-    <text x='82' y='83' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[&argv0]]></text>
-    <text x='171' y='41' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[sp+4]]></text>
-    <text x='232' y='83' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[&argv1]]></text>
-    <text x='252' y='168' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[c ]]></text>
-    <text x='321' y='41' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[sp+8]]></text>
-    <text x='330' y='168' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[echo 'pwn!'...]]></text>
-    <text x='382' y='83' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[&argv2]]></text>
-    <text x='472' y='41' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[sp+12]]></text>
-    <text x='532' y='83' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[&argv3]]></text>
-    <text x='534' y='98' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[(zero)]]></text>
-    <text x='680' y='84' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[stack]]></text>
+    <text x='21' y='40' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[sp]]></text>
+    <text x='51' y='166' font-family='Courier' font-size='15' stroke='none' fill='#ffffff' ><![CDATA[/bin/bash\x00]]></text>
+    <text x='81' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[&argv0]]></text>
+    <text x='171' y='40' font-family='Courier' font-size='13' stroke='none' fill='#000000' ><![CDATA[sp+4]]></text>
+    <text x='231' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[&argv1]]></text>
+    <text x='253' y='166' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[c ]]></text>
+    <text x='321' y='40' font-family='Courier' font-size='13' stroke='none' fill='#000000' ><![CDATA[sp+8]]></text>
+    <text x='334' y='166' font-family='Courier' font-size='15' stroke='none' fill='#ffffff' ><![CDATA[echo 'pwn!'...]]></text>
+    <text x='381' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[&argv2]]></text>
+    <text x='472' y='40' font-family='Courier' font-size='13' stroke='none' fill='#000000' ><![CDATA[sp+12]]></text>
+    <text x='531' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[&argv3]]></text>
+    <text x='535' y='96' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[(zero)]]></text>
+    <text x='683' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[stack]]></text>
   </g>
 </svg>

@@ -66,19 +66,19 @@
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M485.0 63.0 L485.0 119.0 ' />
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M495.0 63.0 L495.0 119.0 ' />
     <path stroke='#000000' stroke-width='1.000000' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M455.0 77.0 L445.0 77.0 ' />
-    <text x='111' y='83' font-family='Courier' font-size='17' stroke='none' fill='#000000' ><![CDATA[main]]></text>
-    <text x='50' y='98' font-family='Courier' font-size='18' stroke='none' fill='#000000' ><![CDATA[xxxxxxxx]]></text>
-    <text x='53' y='140' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[buffer]]></text>
-    <text x='34' y='42' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[fp + 0x50]]></text>
-    <text x='154' y='140' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[saved registers]]></text>
-    <text x='211' y='98' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[fp]]></text>
-    <text x='161' y='98' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[r4]]></text>
-    <text x='247' y='42' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[fp points here]]></text>
-    <text x='284' y='98' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[lr]]></text>
-    <text x='385' y='84' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[start]]></text>
-    <text x='350' y='98' font-family='Courier' font-size='18' stroke='none' fill='#000000' ><![CDATA[xxxxxxx]]></text>
-    <text x='448' y='98' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[...]]></text>
-    <text x='513' y='84' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[stack before]]></text>
-    <text x='514' y='98' font-family='Courier' font-size='19' stroke='none' fill='#000000' ><![CDATA[the overflow]]></text>
+    <text x='110' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[main]]></text>
+    <text x='54' y='96' font-family='Courier' font-size='14' stroke='none' fill='#ffffff' ><![CDATA[xxxxxxxx]]></text>
+    <text x='55' y='138' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[buffer]]></text>
+    <text x='35' y='40' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[fp + 0x50]]></text>
+    <text x='162' y='138' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[saved registers]]></text>
+    <text x='212' y='96' font-family='Courier' font-size='15' stroke='none' fill='#ffffff' ><![CDATA[fp]]></text>
+    <text x='162' y='96' font-family='Courier' font-size='15' stroke='none' fill='#ffffff' ><![CDATA[r4]]></text>
+    <text x='253' y='40' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[fp points here]]></text>
+    <text x='285' y='96' font-family='Courier' font-size='15' stroke='none' fill='#ffffff' ><![CDATA[lr]]></text>
+    <text x='385' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[start]]></text>
+    <text x='354' y='96' font-family='Courier' font-size='14' stroke='none' fill='#000000' ><![CDATA[xxxxxxx]]></text>
+    <text x='446' y='96' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[...]]></text>
+    <text x='518' y='82' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[stack before]]></text>
+    <text x='519' y='96' font-family='Courier' font-size='15' stroke='none' fill='#000000' ><![CDATA[the overflow]]></text>
   </g>
 </svg>

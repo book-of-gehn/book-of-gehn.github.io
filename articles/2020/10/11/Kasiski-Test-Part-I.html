@@ -55,7 +55,7 @@
                     <li><a href="https://byexamples.github.io">byexample</a></li>
                     <li><a href="https://bisturi.github.io">bisturi</a></li>
                     <li>
-                        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
                         <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
                     </li>
                 </ul>
@@ -157,7 +157,7 @@ This is an example of <a href="https://en.wikipedia.org/wiki/Dynamic_programming
 <p>A simple solution is to use an id: different ngrams will have different ids while the instances of the <em>same</em> ngram will have the same id.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max-width: 45%" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' /></figure></p>
+<img style="max_width: 45%;" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' /></figure></p>
 <p>The following Python fragment summarizes the above:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="c1"># input: s, the original text</span>
 <span class="n">id_of_ngram</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
@@ -186,7 +186,7 @@ Input-size/time-taken relationship of <code><span class="highlight-candombe-inli
 
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max-width: 60%" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_count_filter.png' /></figure></p>
+<img style="max_width: 60%;" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_count_filter.png' /></figure></p>
 <p>The final result is a list of tuples <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span></span></code> with the positions of the ngrams and their identifiers <em>sorted</em> by their position.</p>
 <p>The algorithm can be generalized to find all the non-unique ngrams of length <code><span class="highlight-candombe-inline"><span class="n">n</span></span></code> changing <code><span class="highlight-candombe-inline"><span class="n">s</span><span class="o">.</span><span class="n">ngrams</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></span></code> to <code><span class="highlight-candombe-inline"><span class="n">s</span><span class="o">.</span><span class="n">ngrams</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></span></code>.</p>
 <p>The trick is how to build the list of ngrams of <code><span class="highlight-candombe-inline"><span class="n">n</span><span class="o">+</span><span class="mi">1</span></span></code> length <em>reusing</em> the ngrams of length <code><span class="highlight-candombe-inline"><span class="n">n</span></span></code> found by the above algorithm.</p>
@@ -195,7 +195,7 @@ Input-size/time-taken relationship of <code><span class="highlight-candombe-inli
 <p>In other words, they are consecutive.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max-width: 60%" class='' alt='' src='/img/crypto/kasiski/kasiski_merge.png' /></figure></p>
+<img style="max_width: 60%;" class='' alt='' src='/img/crypto/kasiski/kasiski_merge.png' /></figure></p>
 <p>A merged ngram not necessary means that it is a repeated ngram but we know that any repeated ngram will be a merged one.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="n">id_of_ngram</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
 <span class="n">ngram_cnt_by_id</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
@@ -316,7 +316,7 @@ Input-size/time-taken relationship of <code><span class="highlight-candombe-inli
     <span>&copy;
         Martin Di Paola
     </span></br>
-        <a class="raw_link" href="/feed.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
         <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
     <br>
 
