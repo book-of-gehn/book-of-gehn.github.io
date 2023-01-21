@@ -241,25 +241,33 @@ No, there are not memory leaks here. The <em>delete player</em> function is a go
 <p>We found a <strong>memory leak</strong> and a <strong>double free</strong> but we don’t have a real crash. We just reviewed the code.</p>
 <p>We need to keep exploring this, here are some ideas for a future post:</p>
 <ul>
-<li><p><a href="http://valgrind.org/">Valgrind</a>: we could see if there are more memory corruptions. Play with <a href="http://lcamtuf.coredump.cx/afl/">AFL</a> perhaps?</p></li>
-<li><p><a href="https://angr.io/">Angr</a>: trigger the leaking <code>strdup</code> is not trivial, we may use a symbolic execution for that.</p></li>
-<li><p>Heap attack: after all, we need to know how the heap management works and plan the attack.</p>
+<li><a href="http://valgrind.org/">Valgrind</a>: we could see if there are more memory corruptions. Play with <a href="http://lcamtuf.coredump.cx/afl/">AFL</a> perhaps?</li>
+<li><a href="https://angr.io/">Angr</a>: trigger the leaking <code>strdup</code> is not trivial, we may use a symbolic execution for that.</li>
+<li>Heap attack: after all, we need to know how the heap management works and plan the attack.</li>
+</ul>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">RPG - Part I (IDA writeup - EKO 2019) - October 27, 2019 - Martin Di Paola</span>
 <footer>
-<hr class="slender">
-<div class="credits">
-    <span>&copy;
-        Martin Di Paola
-    </span></br>
-        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
-        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
-    <br>
-
-    <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
-
-</div>
-</footer></li>
-</ul>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+</footer>
 </body>
 </html>

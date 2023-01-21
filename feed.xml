@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2023-01-18T12:44:51.421053+00:00</updated>
+  <updated>2023-01-21T20:27:16.267868+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -11833,7 +11833,8 @@ Action Message Format
 &gt;&gt;&gt; seed = 20190822   # make the tests 'random' but deterministic
 &gt;&gt;&gt; block_size = 16     # leave this fixed, it is what happen in practice
 --&gt;
-&lt;p&gt;Recall from &lt;a href="/articles/2018/07/03/CBC-Bitflipping.html"&gt;CBC Bitflipping post&lt;/a&gt; the scenario where we have a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;add_user_data&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function to &lt;em&gt;user&lt;/em&gt; profiles:&lt;/p&gt;
+&lt;h3 id="setup"&gt;Setup&lt;/h3&gt;
+&lt;p&gt;Recall from &lt;a href="/articles/2018/07/03/CBC-Bitflipping.html"&gt;CBC Bitflipping post&lt;/a&gt; the scenario where we have a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;add_user_data&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function that adds arbitrary data to users’ profiles:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;generate_config&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;random_state&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;seed&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="n"&gt;enc_mode&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ctr&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="n"&gt;prefix&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;comment1=cooking%20MCs;userdata=&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
@@ -11845,12 +11846,29 @@ Action Message Format
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;enc_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;We control the user’s data but we cannot control the entire profile. In particular, we cannot say that we have the administration role adding &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;admin&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;true&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;On the server side there is a function that checks for admin role:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;is_admin&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;dec_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;admin=true&amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
+&lt;p&gt;We control the user’s data (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;userdata&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; field) but we cannot control the entire profile.&lt;/p&gt;
+&lt;p&gt;In particular, we cannot say that we have the administration role adding &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;admin&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;true&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CldlbGwuLi4gdGVjaG5pY2FsbHkgdGhlIGNoZWNrIGluIGBhZGRfdXNlcl9kYXRhYCBpcyBtYWRlIHdpdGggYW4KYGFzc2VydGAuCgpJbiBQeXRob24gdGhlc2UgYXNzZXJ0cyBhcmUgKipyZW1vdmVkKiogaWYgdGhlIGNvZGUgaXMgZXhlY3V0ZWQgd2l0aCB0aGUKb3B0aW1pemF0aW9uIGZsYWcgc28gaWYgdGhlIGBhZGRfdXNlcl9kYXRhYCBydW5zIHdpdGggdGhlIGZsYWcgb24gd2UKY291bGQgaW5qZWN0IGFueXRoaW5nLgoKU28gZG8gbm90IHVzZSBgYXNzZXJ0YCBmb3IgYW55IHJlYWwgY2hlY2suCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CldlbGwuLi4gdGVjaG5pY2FsbHkgdGhlIGNoZWNrIGluIGBhZGRfdXNlcl9kYXRhYCBpcyBtYWRlIHdpdGggYW4KYGFzc2VydGAuCgpJbiBQeXRob24gdGhlc2UgYXNzZXJ0cyBhcmUgKipyZW1vdmVkKiogaWYgdGhlIGNvZGUgaXMgZXhlY3V0ZWQgd2l0aCB0aGUKb3B0aW1pemF0aW9uIGZsYWcgc28gaWYgdGhlIGBhZGRfdXNlcl9kYXRhYCBydW5zIHdpdGggdGhlIGZsYWcgb24gd2UKY291bGQgaW5qZWN0IGFueXRoaW5nLgoKU28gZG8gbm90IHVzZSBgYXNzZXJ0YCBmb3IgYW55IHJlYWwgY2hlY2suCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+Well… technically the check in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;add_user_data&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is made with an &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;assert&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.
+&lt;br /&gt;&lt;br /&gt;
+In Python these asserts are &lt;strong&gt;removed&lt;/strong&gt; if the code is executed with the optimization flag so if the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;add_user_data&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; runs with the flag on we could inject anything.
+&lt;br /&gt;&lt;br /&gt;
+So do not use &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;assert&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for any real check.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;So, no, we cannot do this:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;add_user_data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;somedata;admin=true&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;lt;...&amp;gt;&lt;/span&gt;&lt;span class="ne"&gt;AssertionError&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="bit-flipping"&gt;Bit flipping&lt;/h2&gt;
 &lt;p&gt;In &lt;a href="/articles/2018/07/03/CBC-Bitflipping.html"&gt;CBC Bitflipping post&lt;/a&gt; we saw that CBC does not offer any protection against forgery and how to break it.&lt;/p&gt;
 &lt;p&gt;In this post we will do the same but attacking the CTR mode.&lt;/p&gt;
 &lt;p&gt;First we will create our &lt;em&gt;target&lt;/em&gt; plaintext and a &lt;em&gt;padding&lt;/em&gt; plaintext. The former is the plaintext that we &lt;em&gt;want&lt;/em&gt; to inject and the latter is the one that we are &lt;em&gt;allowed&lt;/em&gt; to inject.&lt;/p&gt;
@@ -12062,7 +12080,8 @@ Disjunction/union of two state machines \(sm_1\) and \(sm_2\).
 &lt;strong&gt;– Spoiler Alert! –&lt;/strong&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;One can replace part of the plaintext, extend it or even reduce it.&lt;/p&gt;
-&lt;p&gt;But this beautiful property of a CTR mode (and any other stream cipher) is actually a booby-trap. &lt;!--more--&gt;&lt;/p&gt;
+&lt;p&gt;But this beautiful property of a CTR mode (and any other stream cipher) is actually a booby-trap.&lt;/p&gt;
+&lt;!--more--&gt;
 &lt;!--
 &gt;&gt;&gt; import sys
 &gt;&gt;&gt; sys.path.append("./posts/matasano/assets")
@@ -12072,30 +12091,46 @@ Disjunction/union of two state machines \(sm_1\) and \(sm_2\).
 &gt;&gt;&gt; secret_cfg = generate_config(random_state=seed)
 --&gt;
 &lt;p&gt;Imagine the following function:&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;edit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# we don&amp;#39;t need to decrypt the whole ctext but this is easier&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;dec_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;mutable&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;patch&lt;/span&gt;&lt;span class="p"&gt;)]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;enc_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;edit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;new_ptext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;sz&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;new_ptext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# dummy plaintext to &amp;quot;encrypt&amp;quot; and obtain the secret stream&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# we make it large enough to cover the new_ptext size at the given&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# offset&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;dummy&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;sz&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# partial encrypting stream&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;stream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;enc_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;dummy&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# keep only the bytes needed to decrypt and re-encrypt at the&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# offset&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;stream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;assert&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;sz&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# override the specific part&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# here the advantage of CTR: we don&amp;#39;t need to decrypt everything&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;new_ctext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;splice&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sz&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;new_ptext&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;new_ctext&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;edit&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function allows us edit or patch a ciphertext modifying the plaintext.&lt;/p&gt;
-&lt;p&gt;&lt;label for='ClRoaXMgdW5sb2NrcyB0aGUKW0JyZWFrICJyYW5kb20gYWNjZXNzIHJlYWQvd3JpdGUiIEFFUyBDVFJdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy8xL2NoYWxsZW5nZXMvMjUpCmNoYWxsZW5nZS4gbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='ClRoaXMgdW5sb2NrcyB0aGUKW0JyZWFrICJyYW5kb20gYWNjZXNzIHJlYWQvd3JpdGUiIEFFUyBDVFJdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy8xL2NoYWxsZW5nZXMvMjUpCmNoYWxsZW5nZS4gbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
+&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;edit&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function allows us edit or patch a ciphertext modifying the plaintext &lt;em&gt;knowing the secret key&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;No magic.&lt;/p&gt;
+&lt;p&gt;&lt;label for='ClRoaXMgdW5sb2NrcyB0aGUKW0JyZWFrICJyYW5kb20gYWNjZXNzIHJlYWQvd3JpdGUiIEFFUyBDVFJdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80L2NoYWxsZW5nZXMvMjUpCmNoYWxsZW5nZS4gbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='ClRoaXMgdW5sb2NrcyB0aGUKW0JyZWFrICJyYW5kb20gYWNjZXNzIHJlYWQvd3JpdGUiIEFFUyBDVFJdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80L2NoYWxsZW5nZXMvMjUpCmNoYWxsZW5nZS4gbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-This unlocks the &lt;a href="https://cryptopals.com/sets/1/challenges/25"&gt;Break “random access read/write” AES CTR&lt;/a&gt; challenge.
+This unlocks the &lt;a href="https://cryptopals.com/sets/4/challenges/25"&gt;Break “random access read/write” AES CTR&lt;/a&gt; challenge.
 &lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;This generates two different ciphertexts encrypted with the &lt;strong&gt;same&lt;/strong&gt; key stream which breaks CTR with a simple known-plaintext attack.&lt;/p&gt;
+&lt;p&gt;But if the adversary has access to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;edit&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and he/she can call it with and arbitrary &lt;em&gt;new plaintext&lt;/em&gt; (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;new_ptext&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;), we can recover the secret stream.&lt;/p&gt;
+&lt;p&gt;The vulnerability is that the original ciphertext and the one returned by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;edit&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; were both encrypted with the &lt;strong&gt;same&lt;/strong&gt; key stream.&lt;/p&gt;
+&lt;p&gt;This is a simple &lt;strong&gt;known-plaintext attack&lt;/strong&gt;.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;load_bytes&lt;/span&gt;     &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;./posts/matasano/assets/25.txt&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;rt&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;64&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ctext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;enc_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;A&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;cpatched&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;edit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;new_ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;A&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;  &lt;span class="c1"&gt;# B(0) would be much easier (but boring)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;cpatched&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;edit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;new_ptext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cpatched&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cpatched&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;new_ptext&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;ctext&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt;
 &lt;span class="kc"&gt;True&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
@@ -12103,50 +12138,66 @@ This unlocks the &lt;a href="https://cryptopals.com/sets/1/challenges/25"&gt;Bre
 &lt;p&gt;If the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;edit&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function has some kind of limitation on the size of the patch, we only need to edit it by pieces:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;N&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;pb&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;enumerate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;patch&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nblocks&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;span class="p"&gt;)):&lt;/span&gt;        &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;pb&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;enumerate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;new_ptext&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nblocks&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;span class="p"&gt;)):&lt;/span&gt;        &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;offset&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;N&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;edit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;pb&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="p"&gt;)[&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;cpatched&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cpatched&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;patch&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cpatched&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;new_ptext&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;ctext&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt;
 &lt;span class="kc"&gt;True&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h2 id="known-partial-plaintext-window"&gt;Known Partial Plaintext Window&lt;/h2&gt;
-&lt;p&gt;Imagine that you have access to an &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;inject_pad&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function that allows you to inject a random padding at an unknown position in the plaintext but you can control the length of the padding inserted.&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;inject_pad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;length&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;p&gt;Imagine that you have access to an &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;inject_pad&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function that allows you to inject a &lt;em&gt;secret padding at an unknown position&lt;/em&gt; in the plaintext but you can control the &lt;strong&gt;length&lt;/strong&gt; of the padding inserted.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;inject_pad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;pad_len&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# get some random and unknown padding&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;prefix&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# repeat &amp;#39;p&amp;#39; enough times to cover &amp;#39;length&amp;#39; bytes of padding&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# making &amp;#39;p&amp;#39; infinite and xor with &amp;#39;length&amp;#39; zeros makes the trick&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;padding&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;inf&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;assert&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;padding&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;length&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# repeat &amp;#39;p&amp;#39; enough times to cover &amp;#39;pad_len&amp;#39; bytes of padding&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# making &amp;#39;p&amp;#39; infinite and slicing &amp;#39;pad_len&amp;#39; zeros makes the trick&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;padding&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;inf&lt;/span&gt;&lt;span class="p"&gt;()[:&lt;/span&gt;&lt;span class="n"&gt;pad_len&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;assert&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;padding&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;pad_len&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# we don&amp;#39;t need to decrypt the whole ctext but this is easier&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;dec_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# inject the padding at some random but lesser value&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# than the known partial plaintext&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# pick a random and secret position where to do the injection&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# of the known partial plaintext (padding)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;offset&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n8&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;[:&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;padding&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# inject the padding (know plaintext) at random location&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;splice&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;offset&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;padding&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# encrypt back again (here again the same error: we are reusing&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# the key and nonce)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;enc_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;This &lt;em&gt;feature&lt;/em&gt; makes the system vulnerable.&lt;/p&gt;
-&lt;p&gt;Because the original and the new ciphertexts are encrypted in CTR with the &lt;em&gt;same&lt;/em&gt; secret, both will use the &lt;em&gt;same&lt;/em&gt; key stream and therefor both stream will &lt;em&gt;share the same prefix&lt;/em&gt; until the offset were the injection was done.&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ctext2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;inject_pad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;p&gt;This &lt;em&gt;feature&lt;/em&gt; makes the system &lt;strong&gt;vulnerable&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3 id="finding-the-padding-injection-offset"&gt;Finding the padding injection offset&lt;/h3&gt;
+&lt;p&gt;Because the original and the new ciphertexts are encrypted in CTR with the &lt;em&gt;same&lt;/em&gt; secret, both will use the &lt;em&gt;same&lt;/em&gt; key stream and therefore both streams will &lt;em&gt;share the same prefix&lt;/em&gt; until the &lt;em&gt;offset&lt;/em&gt; were the injection was done.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;./posts/matasano/assets/25.txt&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;rt&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;64&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ctext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;enc_ctr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;clen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ctext2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;inject_pad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;             &lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;             &lt;span class="n"&gt;pad_len&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;             &lt;span class="n"&gt;secret_cfg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;secret_cfg&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If we do a xor between them we will get a bunch of zeros until the first moment in which the plaintext differ: the offset at where the injection happen.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;clen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;x_ctexts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ctext&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;ctext2&lt;/span&gt;&lt;span class="p"&gt;[:&lt;/span&gt;&lt;span class="n"&gt;clen&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="nb"&gt;next&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;enumerate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x_ctexts&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="mi"&gt;187&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Now imagine that you know a fraction of the plaintext but you don’t know &lt;em&gt;where&lt;/em&gt; is in the plaintext but you know that it is &lt;em&gt;after&lt;/em&gt; the injection point:&lt;/p&gt;
+&lt;h3 id="finding-the-known-partial-plaintext-offset"&gt;Finding the known partial plaintext offset&lt;/h3&gt;
+&lt;p&gt;Now imagine that you know a fraction of the plaintext but &lt;strong&gt;you don’t know where&lt;/strong&gt; is in the plaintext but you know that it is &lt;em&gt;after&lt;/em&gt; the injection point:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;N&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;pknown&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n8&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="n"&gt;secret_cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n8&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
@@ -12159,8 +12210,17 @@ This unlocks the &lt;a href="https://cryptopals.com/sets/1/challenges/25"&gt;Bre
 &lt;span class="kc"&gt;True&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Now, with this we can recover &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes of the key stream. No much.&lt;/p&gt;
-&lt;p&gt;But if we &lt;em&gt;inject&lt;/em&gt; more padding, let’s say &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes the known plaintext will move to the right the same amount allowing us to recover the &lt;em&gt;next&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes of the key stream.&lt;/p&gt;
+&lt;h3 id="moving-window-recover-the-whole-key-stream"&gt;Moving window: recover the whole key stream&lt;/h3&gt;
+&lt;p&gt;Knowing where the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes long known plaintext is we can recover &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes of the CTR key stream.&lt;/p&gt;
+&lt;p&gt;We just xor the known plaintext with the ciphertext at the correct location. No big deal.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ctr-edit-first-slice.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;But with the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;inject_pad&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function we are adding padding &lt;em&gt;before&lt;/em&gt; the location of the known plaintext and indeed &lt;strong&gt;we are moving its offset&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;So if we inject &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes the padding, &lt;em&gt;the window will move N bytes&lt;/em&gt; and we will able to recover &lt;em&gt;another&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes of the key stream.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 75%;" class='' alt='' src='/img/matasano/ctr-edit-second-slice.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Repeating this we can recover all the key stream (except the begin):&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;o&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;enumerate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pknown_offset&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;N&lt;/span&gt;&lt;span class="p"&gt;)):&lt;/span&gt; &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
@@ -12170,6 +12230,9 @@ This unlocks the &lt;a href="https://cryptopals.com/sets/1/challenges/25"&gt;Bre
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;In essential we use the partial known plaintext as a window to see a piece of the key stream and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;inject_pad&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to &lt;em&gt;move&lt;/em&gt; the window to the right and recover more of it.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 80%;" class='' alt='' src='/img/matasano/ctr-edit-slicing-window.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The last key stream chunk recovered may contain bytes that does not belong to the original key stream.&lt;/p&gt;
 &lt;p&gt;We are not interested in those:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;nlast&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;pknown_offset&lt;/span&gt;&lt;span class="p"&gt;:])&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;N&lt;/span&gt;
@@ -12179,9 +12242,9 @@ This unlocks the &lt;a href="https://cryptopals.com/sets/1/challenges/25"&gt;Bre
 
 &lt;p&gt;Finally, from the key stream we can break the ciphering and recover the plaintext (except the begin):&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tmp&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;pbroken&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;pknown_offset&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;recoverd_ptext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;pknown_offset&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;pknown_offset&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;pbroken&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ptext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;pknown_offset&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;recoverd_ptext&lt;/span&gt;
 &lt;span class="kc"&gt;True&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
@@ -12827,7 +12890,7 @@ $$ K = C [P]^{-1} \quad(\textrm{mod } m)$$
 &lt;span class="kc"&gt;True&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h2 id="cracking"&gt;Cracking&lt;/h2&gt;
+&lt;h2 id="cracking-seed-space-exploration"&gt;Cracking (seed space exploration)&lt;/h2&gt;
 &lt;p&gt;It is quite common to find people that use the current time as their &lt;em&gt;secret&lt;/em&gt; seed for the generator.&lt;/p&gt;
 &lt;p&gt;Some even say &lt;em&gt;“but I’m using 64 bits with microsecond resolution so it will impossible to find it by brute force”&lt;/em&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;time&lt;/span&gt;
@@ -12835,25 +12898,32 @@ $$ K = C [P]^{-1} \quad(\textrm{mod } m)$$
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;next&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;iter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MT19937&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;secret_seed&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Exploring 64 bits is quite hard but the seed is &lt;strong&gt;not random&lt;/strong&gt;, therefore we do not need to explore the whole space.&lt;/p&gt;
-&lt;p&gt;Instead we just explore the numbers in the vicinity of the current time which turns the &lt;a href="https://cryptopals.com/sets/3/challenges/22"&gt;crack an MT19937 seed&lt;/a&gt; into a much simpler task:&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;    &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;functools&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;partial&lt;/span&gt;
+&lt;p&gt;Exploring 64 bits is quite hard but the seed is &lt;strong&gt;not random&lt;/strong&gt;, therefore we do not need to explore the &lt;em&gt;whole space&lt;/em&gt; but a &lt;strong&gt;smaller space&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Instead we just explore the numbers in the vicinity of the current time which turns the &lt;a href="https://cryptopals.com/sets/3/challenges/22"&gt;crack an MT19937 seed&lt;/a&gt; into a much simpler task.&lt;/p&gt;
+&lt;p&gt;First, assuming that we known the first output of the PRNG, we build an oracle function to tell if we have found or not the secret seed.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;functools&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;partial&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;MT19937_oracle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seed&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;first_known_output&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;g&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;iter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MT19937&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seed&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;next&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;first_known_output&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;oracle&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;partial&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MT19937_oracle&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;first_known_output&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;delta&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2048&lt;/span&gt;
+&lt;p&gt;Then, it just rest to test the seed space starting from an &lt;em&gt;educated guess&lt;/em&gt; for the secret seed.&lt;/p&gt;
+&lt;p&gt;For example we could guess that the seed is between 2048 seconds ago and 2 times that in the future.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;delta&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2048&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;start&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;delta&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;stop&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;start&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;delta&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
+&lt;p&gt;Now we test each possible seed in that range. &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;search&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a handy function for testing that implements some heuristics like trying first the numbers in the middle of the range before in the extremes.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;    &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;stop&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;oracle&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;likely&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;middle&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;secret_seed&lt;/span&gt;      &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
 &lt;span class="kc"&gt;True&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
+&lt;p&gt;Gotcha!&lt;/p&gt;
 &lt;h2 id="cloning"&gt;Cloning&lt;/h2&gt;
 &lt;p&gt;&lt;label for='CkZvcm1hbGx5LCB0aGVyZSBpcyBub3Qgc3VjaCBlZmZpY2llbnQgYWxnb3JpdGhtIHRoYXQgYWxsb3cgYW4gYXR0YWNrCnRvIGRpc3Rpbmd1aXNoIGV2ZW4gd2l0aCBhIHNtYWxsIHByb2JhYmlsaXR5IGZvciBsYXJnZSBidXQgZmluaXRlCnNlcXVlbmNlcy4gRXZlbnR1YWxseSB3aXRoIGEgKnJlYWxseSBsYXJnZSogc2VxdWVuY2VzIHRoZSBhdHRhY2tlciBtYXkKYnJlYWsgaXQuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='CkZvcm1hbGx5LCB0aGVyZSBpcyBub3Qgc3VjaCBlZmZpY2llbnQgYWxnb3JpdGhtIHRoYXQgYWxsb3cgYW4gYXR0YWNrCnRvIGRpc3Rpbmd1aXNoIGV2ZW4gd2l0aCBhIHNtYWxsIHByb2JhYmlsaXR5IGZvciBsYXJnZSBidXQgZmluaXRlCnNlcXVlbmNlcy4gRXZlbnR1YWxseSB3aXRoIGEgKnJlYWxseSBsYXJnZSogc2VxdWVuY2VzIHRoZSBhdHRhY2tlciBtYXkKYnJlYWsgaXQuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
@@ -12972,14 +13042,16 @@ And this is how we could make the MT19937 a little harder: make the operation no
 &lt;a href="https://cryptopals.com/sets/3/challenges/18"&gt;Implement CTR, the stream cipher mode&lt;/a&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Let’s implement a CTR. As usual we generate a pseudo-random configuration to parametrize the CTR.&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;load_bytes&lt;/span&gt;     &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&lt;!--
+&gt;&gt;&gt; from cryptonita import B, load_bytes     # byexample: +timeout=10
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;./posts/matasano/assets&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;challenge&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;generate_config&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;enc_ctr&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;dec_ctr&lt;/span&gt;  &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&gt;&gt;&gt; import sys
+&gt;&gt;&gt; sys.path.append("./posts/matasano/assets")
+&gt;&gt;&gt; from challenge import generate_config, enc_ctr, dec_ctr  # byexample: +timeout=10
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;seed&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;20181204&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;bsize&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;
+&gt;&gt;&gt; seed = 20181204
+--&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;bsize&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;generate_config&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;random_state&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;seed&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;bsize&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;                       &lt;span class="n"&gt;nonce&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;YELLOW SUBMARINE&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
@@ -13041,8 +13113,6 @@ And this is how we could make the MT19937 a little harder: make the operation no
 &lt;h3 id="score-a-decryption-using-chi-square-test"&gt;Score a decryption using Chi-square test&lt;/h3&gt;
 &lt;p&gt;The frequency attack (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;freq_attack&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;) implemented in &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt; returns a guess: a set of possible key bytes.&lt;/p&gt;
 &lt;p&gt;To determine the correct key we need to try each of them by brute force (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;brute_force&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;) and &lt;em&gt;“see”&lt;/em&gt; which looks more “human text”.&lt;/p&gt;
-&lt;p&gt;This could be done by hand but we want to fully automate this… so no deal!&lt;/p&gt;
-&lt;p&gt;The idea is to automate which deciphered text looks more or less like English text (the expected for our plaintexts) and discard any other.&lt;/p&gt;
 &lt;p&gt;For this we &lt;em&gt;observe&lt;/em&gt; the frequency of the letters in the deciphered plaintext and compare them with the &lt;em&gt;expected&lt;/em&gt; frequency using a &lt;a href="https://en.wikipedia.org/wiki/Chi-squared_test"&gt;Chi-square test&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;In &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt;, this is implemented in the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;fit_freq_score&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.scoring&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;fit_freq_score&lt;/span&gt;
@@ -13363,7 +13433,7 @@ And this is how we could make the MT19937 a little harder: make the operation no
     </author>
     <content type="html">&lt;p&gt;AES and other ciphers work on blocks; if the plaintext length is not multiple of the block size a padding is added.&lt;/p&gt;
 &lt;p&gt;If during the decryption the pad is checked and returns an error, we can use this to build a &lt;em&gt;padding oracle&lt;/em&gt;: a function that will tell us if an encrypted plaintext has a valid pad or not.&lt;/p&gt;
-&lt;p&gt;Armed with this &lt;em&gt;padding oracle&lt;/em&gt; we can break CBC one byte at time.&lt;/p&gt;
+&lt;p&gt;It may not sound too much exiting but armed with this &lt;em&gt;padding oracle&lt;/em&gt; we can &lt;strong&gt;break CBC&lt;/strong&gt; one byte at time.&lt;/p&gt;
 &lt;p&gt;&lt;label for='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
@@ -13385,12 +13455,14 @@ And this is how we could make the MT19937 a little harder: make the operation no
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Now, if we change the last byte (we forge it), the unpad of the forged block will success or not based on what byte we set.&lt;/p&gt;
+&lt;p&gt;Here is what I mean.&lt;/p&gt;
 &lt;p&gt;There are three possible outcomes based on this last byte:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;the unpad works because the last byte matches the original padding byte (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;01&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;).&lt;/li&gt;
 &lt;li&gt;the unpad works because the last byte matches &lt;em&gt;another&lt;/em&gt; padding sequence (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;03&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;).&lt;/li&gt;
 &lt;li&gt;the unpad fails.&lt;/li&gt;
 &lt;/ul&gt;
+&lt;h2 id="padding-check-cases"&gt;Padding check cases&lt;/h2&gt;
 &lt;p&gt;The first case happen with the forged byte is actually the original the last byte.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;mpadded&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x01&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;mpadded&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unpad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;pkcs#7&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -13417,7 +13489,7 @@ And this is how we could make the MT19937 a little harder: make the operation no
 &lt;span class="ne"&gt;ValueError&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Bad&lt;/span&gt; &lt;span class="n"&gt;padding&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;pkcs#7&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="n"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0xff&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Armed with this we can build a padding oracle for CBC: a function that will tell us if an encrypted plaintext has a valid pad or not.&lt;/p&gt;
+&lt;p&gt;Armed with this we can build a &lt;strong&gt;padding oracle for CBC&lt;/strong&gt;: a function that will tell us if an encrypted plaintext has a valid pad or not.&lt;/p&gt;
 &lt;!--
 &gt;&gt;&gt; import sys
 &gt;&gt;&gt; sys.path.append("./posts/matasano/assets")
@@ -13439,13 +13511,23 @@ And this is how we could make the MT19937 a little harder: make the operation no
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h2 id="cbc-decryption-and-padding"&gt;CBC decryption and padding&lt;/h2&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIC8+Cm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIC8+Cm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;img style="width: 60%;" class='fullwidth' alt='' src='/img/matasano/cbc_padding_oracle_xor.svg' /&gt;
+&lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Let’s be \(m\) the ith plaintext block, \(c\) the i-1th ciphertext block and \(x\) the decryption of the ith ciphertext block.&lt;/p&gt;
 &lt;p&gt;Then, we can say that for CBC the plaintext block \(m\) is reconstructed from this:&lt;/p&gt;
 $$x \oplus c = m$$
-&lt;p&gt;Let’s say now that instead of \(c\) we use \(f\), a &lt;em&gt;forged&lt;/em&gt; ciphertext block, if we are reconstructing the last plaintext block, this one will be:&lt;/p&gt;
-$$x \oplus f = ?$$
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;img style="width: 90%;" class='fullwidth' alt='' src='/img/matasano/cbc_padding_oracle_patched.svg' /&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Let’s say now that instead of \(c\) we use \(c'\), a &lt;em&gt;forged&lt;/em&gt; ciphertext block, if we are reconstructing the last plaintext block, this one will be:&lt;/p&gt;
+$$x \oplus c' = ?$$
 &lt;p&gt;Now, because this is the last block, this will affect the padding of the final plaintext.&lt;/p&gt;
-&lt;p&gt;The padding will be ok &lt;em&gt;only if&lt;/em&gt; \(x \oplus f\) is equals to one of these:&lt;/p&gt;
+&lt;p&gt;The padding will be ok &lt;strong&gt;only if&lt;/strong&gt; \(x \oplus c'\) is equals to one of these:&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;    [?  ?  ?  ... ?  ?  01]
     [?  ?  ?  ... ?  02 02]
     [?  ?  ?  ... 03 03 03]
@@ -13453,49 +13535,50 @@ $$x \oplus f = ?$$
     [10 10 10 ... 10 10 10]&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Given this fact and using a &lt;em&gt;padding oracle&lt;/em&gt; we can break CBC one byte at time.&lt;/p&gt;
 &lt;h2 id="guess-the-last-byte"&gt;Guess the last byte&lt;/h2&gt;
-&lt;p&gt;For the plaintext block \(m\), let’s be \(m_1\), the last byte of the block. Using the same convention, this last byte is&lt;/p&gt;
+&lt;p&gt;For the plaintext block \(m\), let’s be \(m_1\), the last byte of the block.&lt;/p&gt;
+&lt;p&gt;Using the same convention, this last byte is&lt;/p&gt;
 $$x_1 \oplus c_1 = m_1$$
-&lt;p&gt;If instead of \(c_1\) we use a forged last byte \(f_1\), the decrypted byte will be&lt;/p&gt;
-$$x_1 \oplus f_1 = ?$$
+&lt;p&gt;If instead of \(c_1\) we use a forged last byte \(c'_1\), the decrypted byte will be&lt;/p&gt;
+$$x_1 \oplus c'_1 = ?$$
 &lt;p&gt;The decrypted message will have a valid padding only if:&lt;/p&gt;
 $$\begin{cases}
-x_1 \oplus f_1 = 01 &amp; (1)\\
-x_1 \oplus f_1 = pp &amp; (2)
+x_1 \oplus c'_1 = 01 &amp; (1)\\
+x_1 \oplus c'_1 = pp &amp; (2)
 \end{cases}$$
-&lt;p&gt;The case 2 means that \(x_1 \oplus f_1\) is equal to the original padding byte and this will happen only if \(f_1 = c_1\) or in other words if we didn’t forge anything.&lt;/p&gt;
+&lt;p&gt;The case 2 means that \(x_1 \oplus c'_1\) is equal to the original padding byte and this will happen only if \(c'_1 = c_1\) or in other words if we didn’t forge anything.&lt;/p&gt;
 &lt;p&gt;It doesn’t add much info.&lt;/p&gt;
 &lt;p&gt;The case 1 is more juicy as this is the other case with a valid padding and, by definition, it must be &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;01&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Then,&lt;/p&gt;
 $$\begin{align*}
-x_1 \oplus f_1 &amp; = 01                           \\
-           x_1 &amp; = 01 \oplus f_1
+x_1 \oplus c'_1 &amp; = 01                           \\
+           x_1 &amp; = 01 \oplus c'_1
 \end{align*}$$
 &lt;p&gt;So we &lt;em&gt;learnt&lt;/em&gt; \(x_1\) and from here it is trivial to break the last plaintext byte:&lt;/p&gt;
 $$\begin{align*}
                 x_1 \oplus c_1 &amp; = m_1          \\
-    (01 \oplus f_1) \oplus c_1 &amp; = m_1
+    (01 \oplus c'_1) \oplus c_1 &amp; = m_1
 \end{align*}$$
-&lt;p&gt;as \(f_1\) is our forged byte and \(c_1\) is the last byte of the previous ciphertext block, all of them known by us.&lt;/p&gt;
-&lt;p&gt;The case 1 and 2 are easily identified as in the second case \(f_1 = c_1\).&lt;/p&gt;
+&lt;p&gt;as \(c'_1\) is our forged byte and \(c_1\) is the last byte of the previous ciphertext block, all of them known by us.&lt;/p&gt;
+&lt;p&gt;The case 1 and 2 are easily identified as in the second case \(c'_1 = c_1\).&lt;/p&gt;
 &lt;p&gt;There is, however, a special situation in which the case 1 and 2 are the same: this happens when the original padding byte is actually &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;01&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;Nevertheless, the equation \((01 \oplus f_1) \oplus c_1 = m_1\) is still true.&lt;/p&gt;
+&lt;p&gt;Nevertheless, the equation \((01 \oplus c'_1) \oplus c_1 = m_1\) is still true.&lt;/p&gt;
 &lt;h2 id="guess-the-penultimate-byte"&gt;Guess the penultimate byte&lt;/h2&gt;
 &lt;p&gt;Knowing \(x_1\) we can forge the value of \(m_1\) to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;02&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;:&lt;/p&gt;
 $$\begin{align*}
-      x_1 \oplus f_1 &amp; = 02                     \\
-                 f_1 &amp; = (02 \oplus x_1)
+      x_1 \oplus c'_1 &amp; = 02                     \\
+                 c'_1 &amp; = (02 \oplus x_1)
 \end{align*}$$
-&lt;p&gt;This \(f_1\) is &lt;strong&gt;not&lt;/strong&gt; the same than the previous section: it is a different forged byte used to forge a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;02&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in the last value of the plaintext.&lt;/p&gt;
+&lt;p&gt;This \(c'_1\) is &lt;strong&gt;not&lt;/strong&gt; the same than the previous section: it is a different forged byte used to forge a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;02&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in the last value of the plaintext.&lt;/p&gt;
 &lt;p&gt;With this, the penultimate byte will forge a plaintext with a &lt;em&gt;valid padding&lt;/em&gt; only if:&lt;/p&gt;
-$$x_2 \oplus f_2 = 02$$
+$$x_2 \oplus c'_2 = 02$$
 &lt;p&gt;Then, for the case of a valid padding we can guess \(x_2\) and therefore \(m_2\):&lt;/p&gt;
 $$\begin{align*}
-      x_2 \oplus f_2 &amp; = 02                     \\
-                 x_2 &amp; = (02 \oplus f_2)
+      x_2 \oplus c'_2 &amp; = 02                     \\
+                 x_2 &amp; = (02 \oplus c'_2)
 \end{align*}$$
 $$\begin{align*}
                    x_2 \oplus c_2 &amp; = m_2                     \\
-      (02 \oplus f_2) \oplus c_2  &amp; = m_2
+      (02 \oplus c'_2) \oplus c_2  &amp; = m_2
 \end{align*}$$
 &lt;p&gt;At difference with guessing the last byte, in this scenario there is only one possible value for a valid padding: &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="mi"&gt;02&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/p&gt;
 &lt;h2 id="guessing-the-rest-of-the-bytes-in-a-block"&gt;Guessing the rest of the bytes in a block&lt;/h2&gt;
@@ -14134,14 +14217,16 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;Without any message integrity, a CBC ciphertext can be patched to modify the plaintext at will.&lt;!--more--&gt;&lt;/p&gt;
 &lt;h3 id="warming-up"&gt;Warming up&lt;/h3&gt;
 &lt;p&gt;But first, let’s define a random configuration with some fixed values like the block size or the encryption mode:&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;                &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&lt;!--
+&gt;&gt;&gt; from cryptonita import B                # byexample: +timeout=10
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;./posts/matasano/assets&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;challenge&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;generate_config&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;enc_cbc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;dec_cbc&lt;/span&gt;  &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&gt;&gt;&gt; import sys
+&gt;&gt;&gt; sys.path.append("./posts/matasano/assets")
+&gt;&gt;&gt; from challenge import generate_config, enc_cbc, dec_cbc  # byexample: +timeout=10
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;seed&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;20180703&lt;/span&gt;   &lt;span class="c1"&gt;# make the tests &amp;#39;random&amp;#39; but deterministic&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;     &lt;span class="c1"&gt;# leave this fixed, it is what happen in practice&lt;/span&gt;
+&gt;&gt;&gt; seed = 20180703   # make the tests 'random' but deterministic
+--&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;     &lt;span class="c1"&gt;# leave this fixed, it is what happen in practice&lt;/span&gt;
 
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;generate_config&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;random_state&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;seed&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="n"&gt;enc_mode&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cbc&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
@@ -14156,7 +14241,8 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;enc_cbc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;iv&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Now imagine this quite-dumb role check function that process the previous ciphertext: if one of the fields is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;admin&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;true&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; the user will be considered an Administrator:&lt;/p&gt;
+&lt;p&gt;That function leaves in a server but the adversary (us) is &lt;em&gt;free to inject&lt;/em&gt; almost any data as the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="s2"&gt;&amp;quot;userdata&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; field.&lt;/p&gt;
+&lt;p&gt;Now imagine this quite-dumb role-check function that process the user’s data: if one of the fields is &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;admin&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;true&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; the user will be considered an Administrator:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;is_admin&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;dec_cbc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;iv&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unpad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;pkcs#7&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;admin=true&amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -14168,7 +14254,7 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;span class="ne"&gt;AssertionError&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;So the idea is to patch the ciphertext.&lt;/p&gt;
+&lt;p&gt;So the idea is to &lt;strong&gt;patch&lt;/strong&gt; the ciphertext.&lt;/p&gt;
 &lt;h2 id="bit-flipping-attack"&gt;Bit flipping attack&lt;/h2&gt;
 &lt;p&gt;Recall that in CBC a ciphertext block is xored with the output of the decryption of the &lt;em&gt;next&lt;/em&gt; ciphertext block to get the &lt;em&gt;next&lt;/em&gt; plaintext block.&lt;/p&gt;
 &lt;p&gt;If we modify one ciphertext block its decryption will be totally scrambled but we will have control of the &lt;em&gt;next&lt;/em&gt; plaintext block.&lt;/p&gt;
@@ -14228,23 +14314,23 @@ We don’t know if our inject plaintext will be aligned to the block size bounda
 &lt;strong&gt;– Spoiler Alert! –&lt;/strong&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Welcome to the &lt;a href="https://cryptopals.com/sets/2/challenges/13"&gt;ECB cut-and-paste&lt;/a&gt; challenge!&lt;!--more--&gt;&lt;/p&gt;
-&lt;h3 id="prelude-profile-creation"&gt;Prelude: profile creation&lt;/h3&gt;
-&lt;p&gt;Imagen a scenario where two parties send encrypted messages using AES in ECB mode:&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;./posts/matasano/assets&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;challenge&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;generate_config&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;enc_ecb&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;dec_ecb&lt;/span&gt;  &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&lt;h3 id="prelude-profile-request"&gt;Prelude: profile request&lt;/h3&gt;
+&lt;p&gt;Imagen a scenario where two parties send encrypted messages using AES in ECB mode.&lt;/p&gt;
+&lt;!--
+&gt;&gt;&gt; import sys
+&gt;&gt;&gt; sys.path.append("./posts/matasano/assets")
+&gt;&gt;&gt; from challenge import generate_config, enc_ecb, dec_ecb  # byexample: +timeout=10
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;seed&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;20180701&lt;/span&gt;   &lt;span class="c1"&gt;# make the tests &amp;#39;random&amp;#39; but deterministic&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;     &lt;span class="c1"&gt;# leave this fixed, it is what happen in practice&lt;/span&gt;
+&gt;&gt;&gt; seed = 20180701   # make the tests 'random' but deterministic
+&gt;&gt;&gt; block_size = 16     # leave this fixed, it is what happen in practice
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="c1"&gt;# encrypt/decrypt under this &amp;#39;random&amp;#39; environment&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;generate_config&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;random_state&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;seed&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;enc_mode&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ecb&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
+&gt;&gt;&gt; # encrypt/decrypt under this 'random' environment
+&gt;&gt;&gt; cfg = generate_config(random_state=seed, block_size=block_size, enc_mode='ecb')
+--&gt;
 &lt;p&gt;Consider the following function that builds a ciphertext from an hypothetical &lt;em&gt;“create profile for a new user”&lt;/em&gt;:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;                &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;profile_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;email&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;profile_request_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;email&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;assert&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;amp;&amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;email&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;assert&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;=&amp;#39;&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;email&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;assert&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;@&amp;#39;&lt;/span&gt;     &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;email&lt;/span&gt;
@@ -14253,16 +14339,18 @@ We don’t know if our inject plaintext will be aligned to the block size bounda
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;pkcs#7&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;enc_ecb&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;honest-email@example.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_request_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;honest-email@example.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt;
 &lt;span class="o"&gt;&amp;lt;...&amp;gt;&lt;/span&gt;\&lt;span class="n"&gt;xc1&lt;/span&gt;\&lt;span class="n"&gt;xa4&lt;/span&gt;\&lt;span class="n"&gt;x89&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;...&amp;gt;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;profile_for&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; can create as many user as we want but all of them will have the same privilege level or role: &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;profile_request_for&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; can create as many user as we want but all of them will have the same privilege level or role: &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The adversary (us) can call this function as many times as he/she wants but it cannot neither change it (like disabling the checks) nor peak the secret key.&lt;/p&gt;
+&lt;h3 id="prelude-profile-creation"&gt;Prelude: profile creation&lt;/h3&gt;
 &lt;p&gt;Then the ciphertext can be sent to a server where the given credentials are stored and the profile is &lt;em&gt;“created”&lt;/em&gt;.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;urllib.parse&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;parse_qs&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;create_profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;dec_ecb&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;create_profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;encrypted_request&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;dec_ecb&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;encrypted_request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cfg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unpad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;pkcs#7&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;parse_qs&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;strict_parsing&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -14271,24 +14359,23 @@ We don’t know if our inject plaintext will be aligned to the block size bounda
 &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;email&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;honest-email@example.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;role&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;user&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;uid&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;10&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h2 id="forgery"&gt;Forgery&lt;/h2&gt;
-&lt;p&gt;It would be cool to forge &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;role&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;admin&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; there but it is not possible.&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;profile_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dishonest@evil.com&amp;amp;role=admin&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;h2 id="forgery-naive-try"&gt;Forgery (naive try)&lt;/h2&gt;
+&lt;p&gt;It would be cool to forge &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;role&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;admin&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;em&gt;with an injection there&lt;/em&gt; but it is not possible.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;profile_request_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dishonest@evil.com&amp;amp;role=admin&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;lt;...&amp;gt;&lt;/span&gt;
 &lt;span class="ne"&gt;AssertionError&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Let’s forge &lt;strong&gt;anyways&lt;/strong&gt; with &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="forgery-as-crypto-pro"&gt;Forgery (as crypto pro)&lt;/h2&gt;
 &lt;h3 id="block-alignment"&gt;Block alignment&lt;/h3&gt;
-&lt;p&gt;We want to know how many bytes are needed so the plaintext at its right is aligned with the block boundary.&lt;/p&gt;
-&lt;p&gt;In other words, given the prefix &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;email&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we now that we need 10 bytes to append and complete the block leaving the rest of our own plaintext aligned with the block boundary:&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;email=&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="mi"&gt;10&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;We already know how to do this even if we don’t know the prefix… when we have two blocks encrypted with to the same ciphertext block we are done:&lt;/p&gt;
+&lt;p&gt;In principle our partial plaintext is inserted at some &lt;em&gt;fixed but unknown&lt;/em&gt; position.&lt;/p&gt;
+&lt;p&gt;The first step is to know where.&lt;/p&gt;
+&lt;p&gt;The key insight is that if we insert 2 full and aligned blocks we will get 2 identical ciphertext blocks.&lt;/p&gt;
+&lt;p&gt;So we insert these and slowly add one extra byte at time until we get the two identical ciphertext blocks.&lt;/p&gt;
+&lt;p&gt;The alignment required was exactly the amount of extra bytes inserted.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;@&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_request_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;@&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;indexes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nblocks&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;iduplicates&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;distance&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;idx_of&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;both&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;indexes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;break&lt;/span&gt;
@@ -14302,61 +14389,75 @@ We don’t know if our inject plaintext will be aligned to the block size bounda
 &lt;span class="mi"&gt;1&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h3 id="cut-a-block"&gt;Cut a block&lt;/h3&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;align_block&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;A&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;p&gt;&lt;em&gt;Of course we could cheat a little!&lt;/em&gt; If the &lt;em&gt;prefix is known&lt;/em&gt;, we just do the maths:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;block_size&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;email=&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="mi"&gt;10&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="crafting-the-email"&gt;Crafting the email&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;profile_request_for&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;em&gt;will encrypt for us anything&lt;/em&gt;, as long as the email is a “valid email”.&lt;/p&gt;
+&lt;p&gt;We can prepare specially crafted one:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;align_pad&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;A&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;target&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;admin&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pad&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;pkcs#7&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;posfix&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;@evil.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;crafted_email&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;align_block&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;target&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;posfix&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;crafted_email&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;align_pad&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;target&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;posfix&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;crafted_email&lt;/span&gt;
 &lt;span class="s1"&gt;&amp;#39;A&amp;lt;...&amp;gt;AAAadmin&lt;/span&gt;&lt;span class="se"&gt;\x0b\x0b\x0b&lt;/span&gt;&lt;span class="s1"&gt;&amp;lt;padding&amp;gt;&lt;/span&gt;&lt;span class="se"&gt;\x0b&lt;/span&gt;&lt;span class="s1"&gt;@evil.com&amp;#39;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Now, when &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;crafted_email&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; gets encrypted, the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;admin&lt;/span&gt;\&lt;span class="n"&gt;x0b&lt;/span&gt;&lt;span class="o"&gt;...&lt;/span&gt;\&lt;span class="n"&gt;x0b&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will be aligned to the block boundary and it will be a full block ready to be cut:&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;crafted_email&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;align_pad&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; ensures that what follows (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="s2"&gt;&amp;quot;admin&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;) is &lt;em&gt;at the begin&lt;/em&gt; of a block.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a full block with the string &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="s2"&gt;&amp;quot;admin&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and a padding &lt;strong&gt;as if&lt;/strong&gt; it were at the end of the plaintext (which it is not).&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;posfix&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; just completes the crafting so the whole looks an email address.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 60%;" class='' alt='' src='/img/matasano/cut_and_paste_align_before_cut.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h3 id="cut-the-block"&gt;Cut the block&lt;/h3&gt;
+&lt;p&gt;Now we encrypt the crafted profile. The trick is that &lt;strong&gt;we know&lt;/strong&gt; that a full block will be the encryption of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="s2"&gt;&amp;quot;admin&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;strong&gt;we know&lt;/strong&gt; exactly where.&lt;/p&gt;
+&lt;p&gt;This is because EBC encrypts all the blocks in the same way, no matter where they are.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_request_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;crafted_email&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;cut&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nblocks&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;)[&lt;/span&gt;&lt;span class="n"&gt;indexes&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;pre&gt;&lt;code&gt;   add enough As to align the next block
-     |
-|--------|--------|---------|
- email=AA adminPPP @foo.....
-              |
-              V
-|--------|--------|---------|
-         :   C1   :
-         :.......cut&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;where &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;PPP&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a &lt;code class="none"&gt;pkcs#7&lt;/code&gt; padding such as if the whole &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;C1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; block was the last block of the ciphertext, the decryption + un-padding would success.&lt;/p&gt;
-&lt;h3 id="paste-a-block"&gt;Paste a block&lt;/h3&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 60%;" class='' alt='' src='/img/matasano/cut_and_paste_align_cutting.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h3 id="paste-the-block"&gt;Paste the block&lt;/h3&gt;
 &lt;p&gt;Now, the final step.&lt;/p&gt;
-&lt;p&gt;We will use our valid email (at the end &lt;em&gt;we&lt;/em&gt; want to be admin) but it has to be special: it has to contain enough padding to align the &lt;em&gt;last&lt;/em&gt; block so we can cut it and throw it away.&lt;/p&gt;
-&lt;p&gt;In its replacement we will put our crafted cut cipher block.&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;me-AAAAAAAAAAAAAAAAA@evil.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;p&gt;&lt;label for='CkluIGEgcmVhbCBjYXNlIHlvdSB3aWxsIGFsc28gbWFrZSB5b3VyIHRoYXQgdGhlIGVtYWlsIGlzIGEgdmFsaWQgb25lOgp0aGUgd2hvbGUgdGhpbmcgaXMgYWJvdXQgZ2V0dGluZyAqeW91KiBhbiBhZG1pbi4KCklmIHlvdSBjYW5ub3QgbG9naW4gbGF0ZXIsIGl0IHdvdWxkIGJlIHBvaW50bGVzcy4KbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkluIGEgcmVhbCBjYXNlIHlvdSB3aWxsIGFsc28gbWFrZSB5b3VyIHRoYXQgdGhlIGVtYWlsIGlzIGEgdmFsaWQgb25lOgp0aGUgd2hvbGUgdGhpbmcgaXMgYWJvdXQgZ2V0dGluZyAqeW91KiBhbiBhZG1pbi4KCklmIHlvdSBjYW5ub3QgbG9naW4gbGF0ZXIsIGl0IHdvdWxkIGJlIHBvaW50bGVzcy4KbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+In a real case you will also make your that the email is a valid one: the whole thing is about getting &lt;em&gt;you&lt;/em&gt; an admin.
+&lt;br /&gt;&lt;br /&gt;
+If you cannot login later, it would be pointless.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;We craft another email but this time the goal is to align the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;role&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; plaintext &lt;em&gt;at the end&lt;/em&gt; of the block.&lt;/p&gt;
+&lt;p&gt;In other words, what follows &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;role&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; must be at the begin of the next block.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 90%;" class='' alt='' src='/img/matasano/cut_and_paste_align_cutting2.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Then we &lt;em&gt;paste the block&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;In its replacement we will put our crafted cipher block.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_request_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;me-AAAAAAAAAAAAAAAAA@evil.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;forged&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;mutable&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;forged&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cut&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;The email address &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;me&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;AAAAAAAAAAAAAAAAA&lt;/span&gt;&lt;span class="nd"&gt;@evil&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; should be a valid one and with an account controlled by us if we want to do something beyond the cryptography exercise later.&lt;/p&gt;
-&lt;p&gt;How many &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;A&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we need to add will depend: I tried several times using &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;create_profile&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; as oracle until I got the payload aligned such the last &lt;em&gt;boundary&lt;/em&gt; matched with the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;role&lt;/span&gt;&lt;span class="o"&gt;=|&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; boundary.&lt;/p&gt;
-&lt;p&gt;The following diagram show this:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;  insert a valid email, with As to align the last block
-       |     |
-       |     |
-|--------|--------|--------|--------|    &amp;lt;= original
- email=me -AAA@evi ...role= userQQQQ           |
-     |        |        |                       |
-     |        |        |                       V
-    Ca       Cb       Cc       C1 (cut)  &amp;lt;=  encrypt
-     |        |        |        |              |
-     V        V        V        V              V
-|--------|--------|--------|--------|    &amp;lt;= decrypted
- email=me -AAA@evi ...role= adminPPP&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Voila!, the plaintext is recovered and the padding removed and we get a admin profile.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 90%;" class='' alt='' src='/img/matasano/cut_and_paste_align_pasting.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;How many &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;A&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we need to add will depend: I tried several times using &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;create_profile&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; as oracle until I got the payload aligned such the last &lt;em&gt;boundary&lt;/em&gt; matched and no error was throw.&lt;/p&gt;
+&lt;h2 id="forge"&gt;Forge!&lt;/h2&gt;
+&lt;p&gt;Voila!, the plaintext is recovered by the server, the padding removed and we get a admin profile.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;create_profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;forged&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;email&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;me-AAAAAAAAAAAAAAAAA@evil.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
  &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;role&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;admin&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
  &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;uid&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;10&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/cut_and_paste_align_pasted.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
 </content>
     <link href="https://book-of-gehn.github.io/articles/2018/07/01/Cut-and-Paste-ECB-Blocks.html" rel="alternate" type="text/html" title="Cut and Paste ECB blocks"/>
     <category term="cryptography" label="cryptography"/>

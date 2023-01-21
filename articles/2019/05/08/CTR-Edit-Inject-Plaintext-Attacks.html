@@ -94,7 +94,8 @@ May 8, 2019
 <strong>– Spoiler Alert! –</strong>
 </span></p>
 <p>One can replace part of the plaintext, extend it or even reduce it.</p>
-<p>But this beautiful property of a CTR mode (and any other stream cipher) is actually a booby-trap. <!--more--></p>
+<p>But this beautiful property of a CTR mode (and any other stream cipher) is actually a booby-trap.</p>
+<!--more-->
 <!--
 >>> import sys
 >>> sys.path.append("./posts/matasano/assets")
@@ -104,30 +105,46 @@ May 8, 2019
 >>> secret_cfg = generate_config(random_state=seed)
 -->
 <p>Imagine the following function:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="p">):</span>
-<span class="o">...</span>     <span class="c1"># we don&#39;t need to decrypt the whole ctext but this is easier</span>
-<span class="o">...</span>     <span class="n">ptext</span> <span class="o">=</span> <span class="n">dec_ctr</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
-<span class="o">...</span>     <span class="n">ptext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">ptext</span><span class="p">,</span> <span class="n">mutable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="o">...</span>     <span class="n">ptext</span><span class="p">[</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">patch</span><span class="p">)]</span> <span class="o">=</span> <span class="n">patch</span>
-<span class="o">...</span>     <span class="k">return</span> <span class="n">enc_ctr</span><span class="p">(</span><span class="n">ptext</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">new_ptext</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_ptext</span><span class="p">)</span>
+<span class="o">...</span>     <span class="c1"># dummy plaintext to &quot;encrypt&quot; and obtain the secret stream</span>
+<span class="o">...</span>     <span class="c1"># we make it large enough to cover the new_ptext size at the given</span>
+<span class="o">...</span>     <span class="c1"># offset</span>
+<span class="o">...</span>     <span class="n">dummy</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">offset</span> <span class="o">+</span> <span class="n">sz</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># partial encrypting stream</span>
+<span class="o">...</span>     <span class="n">stream</span> <span class="o">=</span> <span class="n">enc_ctr</span><span class="p">(</span><span class="n">dummy</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># keep only the bytes needed to decrypt and re-encrypt at the</span>
+<span class="o">...</span>     <span class="c1"># offset</span>
+<span class="o">...</span>     <span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+<span class="o">...</span>     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span> <span class="o">==</span> <span class="n">sz</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># override the specific part</span>
+<span class="o">...</span>     <span class="c1"># here the advantage of CTR: we don&#39;t need to decrypt everything</span>
+<span class="o">...</span>     <span class="n">new_ctext</span> <span class="o">=</span> <span class="n">ctext</span><span class="o">.</span><span class="n">splice</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">sz</span><span class="p">,</span> <span class="n">new_ptext</span> <span class="o">^</span> <span class="n">stream</span><span class="p">)</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">new_ctext</span>
 </code></pre></div>
 
-<p>The <code><span class="highlight-candombe-inline"><span class="n">edit</span></span></code> function allows us edit or patch a ciphertext modifying the plaintext.</p>
-<p><label for='ClRoaXMgdW5sb2NrcyB0aGUKW0JyZWFrICJyYW5kb20gYWNjZXNzIHJlYWQvd3JpdGUiIEFFUyBDVFJdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy8xL2NoYWxsZW5nZXMvMjUpCmNoYWxsZW5nZS4gbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
-<input type='checkbox' id='ClRoaXMgdW5sb2NrcyB0aGUKW0JyZWFrICJyYW5kb20gYWNjZXNzIHJlYWQvd3JpdGUiIEFFUyBDVFJdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy8xL2NoYWxsZW5nZXMvMjUpCmNoYWxsZW5nZS4gbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">edit</span></span></code> function allows us edit or patch a ciphertext modifying the plaintext <em>knowing the secret key</em>.</p>
+<p>No magic.</p>
+<p><label for='ClRoaXMgdW5sb2NrcyB0aGUKW0JyZWFrICJyYW5kb20gYWNjZXNzIHJlYWQvd3JpdGUiIEFFUyBDVFJdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80L2NoYWxsZW5nZXMvMjUpCmNoYWxsZW5nZS4gbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoaXMgdW5sb2NrcyB0aGUKW0JyZWFrICJyYW5kb20gYWNjZXNzIHJlYWQvd3JpdGUiIEFFUyBDVFJdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80L2NoYWxsZW5nZXMvMjUpCmNoYWxsZW5nZS4gbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
-This unlocks the <a href="https://cryptopals.com/sets/1/challenges/25">Break “random access read/write” AES CTR</a> challenge.
+This unlocks the <a href="https://cryptopals.com/sets/4/challenges/25">Break “random access read/write” AES CTR</a> challenge.
 </span></p>
-<p>This generates two different ciphertexts encrypted with the <strong>same</strong> key stream which breaks CTR with a simple known-plaintext attack.</p>
+<p>But if the adversary has access to <code><span class="highlight-candombe-inline"><span class="n">edit</span></span></code> and he/she can call it with and arbitrary <em>new plaintext</em> (<code><span class="highlight-candombe-inline"><span class="n">new_ptext</span></span></code>), we can recover the secret stream.</p>
+<p>The vulnerability is that the original ciphertext and the one returned by <code><span class="highlight-candombe-inline"><span class="n">edit</span></span></code> were both encrypted with the <strong>same</strong> key stream.</p>
+<p>This is a simple <strong>known-plaintext attack</strong>.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ptext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/25.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ctext</span> <span class="o">=</span> <span class="n">enc_ctr</span><span class="p">(</span><span class="n">ptext</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">patch</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">cpatched</span> <span class="o">=</span> <span class="n">edit</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">new_ptext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">)</span>  <span class="c1"># B(0) would be much easier (but boring)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">cpatched</span> <span class="o">=</span> <span class="n">edit</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">new_ptext</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">cpatched</span> <span class="o">^</span> <span class="n">patch</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">cpatched</span> <span class="o">^</span> <span class="n">new_ptext</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ptext</span> <span class="o">==</span> <span class="n">ctext</span> <span class="o">^</span> <span class="n">kstream</span>
 <span class="kc">True</span>
 </code></pre></div>
@@ -135,50 +152,66 @@ This unlocks the <a href="https://cryptopals.com/sets/1/challenges/25">Break “
 <p>If the <code><span class="highlight-candombe-inline"><span class="n">edit</span></span></code> function has some kind of limitation on the size of the patch, we only need to edit it by pieces:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">16</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="n">N</span><span class="p">)):</span>        <span class="c1"># byexample: +timeout=10</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">new_ptext</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="n">N</span><span class="p">)):</span>        <span class="c1"># byexample: +timeout=10</span>
 <span class="o">...</span>     <span class="n">offset</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="n">N</span>
 <span class="o">...</span>     <span class="n">tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edit</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">pb</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="p">)[</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span><span class="o">+</span><span class="n">N</span><span class="p">])</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">cpatched</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">cpatched</span> <span class="o">^</span> <span class="n">patch</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">cpatched</span> <span class="o">^</span> <span class="n">new_ptext</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">ptext</span> <span class="o">==</span> <span class="n">ctext</span> <span class="o">^</span> <span class="n">kstream</span>
 <span class="kc">True</span>
 </code></pre></div>
 
 <h2 id="known-partial-plaintext-window">Known Partial Plaintext Window</h2>
-<p>Imagine that you have access to an <code><span class="highlight-candombe-inline"><span class="n">inject_pad</span></span></code> function that allows you to inject a random padding at an unknown position in the plaintext but you can control the length of the padding inserted.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">inject_pad</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="p">):</span>
+<p>Imagine that you have access to an <code><span class="highlight-candombe-inline"><span class="n">inject_pad</span></span></code> function that allows you to inject a <em>secret padding at an unknown position</em> in the plaintext but you can control the <strong>length</strong> of the padding inserted.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">inject_pad</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">pad_len</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="p">):</span>
 <span class="o">...</span>     <span class="c1"># get some random and unknown padding</span>
 <span class="o">...</span>     <span class="n">p</span> <span class="o">=</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">prefix</span>
 <span class="o">...</span>
-<span class="o">...</span>     <span class="c1"># repeat &#39;p&#39; enough times to cover &#39;length&#39; bytes of padding</span>
-<span class="o">...</span>     <span class="c1"># making &#39;p&#39; infinite and xor with &#39;length&#39; zeros makes the trick</span>
-<span class="o">...</span>     <span class="n">padding</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">inf</span><span class="p">()</span> <span class="o">^</span> <span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">length</span><span class="p">)</span>
-<span class="o">...</span>     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">padding</span><span class="p">)</span> <span class="o">==</span> <span class="n">length</span>
+<span class="o">...</span>     <span class="c1"># repeat &#39;p&#39; enough times to cover &#39;pad_len&#39; bytes of padding</span>
+<span class="o">...</span>     <span class="c1"># making &#39;p&#39; infinite and slicing &#39;pad_len&#39; zeros makes the trick</span>
+<span class="o">...</span>     <span class="n">padding</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">inf</span><span class="p">()[:</span><span class="n">pad_len</span><span class="p">]</span>
+<span class="o">...</span>     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">padding</span><span class="p">)</span> <span class="o">==</span> <span class="n">pad_len</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="c1"># we don&#39;t need to decrypt the whole ctext but this is easier</span>
 <span class="o">...</span>     <span class="n">ptext</span> <span class="o">=</span> <span class="n">dec_ctr</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
 <span class="o">...</span>
-<span class="o">...</span>     <span class="c1"># inject the padding at some random but lesser value</span>
-<span class="o">...</span>     <span class="c1"># than the known partial plaintext</span>
+<span class="o">...</span>     <span class="c1"># pick a random and secret position where to do the injection</span>
+<span class="o">...</span>     <span class="c1"># of the known partial plaintext (padding)</span>
 <span class="o">...</span>     <span class="n">offset</span> <span class="o">=</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">n8</span>
-<span class="o">...</span>     <span class="n">ptext</span> <span class="o">=</span> <span class="n">ptext</span><span class="p">[:</span><span class="n">offset</span><span class="p">]</span> <span class="o">+</span> <span class="n">padding</span> <span class="o">+</span> <span class="n">ptext</span><span class="p">[</span><span class="n">offset</span><span class="p">:]</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># inject the padding (know plaintext) at random location</span>
+<span class="o">...</span>     <span class="n">ptext</span> <span class="o">=</span> <span class="n">ptext</span><span class="o">.</span><span class="n">splice</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">padding</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="c1"># encrypt back again (here again the same error: we are reusing</span>
+<span class="o">...</span>     <span class="c1"># the key and nonce)</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="n">enc_ctr</span><span class="p">(</span><span class="n">ptext</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
 </code></pre></div>
 
-<p>This <em>feature</em> makes the system vulnerable.</p>
-<p>Because the original and the new ciphertexts are encrypted in CTR with the <em>same</em> secret, both will use the <em>same</em> key stream and therefor both stream will <em>share the same prefix</em> until the offset were the injection was done.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">ctext2</span> <span class="o">=</span> <span class="n">inject_pad</span><span class="p">(</span><span class="n">ctext</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="p">)</span>
+<p>This <em>feature</em> makes the system <strong>vulnerable</strong>.</p>
+<h3 id="finding-the-padding-injection-offset">Finding the padding injection offset</h3>
+<p>Because the original and the new ciphertexts are encrypted in CTR with the <em>same</em> secret, both will use the <em>same</em> key stream and therefore both streams will <em>share the same prefix</em> until the <em>offset</em> were the injection was done.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">ptext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./posts/matasano/assets/25.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ctext</span> <span class="o">=</span> <span class="n">enc_ctr</span><span class="p">(</span><span class="n">ptext</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">secret_cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">clen</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ctext2</span> <span class="o">=</span> <span class="n">inject_pad</span><span class="p">(</span>
+<span class="o">...</span>             <span class="n">ctext</span><span class="p">,</span>
+<span class="o">...</span>             <span class="n">pad_len</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<span class="o">...</span>             <span class="n">secret_cfg</span> <span class="o">=</span> <span class="n">secret_cfg</span>
+<span class="o">...</span>         <span class="p">)</span>
+</code></pre></div>
+
+<p>If we do a xor between them we will get a bunch of zeros until the first moment in which the plaintext differ: the offset at where the injection happen.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">clen</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">x_ctexts</span> <span class="o">=</span> <span class="n">ctext</span> <span class="o">^</span> <span class="n">ctext2</span><span class="p">[:</span><span class="n">clen</span><span class="p">]</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">next</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x_ctexts</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
 <span class="mi">187</span>
 </code></pre></div>
 
-<p>Now imagine that you know a fraction of the plaintext but you don’t know <em>where</em> is in the plaintext but you know that it is <em>after</em> the injection point:</p>
+<h3 id="finding-the-known-partial-plaintext-offset">Finding the known partial plaintext offset</h3>
+<p>Now imagine that you know a fraction of the plaintext but <strong>you don’t know where</strong> is in the plaintext but you know that it is <em>after</em> the injection point:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">16</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">pknown</span> <span class="o">=</span> <span class="n">ptext</span><span class="p">[</span><span class="n">secret_cfg</span><span class="o">.</span><span class="n">n8</span><span class="p">:</span><span class="n">secret_cfg</span><span class="o">.</span><span class="n">n8</span><span class="o">+</span><span class="n">N</span><span class="p">]</span>
 </code></pre></div>
@@ -191,8 +224,17 @@ This unlocks the <a href="https://cryptopals.com/sets/1/challenges/25">Break “
 <span class="kc">True</span>
 </code></pre></div>
 
-<p>Now, with this we can recover <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes of the key stream. No much.</p>
-<p>But if we <em>inject</em> more padding, let’s say <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes the known plaintext will move to the right the same amount allowing us to recover the <em>next</em> <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes of the key stream.</p>
+<h3 id="moving-window-recover-the-whole-key-stream">Moving window: recover the whole key stream</h3>
+<p>Knowing where the <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes long known plaintext is we can recover <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes of the CTR key stream.</p>
+<p>We just xor the known plaintext with the ciphertext at the correct location. No big deal.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 70%;" class='' alt='' src='/img/matasano/ctr-edit-first-slice.svg' /></figure></p>
+<p>But with the <code><span class="highlight-candombe-inline"><span class="n">inject_pad</span></span></code> function we are adding padding <em>before</em> the location of the known plaintext and indeed <strong>we are moving its offset</strong>.</p>
+<p>So if we inject <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes the padding, <em>the window will move N bytes</em> and we will able to recover <em>another</em> <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes of the key stream.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 75%;" class='' alt='' src='/img/matasano/ctr-edit-second-slice.svg' /></figure></p>
 <p>Repeating this we can recover all the key stream (except the begin):</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">pknown_offset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">),</span> <span class="n">N</span><span class="p">)):</span> <span class="c1"># byexample: +timeout=10</span>
@@ -202,6 +244,9 @@ This unlocks the <a href="https://cryptopals.com/sets/1/challenges/25">Break “
 </code></pre></div>
 
 <p>In essential we use the partial known plaintext as a window to see a piece of the key stream and the <code><span class="highlight-candombe-inline"><span class="n">inject_pad</span></span></code> to <em>move</em> the window to the right and recover more of it.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 80%;" class='' alt='' src='/img/matasano/ctr-edit-slicing-window.svg' /></figure></p>
 <p>The last key stream chunk recovered may contain bytes that does not belong to the original key stream.</p>
 <p>We are not interested in those:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">nlast</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">[</span><span class="n">pknown_offset</span><span class="p">:])</span> <span class="o">%</span> <span class="n">N</span>
@@ -211,13 +256,21 @@ This unlocks the <a href="https://cryptopals.com/sets/1/challenges/25">Break “
 
 <p>Finally, from the key stream we can break the ciphering and recover the plaintext (except the begin):</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">kstream</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pbroken</span> <span class="o">=</span> <span class="n">ctext</span><span class="p">[</span><span class="n">pknown_offset</span><span class="p">:]</span> <span class="o">^</span> <span class="n">kstream</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">recoverd_ptext</span> <span class="o">=</span> <span class="n">ctext</span><span class="p">[</span><span class="n">pknown_offset</span><span class="p">:]</span> <span class="o">^</span> <span class="n">kstream</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">ptext</span><span class="p">[</span><span class="n">pknown_offset</span><span class="p">:]</span> <span class="o">==</span> <span class="n">pbroken</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ptext</span><span class="p">[</span><span class="n">pknown_offset</span><span class="p">:]</span> <span class="o">==</span> <span class="n">recoverd_ptext</span>
 <span class="kc">True</span>
 </code></pre></div>
 
 <p>A similar attack can be done with a <code><span class="highlight-candombe-inline"><span class="n">delete</span></span></code> primitive: instead of injecting padding we remove plaintext therefor moving the known plaintext window to the left instead to the right.</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">CTR Edit/Inject Plaintext Attacks - May 8, 2019 - Martin Di Paola</span>
 <footer>

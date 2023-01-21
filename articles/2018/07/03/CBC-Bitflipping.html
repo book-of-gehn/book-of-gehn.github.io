@@ -96,14 +96,16 @@ July 3, 2018
 <p>Without any message integrity, a CBC ciphertext can be patched to modify the plaintext at will.<!--more--></p>
 <h3 id="warming-up">Warming up</h3>
 <p>But first, let’s define a random configuration with some fixed values like the block size or the encryption mode:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>                <span class="c1"># byexample: +timeout=10</span>
+<!--
+>>> from cryptonita import B                # byexample: +timeout=10
 
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./posts/matasano/assets&quot;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">challenge</span> <span class="kn">import</span> <span class="n">generate_config</span><span class="p">,</span> <span class="n">enc_cbc</span><span class="p">,</span> <span class="n">dec_cbc</span>  <span class="c1"># byexample: +timeout=10</span>
+>>> import sys
+>>> sys.path.append("./posts/matasano/assets")
+>>> from challenge import generate_config, enc_cbc, dec_cbc  # byexample: +timeout=10
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">seed</span> <span class="o">=</span> <span class="mi">20180703</span>   <span class="c1"># make the tests &#39;random&#39; but deterministic</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">block_size</span> <span class="o">=</span> <span class="mi">16</span>     <span class="c1"># leave this fixed, it is what happen in practice</span>
+>>> seed = 20180703   # make the tests 'random' but deterministic
+-->
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">block_size</span> <span class="o">=</span> <span class="mi">16</span>     <span class="c1"># leave this fixed, it is what happen in practice</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">cfg</span> <span class="o">=</span> <span class="n">generate_config</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="n">block_size</span><span class="p">,</span>
 <span class="o">...</span>         <span class="n">enc_mode</span><span class="o">=</span><span class="s1">&#39;cbc&#39;</span><span class="p">,</span>
@@ -118,7 +120,8 @@ July 3, 2018
 <span class="o">...</span>     <span class="k">return</span> <span class="n">enc_cbc</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">iv</span><span class="p">)</span>
 </code></pre></div>
 
-<p>Now imagine this quite-dumb role check function that process the previous ciphertext: if one of the fields is <code><span class="highlight-candombe-inline"><span class="n">admin</span><span class="o">=</span><span class="n">true</span></span></code> the user will be considered an Administrator:</p>
+<p>That function leaves in a server but the adversary (us) is <em>free to inject</em> almost any data as the <code><span class="highlight-candombe-inline"><span class="s2">&quot;userdata&quot;</span></span></code> field.</p>
+<p>Now imagine this quite-dumb role-check function that process the user’s data: if one of the fields is <code><span class="highlight-candombe-inline"><span class="n">admin</span><span class="o">=</span><span class="n">true</span></span></code> the user will be considered an Administrator:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">is_admin</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
 <span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">dec_cbc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">iv</span><span class="p">)</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s1">&#39;pkcs#7&#39;</span><span class="p">)</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="sa">b</span><span class="s1">&#39;admin=true&#39;</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
@@ -130,7 +133,7 @@ July 3, 2018
 <span class="ne">AssertionError</span>
 </code></pre></div>
 
-<p>So the idea is to patch the ciphertext.</p>
+<p>So the idea is to <strong>patch</strong> the ciphertext.</p>
 <h2 id="bit-flipping-attack">Bit flipping attack</h2>
 <p>Recall that in CBC a ciphertext block is xored with the output of the decryption of the <em>next</em> ciphertext block to get the <em>next</em> plaintext block.</p>
 <p>If we modify one ciphertext block its decryption will be totally scrambled but we will have control of the <em>next</em> plaintext block.</p>
@@ -163,6 +166,14 @@ We don’t know if our inject plaintext will be aligned to the block size bounda
 </code></pre></div>
 
 <p><a href="https://cryptopals.com/sets/2/challenges/16">CBC bitflipping attacks</a> challenge unlock!</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">CBC Bitflipping - July 3, 2018 - Martin Di Paola</span>
 <footer>

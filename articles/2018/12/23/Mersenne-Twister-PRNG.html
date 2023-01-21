@@ -112,7 +112,7 @@ December 23, 2018
 <span class="kc">True</span>
 </code></pre></div>
 
-<h2 id="cracking">Cracking</h2>
+<h2 id="cracking-seed-space-exploration">Cracking (seed space exploration)</h2>
 <p>It is quite common to find people that use the current time as their <em>secret</em> seed for the generator.</p>
 <p>Some even say <em>“but I’m using 64 bits with microsecond resolution so it will impossible to find it by brute force”</em></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">time</span>
@@ -120,25 +120,32 @@ December 23, 2018
 <span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">secret_seed</span><span class="p">)))</span>
 </code></pre></div>
 
-<p>Exploring 64 bits is quite hard but the seed is <strong>not random</strong>, therefore we do not need to explore the whole space.</p>
-<p>Instead we just explore the numbers in the vicinity of the current time which turns the <a href="https://cryptopals.com/sets/3/challenges/22">crack an MT19937 seed</a> into a much simpler task:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">search</span>    <span class="c1"># byexample: +timeout=10</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<p>Exploring 64 bits is quite hard but the seed is <strong>not random</strong>, therefore we do not need to explore the <em>whole space</em> but a <strong>smaller space</strong>.</p>
+<p>Instead we just explore the numbers in the vicinity of the current time which turns the <a href="https://cryptopals.com/sets/3/challenges/22">crack an MT19937 seed</a> into a much simpler task.</p>
+<p>First, assuming that we known the first output of the PRNG, we build an oracle function to tell if we have found or not the secret seed.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">MT19937_oracle</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">first_known_output</span><span class="p">):</span>
 <span class="o">...</span>     <span class="n">g</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">MT19937</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">==</span> <span class="n">first_known_output</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">oracle</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">MT19937_oracle</span><span class="p">,</span> <span class="n">first_known_output</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">delta</span> <span class="o">=</span> <span class="mi">2048</span>
+<p>Then, it just rest to test the seed space starting from an <em>educated guess</em> for the secret seed.</p>
+<p>For example we could guess that the seed is between 2048 seconds ago and 2 times that in the future.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">delta</span> <span class="o">=</span> <span class="mi">2048</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span> <span class="o">-</span> <span class="n">delta</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">delta</span><span class="o">*</span><span class="mi">2</span>
+</code></pre></div>
 
+<p>Now we test each possible seed in that range. <code><span class="highlight-candombe-inline"><span class="n">search</span></span></code> is a handy function for testing that implements some heuristics like trying first the numbers in the middle of the range before in the extremes.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">search</span>    <span class="c1"># byexample: +timeout=10</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">oracle</span><span class="p">,</span> <span class="n">likely</span><span class="o">=</span><span class="s1">&#39;middle&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">secret_seed</span>      <span class="c1"># byexample: +timeout=10</span>
 <span class="kc">True</span>
 </code></pre></div>
 
+<p>Gotcha!</p>
 <h2 id="cloning">Cloning</h2>
 <p><label for='CkZvcm1hbGx5LCB0aGVyZSBpcyBub3Qgc3VjaCBlZmZpY2llbnQgYWxnb3JpdGhtIHRoYXQgYWxsb3cgYW4gYXR0YWNrCnRvIGRpc3Rpbmd1aXNoIGV2ZW4gd2l0aCBhIHNtYWxsIHByb2JhYmlsaXR5IGZvciBsYXJnZSBidXQgZmluaXRlCnNlcXVlbmNlcy4gRXZlbnR1YWxseSB3aXRoIGEgKnJlYWxseSBsYXJnZSogc2VxdWVuY2VzIHRoZSBhdHRhY2tlciBtYXkKYnJlYWsgaXQuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CkZvcm1hbGx5LCB0aGVyZSBpcyBub3Qgc3VjaCBlZmZpY2llbnQgYWxnb3JpdGhtIHRoYXQgYWxsb3cgYW4gYXR0YWNrCnRvIGRpc3Rpbmd1aXNoIGV2ZW4gd2l0aCBhIHNtYWxsIHByb2JhYmlsaXR5IGZvciBsYXJnZSBidXQgZmluaXRlCnNlcXVlbmNlcy4gRXZlbnR1YWxseSB3aXRoIGEgKnJlYWxseSBsYXJnZSogc2VxdWVuY2VzIHRoZSBhdHRhY2tlciBtYXkKYnJlYWsgaXQuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
@@ -226,6 +233,14 @@ And this is how we could make the MT19937 a little harder: make the operation no
 <span class="kc">True</span>
 </code></pre></div>
 
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">Breaking MT19937 Crypto - December 23, 2018 - Martin Di Paola</span>
 <footer>

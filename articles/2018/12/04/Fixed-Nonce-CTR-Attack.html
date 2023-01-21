@@ -102,14 +102,16 @@ December 4, 2018
 <a href="https://cryptopals.com/sets/3/challenges/18">Implement CTR, the stream cipher mode</a>
 </span></p>
 <p>Let’s implement a CTR. As usual we generate a pseudo-random configuration to parametrize the CTR.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10</span>
+<!--
+>>> from cryptonita import B, load_bytes     # byexample: +timeout=10
 
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./posts/matasano/assets&quot;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">challenge</span> <span class="kn">import</span> <span class="n">generate_config</span><span class="p">,</span> <span class="n">enc_ctr</span><span class="p">,</span> <span class="n">dec_ctr</span>  <span class="c1"># byexample: +timeout=10</span>
+>>> import sys
+>>> sys.path.append("./posts/matasano/assets")
+>>> from challenge import generate_config, enc_ctr, dec_ctr  # byexample: +timeout=10
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">seed</span> <span class="o">=</span> <span class="mi">20181204</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">bsize</span> <span class="o">=</span> <span class="mi">16</span>
+>>> seed = 20181204
+-->
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">bsize</span> <span class="o">=</span> <span class="mi">16</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">cfg</span> <span class="o">=</span> <span class="n">generate_config</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="n">bsize</span><span class="p">,</span>
 <span class="o">...</span>                       <span class="n">nonce</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;YELLOW SUBMARINE&#39;</span><span class="p">))</span>
@@ -171,8 +173,6 @@ December 4, 2018
 <h3 id="score-a-decryption-using-chi-square-test">Score a decryption using Chi-square test</h3>
 <p>The frequency attack (<code><span class="highlight-candombe-inline"><span class="n">freq_attack</span></span></code>) implemented in <a href="https://pypi.org/project/cryptonita/">cryptonita</a> returns a guess: a set of possible key bytes.</p>
 <p>To determine the correct key we need to try each of them by brute force (<code><span class="highlight-candombe-inline"><span class="n">brute_force</span></span></code>) and <em>“see”</em> which looks more “human text”.</p>
-<p>This could be done by hand but we want to fully automate this… so no deal!</p>
-<p>The idea is to automate which deciphered text looks more or less like English text (the expected for our plaintexts) and discard any other.</p>
 <p>For this we <em>observe</em> the frequency of the letters in the deciphered plaintext and compare them with the <em>expected</em> frequency using a <a href="https://en.wikipedia.org/wiki/Chi-squared_test">Chi-square test</a>.</p>
 <p>In <a href="https://pypi.org/project/cryptonita/">cryptonita</a>, this is implemented in the <code><span class="highlight-candombe-inline"><span class="n">fit_freq_score</span></span></code> function:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.scoring</span> <span class="kn">import</span> <span class="n">fit_freq_score</span>
@@ -472,6 +472,14 @@ December 4, 2018
 <p>Even with all of this, the most likely key stream guess may not be the correct one, inclusive, none of the key stream guesses may be the correct one!</p>
 <p>Correcting a key stream using more information about the plaintext like using a speller can narrow the search area further but there is no warranties.</p>
 <p>Sometimes you will need to relay in your own brain and do a manual fix.</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">Fixed Nonce CTR Attack - December 4, 2018 - Martin Di Paola</span>
 <footer>

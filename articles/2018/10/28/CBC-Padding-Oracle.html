@@ -88,7 +88,7 @@ October 28, 2018
 </p>
 <p>AES and other ciphers work on blocks; if the plaintext length is not multiple of the block size a padding is added.</p>
 <p>If during the decryption the pad is checked and returns an error, we can use this to build a <em>padding oracle</em>: a function that will tell us if an encrypted plaintext has a valid pad or not.</p>
-<p>Armed with this <em>padding oracle</em> we can break CBC one byte at time.</p>
+<p>It may not sound too much exiting but armed with this <em>padding oracle</em> we can <strong>break CBC</strong> one byte at time.</p>
 <p><label for='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
@@ -110,12 +110,14 @@ October 28, 2018
 </code></pre></div>
 
 <p>Now, if we change the last byte (we forge it), the unpad of the forged block will success or not based on what byte we set.</p>
+<p>Here is what I mean.</p>
 <p>There are three possible outcomes based on this last byte:</p>
 <ul>
 <li>the unpad works because the last byte matches the original padding byte (<code><span class="highlight-candombe-inline"><span class="mi">01</span></span></code>).</li>
 <li>the unpad works because the last byte matches <em>another</em> padding sequence (<code><span class="highlight-candombe-inline"><span class="mi">03</span></span></code>).</li>
 <li>the unpad fails.</li>
 </ul>
+<h2 id="padding-check-cases">Padding check cases</h2>
 <p>The first case happen with the forged byte is actually the original the last byte.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x01</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">mpadded</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s1">&#39;pkcs#7&#39;</span><span class="p">)</span>
@@ -142,7 +144,7 @@ October 28, 2018
 <span class="ne">ValueError</span><span class="p">:</span> <span class="n">Bad</span> <span class="n">padding</span> <span class="s1">&#39;pkcs#7&#39;</span> <span class="k">with</span> <span class="n">last</span> <span class="n">byte</span> <span class="mh">0xff</span>
 </code></pre></div>
 
-<p>Armed with this we can build a padding oracle for CBC: a function that will tell us if an encrypted plaintext has a valid pad or not.</p>
+<p>Armed with this we can build a <strong>padding oracle for CBC</strong>: a function that will tell us if an encrypted plaintext has a valid pad or not.</p>
 <!--
 >>> import sys
 >>> sys.path.append("./posts/matasano/assets")
@@ -164,13 +166,23 @@ October 28, 2018
 </code></pre></div>
 
 <h2 id="cbc-decryption-and-padding">CBC decryption and padding</h2>
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIC8+Cm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIC8+Cm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="width: 60%;" class='fullwidth' alt='' src='/img/matasano/cbc_padding_oracle_xor.svg' />
+</span></p>
 <p>Let’s be \(m\) the ith plaintext block, \(c\) the i-1th ciphertext block and \(x\) the decryption of the ith ciphertext block.</p>
 <p>Then, we can say that for CBC the plaintext block \(m\) is reconstructed from this:</p>
 $$x \oplus c = m$$
-<p>Let’s say now that instead of \(c\) we use \(f\), a <em>forged</em> ciphertext block, if we are reconstructing the last plaintext block, this one will be:</p>
-$$x \oplus f = ?$$
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="width: 90%;" class='fullwidth' alt='' src='/img/matasano/cbc_padding_oracle_patched.svg' />
+</span></p>
+<p>Let’s say now that instead of \(c\) we use \(c'\), a <em>forged</em> ciphertext block, if we are reconstructing the last plaintext block, this one will be:</p>
+$$x \oplus c' = ?$$
 <p>Now, because this is the last block, this will affect the padding of the final plaintext.</p>
-<p>The padding will be ok <em>only if</em> \(x \oplus f\) is equals to one of these:</p>
+<p>The padding will be ok <strong>only if</strong> \(x \oplus c'\) is equals to one of these:</p>
 <pre><code>    [?  ?  ?  ... ?  ?  01]
     [?  ?  ?  ... ?  02 02]
     [?  ?  ?  ... 03 03 03]
@@ -178,49 +190,50 @@ $$x \oplus f = ?$$
     [10 10 10 ... 10 10 10]</code></pre>
 <p>Given this fact and using a <em>padding oracle</em> we can break CBC one byte at time.</p>
 <h2 id="guess-the-last-byte">Guess the last byte</h2>
-<p>For the plaintext block \(m\), let’s be \(m_1\), the last byte of the block. Using the same convention, this last byte is</p>
+<p>For the plaintext block \(m\), let’s be \(m_1\), the last byte of the block.</p>
+<p>Using the same convention, this last byte is</p>
 $$x_1 \oplus c_1 = m_1$$
-<p>If instead of \(c_1\) we use a forged last byte \(f_1\), the decrypted byte will be</p>
-$$x_1 \oplus f_1 = ?$$
+<p>If instead of \(c_1\) we use a forged last byte \(c'_1\), the decrypted byte will be</p>
+$$x_1 \oplus c'_1 = ?$$
 <p>The decrypted message will have a valid padding only if:</p>
 $$\begin{cases}
-x_1 \oplus f_1 = 01 & (1)\\
-x_1 \oplus f_1 = pp & (2)
+x_1 \oplus c'_1 = 01 & (1)\\
+x_1 \oplus c'_1 = pp & (2)
 \end{cases}$$
-<p>The case 2 means that \(x_1 \oplus f_1\) is equal to the original padding byte and this will happen only if \(f_1 = c_1\) or in other words if we didn’t forge anything.</p>
+<p>The case 2 means that \(x_1 \oplus c'_1\) is equal to the original padding byte and this will happen only if \(c'_1 = c_1\) or in other words if we didn’t forge anything.</p>
 <p>It doesn’t add much info.</p>
 <p>The case 1 is more juicy as this is the other case with a valid padding and, by definition, it must be <code><span class="highlight-candombe-inline"><span class="mi">01</span></span></code>.</p>
 <p>Then,</p>
 $$\begin{align*}
-x_1 \oplus f_1 & = 01                           \\
-           x_1 & = 01 \oplus f_1
+x_1 \oplus c'_1 & = 01                           \\
+           x_1 & = 01 \oplus c'_1
 \end{align*}$$
 <p>So we <em>learnt</em> \(x_1\) and from here it is trivial to break the last plaintext byte:</p>
 $$\begin{align*}
                 x_1 \oplus c_1 & = m_1          \\
-    (01 \oplus f_1) \oplus c_1 & = m_1
+    (01 \oplus c'_1) \oplus c_1 & = m_1
 \end{align*}$$
-<p>as \(f_1\) is our forged byte and \(c_1\) is the last byte of the previous ciphertext block, all of them known by us.</p>
-<p>The case 1 and 2 are easily identified as in the second case \(f_1 = c_1\).</p>
+<p>as \(c'_1\) is our forged byte and \(c_1\) is the last byte of the previous ciphertext block, all of them known by us.</p>
+<p>The case 1 and 2 are easily identified as in the second case \(c'_1 = c_1\).</p>
 <p>There is, however, a special situation in which the case 1 and 2 are the same: this happens when the original padding byte is actually <code><span class="highlight-candombe-inline"><span class="mi">01</span></span></code>.</p>
-<p>Nevertheless, the equation \((01 \oplus f_1) \oplus c_1 = m_1\) is still true.</p>
+<p>Nevertheless, the equation \((01 \oplus c'_1) \oplus c_1 = m_1\) is still true.</p>
 <h2 id="guess-the-penultimate-byte">Guess the penultimate byte</h2>
 <p>Knowing \(x_1\) we can forge the value of \(m_1\) to <code><span class="highlight-candombe-inline"><span class="mi">02</span></span></code>:</p>
 $$\begin{align*}
-      x_1 \oplus f_1 & = 02                     \\
-                 f_1 & = (02 \oplus x_1)
+      x_1 \oplus c'_1 & = 02                     \\
+                 c'_1 & = (02 \oplus x_1)
 \end{align*}$$
-<p>This \(f_1\) is <strong>not</strong> the same than the previous section: it is a different forged byte used to forge a <code><span class="highlight-candombe-inline"><span class="mi">02</span></span></code> in the last value of the plaintext.</p>
+<p>This \(c'_1\) is <strong>not</strong> the same than the previous section: it is a different forged byte used to forge a <code><span class="highlight-candombe-inline"><span class="mi">02</span></span></code> in the last value of the plaintext.</p>
 <p>With this, the penultimate byte will forge a plaintext with a <em>valid padding</em> only if:</p>
-$$x_2 \oplus f_2 = 02$$
+$$x_2 \oplus c'_2 = 02$$
 <p>Then, for the case of a valid padding we can guess \(x_2\) and therefore \(m_2\):</p>
 $$\begin{align*}
-      x_2 \oplus f_2 & = 02                     \\
-                 x_2 & = (02 \oplus f_2)
+      x_2 \oplus c'_2 & = 02                     \\
+                 x_2 & = (02 \oplus c'_2)
 \end{align*}$$
 $$\begin{align*}
                    x_2 \oplus c_2 & = m_2                     \\
-      (02 \oplus f_2) \oplus c_2  & = m_2
+      (02 \oplus c'_2) \oplus c_2  & = m_2
 \end{align*}$$
 <p>At difference with guessing the last byte, in this scenario there is only one possible value for a valid padding: <code><span class="highlight-candombe-inline"><span class="mi">02</span></span></code></p>
 <h2 id="guessing-the-rest-of-the-bytes-in-a-block">Guessing the rest of the bytes in a block</h2>
@@ -314,6 +327,14 @@ This unlocks the <a href="https://cryptopals.com/sets/3/challenges/17">The CBC p
  <span class="s1">&#39;000009ith my rag-top down so my hair can blow&#39;</span><span class="p">]</span>
 </code></pre></div>
 
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">CBC Padding Oracle Attack - October 28, 2018 - Martin Di Paola</span>
 <footer>

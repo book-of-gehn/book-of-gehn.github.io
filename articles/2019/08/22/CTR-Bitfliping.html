@@ -103,7 +103,8 @@ August 22, 2019
 >>> seed = 20190822   # make the tests 'random' but deterministic
 >>> block_size = 16     # leave this fixed, it is what happen in practice
 -->
-<p>Recall from <a href="/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a> the scenario where we have a <code><span class="highlight-candombe-inline"><span class="n">add_user_data</span></span></code> function to <em>user</em> profiles:</p>
+<h3 id="setup">Setup</h3>
+<p>Recall from <a href="/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a> the scenario where we have a <code><span class="highlight-candombe-inline"><span class="n">add_user_data</span></span></code> function that adds arbitrary data to users’ profiles:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">cfg</span> <span class="o">=</span> <span class="n">generate_config</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="n">block_size</span><span class="p">,</span>
 <span class="o">...</span>         <span class="n">enc_mode</span><span class="o">=</span><span class="s1">&#39;ctr&#39;</span><span class="p">,</span>
 <span class="o">...</span>         <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;comment1=cooking%20MCs;userdata=&quot;</span><span class="p">,</span>
@@ -115,12 +116,29 @@ August 22, 2019
 <span class="o">...</span>     <span class="k">return</span> <span class="n">enc_ctr</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
 </code></pre></div>
 
-<p>We control the user’s data but we cannot control the entire profile. In particular, we cannot say that we have the administration role adding <code><span class="highlight-candombe-inline"><span class="n">admin</span><span class="o">=</span><span class="n">true</span></span></code>.</p>
+<p>On the server side there is a function that checks for admin role:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">is_admin</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
 <span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">dec_ctr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nonce</span><span class="p">)</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="sa">b</span><span class="s1">&#39;admin=true&#39;</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
 </code></pre></div>
 
+<p>We control the user’s data (<code><span class="highlight-candombe-inline"><span class="n">userdata</span></span></code> field) but we cannot control the entire profile.</p>
+<p>In particular, we cannot say that we have the administration role adding <code><span class="highlight-candombe-inline"><span class="n">admin</span><span class="o">=</span><span class="n">true</span></span></code>.</p>
+<p><label for='CldlbGwuLi4gdGVjaG5pY2FsbHkgdGhlIGNoZWNrIGluIGBhZGRfdXNlcl9kYXRhYCBpcyBtYWRlIHdpdGggYW4KYGFzc2VydGAuCgpJbiBQeXRob24gdGhlc2UgYXNzZXJ0cyBhcmUgKipyZW1vdmVkKiogaWYgdGhlIGNvZGUgaXMgZXhlY3V0ZWQgd2l0aCB0aGUKb3B0aW1pemF0aW9uIGZsYWcgc28gaWYgdGhlIGBhZGRfdXNlcl9kYXRhYCBydW5zIHdpdGggdGhlIGZsYWcgb24gd2UKY291bGQgaW5qZWN0IGFueXRoaW5nLgoKU28gZG8gbm90IHVzZSBgYXNzZXJ0YCBmb3IgYW55IHJlYWwgY2hlY2suCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldlbGwuLi4gdGVjaG5pY2FsbHkgdGhlIGNoZWNrIGluIGBhZGRfdXNlcl9kYXRhYCBpcyBtYWRlIHdpdGggYW4KYGFzc2VydGAuCgpJbiBQeXRob24gdGhlc2UgYXNzZXJ0cyBhcmUgKipyZW1vdmVkKiogaWYgdGhlIGNvZGUgaXMgZXhlY3V0ZWQgd2l0aCB0aGUKb3B0aW1pemF0aW9uIGZsYWcgc28gaWYgdGhlIGBhZGRfdXNlcl9kYXRhYCBydW5zIHdpdGggdGhlIGZsYWcgb24gd2UKY291bGQgaW5qZWN0IGFueXRoaW5nLgoKU28gZG8gbm90IHVzZSBgYXNzZXJ0YCBmb3IgYW55IHJlYWwgY2hlY2suCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Well… technically the check in <code><span class="highlight-candombe-inline"><span class="n">add_user_data</span></span></code> is made with an <code><span class="highlight-candombe-inline"><span class="k">assert</span></span></code>.
+<br /><br />
+In Python these asserts are <strong>removed</strong> if the code is executed with the optimization flag so if the <code><span class="highlight-candombe-inline"><span class="n">add_user_data</span></span></code> runs with the flag on we could inject anything.
+<br /><br />
+So do not use <code><span class="highlight-candombe-inline"><span class="k">assert</span></span></code> for any real check.
+</span></p>
+<p>So, no, we cannot do this:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">add_user_data</span><span class="p">(</span><span class="s2">&quot;somedata;admin=true&quot;</span><span class="p">)</span>
+<span class="o">&lt;...&gt;</span><span class="ne">AssertionError</span>
+</code></pre></div>
+
+<h2 id="bit-flipping">Bit flipping</h2>
 <p>In <a href="/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a> we saw that CBC does not offer any protection against forgery and how to break it.</p>
 <p>In this post we will do the same but attacking the CTR mode.</p>
 <p>First we will create our <em>target</em> plaintext and a <em>padding</em> plaintext. The former is the plaintext that we <em>want</em> to inject and the latter is the one that we are <em>allowed</em> to inject.</p>
@@ -149,6 +167,14 @@ August 22, 2019
 </code></pre></div>
 
 <p>Broken! <a href="https://cryptopals.com/sets/4/challenges/26">CTR bitflipping</a> challenge unlock!</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">CTR Bitflipping - August 22, 2019 - Martin Di Paola</span>
 <footer>

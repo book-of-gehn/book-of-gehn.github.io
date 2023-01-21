@@ -258,6 +258,14 @@ max    8019.000000     13532.000000      17392.000000      17572.000000</code></
 <p>In second place <code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span><span class="w"></span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_PROCESS_CPUTIME_ID</span><span class="w"></span></span></code> or <code><span class="highlight-candombe-inline"><span class="n">CLOCK_THREAD_CPUTIME_ID</span><span class="w"></span></span></code>. Good performance, roughly 4 or 5 times slower than <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span><span class="w"></span></span></code>.</p>
 <p><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span><span class="w"></span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC_RAW</span><span class="w"></span></span></code> is not bad but it is at least 8 times slower than <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span><span class="w"></span></span></code>.</p>
 <p>The rest of the clocks are <strong>not</strong> useful.</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">High Precision Timers (userspace) - February 27, 2021 - Martin Di Paola</span>
 <footer>

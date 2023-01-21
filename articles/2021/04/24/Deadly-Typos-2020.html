@@ -164,6 +164,14 @@ April 24, 2021
 <p><code><span class="highlight-candombe-inline"><span class="n">scan</span><span class="w"></span></span></code> checks for <code><span class="highlight-candombe-inline"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">msg</span><span class="p">)</span><span class="w"></span></span></code> and if it is <code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code> it will believe that the subfunction did a full round and it didn’t find a message.</p>
 <p>Under a heavy workload on <em>all</em> the ports, this typo was unnoticed because <code><span class="highlight-candombe-inline"><span class="o">*</span><span class="n">msg</span><span class="w"></span></span></code> was always not-<code><span class="highlight-candombe-inline"><span class="nb">NULL</span><span class="w"></span></span></code>.</p>
 <p>But when a single port was with less data, even if the rest of the ports were super-busy, <code><span class="highlight-candombe-inline"><span class="n">scan</span><span class="w"></span></span></code> did a <code><span class="highlight-candombe-inline"><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"></span></span></code> impacting negatively in the performance. Less work made the things worse!</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">Deadly Typos 2020 - April 24, 2021 - Martin Di Paola</span>
 <footer>

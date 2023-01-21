@@ -197,6 +197,14 @@ code flow successfully changed
 <p>As you can see the return code of the process was 31. I corroborated with a debugger the value of the registers before the syscall and <code><span class="highlight-candombe-inline"><span class="nf">r0</span><span class="w"></span></span></code> was 31 as expected.</p>
 <p>Instead of jumping to <code><span class="highlight-candombe-inline"><span class="n">_exit</span><span class="w"></span></span></code> we could jump before to a piece of code –known as gadget– that sets <code><span class="highlight-candombe-inline"><span class="nf">r0</span><span class="w"></span></span></code> to zero and then jump to <code><span class="highlight-candombe-inline"><span class="n">_exit</span><span class="w"></span></span></code>.</p>
 <p>But that’s for another post.</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">Smashing ARM Stack for Fun - Part V - January 20, 2021 - Martin Di Paola</span>
 <footer>

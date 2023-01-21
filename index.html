@@ -1410,6 +1410,9 @@ CTR Edit/Inject Plaintext Attacks
 </span></p>
 <p>One can replace part of the plaintext, extend it or even reduce it.</p>
 <p>But this beautiful property of a CTR mode (and any other stream cipher) is actually a booby-trap.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 80%;" class='' alt='' src='/img/matasano/ctr-edit-slicing-window.svg' /></figure></p>
 </div>
 <p></span></p>
 <span class="index-single-post">
@@ -1524,7 +1527,7 @@ CBC Padding Oracle Attack
 <div>
 <p>AES and other ciphers work on blocks; if the plaintext length is not multiple of the block size a padding is added.</p>
 <p>If during the decryption the pad is checked and returns an error, we can use this to build a <em>padding oracle</em>: a function that will tell us if an encrypted plaintext has a valid pad or not.</p>
-<p>Armed with this <em>padding oracle</em> we can break CBC one byte at time.</p>
+<p>It may not sound too much exiting but armed with this <em>padding oracle</em> we can <strong>break CBC</strong> one byte at time.</p>
 <p><label for='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>

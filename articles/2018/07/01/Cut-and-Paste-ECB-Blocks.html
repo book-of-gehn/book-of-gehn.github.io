@@ -94,23 +94,23 @@ July 1, 2018
 <strong>– Spoiler Alert! –</strong>
 </span></p>
 <p>Welcome to the <a href="https://cryptopals.com/sets/2/challenges/13">ECB cut-and-paste</a> challenge!<!--more--></p>
-<h3 id="prelude-profile-creation">Prelude: profile creation</h3>
-<p>Imagen a scenario where two parties send encrypted messages using AES in ECB mode:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">sys</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;./posts/matasano/assets&quot;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">challenge</span> <span class="kn">import</span> <span class="n">generate_config</span><span class="p">,</span> <span class="n">enc_ecb</span><span class="p">,</span> <span class="n">dec_ecb</span>  <span class="c1"># byexample: +timeout=10</span>
+<h3 id="prelude-profile-request">Prelude: profile request</h3>
+<p>Imagen a scenario where two parties send encrypted messages using AES in ECB mode.</p>
+<!--
+>>> import sys
+>>> sys.path.append("./posts/matasano/assets")
+>>> from challenge import generate_config, enc_ecb, dec_ecb  # byexample: +timeout=10
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">seed</span> <span class="o">=</span> <span class="mi">20180701</span>   <span class="c1"># make the tests &#39;random&#39; but deterministic</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">block_size</span> <span class="o">=</span> <span class="mi">16</span>     <span class="c1"># leave this fixed, it is what happen in practice</span>
+>>> seed = 20180701   # make the tests 'random' but deterministic
+>>> block_size = 16     # leave this fixed, it is what happen in practice
 
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># encrypt/decrypt under this &#39;random&#39; environment</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">cfg</span> <span class="o">=</span> <span class="n">generate_config</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="n">block_size</span><span class="p">,</span> <span class="n">enc_mode</span><span class="o">=</span><span class="s1">&#39;ecb&#39;</span><span class="p">)</span>
-</code></pre></div>
-
+>>> # encrypt/decrypt under this 'random' environment
+>>> cfg = generate_config(random_state=seed, block_size=block_size, enc_mode='ecb')
+-->
 <p>Consider the following function that builds a ciphertext from an hypothetical <em>“create profile for a new user”</em>:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span>                <span class="c1"># byexample: +timeout=10</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">profile_for</span><span class="p">(</span><span class="n">email</span><span class="p">):</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">profile_request_for</span><span class="p">(</span><span class="n">email</span><span class="p">):</span>
 <span class="o">...</span>     <span class="k">assert</span> <span class="sa">b</span><span class="s1">&#39;&amp;&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">email</span>
 <span class="o">...</span>     <span class="k">assert</span> <span class="sa">b</span><span class="s1">&#39;=&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">email</span>
 <span class="o">...</span>     <span class="k">assert</span> <span class="sa">b</span><span class="s1">&#39;@&#39;</span>     <span class="ow">in</span> <span class="n">email</span>
@@ -119,16 +119,18 @@ July 1, 2018
 <span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="s1">&#39;pkcs#7&#39;</span><span class="p">)</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="n">enc_ecb</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_for</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;honest-email@example.com&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_request_for</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;honest-email@example.com&#39;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">c</span>
 <span class="o">&lt;...&gt;</span>\<span class="n">xc1</span>\<span class="n">xa4</span>\<span class="n">x89</span><span class="o">&lt;...&gt;</span>
 </code></pre></div>
 
-<p>The <code><span class="highlight-candombe-inline"><span class="n">profile_for</span></span></code> can create as many user as we want but all of them will have the same privilege level or role: <code><span class="highlight-candombe-inline"><span class="n">user</span></span></code>.</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">profile_request_for</span></span></code> can create as many user as we want but all of them will have the same privilege level or role: <code><span class="highlight-candombe-inline"><span class="n">user</span></span></code>.</p>
+<p>The adversary (us) can call this function as many times as he/she wants but it cannot neither change it (like disabling the checks) nor peak the secret key.</p>
+<h3 id="prelude-profile-creation">Prelude: profile creation</h3>
 <p>Then the ciphertext can be sent to a server where the given credentials are stored and the profile is <em>“created”</em>.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">parse_qs</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">create_profile</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">dec_ecb</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">create_profile</span><span class="p">(</span><span class="n">encrypted_request</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">dec_ecb</span><span class="p">(</span><span class="n">encrypted_request</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)</span>
 <span class="o">...</span>     <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">unpad</span><span class="p">(</span><span class="s1">&#39;pkcs#7&#39;</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">return</span> <span class="n">parse_qs</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">strict_parsing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -137,24 +139,23 @@ July 1, 2018
 <span class="p">{</span><span class="sa">b</span><span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;honest-email@example.com&#39;</span><span class="p">],</span> <span class="sa">b</span><span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;user&#39;</span><span class="p">],</span> <span class="sa">b</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;10&#39;</span><span class="p">]}</span>
 </code></pre></div>
 
-<h2 id="forgery">Forgery</h2>
-<p>It would be cool to forge <code><span class="highlight-candombe-inline"><span class="n">role</span><span class="o">=</span><span class="n">admin</span></span></code> there but it is not possible.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">profile_for</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;dishonest@evil.com&amp;role=admin&#39;</span><span class="p">)</span>
+<h2 id="forgery-naive-try">Forgery (naive try)</h2>
+<p>It would be cool to forge <code><span class="highlight-candombe-inline"><span class="n">role</span><span class="o">=</span><span class="n">admin</span></span></code> <em>with an injection there</em> but it is not possible.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">profile_request_for</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;dishonest@evil.com&amp;role=admin&#39;</span><span class="p">)</span>
 <span class="o">&lt;...&gt;</span>
 <span class="ne">AssertionError</span>
 </code></pre></div>
 
 <p>Let’s forge <strong>anyways</strong> with <a href="https://pypi.org/project/cryptonita/">cryptonita</a>.</p>
+<h2 id="forgery-as-crypto-pro">Forgery (as crypto pro)</h2>
 <h3 id="block-alignment">Block alignment</h3>
-<p>We want to know how many bytes are needed so the plaintext at its right is aligned with the block boundary.</p>
-<p>In other words, given the prefix <code><span class="highlight-candombe-inline"><span class="n">email</span><span class="o">=</span></span></code> we now that we need 10 bytes to append and complete the block leaving the rest of our own plaintext aligned with the block boundary:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">block_size</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="s2">&quot;email=&quot;</span><span class="p">)</span>
-<span class="mi">10</span>
-</code></pre></div>
-
-<p>We already know how to do this even if we don’t know the prefix… when we have two blocks encrypted with to the same ciphertext block we are done:</p>
+<p>In principle our partial plaintext is inserted at some <em>fixed but unknown</em> position.</p>
+<p>The first step is to know where.</p>
+<p>The key insight is that if we insert 2 full and aligned blocks we will get 2 identical ciphertext blocks.</p>
+<p>So we insert these and slowly add one extra byte at time until we get the two identical ciphertext blocks.</p>
+<p>The alignment required was exactly the amount of extra bytes inserted.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">alignment</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_size</span><span class="p">):</span>
-<span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="n">profile_for</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;@&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">block_size</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">alignment</span><span class="p">)))</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="n">profile_request_for</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;@&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">block_size</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">alignment</span><span class="p">)))</span>
 <span class="o">...</span>     <span class="n">indexes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="n">block_size</span><span class="p">)</span><span class="o">.</span><span class="n">iduplicates</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">idx_of</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">))</span>
 <span class="o">...</span>     <span class="k">if</span> <span class="n">indexes</span><span class="p">:</span>
 <span class="o">...</span>         <span class="k">break</span>
@@ -168,62 +169,83 @@ July 1, 2018
 <span class="mi">1</span>
 </code></pre></div>
 
-<h3 id="cut-a-block">Cut a block</h3>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">align_block</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="n">alignment</span><span class="p">)</span>
+<p><em>Of course we could cheat a little!</em> If the <em>prefix is known</em>, we just do the maths:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">block_size</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="s2">&quot;email=&quot;</span><span class="p">)</span>
+<span class="mi">10</span>
+</code></pre></div>
+
+<h3 id="crafting-the-email">Crafting the email</h3>
+<p><code><span class="highlight-candombe-inline"><span class="n">profile_request_for</span></span></code> <em>will encrypt for us anything</em>, as long as the email is a “valid email”.</p>
+<p>We can prepare specially crafted one:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">align_pad</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="n">alignment</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">target</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="s1">&#39;pkcs#7&#39;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">posfix</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;@evil.com&#39;</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">crafted_email</span> <span class="o">=</span> <span class="n">align_block</span> <span class="o">+</span> <span class="n">target</span> <span class="o">+</span> <span class="n">posfix</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">crafted_email</span> <span class="o">=</span> <span class="n">align_pad</span> <span class="o">+</span> <span class="n">target</span> <span class="o">+</span> <span class="n">posfix</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">crafted_email</span>
 <span class="s1">&#39;A&lt;...&gt;AAAadmin</span><span class="se">\x0b\x0b\x0b</span><span class="s1">&lt;padding&gt;</span><span class="se">\x0b</span><span class="s1">@evil.com&#39;</span>
 </code></pre></div>
 
-<p>Now, when <code><span class="highlight-candombe-inline"><span class="n">crafted_email</span></span></code> gets encrypted, the <code><span class="highlight-candombe-inline"><span class="n">admin</span>\<span class="n">x0b</span><span class="o">...</span>\<span class="n">x0b</span></span></code> will be aligned to the block boundary and it will be a full block ready to be cut:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_for</span><span class="p">(</span><span class="n">crafted_email</span><span class="p">)</span>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">align_pad</span></span></code> ensures that what follows (<code><span class="highlight-candombe-inline"><span class="s2">&quot;admin&quot;</span></span></code>) is <em>at the begin</em> of a block.</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">target</span></span></code> is a full block with the string <code><span class="highlight-candombe-inline"><span class="s2">&quot;admin&quot;</span></span></code> and a padding <strong>as if</strong> it were at the end of the plaintext (which it is not).</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">posfix</span></span></code> just completes the crafting so the whole looks an email address.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 60%;" class='' alt='' src='/img/matasano/cut_and_paste_align_before_cut.svg' /></figure></p>
+<h3 id="cut-the-block">Cut the block</h3>
+<p>Now we encrypt the crafted profile. The trick is that <strong>we know</strong> that a full block will be the encryption of <code><span class="highlight-candombe-inline"><span class="s2">&quot;admin&quot;</span></span></code> and <strong>we know</strong> exactly where.</p>
+<p>This is because EBC encrypts all the blocks in the same way, no matter where they are.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_request_for</span><span class="p">(</span><span class="n">crafted_email</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">cut</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">nblocks</span><span class="p">(</span><span class="n">block_size</span><span class="p">)[</span><span class="n">indexes</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
 </code></pre></div>
 
-<pre><code>   add enough As to align the next block
-     |
-|--------|--------|---------|
- email=AA adminPPP @foo.....
-              |
-              V
-|--------|--------|---------|
-         :   C1   :
-         :.......cut</code></pre>
-<p>where <code><span class="highlight-candombe-inline"><span class="n">PPP</span></span></code> is a <code class="none">pkcs#7</code> padding such as if the whole <code><span class="highlight-candombe-inline"><span class="n">C1</span></span></code> block was the last block of the ciphertext, the decryption + un-padding would success.</p>
-<h3 id="paste-a-block">Paste a block</h3>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 60%;" class='' alt='' src='/img/matasano/cut_and_paste_align_cutting.svg' /></figure></p>
+<h3 id="paste-the-block">Paste the block</h3>
 <p>Now, the final step.</p>
-<p>We will use our valid email (at the end <em>we</em> want to be admin) but it has to be special: it has to contain enough padding to align the <em>last</em> block so we can cut it and throw it away.</p>
-<p>In its replacement we will put our crafted cut cipher block.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_for</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;me-AAAAAAAAAAAAAAAAA@evil.com&#39;</span><span class="p">)</span>
+<p><label for='CkluIGEgcmVhbCBjYXNlIHlvdSB3aWxsIGFsc28gbWFrZSB5b3VyIHRoYXQgdGhlIGVtYWlsIGlzIGEgdmFsaWQgb25lOgp0aGUgd2hvbGUgdGhpbmcgaXMgYWJvdXQgZ2V0dGluZyAqeW91KiBhbiBhZG1pbi4KCklmIHlvdSBjYW5ub3QgbG9naW4gbGF0ZXIsIGl0IHdvdWxkIGJlIHBvaW50bGVzcy4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkluIGEgcmVhbCBjYXNlIHlvdSB3aWxsIGFsc28gbWFrZSB5b3VyIHRoYXQgdGhlIGVtYWlsIGlzIGEgdmFsaWQgb25lOgp0aGUgd2hvbGUgdGhpbmcgaXMgYWJvdXQgZ2V0dGluZyAqeW91KiBhbiBhZG1pbi4KCklmIHlvdSBjYW5ub3QgbG9naW4gbGF0ZXIsIGl0IHdvdWxkIGJlIHBvaW50bGVzcy4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+In a real case you will also make your that the email is a valid one: the whole thing is about getting <em>you</em> an admin.
+<br /><br />
+If you cannot login later, it would be pointless.
+</span></p>
+<p>We craft another email but this time the goal is to align the <code><span class="highlight-candombe-inline"><span class="n">role</span><span class="o">=</span></span></code> plaintext <em>at the end</em> of the block.</p>
+<p>In other words, what follows <code><span class="highlight-candombe-inline"><span class="n">role</span><span class="o">=</span></span></code> must be at the begin of the next block.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 90%;" class='' alt='' src='/img/matasano/cut_and_paste_align_cutting2.svg' /></figure></p>
+<p>Then we <em>paste the block</em>.</p>
+<p>In its replacement we will put our crafted cipher block.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_request_for</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;me-AAAAAAAAAAAAAAAAA@evil.com&#39;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">forged</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">mutable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">forged</span><span class="p">[</span><span class="o">-</span><span class="n">block_size</span><span class="p">:]</span> <span class="o">=</span> <span class="n">cut</span>
 </code></pre></div>
 
-<p>The email address <code><span class="highlight-candombe-inline"><span class="n">me</span><span class="o">-</span><span class="n">AAAAAAAAAAAAAAAAA</span><span class="nd">@evil</span><span class="o">.</span><span class="n">com</span></span></code> should be a valid one and with an account controlled by us if we want to do something beyond the cryptography exercise later.</p>
-<p>How many <code><span class="highlight-candombe-inline"><span class="n">A</span></span></code> we need to add will depend: I tried several times using <code><span class="highlight-candombe-inline"><span class="n">create_profile</span></span></code> as oracle until I got the payload aligned such the last <em>boundary</em> matched with the <code><span class="highlight-candombe-inline"><span class="n">role</span><span class="o">=|</span><span class="n">user</span></span></code> boundary.</p>
-<p>The following diagram show this:</p>
-<pre><code>  insert a valid email, with As to align the last block
-       |     |
-       |     |
-|--------|--------|--------|--------|    &lt;= original
- email=me -AAA@evi ...role= userQQQQ           |
-     |        |        |                       |
-     |        |        |                       V
-    Ca       Cb       Cc       C1 (cut)  &lt;=  encrypt
-     |        |        |        |              |
-     V        V        V        V              V
-|--------|--------|--------|--------|    &lt;= decrypted
- email=me -AAA@evi ...role= adminPPP</code></pre>
-<p>Voila!, the plaintext is recovered and the padding removed and we get a admin profile.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 90%;" class='' alt='' src='/img/matasano/cut_and_paste_align_pasting.svg' /></figure></p>
+<p>How many <code><span class="highlight-candombe-inline"><span class="n">A</span></span></code> we need to add will depend: I tried several times using <code><span class="highlight-candombe-inline"><span class="n">create_profile</span></span></code> as oracle until I got the payload aligned such the last <em>boundary</em> matched and no error was throw.</p>
+<h2 id="forge">Forge!</h2>
+<p>Voila!, the plaintext is recovered by the server, the padding removed and we get a admin profile.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">create_profile</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">forged</span><span class="p">))</span>
 <span class="p">{</span><span class="sa">b</span><span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;me-AAAAAAAAAAAAAAAAA@evil.com&#39;</span><span class="p">],</span>
  <span class="sa">b</span><span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;admin&#39;</span><span class="p">],</span>
  <span class="sa">b</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;10&#39;</span><span class="p">]}</span>
 </code></pre></div>
 
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img style="width: 100%;" class='' alt='' src='/img/matasano/cut_and_paste_align_pasted.svg' /></figure></p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">Cut and Paste ECB blocks - July 1, 2018 - Martin Di Paola</span>
 <footer>

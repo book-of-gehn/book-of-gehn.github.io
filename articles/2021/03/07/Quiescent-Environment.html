@@ -182,6 +182,14 @@ I wrote a few posts about this: a lock free queue <a href="/articles/2020/03/22/
 <p>Version B may be <em>faster</em> than A just because <code><span class="highlight-candombe-inline"><span class="n">bar</span><span class="p">()</span><span class="w"></span></span></code> was moved closer to <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> and the code of <code><span class="highlight-candombe-inline"><span class="n">bar</span><span class="p">()</span><span class="w"></span></span></code> gets into the cache at the moment that <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> does the call.</p>
 <p>Code layout, <a href="https://easyperf.net/blog/2018/01/18/Code_alignment_issues">code alignment</a>, data alignment, and who knows what else may change.</p>
 <p>And trust me, <a href="https://users.cs.northwestern.edu/~robby/courses/322-2013-spring/mytkowicz-wrong-data.pdf">Producing Wrong Data Without Doing Anything Obviously Wrong!</a> is very common and almost unavoidable.</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
 </article>
 <span class="print-footer">Quiescent Environment - March 7, 2021 - Martin Di Paola</span>
 <footer>
