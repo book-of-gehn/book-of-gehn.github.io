@@ -8,7 +8,55 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 21 Jan 2023 20:27:16 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 24 Jan 2023 02:14:09 +0000</lastBuildDate>
+    <item>
+      <title>Key Recovering from CBC with `IV = K`{.mathjax}</title>
+      <link>https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html</link>
+      <description>&lt;p&gt;CBC requires an &lt;em&gt;initialization vector&lt;/em&gt; (IV) that needs to be agreed by both encryption and decryption peers.&lt;/p&gt;
+&lt;p&gt;IV needs to be random so you may be get tempted and use the secret key as IV.&lt;/p&gt;
+&lt;p&gt;No, please don’t.&lt;/p&gt;
+&lt;p&gt;The IV is not required to be secret and there is a good reason for that: it can be recovered with a &lt;strong&gt;single&lt;/strong&gt; &lt;em&gt;chosen ciphertext attack&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Using \(IV = K\) means that the adversary can recover the secret key with a single message.&lt;/p&gt;
+&lt;p&gt;In this post I describe the attack in 3 simple diagrams. &lt;!--more--&gt;&lt;/p&gt;
+&lt;h2 id="setup"&gt;Setup&lt;/h2&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Encryption of a plaintext.
+&lt;br /&gt;&lt;br /&gt;
+Note how the secret key is used incorrectly as IV.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 50%;" class='' alt='' src='/img/matasano/k-eq-iv-enc.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id="chosen-ciphertext"&gt;Chosen ciphertext&lt;/h2&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Decryption of a &lt;em&gt;chosen ciphertext&lt;/em&gt;.
+&lt;br /&gt;&lt;br /&gt;
+It is a 3-block ciphertext with the first and third blocks being the same and the block in the between being full of zeros.
+&lt;br /&gt;&lt;br /&gt;
+Note that \(c_1\) can be an arbitrary encrypted block.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 45%;" class='' alt='' src='/img/matasano/k-eq-iv-attack.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id="key-recovering"&gt;Key recovering&lt;/h2&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+The third block is decrypted and then xored with zeros, making the xor a no-operation.
+&lt;br /&gt;&lt;br /&gt;
+This leaves the direct decryption \(D[c_1]\) at the end of the plaintext.
+&lt;br /&gt;&lt;br /&gt;
+This is the same value obtained for the &lt;em&gt;first&lt;/em&gt; ciphertext block &lt;strong&gt;before&lt;/strong&gt; the xor with the IV.
+&lt;br /&gt;&lt;br /&gt;
+Knowing the first block of the plaintext then it is possible to recover the IV.
+&lt;br /&gt;&lt;br /&gt;
+This is in general true for any CBC setup and it does not imply any vulnerability as &lt;em&gt;the IV does not require to be secret&lt;/em&gt;.
+&lt;br /&gt;&lt;br /&gt;
+But as in this case, if the IV was initialized with the secret key, this now becomes a real attack with a &lt;strong&gt;full recover of the key&lt;/strong&gt;.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/k-eq-iv-recover.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+</description>
+      <guid isPermaLink="false">https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html</guid>
+      <category>cryptography</category>
+      <category>matasano</category>
+      <category>cryptonita</category>
+      <category>CBC</category>
+      <pubDate>Mon, 23 Jan 2023 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>Diff Between Data Frames for Testing</title>
       <link>https://book-of-gehn.github.io/articles/2022/10/01/Diff-Between-Dataframes-for-Testing.html</link>

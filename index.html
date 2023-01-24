@@ -84,6 +84,27 @@
 </h1>
 <span class="index-single-post">
 <hr class="slender post-layout">
+<a href="https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html">
+<h2 class="larger">
+Key Recovering from CBC with \(IV = K\)
+</h2>
+</a> <br><span class="smaller">January 23, 2023</span> <br/>
+<div>
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/k-eq-iv-enc.svg' />
+</span></p>
+<p>CBC requires an <em>initialization vector</em> (IV) that needs to be agreed by both encryption and decryption peers.</p>
+<p>IV needs to be random so you may be get tempted and use the secret key as IV.</p>
+<p>No, please don’t.</p>
+<p>The IV is not required to be secret and there is a good reason for that: it can be recovered with a <strong>single</strong> <em>chosen ciphertext attack</em>.</p>
+<p>Using \(IV = K\) means that the adversary can recover the secret key with a single message.</p>
+<p>In this post I describe the attack in 3 simple diagrams.</p>
+</div>
+<p></span></p>
+<span class="index-single-post">
+<hr class="slender post-layout">
 <a href="https://book-of-gehn.github.io/articles/2022/10/01/Diff-Between-Dataframes-for-Testing.html">
 <h2 class="larger">
 Diff Between Data Frames for Testing
