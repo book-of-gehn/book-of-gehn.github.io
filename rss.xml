@@ -8,7 +8,7 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 24 Jan 2023 02:14:09 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 31 Jan 2023 11:39:50 +0000</lastBuildDate>
     <item>
       <title>Key Recovering from CBC with `IV = K`{.mathjax}</title>
       <link>https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html</link>
@@ -10145,7 +10145,7 @@ Full queue. One entry is always left empty to differentiate a full queue from an
 &lt;br /&gt;&lt;br /&gt;
 &lt;a href="/articles/2018/09/16/Ouroboros-Circular-Buffer.html"&gt;Other implementations&lt;/a&gt; do not waste this entry.
 &lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;The pointers serve as stop-markers: the producer will not write if the head points to an entry that is immediately before the entry pointed by the head; the consumer will not read if the tail and the head are pointing to the same entry.&lt;/p&gt;
+&lt;p&gt;The pointers serve as stop-markers: the producer will not write if the head points to an entry that is immediately before the entry pointed by the tail; the consumer will not read if the tail and the head are pointing to the same entry.&lt;/p&gt;
 &lt;p&gt;&lt;label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3F1ZXVlLWVtcHR5LnBuZycgLz4KRW1wdHkgcXVldWUuIFdoZW4gaGVhZCBhbmQgdGFpbCBwb2ludGVycyBhcmUgdGhlIHNhbWUgdGhlcmUKaXMgbm90IGFtYmlndWl0eS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3F1ZXVlLWVtcHR5LnBuZycgLz4KRW1wdHkgcXVldWUuIFdoZW4gaGVhZCBhbmQgdGFpbCBwb2ludGVycyBhcmUgdGhlIHNhbWUgdGhlcmUKaXMgbm90IGFtYmlndWl0eS4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
@@ -10164,7 +10164,7 @@ And you are correct except for the memory reorders.
 &lt;br /&gt;&lt;br /&gt;
 We cannot longer guarantee that the head was moved &lt;em&gt;after&lt;/em&gt; writing the data even if the code say so. Keep reading.
 &lt;/span&gt;&lt;/p&gt;
-&lt;p&gt;Changing the order doesn’t fix the problem: a producer may move the head before writing, trying to &lt;em&gt;reserver&lt;/em&gt; the space but now a consumer may forward the tail before the data was actually written reading entries that are empty.&lt;/p&gt;
+&lt;p&gt;Changing the order doesn’t fix the problem: a producer may move the head before writing, trying to &lt;em&gt;reserve&lt;/em&gt; the space but now a consumer may forward the tail before the data was actually written reading entries that are empty.&lt;/p&gt;
 &lt;p&gt;The problem is that the write &lt;strong&gt;and&lt;/strong&gt; the move of the head is not a single atomic action.&lt;/p&gt;
 &lt;p&gt;The same happen for reading.&lt;/p&gt;
 &lt;p&gt;The key to resolve this is to have two heads and two tails.&lt;/p&gt;
@@ -12665,9 +12665,12 @@ $$ K = C [P]^{-1} \quad(\textrm{mod } m)$$
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;stop&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;start&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;delta&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Now we test each possible seed in that range. &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;search&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a handy function for testing that implements some heuristics like trying first the numbers in the middle of the range before in the extremes.&lt;/p&gt;
-&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;    &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;stop&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;oracle&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;likely&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;middle&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;secret_seed&lt;/span&gt;      &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&lt;p&gt;Now we test each possible seed in that range. &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;search&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a handy function for the testing and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;IntSpace&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; defines a search space with some heuristics like yielding first the numbers in the middle of the range before in the extremes.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.space&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;IntSpace&lt;/span&gt; &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;    &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;space&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;IntSpace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;stop&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;middle&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;space&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;oracle&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;secret_seed&lt;/span&gt;      &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
 &lt;span class="kc"&gt;True&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
@@ -12751,7 +12754,7 @@ And this is how we could make the MT19937 a little harder: make the operation no
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;sum&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;zip&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sngrams&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;pngrams&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
 &lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;count&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
 
-&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;seed&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;oracle&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;                         &lt;span class="c1"&gt;# byexample: +timeout=300&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;seed&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;IntSpace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;oracle&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;                         &lt;span class="c1"&gt;# byexample: +timeout=300&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;prng&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;iter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MT19937&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;seed&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;kstream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;repack&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;prng&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ifmt&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;gt;I&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ofmt&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;gt;BBBB&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 

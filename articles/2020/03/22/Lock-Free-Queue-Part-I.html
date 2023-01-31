@@ -101,7 +101,7 @@ Full queue. One entry is always left empty to differentiate a full queue from an
 <br /><br />
 <a href="/articles/2018/09/16/Ouroboros-Circular-Buffer.html">Other implementations</a> do not waste this entry.
 </span></p>
-<p>The pointers serve as stop-markers: the producer will not write if the head points to an entry that is immediately before the entry pointed by the head; the consumer will not read if the tail and the head are pointing to the same entry.</p>
+<p>The pointers serve as stop-markers: the producer will not write if the head points to an entry that is immediately before the entry pointed by the tail; the consumer will not read if the tail and the head are pointing to the same entry.</p>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3F1ZXVlLWVtcHR5LnBuZycgLz4KRW1wdHkgcXVldWUuIFdoZW4gaGVhZCBhbmQgdGFpbCBwb2ludGVycyBhcmUgdGhlIHNhbWUgdGhlcmUKaXMgbm90IGFtYmlndWl0eS4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvbG9jay1mcmVlL3F1ZXVlL3F1ZXVlLWVtcHR5LnBuZycgLz4KRW1wdHkgcXVldWUuIFdoZW4gaGVhZCBhbmQgdGFpbCBwb2ludGVycyBhcmUgdGhlIHNhbWUgdGhlcmUKaXMgbm90IGFtYmlndWl0eS4KbWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
@@ -120,7 +120,7 @@ And you are correct except for the memory reorders.
 <br /><br />
 We cannot longer guarantee that the head was moved <em>after</em> writing the data even if the code say so. Keep reading.
 </span></p>
-<p>Changing the order doesn’t fix the problem: a producer may move the head before writing, trying to <em>reserver</em> the space but now a consumer may forward the tail before the data was actually written reading entries that are empty.</p>
+<p>Changing the order doesn’t fix the problem: a producer may move the head before writing, trying to <em>reserve</em> the space but now a consumer may forward the tail before the data was actually written reading entries that are empty.</p>
 <p>The problem is that the write <strong>and</strong> the move of the head is not a single atomic action.</p>
 <p>The same happen for reading.</p>
 <p>The key to resolve this is to have two heads and two tails.</p>
