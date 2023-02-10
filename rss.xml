@@ -8,7 +8,7 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 31 Jan 2023 11:39:50 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 10 Feb 2023 12:40:25 +0000</lastBuildDate>
     <item>
       <title>Key Recovering from CBC with `IV = K`{.mathjax}</title>
       <link>https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html</link>
@@ -11143,8 +11143,8 @@ The first row shows all the frames that forms the animation. The other two are t
     <item>
       <title>Index of Coincidence Explained</title>
       <link>https://book-of-gehn.github.io/articles/2019/10/04/Index-of-Coincidence.html</link>
-      <description>&lt;p&gt;The concept of Index of Coincidence was introduced by William Friedman in 1922-1923 in the paper titled “The Index of Coincidence and its Applications in Cryptoanalysis”.&lt;/p&gt;
-&lt;p&gt;The Navy Department (US) worked in the following years on this topic coming, in 1955, with a paper titled “The Index of Coincidence” by Howard Campaigne.&lt;/p&gt;
+      <description>&lt;p&gt;The concept of Index of Coincidence was introduced by William Friedman in 1922-1923 in the paper titled “The Index of Coincidence and its Applications in Cryptoanalysis” [&lt;a href="/assets/crypto/index-of-coincidence/biblio/index_of_coincidence_1923.pdf"&gt;1&lt;/a&gt;].&lt;/p&gt;
+&lt;p&gt;The Navy Department (US) worked in the following years on this topic coming, in 1955, with a paper titled “The Index of Coincidence” by Howard Campaigne [&lt;a href="/assets/crypto/index-of-coincidence/biblio/index_of_coincidence_1955.pdf"&gt;2&lt;/a&gt;].&lt;/p&gt;
 &lt;p&gt;However I found some confusing and misleading concepts in the &lt;em&gt;modern&lt;/em&gt; literature.&lt;/p&gt;
 &lt;p&gt;This post is a summary of what I could understand from Howard’s work.&lt;!--more--&gt;&lt;/p&gt;
 &lt;h2 id="count-coincidences"&gt;Count Coincidences&lt;/h2&gt;
