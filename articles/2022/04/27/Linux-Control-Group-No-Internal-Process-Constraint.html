@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -101,33 +103,33 @@ Previous posts: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-O
 <p><label for='CmBgYHNoZWxsCiQgY2QgL3N5cy9mcy9jZ3JvdXAKJCBta2RpciAtcCB0ZXN0L2NnMS9jZzFfMQokIG1rZGlyIC1wIHRlc3QvY2cxL2NnMV8yCiQgbWtkaXIgLXAgdGVzdC9jZzIvY2cyXzEKJCBta2RpciAtcCB0ZXN0L2NnMi9jZzJfMgoKJCBlY2hvICcrY3B1JyA+IHRlc3QvY2dyb3VwLnN1YnRyZWVfY29udHJvbAokIGVjaG8gJytjcHUnID4gdGVzdC9jZzEvY2dyb3VwLnN1YnRyZWVfY29udHJvbApgYGAKbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CmBgYHNoZWxsCiQgY2QgL3N5cy9mcy9jZ3JvdXAKJCBta2RpciAtcCB0ZXN0L2NnMS9jZzFfMQokIG1rZGlyIC1wIHRlc3QvY2cxL2NnMV8yCiQgbWtkaXIgLXAgdGVzdC9jZzIvY2cyXzEKJCBta2RpciAtcCB0ZXN0L2NnMi9jZzJfMgoKJCBlY2hvICcrY3B1JyA+IHRlc3QvY2dyb3VwLnN1YnRyZWVfY29udHJvbAokIGVjaG8gJytjcHUnID4gdGVzdC9jZzEvY2dyb3VwLnN1YnRyZWVfY29udHJvbApgYGAKbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
-<span class="pseudo-pre"><code><span class="highlight-candombe">$ <span class="nb">cd</span> /sys/fs/cgroup
-$ mkdir -p test/cg1/cg1_1
-$ mkdir -p test/cg1/cg1_2
-$ mkdir -p test/cg2/cg2_1
-$ mkdir -p test/cg2/cg2_2
+<span class="pseudo-pre"><code><span class="highlight-candombe">$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/sys/fs/cgroup
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>test/cg1/cg1_1
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>test/cg1/cg1_2
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>test/cg2/cg2_1
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>test/cg2/cg2_2
 
-$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cgroup.subtree_control
-$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cg1/cgroup.subtree_control</span></code></span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cgroup.subtree_control
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cgroup.subtree_control</span></code></span>
 </span></p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/starting.svg' type='image/svg+xml'></object></figure></p>
 <p>Let’s create a long running process and let’s move it to one cgroup. In fact, let’s try <em>different cgroups</em> and see what happen:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ sleep <span class="m">1000</span> <span class="p">&amp;</span>
-<span class="o">[</span>&lt;job-id-proc1&gt;<span class="o">]</span> &lt;pid-proc1&gt;
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sleep<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="o">[</span>&lt;job-id-proc1&gt;<span class="o">]</span><span class="w"> </span>&lt;pid-proc1&gt;
 
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cgroup.procs            <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cgroup.procs         <span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cgroup.procs<span class="w">            </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>cgroup.procs<span class="w">         </span><span class="c1"># byexample: +paste</span>
 
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg1/cgroup.procs        <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cgroup.procs         <span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>cgroup.procs<span class="w">         </span><span class="c1"># byexample: +paste</span>
 
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg1/cg1_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cgroup.procs               <span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cg1_1/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>cgroup.procs<span class="w">               </span><span class="c1"># byexample: +paste</span>
 
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg2/cg2_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cgroup.procs               <span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cg2_1/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>cgroup.procs<span class="w">               </span><span class="c1"># byexample: +paste</span>
 </code></pre></div>
 
 <p>The process could be moved to <code>test/</code>, <code>test/cg1/</code>, <code>test/cg1/cg1_1/</code> and <code>test/cg2/cg2_1/</code> without problems.</p>
@@ -136,10 +138,10 @@ $ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cgroup.procs              
 <p>Let me show you.</p>
 <h2 id="adding-a-process-under-the-no-internal-process-constraint">Adding a process under the <em>“no internal process” constraint</em></h2>
 <p>I will move the <code>sleep</code> process to <code>test/cg1/</code> and then move it again to <code>test/cg1/cg1_1/</code> as before <em>but</em> without moving it to the root in between.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg1/cgroup.procs        <span class="c1"># byexample: +paste</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
 
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg1/cg1_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
-&lt;...&gt;write error: Operation not supported
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cg1_1/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>Operation<span class="w"> </span>not<span class="w"> </span>supported
 </code></pre></div>
 
 <p>Okay, it seems that we cannot move our process after all!</p>
@@ -152,19 +154,19 @@ $ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg1/cg1_1/cgroup.proc
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_with_proc_in_cg1.svg' type='image/svg+xml'></object>
 Diagram that shows the errors got when tried to add process 2 (<code>p2</code>) to different cgroups. Only to <code>test/cg1/</code> succeeded.
 </span></p>
-<div class="highlight-candombe"><pre><span></span><code>$ sleep <span class="m">1000</span> <span class="p">&amp;</span>
-<span class="o">[</span>&lt;job-id-proc2&gt;<span class="o">]</span> &lt;pid-proc2&gt;
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sleep<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="o">[</span>&lt;job-id-proc2&gt;<span class="o">]</span><span class="w"> </span>&lt;pid-proc2&gt;
 
-$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; test/cg1/cg1_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
-&lt;...&gt;write error: Operation not supported
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc2&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cg1_1/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>Operation<span class="w"> </span>not<span class="w"> </span>supported
 
-$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; test/cg1/cg1_2/cgroup.procs        <span class="c1"># byexample: +paste</span>
-&lt;...&gt;write error: Operation not supported
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc2&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cg1_2/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>Operation<span class="w"> </span>not<span class="w"> </span>supported
 
-$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; test/cgroup.procs                  <span class="c1"># byexample: +paste</span>
-&lt;...&gt;write error: Device or resource busy
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc2&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cgroup.procs<span class="w">                  </span><span class="c1"># byexample: +paste</span>
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>Device<span class="w"> </span>or<span class="w"> </span>resource<span class="w"> </span>busy
 
-$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; test/cg1/cgroup.procs              <span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc2&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cgroup.procs<span class="w">              </span><span class="c1"># byexample: +paste</span>
 </code></pre></div>
 
 <p>Interesting!</p>
@@ -174,10 +176,10 @@ $ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; test/cg1/cgroup.procs     
 <p><figure><figcaption><span markdown='1'>
 Add a third process to <code>test/cg2/</code>, no problem arise from.
 <br /><br />
-<span class="pseudo-pre"><code><span class="highlight-candombe">$ sleep <span class="m">1000</span> <span class="p">&amp;</span>
-<span class="o">[</span>&lt;job-id-proc3&gt;<span class="o">]</span> &lt;pid-proc3&gt;
+<span class="pseudo-pre"><code><span class="highlight-candombe">$<span class="w"> </span>sleep<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="o">[</span>&lt;job-id-proc3&gt;<span class="o">]</span><span class="w"> </span>&lt;pid-proc3&gt;
 
-$ <span class="nb">echo</span> &lt;pid-proc3&gt; &gt; test/cg2/cgroup.procs        <span class="c1"># byexample: +paste</span></span></code></span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc3&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span></span></code></span>
 </span></figcaption>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_with_proc_in_cg1_and_cg2.svg' type='image/svg+xml'></object></figure></p>
 <h3 id="how-does-the-resource-controller-affect">How does the resource controller affect?</h3>
@@ -187,13 +189,13 @@ $ <span class="nb">echo</span> &lt;pid-proc3&gt; &gt; test/cg2/cgroup.procs     
 <p><figure><figcaption><span markdown='1'>
 Add a fourth process to <code>test/cg1/cg1_2</code>, fail and then add it to <code>test/cg2/cg2_2</code>. The only difference that would explain why we failed in the first cgroup is because <code>+cpu</code> controller is enabled on the cgroup while in <code>test/cg2/cg2_2</code> is not.
 <br /><br />
-<span class="pseudo-pre"><code><span class="highlight-candombe">$ sleep <span class="m">1000</span> <span class="p">&amp;</span>
-<span class="o">[</span>&lt;job-id-proc4&gt;<span class="o">]</span> &lt;pid-proc4&gt;
+<span class="pseudo-pre"><code><span class="highlight-candombe">$<span class="w"> </span>sleep<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="o">[</span>&lt;job-id-proc4&gt;<span class="o">]</span><span class="w"> </span>&lt;pid-proc4&gt;
 
-$ <span class="nb">echo</span> &lt;pid-proc4&gt; &gt; test/cg1/cg1_2/cgroup.procs        <span class="c1"># byexample: +paste</span>
-&lt;...&gt;write error: Operation not supported
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc4&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cg1_2/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>Operation<span class="w"> </span>not<span class="w"> </span>supported
 
-$ <span class="nb">echo</span> &lt;pid-proc4&gt; &gt; test/cg2/cg2_2/cgroup.procs        <span class="c1"># byexample: +paste</span></span></code></span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc4&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cg2_2/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span></span></code></span>
 </span></figcaption>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_with_proc_in_cg1_and_cg2_alt.svg' type='image/svg+xml'></object></figure></p>
 <h3 id="flow-diagram-for-adding-a-process">Flow diagram for adding a process</h3>
@@ -212,51 +214,51 @@ This is a sketch and by no means it is a fully specification.
 State of the hierarchy after the reset and repositioning.
 </span></p>
 <p>Send all the processes to root temporally so they don’t interfere:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; cgroup.procs        <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; cgroup.procs        <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc3&gt; &gt; cgroup.procs        <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc4&gt; &gt; cgroup.procs        <span class="c1"># byexample: +paste</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc2&gt;<span class="w"> </span>&gt;<span class="w"> </span>cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc3&gt;<span class="w"> </span>&gt;<span class="w"> </span>cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc4&gt;<span class="w"> </span>&gt;<span class="w"> </span>cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
 </code></pre></div>
 
 <p>Disable the controller and delete/create some nested cgroups:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;-cpu&#39;</span> &gt; test/cg1/cgroup.subtree_control
-$ <span class="nb">echo</span> <span class="s1">&#39;-cpu&#39;</span> &gt; test/cgroup.subtree_control
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;-cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cgroup.subtree_control
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;-cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cgroup.subtree_control
 
-$ rmdir test/cg1/cg1_2 test/cg2/cg2_2
-$ mkdir test/cg3 test/cg3/cg3_1
+$<span class="w"> </span>rmdir<span class="w"> </span>test/cg1/cg1_2<span class="w"> </span>test/cg2/cg2_2
+$<span class="w"> </span>mkdir<span class="w"> </span>test/cg3<span class="w"> </span>test/cg3/cg3_1
 </code></pre></div>
 
 <p>Put back the processes into the cgroups:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg1/cgroup.procs              <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc2&gt; &gt; test/cg1/cg1_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc3&gt; &gt; test/cg2/cg2_1/cgroup.procs        <span class="c1"># byexample: +paste</span>
-$ <span class="nb">echo</span> &lt;pid-proc4&gt; &gt; test/cg3/cgroup.procs              <span class="c1"># byexample: +paste</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cgroup.procs<span class="w">              </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc2&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cg1_1/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc3&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cg2_1/cgroup.procs<span class="w">        </span><span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc4&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg3/cgroup.procs<span class="w">              </span><span class="c1"># byexample: +paste</span>
 </code></pre></div>
 
 <p>Let’s play with it and see to what extend we can enable the <code>+cpu</code> controller along the hierarchy:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cgroup.subtree_control
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cgroup.subtree_control
 
-$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cg1/cgroup.subtree_control
-&lt;...&gt;write error: Device or resource busy
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cgroup.subtree_control
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>Device<span class="w"> </span>or<span class="w"> </span>resource<span class="w"> </span>busy
 </code></pre></div>
 
 <p>We could enable <code>+cpu</code> on <code>test/</code>’s children but we had some trouble going further.</p>
 <p>We couldn’t enable on <code>test/cg1/</code>’s children because <code>test/cg1/</code> and one of its children are not empty.</p>
 <p>And because a cgroup can enable the control in its subtree only if its parent enabled it for it, <code>test/cg1/cg1_1/</code> will fail because its parent does not have the control of <code>+cpu</code>:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cg1/cg1_1/cgroup.subtree_control
-&lt;...&gt;write error: No such file or directory
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cg1_1/cgroup.subtree_control
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </span>file<span class="w"> </span>or<span class="w"> </span>directory
 </code></pre></div>
 
 <p>In contrast with <code>test/cg1/</code> we didn’t have trouble enabling on <code>test/cg2/</code>’s and <code>test/cg3/</code>’s children because in the first case <code>test/cg2/</code> is empty and in the second case is the child <code>test/cg3/cg3_1/</code> which it is empty.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cg2/cgroup.subtree_control
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cgroup.subtree_control
 
-$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cg3/cgroup.subtree_control
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg3/cgroup.subtree_control
 </code></pre></div>
 
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cg2/cg2_1/cgroup.subtree_control
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cg2_1/cgroup.subtree_control
 
-$ <span class="nb">echo</span> <span class="s1">&#39;+cpu&#39;</span> &gt; test/cg3/cg3_1/cgroup.subtree_control
-&lt;...&gt;write error: Operation not supported
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg3/cg3_1/cgroup.subtree_control
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>Operation<span class="w"> </span>not<span class="w"> </span>supported
 </code></pre></div>
 
 <h3 id="flow-diagram-for-enabling-a-controller-in-a-subtree">Flow diagram for enabling a controller in a subtree</h3>

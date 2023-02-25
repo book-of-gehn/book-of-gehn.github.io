@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -97,12 +99,12 @@ November 13, 2021
 <p>Following the <a href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">terms defined in Hop-Stability post</a>, <code><span class="highlight-candombe-inline"><span class="n">masscan</span></span></code> sends multiple probes to the same host at the same time: we call these <em>short bursts</em>.</p>
 <p><code><span class="highlight-candombe-inline"><span class="n">masscan</span></span></code> may also scan the same host multiple times, at different moments: we call these <em>rounds of short bursts</em> or just <em>rounds</em>.</p>
 <p>As we saw <a href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">earlier</a>, for a given host the <em>time to live</em> (TTL) read from every probe/packet remains constant within a short burst and relatively constant between rounds.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">all_rounds_g</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">)</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">all_rounds_g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">groupby</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">)</span>
 </code></pre></div>
 
 <p>The TTL changes between rounds only by 1 or 2; changes of 8 or greater happen only in a very small fraction of the dataset, around 0.39998%.</p>
 <p>For this reason we are going to work with the <em>mode</em>: the most common TTL value per host.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">all_rounds</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">all_rounds_g</span><span class="p">,</span> <span class="ss">:ttl</span> <span class="o">=&gt;</span> <span class="n">mode</span> <span class="o">=&gt;</span> <span class="ss">:ttl</span><span class="p">)</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">all_rounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">combine</span><span class="p">(</span><span class="n">all_rounds_g</span><span class="p">,</span><span class="w"> </span><span class="ss">:ttl</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="ss">:ttl</span><span class="p">)</span>
 </code></pre></div>
 
 <h2 id="histogram">Histogram</h2>
@@ -117,18 +119,18 @@ Histogram of TTL observed: the peaks indicate the different operative systems an
 <p>Notice however that the peaks are <strong>left-shifted</strong> from the expected default TTLs.</p>
 <p>This is because the packets received had travelled through the network and in each hop the TTL is decremented by one.</p>
 <h2 id="peak-estimation">Peak estimation</h2>
-<p>First we compute the histogram. We cannot plug in <code><span class="highlight-candombe-inline"><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span> <span class="ss">:ttl</span><span class="p">]</span></span></code> directly because its type is <code><span class="highlight-candombe-inline"><span class="kt">Vector</span><span class="p">{</span><span class="kt">Union</span><span class="p">{</span><span class="kt">Missing</span><span class="p">,</span> <span class="kt">Int32</span><span class="p">}}</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Histogram</span></span></code> does not work with <code><span class="highlight-candombe-inline"><span class="kt">Missing</span></span></code> values, even if there are no missing there.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">vec</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Int32</span><span class="p">},</span> <span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span> <span class="ss">:ttl</span><span class="p">])</span>
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">hist</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">Histogram</span><span class="p">,</span> <span class="n">vec</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+<p>First we compute the histogram. We cannot plug in <code><span class="highlight-candombe-inline"><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="ss">:ttl</span><span class="p">]</span></span></code> directly because its type is <code><span class="highlight-candombe-inline"><span class="kt">Vector</span><span class="p">{</span><span class="kt">Union</span><span class="p">{</span><span class="kt">Missing</span><span class="p">,</span><span class="w"> </span><span class="kt">Int32</span><span class="p">}}</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Histogram</span></span></code> does not work with <code><span class="highlight-candombe-inline"><span class="kt">Missing</span></span></code> values, even if there are no missing there.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">convert</span><span class="p">(</span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Int32</span><span class="p">},</span><span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="ss">:ttl</span><span class="p">])</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">hist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fit</span><span class="p">(</span><span class="n">Histogram</span><span class="p">,</span><span class="w"> </span><span class="n">vec</span><span class="p">,</span><span class="w"> </span><span class="n">nbins</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
 </code></pre></div>
 
 <p>Now we find where the local maxima ares. We use a window of 40, quite large, to filter out the secondary peaks.</p>
 <p><code><span class="highlight-candombe-inline"><span class="n">strict</span><span class="o">=</span><span class="nb">false</span></span></code> is crucial because while scanning, if the search window gets slightly out of the range, no peak is detected. So peaks near the ends, like the around 235, wouldn’t be detected.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">argmaxima</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span> <span class="o">.+</span> <span class="mi">4</span>
-<span class="mi">3</span><span class="o">-</span><span class="n">element</span> <span class="kt">Vector</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span><span class="o">:</span>
-  <span class="mi">49</span>
- <span class="mi">112</span>
- <span class="mi">239</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">argmaxima</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="n">strict</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">.+</span><span class="w"> </span><span class="mi">4</span>
+<span class="mi">3</span><span class="o">-</span><span class="n">element</span><span class="w"> </span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span><span class="o">:</span>
+<span class="w">  </span><span class="mi">49</span>
+<span class="w"> </span><span class="mi">112</span>
+<span class="w"> </span><span class="mi">239</span>
 </code></pre></div>
 
 <h2 id="hop-distance-average">Hop-distance average</h2>
@@ -140,11 +142,11 @@ Histogram of TTL observed: the peaks indicate the different operative systems an
 Reference: <a href="https://subinsb.com/default-device-ttl-values/">Subin's Default TTLs</a>
 </span></p>
 <p>Comparing these with the expected default TTLs we can know by how much the histogram was left-shifted:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">254</span><span class="p">]</span> <span class="o">-</span> <span class="p">[</span><span class="mi">49</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">239</span><span class="p">]</span>
-<span class="mi">3</span><span class="o">-</span><span class="n">element</span> <span class="kt">Vector</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span><span class="o">:</span>
- <span class="mi">15</span>
- <span class="mi">16</span>
- <span class="mi">15</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="p">[</span><span class="mi">64</span><span class="p">,</span><span class="w"> </span><span class="mi">128</span><span class="p">,</span><span class="w"> </span><span class="mi">254</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">[</span><span class="mi">49</span><span class="p">,</span><span class="w"> </span><span class="mi">112</span><span class="p">,</span><span class="w"> </span><span class="mi">239</span><span class="p">]</span>
+<span class="mi">3</span><span class="o">-</span><span class="n">element</span><span class="w"> </span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span><span class="o">:</span>
+<span class="w"> </span><span class="mi">15</span>
+<span class="w"> </span><span class="mi">16</span>
+<span class="w"> </span><span class="mi">15</span>
 </code></pre></div>
 
 <p>So the scanner is at 15 - 16 hops of distance, on average, from any other host in the network.</p>
@@ -154,36 +156,36 @@ Histogram of TTL observed but with the values shifted to the right to compensate
 <img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale_shifted.svg' /></figure></p>
 <h2 id="ip-distribution">IP distribution</h2>
 <p>We can get an idea of how the hosts scanned are distributed in the IP space.</p>
-<p>Sorted by IP address, we can compute the first order difference (aka <code><span class="highlight-candombe-inline"><span class="n">df</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">]</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">]</span></span></code>: hosts in the same subnetwork will have very small differences.</p>
+<p>Sorted by IP address, we can compute the first order difference (aka <code><span class="highlight-candombe-inline"><span class="n">df</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">]</span></span></code>: hosts in the same subnetwork will have very small differences.</p>
 <p>This <strong>crude model</strong> is not free of misinterpretations: two hosts at the end and at the begin of two large subnets, like <code><span class="highlight-candombe-inline"><span class="mf">1.255.255.254</span></span></code> and <code><span class="highlight-candombe-inline"><span class="mf">2.0.0.1</span></span></code> and you will get a difference of 2 but clearly they are at two different subnets.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">sort!</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="p">[</span><span class="ss">:ip</span><span class="p">])</span>
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">unique!</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="p">[</span><span class="ss">:ip</span><span class="p">])</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sort!</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="ss">:ip</span><span class="p">])</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">unique!</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="ss">:ip</span><span class="p">])</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">df_diff</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">diff</span> <span class="o">=</span> <span class="n">diff</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">]))</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">df_diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span><span class="n">diff</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">diff</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">]))</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="p">(</span><span class="n">df_diff</span><span class="p">)</span>
-<span class="mi">1</span><span class="o">×</span><span class="mi">7</span> <span class="n">DataFrame</span>
- <span class="n">Row</span> <span class="n">│</span> <span class="n">variable</span>  <span class="n">mean</span>     <span class="n">min</span>    <span class="n">median</span>   <span class="n">max</span>       <span class="n">nmissing</span>  <span class="n">eltype</span>
-     <span class="n">│</span> <span class="kt">Symbol</span>    <span class="kt">Float64</span>  <span class="kt">Int64</span>  <span class="kt">Float64</span>  <span class="kt">Int64</span>     <span class="kt">Int64</span>     <span class="kt">DataType</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">describe</span><span class="p">(</span><span class="n">df_diff</span><span class="p">)</span>
+<span class="mi">1</span><span class="o">×</span><span class="mi">7</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="w"> </span><span class="n">Row</span><span class="w"> </span><span class="n">│</span><span class="w"> </span><span class="n">variable</span><span class="w">  </span><span class="n">mean</span><span class="w">     </span><span class="n">min</span><span class="w">    </span><span class="n">median</span><span class="w">   </span><span class="n">max</span><span class="w">       </span><span class="n">nmissing</span><span class="w">  </span><span class="n">eltype</span>
+<span class="w">     </span><span class="n">│</span><span class="w"> </span><span class="kt">Symbol</span><span class="w">    </span><span class="kt">Float64</span><span class="w">  </span><span class="kt">Int64</span><span class="w">  </span><span class="kt">Float64</span><span class="w">  </span><span class="kt">Int64</span><span class="w">     </span><span class="kt">Int64</span><span class="w">     </span><span class="kt">DataType</span>
 <span class="n">─────┼─────────────────────────────────────────────────────────────────</span>
-   <span class="mi">1</span> <span class="n">│</span> <span class="n">diff</span>       <span class="mf">86.893</span>      <span class="mi">1</span>      <span class="mf">2.0</span>  <span class="mi">50359752</span>         <span class="mi">0</span>  <span class="kt">Int64</span>
+<span class="w">   </span><span class="mi">1</span><span class="w"> </span><span class="n">│</span><span class="w"> </span><span class="n">diff</span><span class="w">       </span><span class="mf">86.893</span><span class="w">      </span><span class="mi">1</span><span class="w">      </span><span class="mf">2.0</span><span class="w">  </span><span class="mi">50359752</span><span class="w">         </span><span class="mi">0</span><span class="w">  </span><span class="kt">Int64</span>
 </code></pre></div>
 
 <p>The median tells us that half of the hosts’ IPs differ by 1 or 2 at most. <strong>They are far from being uniformely distributed</strong>.</p>
 <p>The mean of <code><span class="highlight-candombe-inline"><span class="mf">86.893</span></span></code> tells us that despite being highly non-uniform, clusters are quite separated each other, generating larger differences in the IP (so the mean moves towards the right).</p>
 <h2 id="rough-estimation-for-cluster-density">Rough estimation for cluster density</h2>
 <p>We can integrate the difference back to the dataframe as follows:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">df</span><span class="p">[</span><span class="o">!</span><span class="p">,</span> <span class="ss">:diff</span><span class="p">]</span> <span class="o">=</span> <span class="n">insert!</span><span class="p">(</span><span class="n">diff</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">]),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="o">!</span><span class="p">,</span><span class="w"> </span><span class="ss">:diff</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">insert!</span><span class="p">(</span><span class="n">diff</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">]),</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 
-<p>Arbitrarily, I chose 0 as the difference for the first IP, that’s why I did a <code><span class="highlight-candombe-inline"><span class="n">insert!</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></span></code>. Reasonable, I guess.</p>
+<p>Arbitrarily, I chose 0 as the difference for the first IP, that’s why I did a <code><span class="highlight-candombe-inline"><span class="n">insert!</span><span class="p">(</span><span class="o">...</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span></span></code>. Reasonable, I guess.</p>
 <p>If we define that the maximum difference per cluster to 8, we can count how many clusters do we have:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">df_cluster_leaders</span> <span class="o">=</span> <span class="n">filter</span><span class="p">(</span><span class="ss">:diff</span> <span class="o">=&gt;</span> <span class="o">&gt;</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="n">df</span><span class="p">)</span>
-<span class="mi">10822514</span><span class="o">×</span><span class="mi">6</span> <span class="n">DataFrame</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">df_cluster_leaders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filter</span><span class="p">(</span><span class="ss">:diff</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">&gt;</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span><span class="w"> </span><span class="n">df</span><span class="p">)</span>
+<span class="mi">10822514</span><span class="o">×</span><span class="mi">6</span><span class="w"> </span><span class="n">DataFrame</span>
 </code></pre></div>
 
 <p>Once again we need to take into account the first cluster that it is counted above because its first host has a difference of 0 so obviously it is not part of the <code><span class="highlight-candombe-inline"><span class="n">df_cluster_leaders</span></span></code>.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">cluster_leaders</span>  <span class="o">=</span> <span class="n">insert!</span><span class="p">(</span><span class="n">df_cluster_leaders</span><span class="p">[</span><span class="o">:</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">])</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cluster_leaders</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">insert!</span><span class="p">(</span><span class="n">df_cluster_leaders</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">],</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">])</span>
 </code></pre></div>
 
 <p><label for='CkRvIG5vdCBsYXVnaC4gVGhpcyBpcyBteSBmaXJzdCB0aW1lIGNvZGluZyBhIGZ1bmN0aW9uIGluIEp1bGlhLCB0cnlpbmcKdG8gZG8gc29tZSBjbG9zdXJlLXRoaW5nLgogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
@@ -192,39 +194,39 @@ Histogram of TTL observed but with the values shifted to the right to compensate
 Do not laugh. This is my first time coding a function in Julia, trying to do some closure-thing.
 </span></p>
 <p>We can tag then each host of <code><span class="highlight-candombe-inline"><span class="n">df</span></span></code> with the first IP of its cluster, its leader.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">ix</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">next_ix</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">next_ix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="k">function</span> <span class="n">assign_leader</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-           <span class="k">if</span> <span class="n">val</span> <span class="o">&gt;=</span> <span class="n">cluster_leaders</span><span class="p">[</span><span class="n">next_ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-                 <span class="n">ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                 <span class="n">next_ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-           <span class="k">end</span>
-           <span class="k">return</span> <span class="n">cluster_leaders</span><span class="p">[</span><span class="n">ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-       <span class="k">end</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="n">assign_leader</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<span class="w">           </span><span class="k">if</span><span class="w"> </span><span class="n">val</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">cluster_leaders</span><span class="p">[</span><span class="n">next_ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+<span class="w">                 </span><span class="n">ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next_ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="w">                 </span><span class="n">next_ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">           </span><span class="k">end</span>
+<span class="w">           </span><span class="k">return</span><span class="w"> </span><span class="n">cluster_leaders</span><span class="p">[</span><span class="n">ix</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+<span class="w">       </span><span class="k">end</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">df</span><span class="p">[</span><span class="o">!</span><span class="p">,</span> <span class="ss">:leader</span><span class="p">]</span> <span class="o">=</span> <span class="n">assign_leader</span><span class="o">.</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span> <span class="ss">:ip</span><span class="p">])</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="o">!</span><span class="p">,</span><span class="w"> </span><span class="ss">:leader</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">assign_leader</span><span class="o">.</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">])</span>
 </code></pre></div>
 
 <p>Now we can group by leader and count how many rows do we have. Remember that we filtered out duplicated IPs so counting the rows effectively is the same that counting how many hosts we have in each cluster.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">clusters_g</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="p">[</span><span class="ss">:leader</span><span class="p">])</span>
-<span class="n">GroupedDataFrame</span> <span class="n">with</span> <span class="mi">10822515</span> <span class="n">groups</span> <span class="n">based</span> <span class="n">on</span> <span class="n">key</span><span class="o">:</span> <span class="n">leader</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">clusters_g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">groupby</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="ss">:leader</span><span class="p">])</span>
+<span class="n">GroupedDataFrame</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="mi">10822515</span><span class="w"> </span><span class="n">groups</span><span class="w"> </span><span class="n">based</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">key</span><span class="o">:</span><span class="w"> </span><span class="n">leader</span>
 </code></pre></div>
 
 <p>From there, we can estimate the clusters’ density:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">clusters_size</span> <span class="o">=</span> <span class="n">combine</span><span class="p">(</span><span class="n">clusters_g</span><span class="p">,</span> <span class="n">nrow</span><span class="p">)</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">clusters_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">combine</span><span class="p">(</span><span class="n">clusters_g</span><span class="p">,</span><span class="w"> </span><span class="n">nrow</span><span class="p">)</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">describe</span><span class="p">(</span><span class="n">clusters_size</span><span class="p">[</span><span class="o">:</span><span class="p">,</span> <span class="ss">:count</span><span class="p">])</span>
-<span class="n">Summary</span> <span class="n">Stats</span><span class="o">:</span>
-<span class="n">Length</span><span class="o">:</span>         <span class="mi">10822515</span>
-<span class="kt">Missing</span> <span class="n">Count</span><span class="o">:</span>  <span class="mi">0</span>
-<span class="n">Mean</span><span class="o">:</span>           <span class="mf">3.978428</span>
-<span class="n">Minimum</span><span class="o">:</span>        <span class="mf">1.000000</span>
-<span class="mi">1</span><span class="n">st</span> <span class="n">Quartile</span><span class="o">:</span>   <span class="mf">1.000000</span>
-<span class="n">Median</span><span class="o">:</span>         <span class="mf">1.000000</span>
-<span class="mi">3</span><span class="n">rd</span> <span class="n">Quartile</span><span class="o">:</span>   <span class="mf">2.000000</span>
-<span class="n">Maximum</span><span class="o">:</span>        <span class="mf">212730.000000</span>
-<span class="kt">Type</span><span class="o">:</span>           <span class="kt">Int64</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">describe</span><span class="p">(</span><span class="n">clusters_size</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="ss">:count</span><span class="p">])</span>
+<span class="n">Summary</span><span class="w"> </span><span class="n">Stats</span><span class="o">:</span>
+<span class="n">Length</span><span class="o">:</span><span class="w">         </span><span class="mi">10822515</span>
+<span class="kt">Missing</span><span class="w"> </span><span class="n">Count</span><span class="o">:</span><span class="w">  </span><span class="mi">0</span>
+<span class="n">Mean</span><span class="o">:</span><span class="w">           </span><span class="mf">3.978428</span>
+<span class="n">Minimum</span><span class="o">:</span><span class="w">        </span><span class="mf">1.000000</span>
+<span class="mi">1</span><span class="n">st</span><span class="w"> </span><span class="n">Quartile</span><span class="o">:</span><span class="w">   </span><span class="mf">1.000000</span>
+<span class="n">Median</span><span class="o">:</span><span class="w">         </span><span class="mf">1.000000</span>
+<span class="mi">3</span><span class="n">rd</span><span class="w"> </span><span class="n">Quartile</span><span class="o">:</span><span class="w">   </span><span class="mf">2.000000</span>
+<span class="n">Maximum</span><span class="o">:</span><span class="w">        </span><span class="mf">212730.000000</span>
+<span class="kt">Type</span><span class="o">:</span><span class="w">           </span><span class="kt">Int64</span>
 </code></pre></div>
 
 <p>Keep in mind that we defined arbitrary the cluster as hosts that do not differ by more than 8 IPs.</p>

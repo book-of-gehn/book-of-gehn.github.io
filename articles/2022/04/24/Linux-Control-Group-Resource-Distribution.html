@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -108,16 +110,16 @@ $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byex
 <code>cgroup</code> hierarchy after adding the <code>shell</code> process to <code>test/</code>. <br /> Boxes represent cgroups and the arrows between the nesting (here, <code>test/</code> is inside of the root <code>/</code> cgroup). Circles are processes and the small purple dots are the resource controller’s setting (the limit of pids in this case).
 </span></p>
 <p>Let’s create a <code>test/</code> cgroup:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">cd</span> /sys/fs/cgroup
-$ mkdir <span class="nb">test</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/sys/fs/cgroup
+$<span class="w"> </span>mkdir<span class="w"> </span><span class="nb">test</span>
 </code></pre></div>
 
 <p>Let’s add ourselves to <code>test/</code>: we add the <em>shell process</em> to <code>test/</code> by adding its process id into <code>cgroup.procs</code> file.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="nv">$$</span> &gt; test/cgroup.procs
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$$</span><span class="w"> </span>&gt;<span class="w"> </span>test/cgroup.procs
 </code></pre></div>
 
 <p>Now we can query how many pids are being used in the cgroup. The expected count is 2: one for the shell that we added and other for the <code>cat</code> program that it is reading <code>pids.current</code>:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ cat test/pids.current
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>test/pids.current
 <span class="m">2</span>
 </code></pre></div>
 
@@ -128,13 +130,13 @@ $ mkdir <span class="nb">test</span>
 <code>cgroup</code> hierarchy during the execution of <code>echo "Hello" | cat</code>. Both <code>echo</code> and <code>cat</code> are children of <code>shell</code> so they inherit the parent’s cgroup by default but due the limit on <code>pids ≤ 2</code>, the spawn of <code>cat</code> fails (the <code>fork</code> syscall fails) and the process never gets alive.
 </span></p>
 <p>The <code>+pids</code> controller allows us to set a maximum: once reached calls to <code>fork</code> or <code>clone</code> will fail because they will not be able to reserve another pid.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="m">2</span> &gt; test/pids.max
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>&gt;<span class="w"> </span>test/pids.max
 
-$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span>
 Hello
 
-$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat        <span class="c1"># byexample: +timeout=30</span>
-&lt;...&gt;fork: Resource temporarily unavailable
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cat<span class="w">        </span><span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork:<span class="w"> </span>Resource<span class="w"> </span>temporarily<span class="w"> </span>unavailable
 </code></pre></div>
 
 <h2 id="resource-distribution-over-a-subtree">Resource distribution over a subtree</h2>
@@ -145,14 +147,14 @@ $ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span c
 Notice how <code>test/cg1/</code> and <code>test/cg2/</code> are (sub) cgroups of <code>test/</code>.
 </span></p>
 <p>We can divide <code>test/</code> in more sub cgroups however there are no <code>pids.max</code> there by default:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mkdir test/cg1
-$ mkdir test/cg2
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mkdir<span class="w"> </span>test/cg1
+$<span class="w"> </span>mkdir<span class="w"> </span>test/cg2
 
-$ ls -1 test/cg1/pids*
-&lt;...&gt;No such file or directory
+$<span class="w"> </span>ls<span class="w"> </span>-1<span class="w"> </span>test/cg1/pids*
+&lt;...&gt;No<span class="w"> </span>such<span class="w"> </span>file<span class="w"> </span>or<span class="w"> </span>directory
 
-$ ls -1 test/cg2/pids*
-&lt;...&gt;No such file or directory
+$<span class="w"> </span>ls<span class="w"> </span>-1<span class="w"> </span>test/cg2/pids*
+&lt;...&gt;No<span class="w"> </span>such<span class="w"> </span>file<span class="w"> </span>or<span class="w"> </span>directory
 </code></pre></div>
 
 <p>Each new (sub) cgroup will <em>not</em> inherit the controllers of its parent. The parent must explicitly select which controllers its children will administrate.</p>
@@ -164,12 +166,12 @@ $ ls -1 test/cg2/pids*
 Despite +pids not be enabled on test/cg1/ the limit imposed by test/ <em>still applies</em>. <br /> Notice also that writing shell’s pid to <code>test/cg1/cgroup.procs</code> literally moved it from <code>test/</code> to <code>test/cg1/</code>: <em>each process belongs to one and only one cgroup</em>.
 </span></p>
 <p>To prove this, let’s move our shell to <code>test/cg1/</code> and try to spawn more than 2 processes there.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="nv">$$</span> &gt; test/cg1/cgroup.procs
-$ cat test/cgroup.procs
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$$</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/cgroup.procs
+$<span class="w"> </span>cat<span class="w"> </span>test/cgroup.procs
 
-$ <span class="c1"># the limit of 2 processes on test/ applies to test/&#39;s children too</span>
-$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat        <span class="c1"># byexample: +timeout=30</span>
-&lt;...&gt;fork: Resource temporarily unavailable
+$<span class="w"> </span><span class="c1"># the limit of 2 processes on test/ applies to test/&#39;s children too</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cat<span class="w">        </span><span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork:<span class="w"> </span>Resource<span class="w"> </span>temporarily<span class="w"> </span>unavailable
 </code></pre></div>
 
 <p>In fact the whole subtree works as <em>single unit</em>: the <em>sum</em> of the consumed resources by the processes in the subtree is subject to the limits of the controller.</p>
@@ -180,24 +182,24 @@ $ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span c
 <span class='marginnote'>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/testing_cg1_shell_echo_cat_cg2_sleep_limited_by_parent.svg' type='image/svg+xml'></object>
 </span></p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># limit on our parent (test/)</span>
-$ <span class="nb">echo</span> <span class="m">3</span> &gt; test/pids.max
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="c1"># limit on our parent (test/)</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="m">3</span><span class="w"> </span>&gt;<span class="w"> </span>test/pids.max
 
-$ <span class="c1"># we can spawn 2 processes without problem</span>
-$ <span class="c1"># because we under the limit (2+1 &lt;= 3)</span>
-$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat
+$<span class="w"> </span><span class="c1"># we can spawn 2 processes without problem</span>
+$<span class="w"> </span><span class="c1"># because we under the limit (2+1 &lt;= 3)</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cat
 Hello
 
-$ <span class="c1"># let&#39;s add a process to our sibling (test/cg2)</span>
-$ sleep <span class="m">1000</span> <span class="p">&amp;</span>
-<span class="o">[</span>&lt;job-id-proc1&gt;<span class="o">]</span> &lt;pid-proc1&gt;
-$ <span class="nb">echo</span> &lt;pid-proc1&gt; &gt; test/cg2/cgroup.procs      <span class="c1"># byexample: +paste</span>
+$<span class="w"> </span><span class="c1"># let&#39;s add a process to our sibling (test/cg2)</span>
+$<span class="w"> </span>sleep<span class="w"> </span><span class="m">1000</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="o">[</span>&lt;job-id-proc1&gt;<span class="o">]</span><span class="w"> </span>&lt;pid-proc1&gt;
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>&lt;pid-proc1&gt;<span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cgroup.procs<span class="w">      </span><span class="c1"># byexample: +paste</span>
 
-$ <span class="c1"># limit exceeded: our shell, the sleep process and these</span>
-$ <span class="c1"># 2 spawned processes exceeds the limit of 3 for the whole</span>
-$ <span class="c1"># subtree of test/</span>
-$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat        <span class="c1"># byexample: +timeout=30</span>
-&lt;...&gt;fork: Resource temporarily unavailable
+$<span class="w"> </span><span class="c1"># limit exceeded: our shell, the sleep process and these</span>
+$<span class="w"> </span><span class="c1"># 2 spawned processes exceeds the limit of 3 for the whole</span>
+$<span class="w"> </span><span class="c1"># subtree of test/</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cat<span class="w">        </span><span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork:<span class="w"> </span>Resource<span class="w"> </span>temporarily<span class="w"> </span>unavailable
 </code></pre></div>
 
 <h2 id="further-resource-distribution-top-down-constraint">Further resource distribution: top-down constraint</h2>
@@ -209,31 +211,31 @@ $ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span c
 Writing to <code>+pids</code> to <code>test/cgroup.subtree_control</code> enables the resource controller on the immediate children.
 </span></p>
 <p>If we want to define (sub) limits in the <code>test/</code> immediate children, we need to <em>enable the <code>+pids</code> controller on the subtree</em>.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># kill the sleep process, not of much interest from now on</span>
-$ <span class="nb">kill</span> -15 &lt;pid-proc1&gt;                          <span class="c1"># byexample: +paste +pass</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="c1"># kill the sleep process, not of much interest from now on</span>
+$<span class="w"> </span><span class="nb">kill</span><span class="w"> </span>-15<span class="w"> </span>&lt;pid-proc1&gt;<span class="w">                          </span><span class="c1"># byexample: +paste +pass</span>
 
-$ <span class="c1"># enable the controller to the test/ children</span>
-$ <span class="nb">echo</span> <span class="s1">&#39;+pids&#39;</span> &gt; test/cgroup.subtree_control
+$<span class="w"> </span><span class="c1"># enable the controller to the test/ children</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+pids&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cgroup.subtree_control
 </code></pre></div>
 
 <p>The <code>cgroup.subtree_control</code> lists which controllers the immediate children will have access and control over.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ls -1 test/cg1/pids*
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ls<span class="w"> </span>-1<span class="w"> </span>test/cg1/pids*
 test/cg1/pids.current
 test/cg1/pids.events
 test/cg1/pids.max
 
-$ ls -1 test/cg2/pids*
+$<span class="w"> </span>ls<span class="w"> </span>-1<span class="w"> </span>test/cg2/pids*
 test/cg2/pids.current
 test/cg2/pids.events
 test/cg2/pids.max
 </code></pre></div>
 
 <p>By default the sub cgroups will have no limit on <em>their</em> <code>pids.max</code> file but the are still subject to the limit set in <code>test/</code>.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ cat test/cg1/pids.max      <span class="c1"># apparently no limit on the child (test/cg1)</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>test/cg1/pids.max<span class="w">      </span><span class="c1"># apparently no limit on the child (test/cg1)</span>
 max
 
-$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat <span class="p">|</span> cat   <span class="c1"># byexample: +timeout=30</span>
-&lt;...&gt;fork: Resource temporarily unavailable
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cat<span class="w"> </span><span class="p">|</span><span class="w"> </span>cat<span class="w">   </span><span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork:<span class="w"> </span>Resource<span class="w"> </span>temporarily<span class="w"> </span>unavailable
 </code></pre></div>
 
 <p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL3Rlc3RpbmdfY2cxX3NoZWxsX2VjaG9fY2F0X2NnMl9saW1pdGVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
@@ -244,19 +246,19 @@ $ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span c
 <p>The controller can never enlarge or relax the limits on the resource <em>beyond</em> the limits given by the parent, it can only <em>restrict</em> it further.</p>
 <p>This is the <em>top-down constraint</em>.</p>
 <p>So let’s try that!</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># limit on the parent (test/)</span>
-$ <span class="nb">echo</span> <span class="m">6</span> &gt; test/pids.max
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="c1"># limit on the parent (test/)</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="m">6</span><span class="w"> </span>&gt;<span class="w"> </span>test/pids.max
 
-$ <span class="c1"># we can perfectly spawn these two process now</span>
-$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat
+$<span class="w"> </span><span class="c1"># we can perfectly spawn these two process now</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cat
 Hello
 
-$ <span class="c1"># limit further on the child (cg1/)</span>
-$ <span class="nb">echo</span> <span class="m">2</span> &gt; test/cg1/pids.max
+$<span class="w"> </span><span class="c1"># limit further on the child (cg1/)</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/pids.max
 
-$ <span class="c1"># now we can&#39;t: we are hitting the limit not of test/ but of test/cg1/</span>
-$ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span class="p">|</span> cat        <span class="c1"># byexample: +timeout=30</span>
-&lt;...&gt;fork: Resource temporarily unavailable
+$<span class="w"> </span><span class="c1"># now we can&#39;t: we are hitting the limit not of test/ but of test/cg1/</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Hello&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cat<span class="w">        </span><span class="c1"># byexample: +timeout=30</span>
+&lt;...&gt;fork:<span class="w"> </span>Resource<span class="w"> </span>temporarily<span class="w"> </span>unavailable
 </code></pre></div>
 
 <h2 id="explosion-contained">Explosion contained</h2>
@@ -267,17 +269,17 @@ $ <span class="nb">echo</span> <span class="s2">&quot;Hello&quot;</span> <span c
 </span></p>
 <p>Not really sure why, but a fork bomb in my machine tends to eat all the CPU so it is not just eating all the pids.</p>
 <p>Thankfully, there is a resource controller for the CPU in <code>cgroup</code> too.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="m">3</span> &gt; test/pids.max                <span class="c1"># byexample: +fail-fast</span>
-$ <span class="nb">echo</span> <span class="s2">&quot;1000 100000&quot;</span> &gt; test/cpu.max     <span class="c1"># byexample: +fail-fast</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="m">3</span><span class="w"> </span>&gt;<span class="w"> </span>test/pids.max<span class="w">                </span><span class="c1"># byexample: +fail-fast</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;1000 100000&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cpu.max<span class="w">     </span><span class="c1"># byexample: +fail-fast</span>
 
-$ <span class="nb">echo</span> max &gt; test/cg1/pids.max
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>max<span class="w"> </span>&gt;<span class="w"> </span>test/cg1/pids.max
 
-$ bomb<span class="o">()</span> <span class="o">{</span>
-&gt;  bomb <span class="p">|</span> bomb
-&gt; <span class="o">}</span>
+$<span class="w"> </span>bomb<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+&gt;<span class="w">  </span>bomb<span class="w"> </span><span class="p">|</span><span class="w"> </span>bomb
+&gt;<span class="w"> </span><span class="o">}</span>
 
-$ bomb       <span class="c1"># byexample: +timeout=90</span>
-&lt;...&gt;Resource temporarily unavailable&lt;...&gt;
+$<span class="w"> </span>bomb<span class="w">       </span><span class="c1"># byexample: +timeout=90</span>
+&lt;...&gt;Resource<span class="w"> </span>temporarily<span class="w"> </span>unavailable&lt;...&gt;
 </code></pre></div>
 
 <p>After a few experiments I would say that the <code>+pids</code> controller is by no means the only measure to take to contain a fork explosion. Without <code>+cpu</code> I melted down my machine a few times.</p>

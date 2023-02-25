@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -126,7 +128,7 @@ May 17, 2021
 <span class="kt">int</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w">             </span><span class="c1">// Input value to negate if fDontNegate is false.</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">             </span><span class="c1">// result = fDontNegate ? v : -v;</span>
 
-<span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fDontNegate</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">fDontNegate</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"></span>
+<span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">fDontNegate</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">fDontNegate</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
 </code></pre></div>
 
 <p>Its translation to Z3 is <em>almost</em> immediate:</p>
@@ -160,7 +162,7 @@ May 17, 2021
 <span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">mask</span><span class="p">;</span><span class="w"> </span><span class="c1">// 1 where bits from b should be selected; 0 where from a.</span>
 <span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">r</span><span class="p">;</span><span class="w">    </span><span class="c1">// result of (a &amp; ~mask) | (b &amp; mask) goes here</span>
 
-<span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">((</span><span class="n">a</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">);</span><span class="w"></span>
+<span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">((</span><span class="n">a</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">mask</span><span class="p">);</span>
 </code></pre></div>
 
 <p>The verification steps are the same, nothing new around here.</p>
@@ -374,9 +376,9 @@ a single 1</code></pre>
 <p>In C, it goes through as many iterations as <code><span class="highlight-candombe-inline"><span class="mi">1</span></span></code> bits are in <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code>.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"> </span><span class="c1">// count the number of bits set in v</span>
 <span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w"> </span><span class="c1">// c accumulates the total bits set in v</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"> </span><span class="n">c</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="p">;</span><span class="w"> </span><span class="n">c</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">v</span><span class="w"> </span><span class="o">&amp;=</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">// clear the least significant bit set</span>
-<span class="p">}</span><span class="w"></span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p>However in Z3 we must go through all the 64 iterations because in the Kernighan’s code, the loops ends when the variable <code><span class="highlight-candombe-inline"><span class="n">v</span></span></code> is zero.</p>

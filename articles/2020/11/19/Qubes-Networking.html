@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -98,23 +100,23 @@ The “firewall” VM is isolated except for the firewall/routing processing so 
 <img  class='' alt='' src='/img/network/qubes/qubes-network.png' /></figure></p>
 <h2 id="addresses">Addresses</h2>
 <p>The first obvious thing to notice is the existence of ethernet cards both in App VM and Proxy VM.</p>
-<div class="highlight-candombe"><pre><span></span><code>root@appvm:# ip address show
-<span class="m">2</span>: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu <span class="m">1500</span> qdisc mq state UP group default qlen <span class="m">1000</span>
-    link/ether <span class="m">00</span>:16:3e:5e:6c:19 brd ff:ff:ff:ff:ff:ff
-    inet <span class="m">10</span>.137.7.27/32 brd <span class="m">10</span>.255.255.255 scope global eth0
-       valid_lft forever preferred_lft forever
+<div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>ip<span class="w"> </span>address<span class="w"> </span>show
+<span class="m">2</span>:<span class="w"> </span>eth0:<span class="w"> </span>&lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt;<span class="w"> </span>mtu<span class="w"> </span><span class="m">1500</span><span class="w"> </span>qdisc<span class="w"> </span>mq<span class="w"> </span>state<span class="w"> </span>UP<span class="w"> </span>group<span class="w"> </span>default<span class="w"> </span>qlen<span class="w"> </span><span class="m">1000</span>
+<span class="w">    </span>link/ether<span class="w"> </span><span class="m">00</span>:16:3e:5e:6c:19<span class="w"> </span>brd<span class="w"> </span>ff:ff:ff:ff:ff:ff
+<span class="w">    </span>inet<span class="w"> </span><span class="m">10</span>.137.7.27/32<span class="w"> </span>brd<span class="w"> </span><span class="m">10</span>.255.255.255<span class="w"> </span>scope<span class="w"> </span>global<span class="w"> </span>eth0
+<span class="w">       </span>valid_lft<span class="w"> </span>forever<span class="w"> </span>preferred_lft<span class="w"> </span>forever
 </code></pre></div>
 
 <hr class="slender post-layout small" />
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# ip address show
-<span class="m">2</span>: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu <span class="m">1500</span> qdisc pfifo_fast state UP group default qlen <span class="m">1000</span>
-    link/ether <span class="m">00</span>:16:3e:5e:6c:18 brd ff:ff:ff:ff:ff:ff
-    inet <span class="m">10</span>.137.1.26/32 brd <span class="m">10</span>.137.1.26 scope global eth0
-       valid_lft forever preferred_lft forever
-<span class="m">4</span>: vif37.0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu <span class="m">1500</span> qdisc pfifo_fast state UP group default qlen <span class="m">32</span>
-    link/ether fe:ff:ff:ff:ff:ff brd ff:ff:ff:ff:ff:ff
-    inet <span class="m">10</span>.137.7.1/32 scope global vif37.0
-       valid_lft forever preferred_lft forever
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>ip<span class="w"> </span>address<span class="w"> </span>show
+<span class="m">2</span>:<span class="w"> </span>eth0:<span class="w"> </span>&lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt;<span class="w"> </span>mtu<span class="w"> </span><span class="m">1500</span><span class="w"> </span>qdisc<span class="w"> </span>pfifo_fast<span class="w"> </span>state<span class="w"> </span>UP<span class="w"> </span>group<span class="w"> </span>default<span class="w"> </span>qlen<span class="w"> </span><span class="m">1000</span>
+<span class="w">    </span>link/ether<span class="w"> </span><span class="m">00</span>:16:3e:5e:6c:18<span class="w"> </span>brd<span class="w"> </span>ff:ff:ff:ff:ff:ff
+<span class="w">    </span>inet<span class="w"> </span><span class="m">10</span>.137.1.26/32<span class="w"> </span>brd<span class="w"> </span><span class="m">10</span>.137.1.26<span class="w"> </span>scope<span class="w"> </span>global<span class="w"> </span>eth0
+<span class="w">       </span>valid_lft<span class="w"> </span>forever<span class="w"> </span>preferred_lft<span class="w"> </span>forever
+<span class="m">4</span>:<span class="w"> </span>vif37.0:<span class="w"> </span>&lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt;<span class="w"> </span>mtu<span class="w"> </span><span class="m">1500</span><span class="w"> </span>qdisc<span class="w"> </span>pfifo_fast<span class="w"> </span>state<span class="w"> </span>UP<span class="w"> </span>group<span class="w"> </span>default<span class="w"> </span>qlen<span class="w"> </span><span class="m">32</span>
+<span class="w">    </span>link/ether<span class="w"> </span>fe:ff:ff:ff:ff:ff<span class="w"> </span>brd<span class="w"> </span>ff:ff:ff:ff:ff:ff
+<span class="w">    </span>inet<span class="w"> </span><span class="m">10</span>.137.7.1/32<span class="w"> </span>scope<span class="w"> </span>global<span class="w"> </span>vif37.0
+<span class="w">       </span>valid_lft<span class="w"> </span>forever<span class="w"> </span>preferred_lft<span class="w"> </span>forever
 </code></pre></div>
 
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLWlwcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
@@ -135,22 +137,22 @@ The second most-right bit of the same byte is odd so it is a locally administrat
 <p>The <code>ethX</code> links have different addresses with the same <a href="https://hwaddress.com/company/xensource-inc/">Xensource OUI</a> <code>00:16:3e</code> while the <code>vifX.Y</code> have the same <a href="https://en.wikipedia.org/wiki/MAC_address">unicast-locally administrated</a> MAC: <code>fe:ff:ff:ff:ff:ff</code>.</p>
 <h2 id="routing">Routing</h2>
 <p>Here a ping from the App VM is routed to the Proxy VM which in turns routes the packet to the Net VM and the outside world and the response goes back through the same path to the App VM</p>
-<div class="highlight-candombe"><pre><span></span><code>root@appvm:# ping -c <span class="m">1</span> <span class="m">8</span>.8.8.8
-<span class="m">64</span> bytes from <span class="m">8</span>.8.8.8: <span class="nv">icmp_seq</span><span class="o">=</span><span class="m">1</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">53</span> <span class="nv">time</span><span class="o">=</span><span class="m">12</span>.1 ms
+<div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>ping<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">8</span>.8.8.8
+<span class="m">64</span><span class="w"> </span>bytes<span class="w"> </span>from<span class="w"> </span><span class="m">8</span>.8.8.8:<span class="w"> </span><span class="nv">icmp_seq</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">ttl</span><span class="o">=</span><span class="m">53</span><span class="w"> </span><span class="nv">time</span><span class="o">=</span><span class="m">12</span>.1<span class="w"> </span>ms
 </code></pre></div>
 
 <hr class="slender post-layout small" />
-<div class="highlight-candombe"><pre><span></span><code>root@appvm:# tcpdump -n -i eth0
-<span class="m">23</span>:56:57.072295 ARP, Request who-has <span class="m">10</span>.137.7.1 tell <span class="m">10</span>.137.7.27, length <span class="m">28</span>
-<span class="m">23</span>:56:57.072330 ARP, Reply <span class="m">10</span>.137.7.1 is-at fe:ff:ff:ff:ff:ff, length <span class="m">28</span>
-<span class="o">(</span>icmp omitted<span class="o">)</span>
+<div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>eth0
+<span class="m">23</span>:56:57.072295<span class="w"> </span>ARP,<span class="w"> </span>Request<span class="w"> </span>who-has<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>tell<span class="w"> </span><span class="m">10</span>.137.7.27,<span class="w"> </span>length<span class="w"> </span><span class="m">28</span>
+<span class="m">23</span>:56:57.072330<span class="w"> </span>ARP,<span class="w"> </span>Reply<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>is-at<span class="w"> </span>fe:ff:ff:ff:ff:ff,<span class="w"> </span>length<span class="w"> </span><span class="m">28</span>
+<span class="o">(</span>icmp<span class="w"> </span>omitted<span class="o">)</span>
 </code></pre></div>
 
 <hr class="slender post-layout small" />
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# tcpdump -n -i vif37.0
-<span class="m">23</span>:56:57.072295 ARP, Request who-has <span class="m">10</span>.137.7.1 tell <span class="m">10</span>.137.7.27, length <span class="m">28</span>
-<span class="m">23</span>:56:57.072330 ARP, Reply <span class="m">10</span>.137.7.1 is-at fe:ff:ff:ff:ff:ff, length <span class="m">28</span>
-<span class="o">(</span>icmp omitted<span class="o">)</span>
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>vif37.0
+<span class="m">23</span>:56:57.072295<span class="w"> </span>ARP,<span class="w"> </span>Request<span class="w"> </span>who-has<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>tell<span class="w"> </span><span class="m">10</span>.137.7.27,<span class="w"> </span>length<span class="w"> </span><span class="m">28</span>
+<span class="m">23</span>:56:57.072330<span class="w"> </span>ARP,<span class="w"> </span>Reply<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>is-at<span class="w"> </span>fe:ff:ff:ff:ff:ff,<span class="w"> </span>length<span class="w"> </span><span class="m">28</span>
+<span class="o">(</span>icmp<span class="w"> </span>omitted<span class="o">)</span>
 </code></pre></div>
 
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLWFycC5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
@@ -159,9 +161,9 @@ The second most-right bit of the same byte is odd so it is a locally administrat
 <img  class='fullwidth' alt='' src='/img/network/qubes/qubes-arp.png' />
 </span></p>
 <p>The ARP request/reply is the App VM asking for the MAC address of its configured gateway, the <code>10.137.7.1</code> which it is the IP of the Proxy VM’s <code>vif37.0</code> interface.</p>
-<div class="highlight-candombe"><pre><span></span><code>root@appvm:# ip route show
-default via <span class="m">10</span>.137.7.1 dev eth0
-<span class="m">10</span>.137.7.1 dev eth0 scope link
+<div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>ip<span class="w"> </span>route<span class="w"> </span>show
+default<span class="w"> </span>via<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>dev<span class="w"> </span>eth0
+<span class="m">10</span>.137.7.1<span class="w"> </span>dev<span class="w"> </span>eth0<span class="w"> </span>scope<span class="w"> </span>link
 </code></pre></div>
 
 <p><label for='CllvdSBtYXkgZmluZCBgUkVBQ0hBQkxFYCBvciBgU1RBTEVgOgp0aGUgZmlyc3QgbWVhbnMgdGhhdCB0aGUgZW50cnkgaXMgdmFsaWQgd2hpbGUgdGhlIHNlY29uZAptZWFucyBpdCAqd2FzKiB2YWxpZC4KCklmIHlvdSBhcmUgcXVpY2tseSBlbm91Z2ggeW91IG1heSBzZWUgYERFTEFZYDogdGhlIGxlYXJuaW5nIGFib3V0IHRoZQpyZWFjaGFiaWxpdHkgaXMgc3RpbGwgaW4gcHJvZ3Jlc3MuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
@@ -172,8 +174,8 @@ You may find <code>REACHABLE</code> or <code>STALE</code>: the first means that 
 If you are quickly enough you may see <code>DELAY</code>: the learning about the reachability is still in progress.
 </span></p>
 <p>As expected, the App VM saves this in its ARP cache:</p>
-<div class="highlight-candombe"><pre><span></span><code>root@appvm:# ip neigh show
-<span class="m">10</span>.137.7.1 dev eth0 lladdr fe:ff:ff:ff:ff:ff STALE
+<div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>ip<span class="w"> </span>neigh<span class="w"> </span>show
+<span class="m">10</span>.137.7.1<span class="w"> </span>dev<span class="w"> </span>eth0<span class="w"> </span>lladdr<span class="w"> </span>fe:ff:ff:ff:ff:ff<span class="w"> </span>STALE
 </code></pre></div>
 
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLWZpcnN0LXBhcnQtcGluZy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
@@ -182,36 +184,36 @@ If you are quickly enough you may see <code>DELAY</code>: the learning about the
 <img  class='fullwidth' alt='' src='/img/network/qubes/qubes-first-part-ping.png' />
 </span></p>
 <p>Once the App VM knows the Link Layer address (aka <code>lladdr</code>), it sends the ICMP echo request, the Proxy VM <em>forwards</em> it and forwards back the response.</p>
-<div class="highlight-candombe"><pre><span></span><code>root@appvm:# tcpdump -n -i eth0
-<span class="o">(</span>arp omitted<span class="o">)</span>
-<span class="m">23</span>:56:58.014156 IP <span class="m">10</span>.137.7.27 &gt; <span class="m">8</span>.8.8.8: ICMP <span class="nb">echo</span> request, id <span class="m">1177</span>, seq <span class="m">1</span>, length <span class="m">64</span>
-<span class="m">23</span>:56:58.027402 IP <span class="m">8</span>.8.8.8 &gt; <span class="m">10</span>.137.7.27: ICMP <span class="nb">echo</span> reply, id <span class="m">1177</span>, seq <span class="m">1</span>, length <span class="m">64</span>
+<div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>eth0
+<span class="o">(</span>arp<span class="w"> </span>omitted<span class="o">)</span>
+<span class="m">23</span>:56:58.014156<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.27<span class="w"> </span>&gt;<span class="w"> </span><span class="m">8</span>.8.8.8:<span class="w"> </span>ICMP<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>request,<span class="w"> </span>id<span class="w"> </span><span class="m">1177</span>,<span class="w"> </span>seq<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>length<span class="w"> </span><span class="m">64</span>
+<span class="m">23</span>:56:58.027402<span class="w"> </span>IP<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.27:<span class="w"> </span>ICMP<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>reply,<span class="w"> </span>id<span class="w"> </span><span class="m">1177</span>,<span class="w"> </span>seq<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>length<span class="w"> </span><span class="m">64</span>
 </code></pre></div>
 
 <hr class="slender post-layout small" />
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# tcpdump -n -i vif37.0
-<span class="o">(</span>arp omitted<span class="o">)</span>
-<span class="m">23</span>:56:58.019581 IP <span class="m">10</span>.137.7.27 &gt; <span class="m">8</span>.8.8.8: ICMP <span class="nb">echo</span> request, id <span class="m">1177</span>, seq <span class="m">1</span>, length <span class="m">64</span>
-<span class="m">23</span>:56:58.032679 IP <span class="m">8</span>.8.8.8 &gt; <span class="m">10</span>.137.7.27: ICMP <span class="nb">echo</span> reply, id <span class="m">1177</span>, seq <span class="m">1</span>, length <span class="m">64</span>
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>vif37.0
+<span class="o">(</span>arp<span class="w"> </span>omitted<span class="o">)</span>
+<span class="m">23</span>:56:58.019581<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.27<span class="w"> </span>&gt;<span class="w"> </span><span class="m">8</span>.8.8.8:<span class="w"> </span>ICMP<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>request,<span class="w"> </span>id<span class="w"> </span><span class="m">1177</span>,<span class="w"> </span>seq<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>length<span class="w"> </span><span class="m">64</span>
+<span class="m">23</span>:56:58.032679<span class="w"> </span>IP<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.27:<span class="w"> </span>ICMP<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>reply,<span class="w"> </span>id<span class="w"> </span><span class="m">1177</span>,<span class="w"> </span>seq<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>length<span class="w"> </span><span class="m">64</span>
 </code></pre></div>
 
 <h2 id="upstream---downstream-forwarding">Upstream - downstream forwarding</h2>
 <p>The Proxy VM acts as a router.</p>
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# cat /proc/sys/net/ipv4/ip_forward
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>cat<span class="w"> </span>/proc/sys/net/ipv4/ip_forward
 <span class="m">1</span>
 </code></pre></div>
 
 <p>However the VM will <em>drop</em> all the packets before forwarding them with some exceptions:</p>
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# iptables-save -t raw
-:PREROUTING ACCEPT <span class="o">[</span><span class="m">116</span>:43405<span class="o">]</span>
--A PREROUTING ! -s <span class="m">10</span>.137.7.27/32 -i vif37.0 -j DROP
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>iptables-save<span class="w"> </span>-t<span class="w"> </span>raw
+:PREROUTING<span class="w"> </span>ACCEPT<span class="w"> </span><span class="o">[</span><span class="m">116</span>:43405<span class="o">]</span>
+-A<span class="w"> </span>PREROUTING<span class="w"> </span>!<span class="w"> </span>-s<span class="w"> </span><span class="m">10</span>.137.7.27/32<span class="w"> </span>-i<span class="w"> </span>vif37.0<span class="w"> </span>-j<span class="w"> </span>DROP
 ...
 
-root@proxyvm:# iptables-save -t filter
-:FORWARD DROP <span class="o">[</span><span class="m">0</span>:0<span class="o">]</span>
+root@proxyvm:#<span class="w"> </span>iptables-save<span class="w"> </span>-t<span class="w"> </span>filter
+:FORWARD<span class="w"> </span>DROP<span class="w"> </span><span class="o">[</span><span class="m">0</span>:0<span class="o">]</span>
 ...
--A FORWARD -s <span class="m">10</span>.137.7.27/32 -p icmp -j ACCEPT
--A FORWARD -s <span class="m">10</span>.137.7.27/32 -j ACCEPT
+-A<span class="w"> </span>FORWARD<span class="w"> </span>-s<span class="w"> </span><span class="m">10</span>.137.7.27/32<span class="w"> </span>-p<span class="w"> </span>icmp<span class="w"> </span>-j<span class="w"> </span>ACCEPT
+-A<span class="w"> </span>FORWARD<span class="w"> </span>-s<span class="w"> </span><span class="m">10</span>.137.7.27/32<span class="w"> </span>-j<span class="w"> </span>ACCEPT
 </code></pre></div>
 
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLXNwb29mZWQucG5nJyAvPgpUaGUgKnVudHJ1c3RlZCogVk0gc3Bvb2ZzIHRoZSBzb3VyY2UgYWRkcmVzcyBzaW11bGF0aW5nIGEgbWVzc2FnZQoqZnJvbSB0aGUgd29yayogVk07IHJlcGxpZXMgd2lsbCBiZSBhZGRyZXNzZXMgdG8gaXQuCgpUaGlzIHNwb29maW5nIHNjZW5hcmlvIGlzIHByZXZlbnRlZCB3aXRoIHRoZSBgUFJFUk9VVElOR2AgcnVsZXMuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
@@ -231,11 +233,11 @@ This spoofing scenario is prevented with the <code>PREROUTING</code> rules.
 </blockquote>
 </blockquote>
 </blockquote>
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# ip route show
-default via <span class="m">10</span>.137.1.1 dev eth0 proto static metric <span class="m">100</span>
-<span class="m">10</span>.137.1.1 dev eth0 proto static scope link metric <span class="m">100</span>
-<span class="m">10</span>.137.1.26 dev eth0 proto kernel scope link src <span class="m">10</span>.137.1.26 metric <span class="m">100</span>
-<span class="m">10</span>.137.7.27 dev vif37.0 scope link metric <span class="m">32715</span>
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>ip<span class="w"> </span>route<span class="w"> </span>show
+default<span class="w"> </span>via<span class="w"> </span><span class="m">10</span>.137.1.1<span class="w"> </span>dev<span class="w"> </span>eth0<span class="w"> </span>proto<span class="w"> </span>static<span class="w"> </span>metric<span class="w"> </span><span class="m">100</span>
+<span class="m">10</span>.137.1.1<span class="w"> </span>dev<span class="w"> </span>eth0<span class="w"> </span>proto<span class="w"> </span>static<span class="w"> </span>scope<span class="w"> </span>link<span class="w"> </span>metric<span class="w"> </span><span class="m">100</span>
+<span class="m">10</span>.137.1.26<span class="w"> </span>dev<span class="w"> </span>eth0<span class="w"> </span>proto<span class="w"> </span>kernel<span class="w"> </span>scope<span class="w"> </span>link<span class="w"> </span>src<span class="w"> </span><span class="m">10</span>.137.1.26<span class="w"> </span>metric<span class="w"> </span><span class="m">100</span>
+<span class="m">10</span>.137.7.27<span class="w"> </span>dev<span class="w"> </span>vif37.0<span class="w"> </span>scope<span class="w"> </span>link<span class="w"> </span>metric<span class="w"> </span><span class="m">32715</span>
 </code></pre></div>
 
 <p>So the incoming ICMP echo request packet with source IP <code>10.137.7.27</code> enters from <code>vif37.0</code>, it is accepted by the firewall, routed to <code>eth0</code> due the default route and goes out.</p>
@@ -244,16 +246,16 @@ default via <span class="m">10</span>.137.1.1 dev eth0 proto static metric <span
 <p>The Proxy VM allows routing packets coming from its App VM: we see this in the firewall exceptions and in the route where the <strong>specific</strong> App VM IP is used, <code>10.137.7.27</code>.</p>
 <p>But if we have more Proxy VMs chained ?</p>
 <p>Would the second Proxy VM need the IPs of the first Proxy VM and the App VM to setup its routes?</p>
-<div class="highlight-candombe"><pre><span></span><code>App VM &lt;-&gt; Proxy VM &lt;-&gt; another Proxy VM &lt;-&gt; ...
+<div class="highlight-candombe"><pre><span></span><code>App<span class="w"> </span>VM<span class="w"> </span>&lt;-&gt;<span class="w"> </span>Proxy<span class="w"> </span>VM<span class="w"> </span>&lt;-&gt;<span class="w"> </span>another<span class="w"> </span>Proxy<span class="w"> </span>VM<span class="w"> </span>&lt;-&gt;<span class="w"> </span>...
 </code></pre></div>
 
 <p>In general, any Proxy VM would need the IPs of all the downstream VMs!</p>
 <p>That’s not only tedious but also would leak information: higher VMs would know more about the topology. A Net VM would know all the IPs that the environment has.</p>
 <p>However sniffing on Proxy VM’s <code>eth0</code> shows something different when the ping of App VM is forwarded:</p>
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# tcpdump -n -i eth0
-<span class="o">(</span>arp omitted<span class="o">)</span>
-<span class="m">23</span>:56:58.019649 IP <span class="m">10</span>.137.1.26 &gt; <span class="m">8</span>.8.8.8: ICMP <span class="nb">echo</span> request, id <span class="m">1177</span>, seq <span class="m">1</span>, length <span class="m">64</span>
-<span class="m">23</span>:56:58.032636 IP <span class="m">8</span>.8.8.8 &gt; <span class="m">10</span>.137.1.26: ICMP <span class="nb">echo</span> reply, id <span class="m">1177</span>, seq <span class="m">1</span>, length <span class="m">64</span>
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>eth0
+<span class="o">(</span>arp<span class="w"> </span>omitted<span class="o">)</span>
+<span class="m">23</span>:56:58.019649<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.1.26<span class="w"> </span>&gt;<span class="w"> </span><span class="m">8</span>.8.8.8:<span class="w"> </span>ICMP<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>request,<span class="w"> </span>id<span class="w"> </span><span class="m">1177</span>,<span class="w"> </span>seq<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>length<span class="w"> </span><span class="m">64</span>
+<span class="m">23</span>:56:58.032636<span class="w"> </span>IP<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.1.26:<span class="w"> </span>ICMP<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>reply,<span class="w"> </span>id<span class="w"> </span><span class="m">1177</span>,<span class="w"> </span>seq<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>length<span class="w"> </span><span class="m">64</span>
 </code></pre></div>
 
 <p>The source of the request is set to Proxy VM’s <code>eth0</code> IP, not App VM ones.</p>
@@ -264,11 +266,11 @@ The reply takes the same path but the source address is <strong>not</strong> cha
 </span></figcaption>
 <img  class='' alt='' src='/img/network/qubes/qubes-full-ping.png' /></figure></p>
 <p>This is due a NAT rule that <strong>masquerade</strong> the routed traffic:</p>
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# iptables-save -t nat
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>iptables-save<span class="w"> </span>-t<span class="w"> </span>nat
 ...
--A POSTROUTING -o vif+ -j ACCEPT
--A POSTROUTING -o lo -j ACCEPT
--A POSTROUTING -j MASQUERADE
+-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-o<span class="w"> </span>vif+<span class="w"> </span>-j<span class="w"> </span>ACCEPT
+-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-o<span class="w"> </span>lo<span class="w"> </span>-j<span class="w"> </span>ACCEPT
+-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
 </code></pre></div>
 
 <p>The <code>-o vif+</code> rule prevents masquerade traffic going downward, back to the App VM and the <code>-o lo</code> ignores loopback traffic.</p>
@@ -313,34 +315,34 @@ App VM
 | eth0:          8.8.8.8 &gt; 10.137.7.27: ICMP echo reply</code></pre>
 <h2 id="dns">DNS</h2>
 <p>The DNS traffic is handled like the above but with a twist.</p>
-<div class="highlight-candombe"><pre><span></span><code>root@appvm:# nslookup google.com
-Server:     <span class="m">10</span>.137.7.1
-Address:    <span class="m">10</span>.137.7.1#53
+<div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>nslookup<span class="w"> </span>google.com
+Server:<span class="w">     </span><span class="m">10</span>.137.7.1
+Address:<span class="w">    </span><span class="m">10</span>.137.7.1#53
 
-Non-authoritative answer:
-Name:   google.com
-Address: <span class="m">172</span>.217.172.46
+Non-authoritative<span class="w"> </span>answer:
+Name:<span class="w">   </span>google.com
+Address:<span class="w"> </span><span class="m">172</span>.217.172.46
 </code></pre></div>
 
 <p>It is interesting to note that App VM queried <code>10.137.7.1</code> to resolve the address: the Proxy VM is working as a DNS resolver.</p>
-<div class="highlight-candombe"><pre><span></span><code>root@appvm:# tcpdump -n -i eth0
+<div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>eth0
 ...
-<span class="m">23</span>:58:30.214939 IP <span class="m">10</span>.137.7.27.46734 &gt; <span class="m">10</span>.137.7.1.53: <span class="m">26595</span>+ A? google.com. <span class="o">(</span><span class="m">28</span><span class="o">)</span>
-<span class="m">23</span>:58:30.337391 IP <span class="m">10</span>.137.7.1.53 &gt; <span class="m">10</span>.137.7.27.46734: <span class="m">26595</span> <span class="m">1</span>/0/0 A <span class="m">172</span>.217.172.46 <span class="o">(</span><span class="m">44</span><span class="o">)</span>
+<span class="m">23</span>:58:30.214939<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.27.46734<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.1.53:<span class="w"> </span><span class="m">26595</span>+<span class="w"> </span>A?<span class="w"> </span>google.com.<span class="w"> </span><span class="o">(</span><span class="m">28</span><span class="o">)</span>
+<span class="m">23</span>:58:30.337391<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.1.53<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.27.46734:<span class="w"> </span><span class="m">26595</span><span class="w"> </span><span class="m">1</span>/0/0<span class="w"> </span>A<span class="w"> </span><span class="m">172</span>.217.172.46<span class="w"> </span><span class="o">(</span><span class="m">44</span><span class="o">)</span>
 </code></pre></div>
 
 <hr class="slender post-layout small" />
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# tcpdump -n -i vif37.0
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>vif37.0
 ...
-<span class="m">23</span>:58:30.220387 IP <span class="m">10</span>.137.7.27.46734 &gt; <span class="m">10</span>.137.7.1.53: <span class="m">26595</span>+ A? google.com. <span class="o">(</span><span class="m">28</span><span class="o">)</span>
-<span class="m">23</span>:58:30.342664 IP <span class="m">10</span>.137.7.1.53 &gt; <span class="m">10</span>.137.7.27.46734: <span class="m">26595</span> <span class="m">1</span>/0/0 A <span class="m">172</span>.217.172.46 <span class="o">(</span><span class="m">44</span><span class="o">)</span>
+<span class="m">23</span>:58:30.220387<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.27.46734<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.1.53:<span class="w"> </span><span class="m">26595</span>+<span class="w"> </span>A?<span class="w"> </span>google.com.<span class="w"> </span><span class="o">(</span><span class="m">28</span><span class="o">)</span>
+<span class="m">23</span>:58:30.342664<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.1.53<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.27.46734:<span class="w"> </span><span class="m">26595</span><span class="w"> </span><span class="m">1</span>/0/0<span class="w"> </span>A<span class="w"> </span><span class="m">172</span>.217.172.46<span class="w"> </span><span class="o">(</span><span class="m">44</span><span class="o">)</span>
 </code></pre></div>
 
 <p>But that’s a lie: there is no DNS resolver in Proxy VM and the DNS request is forwarded upstream:</p>
-<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:# tcpdump -n -i eth0
+<div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>eth0
 ...
-<span class="m">23</span>:58:30.220455 IP <span class="m">10</span>.137.1.26.46734 &gt; <span class="m">10</span>.137.1.1.53: <span class="m">26595</span>+ A? google.com. <span class="o">(</span><span class="m">28</span><span class="o">)</span>
-<span class="m">23</span>:58:30.342616 IP <span class="m">10</span>.137.1.1.53 &gt; <span class="m">10</span>.137.1.26.46734: <span class="m">26595</span> <span class="m">1</span>/0/0 A <span class="m">172</span>.217.172.46 <span class="o">(</span><span class="m">44</span><span class="o">)</span>
+<span class="m">23</span>:58:30.220455<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.1.26.46734<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.1.1.53:<span class="w"> </span><span class="m">26595</span>+<span class="w"> </span>A?<span class="w"> </span>google.com.<span class="w"> </span><span class="o">(</span><span class="m">28</span><span class="o">)</span>
+<span class="m">23</span>:58:30.342616<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.1.1.53<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.1.26.46734:<span class="w"> </span><span class="m">26595</span><span class="w"> </span><span class="m">1</span>/0/0<span class="w"> </span>A<span class="w"> </span><span class="m">172</span>.217.172.46<span class="w"> </span><span class="o">(</span><span class="m">44</span><span class="o">)</span>
 </code></pre></div>
 
 <p>Notice how the source address is masqueraded as we saw with the ping packet but the <strong>destination address is changed</strong> too:</p>

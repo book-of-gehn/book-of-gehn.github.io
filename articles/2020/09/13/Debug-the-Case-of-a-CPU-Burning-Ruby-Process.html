@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -93,12 +95,12 @@ September 13, 2020
 <p>But what was the <em>“twin evil”</em> process doing with the CPU?<!--more--></p>
 <h2 id="ruby-stack-sampling-with-rbspy">Ruby stack sampling with <code>rbspy</code></h2>
 <p>To get some insight I used <a href="https://github.com/rbspy/rbspy">rbspy</a>. It profiles a Ruby process sampling its memory, reconstructing the stack and showing which stack traces are the most common executed.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ sudo ./rbspy record --pid <span class="m">2331</span> -d <span class="m">120</span> --raw-file data.gz        <span class="c1"># byexample: +skip</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>./rbspy<span class="w"> </span>record<span class="w"> </span>--pid<span class="w"> </span><span class="m">2331</span><span class="w"> </span>-d<span class="w"> </span><span class="m">120</span><span class="w"> </span>--raw-file<span class="w"> </span>data.gz<span class="w">        </span><span class="c1"># byexample: +skip</span>
 </code></pre></div>
 
 <p>Two minutes of sampling was done for the good and the bad <code>executor.rb</code> processes.</p>
 <p><code>rbspy</code> can also generate <a href="https://rbspy.github.io/using-flamegraphs/">flame graphs</a></p>
-<div class="highlight-candombe"><pre><span></span><code>$ ./rbspy report -f flamegraph -i data.gz  -o out-good.svg      <span class="c1"># byexample: +skip</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>./rbspy<span class="w"> </span>report<span class="w"> </span>-f<span class="w"> </span>flamegraph<span class="w"> </span>-i<span class="w"> </span>data.gz<span class="w">  </span>-o<span class="w"> </span>out-good.svg<span class="w">      </span><span class="c1"># byexample: +skip</span>
 </code></pre></div>
 
 <p><figure class='fullwidth'><img  class='fullwidth' alt='' src='/img/debug/ruby-process/flame-ruby-executor.png' />
@@ -113,13 +115,13 @@ Flamegraph of 2 minutes sampling. On top a good behaving <code>executor.rb</code
 It would not be first time that I see a infinite loop calling <code>read(fd, buf, 0)</code>
 </span></p>
 <p>I rollback to the traditional <a href="https://linux.die.net/man/1/strace">strace</a>. It slows down quite a bit the debugged process but knowing which syscall is being executed can be of a great help.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ sudo strace -tt -T -f -p <span class="m">2331</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>strace<span class="w"> </span>-tt<span class="w"> </span>-T<span class="w"> </span>-f<span class="w"> </span>-p<span class="w"> </span><span class="m">2331</span>
 &lt;...&gt;
-<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676271 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000008&gt;
-<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676309 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000008&gt;
-<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676346 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000008&gt;
-<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676383 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000008&gt;
-<span class="o">[</span>pid <span class="m">2331</span><span class="o">]</span> <span class="m">16</span>:45:05.676419 sched_yield<span class="o">()</span> <span class="o">=</span> <span class="m">0</span> &lt;<span class="m">0</span>.000007&gt;
+<span class="o">[</span>pid<span class="w"> </span><span class="m">2331</span><span class="o">]</span><span class="w"> </span><span class="m">16</span>:45:05.676271<span class="w"> </span>sched_yield<span class="o">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&lt;<span class="m">0</span>.000008&gt;
+<span class="o">[</span>pid<span class="w"> </span><span class="m">2331</span><span class="o">]</span><span class="w"> </span><span class="m">16</span>:45:05.676309<span class="w"> </span>sched_yield<span class="o">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&lt;<span class="m">0</span>.000008&gt;
+<span class="o">[</span>pid<span class="w"> </span><span class="m">2331</span><span class="o">]</span><span class="w"> </span><span class="m">16</span>:45:05.676346<span class="w"> </span>sched_yield<span class="o">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&lt;<span class="m">0</span>.000008&gt;
+<span class="o">[</span>pid<span class="w"> </span><span class="m">2331</span><span class="o">]</span><span class="w"> </span><span class="m">16</span>:45:05.676383<span class="w"> </span>sched_yield<span class="o">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&lt;<span class="m">0</span>.000008&gt;
+<span class="o">[</span>pid<span class="w"> </span><span class="m">2331</span><span class="o">]</span><span class="w"> </span><span class="m">16</span>:45:05.676419<span class="w"> </span>sched_yield<span class="o">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w"> </span>&lt;<span class="m">0</span>.000007&gt;
 &lt;...&gt;
 </code></pre></div>
 
@@ -131,30 +133,30 @@ It would not be first time that I see a infinite loop calling <code>read(fd, buf
 I talk a marginally about this in my <a href="/articles/2020/02/15/CPU-Cache-Coherence.html">other post</a>
 </span></p>
 <p>I found this syscall in the past to implement a neighbor-friendly busy wait loop. Something like this:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">wait</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">some_condition</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">sched_yield</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">wait</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">some_condition</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">sched_yield</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p>No code in <code>executor.rb</code> was doing such a thing however, I was still missing something.</p>
 <h2 id="c-stack-sampling-with-linux-perf">C stack sampling with Linux <code>perf</code></h2>
 <p>And <a href="https://perf.wiki.kernel.org/index.php/Main_Page">Linux perf</a> filled the blanks.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ sudo perf top -p <span class="m">2331</span>                 <span class="c1"># byexample: +skip</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>perf<span class="w"> </span>top<span class="w"> </span>-p<span class="w"> </span><span class="m">2331</span><span class="w">                 </span><span class="c1"># byexample: +skip</span>
 &lt;...&gt;
-<span class="m">34</span>.90%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> do_syscall_64
-<span class="m">15</span>.37%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> syscall_return_via_sysret
- <span class="m">9</span>.08%  <span class="o">[</span>unknown<span class="o">]</span>             <span class="o">[</span>k<span class="o">]</span> 0xfffffe000000601e
- <span class="m">5</span>.89%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> pvclock_clocksource_read
- <span class="m">5</span>.06%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> __schedule
- <span class="m">2</span>.52%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> __raw_callee_save___pv_queued_spin_unloc
- <span class="m">2</span>.45%  libc-2.24.so          <span class="o">[</span>.<span class="o">]</span> __sched_yield
- <span class="m">2</span>.21%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> _raw_spin_lock
- <span class="m">2</span>.16%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> __entry_trampoline_start
- <span class="m">2</span>.01%  libruby-2.3.so.2.3.0  <span class="o">[</span>.<span class="o">]</span> rb_thread_stop_timer_thread
- <span class="m">1</span>.86%  <span class="o">[</span>unknown<span class="o">]</span>             <span class="o">[</span>k<span class="o">]</span> 0xfffffe0000006000
- <span class="m">1</span>.61%  <span class="o">[</span>kernel<span class="o">]</span>              <span class="o">[</span>k<span class="o">]</span> cpuacct_charge
+<span class="m">34</span>.90%<span class="w">  </span><span class="o">[</span>kernel<span class="o">]</span><span class="w">              </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>do_syscall_64
+<span class="m">15</span>.37%<span class="w">  </span><span class="o">[</span>kernel<span class="o">]</span><span class="w">              </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>syscall_return_via_sysret
+<span class="w"> </span><span class="m">9</span>.08%<span class="w">  </span><span class="o">[</span>unknown<span class="o">]</span><span class="w">             </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>0xfffffe000000601e
+<span class="w"> </span><span class="m">5</span>.89%<span class="w">  </span><span class="o">[</span>kernel<span class="o">]</span><span class="w">              </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>pvclock_clocksource_read
+<span class="w"> </span><span class="m">5</span>.06%<span class="w">  </span><span class="o">[</span>kernel<span class="o">]</span><span class="w">              </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>__schedule
+<span class="w"> </span><span class="m">2</span>.52%<span class="w">  </span><span class="o">[</span>kernel<span class="o">]</span><span class="w">              </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>__raw_callee_save___pv_queued_spin_unloc
+<span class="w"> </span><span class="m">2</span>.45%<span class="w">  </span>libc-2.24.so<span class="w">          </span><span class="o">[</span>.<span class="o">]</span><span class="w"> </span>__sched_yield
+<span class="w"> </span><span class="m">2</span>.21%<span class="w">  </span><span class="o">[</span>kernel<span class="o">]</span><span class="w">              </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>_raw_spin_lock
+<span class="w"> </span><span class="m">2</span>.16%<span class="w">  </span><span class="o">[</span>kernel<span class="o">]</span><span class="w">              </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>__entry_trampoline_start
+<span class="w"> </span><span class="m">2</span>.01%<span class="w">  </span>libruby-2.3.so.2.3.0<span class="w">  </span><span class="o">[</span>.<span class="o">]</span><span class="w"> </span>rb_thread_stop_timer_thread
+<span class="w"> </span><span class="m">1</span>.86%<span class="w">  </span><span class="o">[</span>unknown<span class="o">]</span><span class="w">             </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>0xfffffe0000006000
+<span class="w"> </span><span class="m">1</span>.61%<span class="w">  </span><span class="o">[</span>kernel<span class="o">]</span><span class="w">              </span><span class="o">[</span>k<span class="o">]</span><span class="w"> </span>cpuacct_charge
 &lt;...&gt;
 </code></pre></div>
 
@@ -163,13 +165,13 @@ I talk a marginally about this in my <a href="/articles/2020/02/15/CPU-Cache-Coh
 <h2 id="finding-the-bug-with-google-and-the-open-source-community">Finding the bug with Google and the Open Source Community</h2>
 <p>Bug reports <a href="https://bugs.ruby-lang.org/issues/13794">here</a> and <a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=876377">here</a>.</p>
 <p>A counter is used for signaling between threads and <a href="https://en.wikipedia.org/wiki/Compare-and-swap">CAS</a> loop for detecting when it is zero yielding the CPU with <code>sched_yield</code> if the condition was not met yet.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="n">native_stop_timer_thread</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span><span class="w"></span>
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">ATOMIC_CAS</span><span class="p">(</span><span class="n">timer_thread_pipe</span><span class="p">.</span><span class="n">writing</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">rb_atomic_t</span><span class="p">)</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">native_thread_yield</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="n">native_stop_timer_thread</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">ATOMIC_CAS</span><span class="p">(</span><span class="n">timer_thread_pipe</span><span class="p">.</span><span class="n">writing</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">rb_atomic_t</span><span class="p">)</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">native_thread_yield</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p>If a fork happen after one thread increments the counter but before someone decrements it, the child process will get stuck waiting for the counter to be zero.</p>
@@ -177,11 +179,11 @@ I talk a marginally about this in my <a href="/articles/2020/02/15/CPU-Cache-Coh
 <p>But I need to be sure that this is the bug.</p>
 <h2 id="confirming-the-bug-with-gdb">Confirming the bug with GDB</h2>
 <p>I attached <a href="https://www.gnu.org/software/gdb/">gdb</a> to ruby process and confirmed the bug.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ sudo gdb -p <span class="m">2331</span>                      <span class="c1"># byexample: +skip</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>gdb<span class="w"> </span>-p<span class="w"> </span><span class="m">2331</span><span class="w">                      </span><span class="c1"># byexample: +skip</span>
 &lt;...&gt;
-0x0000&lt;...&gt; <span class="k">in</span> sched_yield <span class="o">()</span> from /lib/x86_64-linux-gnu/libc.so.6
+0x0000&lt;...&gt;<span class="w"> </span><span class="k">in</span><span class="w"> </span>sched_yield<span class="w"> </span><span class="o">()</span><span class="w"> </span>from<span class="w"> </span>/lib/x86_64-linux-gnu/libc.so.6
 &lt;...&gt;
-<span class="o">(</span>gdb<span class="o">)</span> bt
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>bt
 <span class="c1">#0  0x0000&lt;...&gt; in sched_yield () from/lib/x86_64-linux-gnu/libc.so.6</span>
 <span class="c1">#1  0x0000&lt;...&gt; in native_stop_timer_thread () atthread_pthread.c</span>
 <span class="c1">#2  rb_thread_stop_timer_thread () at thread.c</span>
@@ -189,10 +191,10 @@ I talk a marginally about this in my <a href="/articles/2020/02/15/CPU-Cache-Coh
 <span class="c1">#4  before_exec () at process.c</span>
 <span class="c1">#5  rb_f_exec (argc=&lt;optimized out&gt;, argv=&lt;optimized out&gt;) atprocess.c</span>
 &lt;...&gt;
-<span class="o">(</span>gdb<span class="o">)</span> frame <span class="m">2</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>frame<span class="w"> </span><span class="m">2</span>
 <span class="c1">#2  rb_thread_stop_timer_thread () at thread.c</span>
-<span class="o">(</span>gdb<span class="o">)</span> p timer_thread_pipe
-<span class="nv">$1</span> <span class="o">=</span> <span class="o">{</span><span class="nv">normal</span> <span class="o">=</span> <span class="o">{</span><span class="m">3</span>, <span class="m">4</span><span class="o">}</span>, <span class="nv">low</span> <span class="o">=</span> <span class="o">{</span><span class="m">5</span>, <span class="m">6</span><span class="o">}</span>, <span class="nv">owner_process</span> <span class="o">=</span> <span class="m">0</span>, <span class="nv">writing</span> <span class="o">=</span> <span class="m">1</span><span class="o">}</span>
+<span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span>p<span class="w"> </span>timer_thread_pipe
+<span class="nv">$1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span><span class="nv">normal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span><span class="m">3</span>,<span class="w"> </span><span class="m">4</span><span class="o">}</span>,<span class="w"> </span><span class="nv">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span><span class="m">5</span>,<span class="w"> </span><span class="m">6</span><span class="o">}</span>,<span class="w"> </span><span class="nv">owner_process</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>,<span class="w"> </span><span class="nv">writing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="o">}</span>
 </code></pre></div>
 
 <p>With <code>timer_thread_pipe.writing</code> in 1, the CAS loop will never end.</p>

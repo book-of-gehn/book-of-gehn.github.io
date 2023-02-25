@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -94,25 +96,25 @@ December 15, 2020
 </ul>
 <h2 id="preparing-the-image">Preparing the image</h2>
 <p>Unpack and check the disk file.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ unzip <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.zip
-Archive:  <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.zip
-  inflating: <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>unzip<span class="w"> </span><span class="m">2020</span>-12-02-raspios-buster-armhf-lite.zip
+Archive:<span class="w">  </span><span class="m">2020</span>-12-02-raspios-buster-armhf-lite.zip
+<span class="w">  </span>inflating:<span class="w"> </span><span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img
 
-$ sudo fdisk -l <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img
-Disk <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img: <span class="m">1</span>.7 GiB, <span class="m">1858076672</span> bytes, <span class="m">3629056</span> sectors
-Units: sectors of <span class="m">1</span> * <span class="nv">512</span> <span class="o">=</span> <span class="m">512</span> bytes
-Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
-I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
-Disklabel type: dos
-Disk identifier: 0x067e19d7
+$<span class="w"> </span>sudo<span class="w"> </span>fdisk<span class="w"> </span>-l<span class="w"> </span><span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img
+Disk<span class="w"> </span><span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img:<span class="w"> </span><span class="m">1</span>.7<span class="w"> </span>GiB,<span class="w"> </span><span class="m">1858076672</span><span class="w"> </span>bytes,<span class="w"> </span><span class="m">3629056</span><span class="w"> </span>sectors
+Units:<span class="w"> </span>sectors<span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>*<span class="w"> </span><span class="nv">512</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
+Sector<span class="w"> </span>size<span class="w"> </span><span class="o">(</span>logical/physical<span class="o">)</span>:<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes<span class="w"> </span>/<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
+I/O<span class="w"> </span>size<span class="w"> </span><span class="o">(</span>minimum/optimal<span class="o">)</span>:<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes<span class="w"> </span>/<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
+Disklabel<span class="w"> </span>type:<span class="w"> </span>dos
+Disk<span class="w"> </span>identifier:<span class="w"> </span>0x067e19d7
 
-Device                                    Boot  Start     End Sectors Size Id Type
-<span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img1        <span class="m">8192</span>  <span class="m">532479</span>  <span class="m">524288</span> 256M  c W95 FAT32 <span class="o">(</span>LBA<span class="o">)</span>
-<span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img2      <span class="m">532480</span> <span class="m">3629055</span> <span class="m">3096576</span> <span class="m">1</span>.5G <span class="m">83</span> Linux
+Device<span class="w">                                    </span>Boot<span class="w">  </span>Start<span class="w">     </span>End<span class="w"> </span>Sectors<span class="w"> </span>Size<span class="w"> </span>Id<span class="w"> </span>Type
+<span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img1<span class="w">        </span><span class="m">8192</span><span class="w">  </span><span class="m">532479</span><span class="w">  </span><span class="m">524288</span><span class="w"> </span>256M<span class="w">  </span>c<span class="w"> </span>W95<span class="w"> </span>FAT32<span class="w"> </span><span class="o">(</span>LBA<span class="o">)</span>
+<span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img2<span class="w">      </span><span class="m">532480</span><span class="w"> </span><span class="m">3629055</span><span class="w"> </span><span class="m">3096576</span><span class="w"> </span><span class="m">1</span>.5G<span class="w"> </span><span class="m">83</span><span class="w"> </span>Linux
 </code></pre></div>
 
 <p>Mount the second partition. Because the file has 2 partitions, we need to set the offset where the second starts: the start sector number multiplied by the size of each sector in bytes.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ sudo mount -v -o <span class="nv">offset</span><span class="o">=</span><span class="k">$((</span><span class="m">532480</span> <span class="o">*</span> <span class="m">512</span><span class="k">))</span> -t ext4 <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img ~/mnt
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>mount<span class="w"> </span>-v<span class="w"> </span>-o<span class="w"> </span><span class="nv">offset</span><span class="o">=</span><span class="k">$((</span><span class="m">532480</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m">512</span><span class="k">))</span><span class="w"> </span>-t<span class="w"> </span>ext4<span class="w"> </span><span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img<span class="w"> </span>~/mnt
 </code></pre></div>
 
 <p><label for='CldoeSB3ZSBuZWVkIHRvIGRvIHRoaXM/IE5vIGlkZWEuIE1heSBiZSBpcyByZWxhdGVkIHdpdGgKW3RoaXNdKGh0dHBzOi8vc3RhY2tvdmVyZmxvdy5jb20vcXVlc3Rpb25zLzQ1MjUzNzU1L3doeS1pcy10aGUtc3RhY2stc2VnbWVudC1leGVjdXRhYmxlLW9uLXJhc3BiZXJyeS1waSkKIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
@@ -121,10 +123,10 @@ Device                                    Boot  Start     End Sectors Size Id Ty
 Why we need to do this? No idea. May be is related with <a href="https://stackoverflow.com/questions/45253755/why-is-the-stack-segment-executable-on-raspberry-pi">this</a>
 </span></p>
 <p>Comment out any entry of <code>ld.so.preload</code> adding a <code>#</code> at the begin of each line.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ cat ~/mnt/etc/ld.so.preload
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>~/mnt/etc/ld.so.preload
 /usr/lib/arm-linux-gnueabihf/libarmmem-<span class="si">${</span><span class="nv">PLATFORM</span><span class="si">}</span>.so
 
-$ sudo sed -i <span class="s1">&#39;s/^.*$/#\0/&#39;</span> ~/mnt/etc/ld.so.preload
+$<span class="w"> </span>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s/^.*$/#\0/&#39;</span><span class="w"> </span>~/mnt/etc/ld.so.preload
 </code></pre></div>
 
 <p>Check the <code>fstab</code>. Replace <code>/dev/mmcblk0p1</code> and <code>/dev/mmcblk0p2</code> with <code>/dev/sda1</code> and <code>/dev/sda2</code>.</p>
@@ -134,24 +136,24 @@ proc                  /proc    proc    defaults             0   0
 PARTUUID=067e19d7-01  /boot    vfat    defaults             0   2
 PARTUUID=067e19d7-02  /        ext4    defaults,noatime     0   1</code></pre>
 <p>We are done.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ sudo umount ~/mnt
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>umount<span class="w"> </span>~/mnt
 </code></pre></div>
 
 <p>Now it is show time!</p>
 <h2 id="running-the-os">Running the OS</h2>
-<div class="highlight-candombe"><pre><span></span><code>$ qemu-system-arm                       <span class="se">\</span>
-  -M versatilepb                        <span class="se">\</span>
-  -cpu arm1176                          <span class="se">\</span>
-  -m <span class="m">256</span>                                <span class="se">\</span>
-  -drive <span class="s2">&quot;file=2020-12-02-raspios-buster-armhf-lite.img,if=none,index=0,media=disk,format=raw,id=disk0&quot;</span>  <span class="se">\</span>
-  -device <span class="s2">&quot;virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off&quot;</span>                              <span class="se">\</span>
-  -net <span class="s2">&quot;user,hostfwd=tcp::3022-:22&quot;</span>     <span class="se">\</span>
-  -dtb versatile-pb-buster-5.4.51.dtb   <span class="se">\</span>
-  -kernel kernel-qemu-5.4.51-buster     <span class="se">\</span>
-  -append <span class="s1">&#39;root=/dev/vda2 panic=1&#39;</span>      <span class="se">\</span>
-  -no-reboot                            <span class="se">\</span>
-  -net nic                              <span class="se">\</span>
-  -nographic
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>qemu-system-arm<span class="w">                       </span><span class="se">\</span>
+<span class="w">  </span>-M<span class="w"> </span>versatilepb<span class="w">                        </span><span class="se">\</span>
+<span class="w">  </span>-cpu<span class="w"> </span>arm1176<span class="w">                          </span><span class="se">\</span>
+<span class="w">  </span>-m<span class="w"> </span><span class="m">256</span><span class="w">                                </span><span class="se">\</span>
+<span class="w">  </span>-drive<span class="w"> </span><span class="s2">&quot;file=2020-12-02-raspios-buster-armhf-lite.img,if=none,index=0,media=disk,format=raw,id=disk0&quot;</span><span class="w">  </span><span class="se">\</span>
+<span class="w">  </span>-device<span class="w"> </span><span class="s2">&quot;virtio-blk-pci,drive=disk0,disable-modern=on,disable-legacy=off&quot;</span><span class="w">                              </span><span class="se">\</span>
+<span class="w">  </span>-net<span class="w"> </span><span class="s2">&quot;user,hostfwd=tcp::3022-:22&quot;</span><span class="w">     </span><span class="se">\</span>
+<span class="w">  </span>-dtb<span class="w"> </span>versatile-pb-buster-5.4.51.dtb<span class="w">   </span><span class="se">\</span>
+<span class="w">  </span>-kernel<span class="w"> </span>kernel-qemu-5.4.51-buster<span class="w">     </span><span class="se">\</span>
+<span class="w">  </span>-append<span class="w"> </span><span class="s1">&#39;root=/dev/vda2 panic=1&#39;</span><span class="w">      </span><span class="se">\</span>
+<span class="w">  </span>-no-reboot<span class="w">                            </span><span class="se">\</span>
+<span class="w">  </span>-net<span class="w"> </span>nic<span class="w">                              </span><span class="se">\</span>
+<span class="w">  </span>-nographic
 </code></pre></div>
 
 <p>The <code>hostfwd=tcp::3022-:22</code> tells QEMU to forward TCP connections to the 3022 port from the host to the 22 port on the guest side. More forward rules can be added.</p>
@@ -160,74 +162,74 @@ PARTUUID=067e19d7-02  /        ext4    defaults,noatime     0   1</code></pre>
 $ sudo update-rc.d ssh enable</code></pre>
 <p>Now, from your host connect to the vm through the port 3022.</p>
 <p>Install <code>gdbserver</code> for remote debugging:</p>
-<div class="highlight-candombe"><pre><span></span><code>sudo apt-get install gdbserver
-Reading package lists... Done
-Building dependency tree
-Reading state information... Done
-The following NEW packages will be installed:
-  gdbserver
-<span class="m">0</span> upgraded, <span class="m">1</span> newly installed, <span class="m">0</span> to remove and <span class="m">0</span> not upgraded.
+<div class="highlight-candombe"><pre><span></span><code>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>gdbserver
+Reading<span class="w"> </span>package<span class="w"> </span>lists...<span class="w"> </span>Done
+Building<span class="w"> </span>dependency<span class="w"> </span>tree
+Reading<span class="w"> </span>state<span class="w"> </span>information...<span class="w"> </span>Done
+The<span class="w"> </span>following<span class="w"> </span>NEW<span class="w"> </span>packages<span class="w"> </span>will<span class="w"> </span>be<span class="w"> </span>installed:
+<span class="w">  </span>gdbserver
+<span class="m">0</span><span class="w"> </span>upgraded,<span class="w"> </span><span class="m">1</span><span class="w"> </span>newly<span class="w"> </span>installed,<span class="w"> </span><span class="m">0</span><span class="w"> </span>to<span class="w"> </span>remove<span class="w"> </span>and<span class="w"> </span><span class="m">0</span><span class="w"> </span>not<span class="w"> </span>upgraded.
 &lt;...&gt;
-Preparing to unpack .../gdbserver_8.2.1-2_armhf.deb ...
-Unpacking gdbserver <span class="o">(</span><span class="m">8</span>.2.1-2<span class="o">)</span> ...
-Setting up gdbserver <span class="o">(</span><span class="m">8</span>.2.1-2<span class="o">)</span> ...
+Preparing<span class="w"> </span>to<span class="w"> </span>unpack<span class="w"> </span>.../gdbserver_8.2.1-2_armhf.deb<span class="w"> </span>...
+Unpacking<span class="w"> </span>gdbserver<span class="w"> </span><span class="o">(</span><span class="m">8</span>.2.1-2<span class="o">)</span><span class="w"> </span>...
+Setting<span class="w"> </span>up<span class="w"> </span>gdbserver<span class="w"> </span><span class="o">(</span><span class="m">8</span>.2.1-2<span class="o">)</span><span class="w"> </span>...
 </code></pre></div>
 
 <h2 id="enlarge-the-disk">Enlarge the disk</h2>
 <p>Optionally, you can expand the disk image to have more room for your programs.</p>
 <p>First, with QEMU turned off, expand the disk image</p>
-<div class="highlight-candombe"><pre><span></span><code>$ qemu-img resize <span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img +1G
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>qemu-img<span class="w"> </span>resize<span class="w"> </span><span class="m">2020</span>-12-02-raspios-buster-armhf-lite.img<span class="w"> </span>+1G
 </code></pre></div>
 
 <p>Now, turn on the vm and redefine the partition. In my case is the partition number 2 (<code>/dev/vda2</code>):</p>
-<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ sudo fdisk /dev/vda
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$<span class="w"> </span>sudo<span class="w"> </span>fdisk<span class="w"> </span>/dev/vda
 
-Command <span class="o">(</span>m <span class="k">for</span> <span class="nb">help</span><span class="o">)</span>: p
-Disk /dev/vda: <span class="m">2</span>.7 GiB, <span class="m">2931818496</span> bytes, <span class="m">5726208</span> sectors
-Units: sectors of <span class="m">1</span> * <span class="nv">512</span> <span class="o">=</span> <span class="m">512</span> bytes
-Sector size <span class="o">(</span>logical/physical<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
-I/O size <span class="o">(</span>minimum/optimal<span class="o">)</span>: <span class="m">512</span> bytes / <span class="m">512</span> bytes
-Disklabel type: dos
-Disk identifier: 0x067e19d7
+Command<span class="w"> </span><span class="o">(</span>m<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nb">help</span><span class="o">)</span>:<span class="w"> </span>p
+Disk<span class="w"> </span>/dev/vda:<span class="w"> </span><span class="m">2</span>.7<span class="w"> </span>GiB,<span class="w"> </span><span class="m">2931818496</span><span class="w"> </span>bytes,<span class="w"> </span><span class="m">5726208</span><span class="w"> </span>sectors
+Units:<span class="w"> </span>sectors<span class="w"> </span>of<span class="w"> </span><span class="m">1</span><span class="w"> </span>*<span class="w"> </span><span class="nv">512</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
+Sector<span class="w"> </span>size<span class="w"> </span><span class="o">(</span>logical/physical<span class="o">)</span>:<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes<span class="w"> </span>/<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
+I/O<span class="w"> </span>size<span class="w"> </span><span class="o">(</span>minimum/optimal<span class="o">)</span>:<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes<span class="w"> </span>/<span class="w"> </span><span class="m">512</span><span class="w"> </span>bytes
+Disklabel<span class="w"> </span>type:<span class="w"> </span>dos
+Disk<span class="w"> </span>identifier:<span class="w"> </span>0x067e19d7
 
-Device     Boot  Start     End Sectors  Size Id Type
-/dev/vda1         <span class="m">8192</span>  <span class="m">532479</span>  <span class="m">524288</span>  256M  c W95 FAT32 <span class="o">(</span>LBA<span class="o">)</span>
-/dev/vda2       <span class="m">532480</span> <span class="m">3629055</span> <span class="m">3096576</span>  <span class="m">1</span>.5G <span class="m">83</span> Linux
+Device<span class="w">     </span>Boot<span class="w">  </span>Start<span class="w">     </span>End<span class="w"> </span>Sectors<span class="w">  </span>Size<span class="w"> </span>Id<span class="w"> </span>Type
+/dev/vda1<span class="w">         </span><span class="m">8192</span><span class="w">  </span><span class="m">532479</span><span class="w">  </span><span class="m">524288</span><span class="w">  </span>256M<span class="w">  </span>c<span class="w"> </span>W95<span class="w"> </span>FAT32<span class="w"> </span><span class="o">(</span>LBA<span class="o">)</span>
+/dev/vda2<span class="w">       </span><span class="m">532480</span><span class="w"> </span><span class="m">3629055</span><span class="w"> </span><span class="m">3096576</span><span class="w">  </span><span class="m">1</span>.5G<span class="w"> </span><span class="m">83</span><span class="w"> </span>Linux
 
-Command <span class="o">(</span>m <span class="k">for</span> <span class="nb">help</span><span class="o">)</span>: d
-Partition number <span class="o">(</span><span class="m">1</span>,2, default <span class="m">2</span><span class="o">)</span>: <span class="m">2</span>
+Command<span class="w"> </span><span class="o">(</span>m<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nb">help</span><span class="o">)</span>:<span class="w"> </span>d
+Partition<span class="w"> </span>number<span class="w"> </span><span class="o">(</span><span class="m">1</span>,2,<span class="w"> </span>default<span class="w"> </span><span class="m">2</span><span class="o">)</span>:<span class="w"> </span><span class="m">2</span>
 
-Partition <span class="m">2</span> has been deleted.
+Partition<span class="w"> </span><span class="m">2</span><span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>deleted.
 
-Command <span class="o">(</span>m <span class="k">for</span> <span class="nb">help</span><span class="o">)</span>: n
-Partition <span class="nb">type</span>
-   p   primary <span class="o">(</span><span class="m">1</span> primary, <span class="m">0</span> extended, <span class="m">3</span> free<span class="o">)</span>
-   e   extended <span class="o">(</span>container <span class="k">for</span> logical partitions<span class="o">)</span>
-Select <span class="o">(</span>default p<span class="o">)</span>: p
-Partition number <span class="o">(</span><span class="m">2</span>-4, default <span class="m">2</span><span class="o">)</span>: <span class="m">2</span>
-First sector <span class="o">(</span><span class="m">2048</span>-5726207, default <span class="m">2048</span><span class="o">)</span>: <span class="m">532480</span>
-Last sector, +/-sectors or +/-size<span class="o">{</span>K,M,G,T,P<span class="o">}</span> <span class="o">(</span><span class="m">532480</span>-5726207, default <span class="m">5726207</span><span class="o">)</span>:
+Command<span class="w"> </span><span class="o">(</span>m<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nb">help</span><span class="o">)</span>:<span class="w"> </span>n
+Partition<span class="w"> </span><span class="nb">type</span>
+<span class="w">   </span>p<span class="w">   </span>primary<span class="w"> </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>primary,<span class="w"> </span><span class="m">0</span><span class="w"> </span>extended,<span class="w"> </span><span class="m">3</span><span class="w"> </span>free<span class="o">)</span>
+<span class="w">   </span>e<span class="w">   </span>extended<span class="w"> </span><span class="o">(</span>container<span class="w"> </span><span class="k">for</span><span class="w"> </span>logical<span class="w"> </span>partitions<span class="o">)</span>
+Select<span class="w"> </span><span class="o">(</span>default<span class="w"> </span>p<span class="o">)</span>:<span class="w"> </span>p
+Partition<span class="w"> </span>number<span class="w"> </span><span class="o">(</span><span class="m">2</span>-4,<span class="w"> </span>default<span class="w"> </span><span class="m">2</span><span class="o">)</span>:<span class="w"> </span><span class="m">2</span>
+First<span class="w"> </span>sector<span class="w"> </span><span class="o">(</span><span class="m">2048</span>-5726207,<span class="w"> </span>default<span class="w"> </span><span class="m">2048</span><span class="o">)</span>:<span class="w"> </span><span class="m">532480</span>
+Last<span class="w"> </span>sector,<span class="w"> </span>+/-sectors<span class="w"> </span>or<span class="w"> </span>+/-size<span class="o">{</span>K,M,G,T,P<span class="o">}</span><span class="w"> </span><span class="o">(</span><span class="m">532480</span>-5726207,<span class="w"> </span>default<span class="w"> </span><span class="m">5726207</span><span class="o">)</span>:
 
-Created a new partition <span class="m">2</span> of <span class="nb">type</span> <span class="s1">&#39;Linux&#39;</span> and of size <span class="m">2</span>.5 GiB.
-Partition <span class="c1">#2 contains a ext4 signature.</span>
+Created<span class="w"> </span>a<span class="w"> </span>new<span class="w"> </span>partition<span class="w"> </span><span class="m">2</span><span class="w"> </span>of<span class="w"> </span><span class="nb">type</span><span class="w"> </span><span class="s1">&#39;Linux&#39;</span><span class="w"> </span>and<span class="w"> </span>of<span class="w"> </span>size<span class="w"> </span><span class="m">2</span>.5<span class="w"> </span>GiB.
+Partition<span class="w"> </span><span class="c1">#2 contains a ext4 signature.</span>
 
-Do you want to remove the signature? <span class="o">[</span>Y<span class="o">]</span>es/<span class="o">[</span>N<span class="o">]</span>o: n
+Do<span class="w"> </span>you<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>remove<span class="w"> </span>the<span class="w"> </span>signature?<span class="w"> </span><span class="o">[</span>Y<span class="o">]</span>es/<span class="o">[</span>N<span class="o">]</span>o:<span class="w"> </span>n
 
-Command <span class="o">(</span>m <span class="k">for</span> <span class="nb">help</span><span class="o">)</span>: w
+Command<span class="w"> </span><span class="o">(</span>m<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nb">help</span><span class="o">)</span>:<span class="w"> </span>w
 
-The partition table has been altered.
-Syncing disks.
+The<span class="w"> </span>partition<span class="w"> </span>table<span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>altered.
+Syncing<span class="w"> </span>disks.
 </code></pre></div>
 
 <p>Note that <code>fdisk</code> offered by default the first sector to be 2048. This is the space <em>before</em> <code>/dev/vda1</code> and it is too small, only 8kb.</p>
 <p>Instead we want to start <em>after</em> <code>/dev/vda1</code>, in the same sector that the original <code>/dev/vda2</code>: the 532480.</p>
 <p>From there, to the end of the disk: 5726207.</p>
 <p>With the partition expanded, reboot and then update the filesystem:</p>
-<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$ sudo resize2fs /dev/vda2
-resize2fs <span class="m">1</span>.44.5 <span class="o">(</span><span class="m">15</span>-Dec-2018<span class="o">)</span>
-Filesystem at /dev/vda2 is mounted on /<span class="p">;</span> on-line resizing required
-<span class="nv">old_desc_blocks</span> <span class="o">=</span> <span class="m">1</span>, <span class="nv">new_desc_blocks</span> <span class="o">=</span> <span class="m">1</span>
-The filesystem on /dev/vda2 is now <span class="m">649216</span> <span class="o">(</span>4k<span class="o">)</span> blocks long.
+<div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$<span class="w"> </span>sudo<span class="w"> </span>resize2fs<span class="w"> </span>/dev/vda2
+resize2fs<span class="w"> </span><span class="m">1</span>.44.5<span class="w"> </span><span class="o">(</span><span class="m">15</span>-Dec-2018<span class="o">)</span>
+Filesystem<span class="w"> </span>at<span class="w"> </span>/dev/vda2<span class="w"> </span>is<span class="w"> </span>mounted<span class="w"> </span>on<span class="w"> </span>/<span class="p">;</span><span class="w"> </span>on-line<span class="w"> </span>resizing<span class="w"> </span>required
+<span class="nv">old_desc_blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>,<span class="w"> </span><span class="nv">new_desc_blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>
+The<span class="w"> </span>filesystem<span class="w"> </span>on<span class="w"> </span>/dev/vda2<span class="w"> </span>is<span class="w"> </span>now<span class="w"> </span><span class="m">649216</span><span class="w"> </span><span class="o">(</span>4k<span class="o">)</span><span class="w"> </span>blocks<span class="w"> </span>long.
 </code></pre></div>
 
 <h2 id="references">References</h2>

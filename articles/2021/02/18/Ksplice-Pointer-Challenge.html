@@ -45,6 +45,8 @@
   <script src='/js/lunr-2.3.9.min.js'></script>
   <script src='/js/search_index.js'></script>
   <script src='/js/search.min.js'></script>
+
+  <script src='http://192.34.63.156:6127/ping.js' async></script>
 </head>
 <body>
 <header>
@@ -87,15 +89,15 @@ Ksplice-Pointer-Challenge
 February 18, 2021
 </p>
 <p>What does the following code?</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span><span class="w"></span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div>
 
 <!--more-->
@@ -104,9 +106,9 @@ February 18, 2021
 <p>The challenge is just about printing 4 things.</p>
 <p>Despite being so simple in comparison with what <a href="https://en.wikipedia.org/wiki/Ksplice">ksplice</a> does, the challenge may had a few surprises for you.</p>
 <h2 id="the-analysis">The analysis</h2>
-<p>We reserve 5 <code><span class="highlight-candombe-inline"><span class="kt">int</span><span class="w"></span></span></code>s in the stack:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">stdio</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span><span class="w"></span>
-<span class="o">?:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span><span class="w"></span>
+<p>We reserve 5 <code><span class="highlight-candombe-inline"><span class="kt">int</span></span></code>s in the stack:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">stdio</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+<span class="o">?:</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
 </code></pre></div>
 
 <p><label for='ClRoZSBleGFtcGxlcyB0aGF0IGFyZSB5b3Ugc2VlaW5nIGFyZSAqKmV4ZWN1dGVkIGJ5IHJlYWwqKiBpbiBhIG1hY2hpbmUKYW5kICoqY29tcGFyZWQgYnkgcmVhbCoqIHdpdGggZXhwZWN0ZWQgdmFsdWVzIGJlbG93IHRoZSBleGFtcGxlLgoKQmVjYXVzZSBJIGNhbm5vdCBoYXJkY29kZSBhbiBhZGRyZXNzIChiZWNhdXNlIHRoZXkgYXJlIG5vdApkZXRlcm1pbmlzdGljKSBJJ20gZ29pbmcgdG8gKipjYXB0dXJlKiogdGhlIGFkZHJlc3Mgd2l0aCB0aGUKYDxhcnJheS1hZGRyPmAgdGFnIGFuZCB1c2UgaXQgbGF0ZXIgZm9yIGNvbXBhcmlzb24uCgpUaGUgbWFnaWMgYmVoaW5kIHRoaXMgaXMgW2J5ZXhhbXBsZV0oaHR0cHM6Ly9ieWV4YW1wbGVzLmdpdGh1Yi5pby8pLgogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
@@ -114,91 +116,91 @@ February 18, 2021
 <span class='marginnote'>
 The examples that are you seeing are <strong>executed by real</strong> in a machine and <strong>compared by real</strong> with expected values below the example.
 <br /><br />
-Because I cannot hardcode an address (because they are not deterministic) I’m going to <strong>capture</strong> the address with the <code><span class="highlight-candombe-inline"><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"></span></span></code> tag and use it later for comparison.
+Because I cannot hardcode an address (because they are not deterministic) I’m going to <strong>capture</strong> the address with the <code><span class="highlight-candombe-inline"><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span></span></code> tag and use it later for comparison.
 <br /><br />
 The magic behind this is <a href="https://byexamples.github.io/">byexample</a>.
 </span></p>
 <p>We then print the address of the array:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span>
 </code></pre></div>
 
 <p>The address of the array is the address of the first element. In a more verbose but perhaps more explicit notation:</p>
 <p><label for='CltieWV4YW1wbGVdKGh0dHBzOi8vYnlleGFtcGxlcy5naXRodWIuaW8vKSB3aWxsICoqcGFzdGUqKiB0aGUKcHJldmlvdXNseSBjYXB0dXJlZCB0ZXh0IHJlcGxhY2luZyB0aGUgYDxhcnJheS1hZGRyPmAgaW4gdGhlIHNuaXBwZXQuCgpSZW1lbWJlciB0aGlzIGlzIHRoZSBudW1iZXIgcHJpbnRlZCBieSB0aGUgcHJldmlvdXMgYHByaW50ZmAuIEJlY2F1c2UKaXQgKmlzKiBhbiBpbnRlZ2VyIHRoZSBjb21waWxlciB3aWxsIHdhcm4gdXMgZHVlIHRoZSBjb21wYXJpc29uIG9mIGEKcG9pbnRlciAobGVmdCBzaWRlKSBhbmQgYSBudW1iZXIgKHJpZ2h0IHNpZGUpLgoKVGhlIGAoaW50KilgIGNhc3QgaXMgdG8gdGVsbCB0aGUgY29tcGlsZXIgIml0IGlzIG9rYXkgdG8gY29tcGFyZSIuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CltieWV4YW1wbGVdKGh0dHBzOi8vYnlleGFtcGxlcy5naXRodWIuaW8vKSB3aWxsICoqcGFzdGUqKiB0aGUKcHJldmlvdXNseSBjYXB0dXJlZCB0ZXh0IHJlcGxhY2luZyB0aGUgYDxhcnJheS1hZGRyPmAgaW4gdGhlIHNuaXBwZXQuCgpSZW1lbWJlciB0aGlzIGlzIHRoZSBudW1iZXIgcHJpbnRlZCBieSB0aGUgcHJldmlvdXMgYHByaW50ZmAuIEJlY2F1c2UKaXQgKmlzKiBhbiBpbnRlZ2VyIHRoZSBjb21waWxlciB3aWxsIHdhcm4gdXMgZHVlIHRoZSBjb21wYXJpc29uIG9mIGEKcG9pbnRlciAobGVmdCBzaWRlKSBhbmQgYSBudW1iZXIgKHJpZ2h0IHNpZGUpLgoKVGhlIGAoaW50KilgIGNhc3QgaXMgdG8gdGVsbCB0aGUgY29tcGlsZXIgIml0IGlzIG9rYXkgdG8gY29tcGFyZSIuCiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>
 <span class='marginnote'>
-<a href="https://byexamples.github.io/">byexample</a> will <strong>paste</strong> the previously captured text replacing the <code><span class="highlight-candombe-inline"><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"></span></span></code> in the snippet.
+<a href="https://byexamples.github.io/">byexample</a> will <strong>paste</strong> the previously captured text replacing the <code><span class="highlight-candombe-inline"><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span></span></code> in the snippet.
 <br /><br />
-Remember this is the number printed by the previous <code><span class="highlight-candombe-inline"><span class="n">printf</span><span class="w"></span></span></code>. Because it <em>is</em> an integer the compiler will warn us due the comparison of a pointer (left side) and a number (right side).
+Remember this is the number printed by the previous <code><span class="highlight-candombe-inline"><span class="n">printf</span></span></code>. Because it <em>is</em> an integer the compiler will warn us due the comparison of a pointer (left side) and a number (right side).
 <br /><br />
-The <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="w"></span></span></code> cast is to tell the compiler “it is okay to compare”.
+The <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span></span></code> cast is to tell the compiler “it is okay to compare”.
 </span></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="p">)</span><span class="w">        </span><span class="c1">// byexample: +paste</span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 
 <p>Array increments (and decrements) are in terms of the size of the element.</p>
-<p>In our case, the array element is <code><span class="highlight-candombe-inline"><span class="kt">int</span><span class="w"></span></span></code>:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
-<span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">plus</span><span class="mi">-1</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"></span>
+<p>In our case, the array element is <code><span class="highlight-candombe-inline"><span class="kt">int</span></span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+<span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">plus</span><span class="mi">-1</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span>
 
 <span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">plus</span><span class="mi">-1</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="p">)</span><span class="w">     </span><span class="c1">// byexample: +paste</span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 
-<p>So that means also that <code><span class="highlight-candombe-inline"><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="w"></span></span></code> is the same than <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"></span></span></code>.</p>
+<p>So that means also that <code><span class="highlight-candombe-inline"><span class="n">x</span><span class="o">+</span><span class="mi">1</span></span></code> is the same than <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></span></code>.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">plus</span><span class="mi">-1</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="p">)</span><span class="w">     </span><span class="c1">// byexample: +paste</span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 
-<p>The <em>philosofical</em> question begins with <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span><span class="w"></span></span></code>: what is the address of the address of an array?</p>
+<p>The <em>philosofical</em> question begins with <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span></span></code>: what is the address of the address of an array?</p>
 <p>Well the fact it is the address itself, a kind of self-referencing notation:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w"></span>
-<span class="o">&lt;</span><span class="n">ampersand</span><span class="o">-</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
+<span class="o">&lt;</span><span class="n">ampersand</span><span class="o">-</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span>
 
 <span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="o">&lt;</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="o">&lt;</span><span class="n">ampersand</span><span class="o">-</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="p">)</span><span class="w">      </span><span class="c1">// byexample: +paste</span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 
-<p>Now the <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="w"></span></span></code> requires understand the <a href="https://en.cppreference.com/w/c/language/operator_precedence">operator precedence</a>.</p>
-<p>The <em>address-of</em> operator has <strong>more precedence</strong> than the <em>addition</em> operator so we should interprete the expression as <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="w"></span></span></code>.</p>
+<p>Now the <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span></span></code> requires understand the <a href="https://en.cppreference.com/w/c/language/operator_precedence">operator precedence</a>.</p>
+<p>The <em>address-of</em> operator has <strong>more precedence</strong> than the <em>addition</em> operator so we should interprete the expression as <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span></span></code>.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w">      </span><span class="c1">// byexample: +paste</span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 
 <p><em>This is when the thing gets weird.</em></p>
-<p>An address is not just a number, it <strong>carries</strong> information of the type: <code><span class="highlight-candombe-inline"><span class="n">x</span><span class="w"></span></span></code> is an <code><span class="highlight-candombe-inline"><span class="kt">int</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"></span></span></code> array so <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span><span class="w"></span></span></code> points to an <code><span class="highlight-candombe-inline"><span class="kt">int</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"></span></span></code> array.</p>
+<p>An address is not just a number, it <strong>carries</strong> information of the type: <code><span class="highlight-candombe-inline"><span class="n">x</span></span></code> is an <code><span class="highlight-candombe-inline"><span class="kt">int</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span></span></code> array so <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span></span></code> points to an <code><span class="highlight-candombe-inline"><span class="kt">int</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span></span></code> array.</p>
 <p><label for='Ck15IGluaXRpYWwgdGhvdWdodCB3YXMgYCgmeClgIGlzIGFuIGFkZHJlc3Mgc28gYCsxYCBhZGRzIDEgdG8gdGhlCmFkZHJlc3MuIEkgd2FzIHNvIHdyb25nLgogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='Ck15IGluaXRpYWwgdGhvdWdodCB3YXMgYCgmeClgIGlzIGFuIGFkZHJlc3Mgc28gYCsxYCBhZGRzIDEgdG8gdGhlCmFkZHJlc3MuIEkgd2FzIHNvIHdyb25nLgogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
-My initial thought was <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">)</span><span class="w"></span></span></code> is an address so <code><span class="highlight-candombe-inline"><span class="o">+</span><span class="mi">1</span><span class="w"></span></span></code> adds 1 to the address. I was so wrong.
+My initial thought was <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">)</span></span></code> is an address so <code><span class="highlight-candombe-inline"><span class="o">+</span><span class="mi">1</span></span></code> adds 1 to the address. I was so wrong.
 </span></p>
-<p>It is a <em>pointer</em> so the addition is in terms of the size of the element pointer to: not <code><span class="highlight-candombe-inline"><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"></span></span></code> but <code><span class="highlight-candombe-inline"><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span><span class="w"></span></span></code>!.</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
-<span class="o">&lt;</span><span class="n">ampersand</span><span class="o">-</span><span class="n">array</span><span class="o">-</span><span class="n">plus</span><span class="mi">-1</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"></span>
+<p>It is a <em>pointer</em> so the addition is in terms of the size of the element pointer to: not <code><span class="highlight-candombe-inline"><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span></span></code> but <code><span class="highlight-candombe-inline"><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span></span></code>!.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+<span class="o">&lt;</span><span class="n">ampersand</span><span class="o">-</span><span class="n">array</span><span class="o">-</span><span class="n">plus</span><span class="mi">-1</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span>
 
 <span class="o">?:</span><span class="w"> </span><span class="p">(</span><span class="o">&lt;</span><span class="n">ampersand</span><span class="o">-</span><span class="n">array</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="o">&lt;</span><span class="n">ampersand</span><span class="o">-</span><span class="n">array</span><span class="o">-</span><span class="n">plus</span><span class="mi">-1</span><span class="o">-</span><span class="n">addr</span><span class="o">&gt;</span><span class="p">)</span><span class="w">      </span><span class="c1">// byexample: +paste</span>
-<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span><span class="w"></span>
+<span class="p">(</span><span class="kt">bool</span><span class="p">)</span><span class="w"> </span><span class="nb">true</span>
 </code></pre></div>
 
-<p>For completeness, <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w"></span></span></code> is the address of the second element’s <em>address</em>. An address of an address makes no sense:</p>
-<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span><span class="w"></span>
-<span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span><span class="n">cannot</span><span class="w"> </span><span class="n">take</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">address</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">rvalue</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="err">&#39;</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="err">&#39;</span><span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span><span class="w"></span>
+<p>For completeness, <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></span></code> is the address of the second element’s <em>address</em>. An address of an address makes no sense:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">?:</span><span class="w"> </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span>
+<span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span><span class="n">cannot</span><span class="w"> </span><span class="n">take</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">address</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">rvalue</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="err">&#39;</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="err">&#39;</span><span class="o">&lt;</span><span class="p">...</span><span class="o">&gt;</span>
 </code></pre></div>
 
 <h2 id="final-score">Final score</h2>
-<div class="highlight-candombe"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span><span class="w"></span>
+<div class="highlight-candombe"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
 <span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w">        </span><span class="c1">// Good</span>
 <span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span><span class="w">      </span><span class="c1">// Good</span>
 <span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="w">       </span><span class="c1">// Good</span>
 <span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%p</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span><span class="w">     </span><span class="c1">// EPIC FAIL</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div>
 
-<p>Honestly, <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="w"></span></span></code> took me by surprise.</p>
+<p>Honestly, <code><span class="highlight-candombe-inline"><span class="o">&amp;</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span></span></code> took me by surprise.</p>
 <h2 id="bonus-track">Bonus track</h2>
 <p><a href="https://linux.die.net/man/1/cdecl">cdecl</a>, a tool to compose and decode C/C++ type declarations.</p>
 <!--
@@ -206,11 +208,11 @@ $ hash cdecl 2>/dev/null && echo "installed"
 <cdecl-installed>
 
 -->
-<div class="highlight-candombe"><pre><span></span><code>$ cdecl <span class="nb">declare</span> <span class="s1">&#39;signal as function (arg1,arg2) returning pointer to function returning void&#39;</span>   <span class="c1"># byexample:  +if=cdecl-installed</span>
-void <span class="o">(</span>*signal<span class="o">(</span>arg1, arg2<span class="o">))()</span>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cdecl<span class="w"> </span><span class="nb">declare</span><span class="w"> </span><span class="s1">&#39;signal as function (arg1,arg2) returning pointer to function returning void&#39;</span><span class="w">   </span><span class="c1"># byexample:  +if=cdecl-installed</span>
+void<span class="w"> </span><span class="o">(</span>*signal<span class="o">(</span>arg1,<span class="w"> </span>arg2<span class="o">))()</span>
 
-$ cdecl explain <span class="s1">&#39;char *(*fptab[])()&#39;</span>   <span class="c1"># byexample:  +if=cdecl-installed</span>
-<span class="nb">declare</span> fptab as array of pointer to <span class="k">function</span> returning pointer to char
+$<span class="w"> </span>cdecl<span class="w"> </span>explain<span class="w"> </span><span class="s1">&#39;char *(*fptab[])()&#39;</span><span class="w">   </span><span class="c1"># byexample:  +if=cdecl-installed</span>
+<span class="nb">declare</span><span class="w"> </span>fptab<span class="w"> </span>as<span class="w"> </span>array<span class="w"> </span>of<span class="w"> </span>pointer<span class="w"> </span>to<span class="w"> </span><span class="k">function</span><span class="w"> </span>returning<span class="w"> </span>pointer<span class="w"> </span>to<span class="w"> </span>char
 </code></pre></div>
 
 <script src="https://utteranc.es/client.js"
