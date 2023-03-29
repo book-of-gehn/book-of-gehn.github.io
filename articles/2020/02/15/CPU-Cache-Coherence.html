@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -266,8 +252,11 @@ High-level diagram. The colours are qualitative following the same color palette
 <p>These conclusions highly depend of the hardware and may not apply to all the systems but this post shows how complex can get such a simple thing like a cache.</p>
 <h2 id="references">References</h2>
 <ul>
-<li><a href="http://course.ece.cmu.edu/~ece600/lectures/lecture17.pdf">Multicore Cache Coherence (Lecture 17)</a>, John P. Shen. October 25, 2017.</li>
-<li><a href="https://software.intel.com/en-us/articles/avoiding-and-identifying-false-sharing-among-threads">Avoiding and Identifying False Sharing Among Threads</a>, Intel, November 2, 2011</li>
+<li><p><a href="http://course.ece.cmu.edu/~ece600/lectures/lecture17.pdf">Multicore Cache Coherence (Lecture 17)</a>, John P. Shen. October 25, 2017.</p></li>
+<li><p><a href="https://software.intel.com/en-us/articles/avoiding-and-identifying-false-sharing-among-threads">Avoiding and Identifying False Sharing Among Threads</a>, Intel, November 2, 2011</p>
+<p class="subtitle">
+<p>Related: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="cache"'>cache</a>, <a href='https://book-of-gehn.github.io/?tag="CPU"'>CPU</a></p>
+</p></li>
 </ul>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

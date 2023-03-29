@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -234,6 +220,9 @@ Do not laugh. This is my first time coding a function in Julia, trying to do som
 <p>Augmenting the dataset with the geolocalization of each host may help.</p>
 <p>Using the TTLs to group the hosts is also possible: even hosts running different OS (and therefore with different default TTLs), the scanner should observe their TTLs decremented by the same factor if the hosts are in the same <em>physical</em> network.</p>
 <p>Combining this with routing information it would be also helpful.</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href='https://book-of-gehn.github.io/?tag="julia"'>julia</a>, <a href='https://book-of-gehn.github.io/?tag="categorical"'>categorical</a>, <a href='https://book-of-gehn.github.io/?tag="ordinal"'>ordinal</a>, <a href='https://book-of-gehn.github.io/?tag="parquet"'>parquet</a>, <a href='https://book-of-gehn.github.io/?tag="statistics"'>statistics</a>, <a href='https://book-of-gehn.github.io/?tag="seaborn"'>seaborn</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

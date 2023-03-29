@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -152,6 +138,9 @@ You could write directly <code><span class="highlight-candombe-inline">.opus</sp
 <h2 id="results">Results</h2>
 <p>The ~3k audio files with a total size of ~20GB was processed in ~2hs with a final total size of ~7GB, a ~65% reduction. Not bad.</p>
 <p>That only counted for audio files. Extracting the audio from videos and deleting the videos additionally saved a few hundred of megabytes more.</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="misc"'>misc</a>, <a href='https://book-of-gehn.github.io/?tag="ffmpeg"'>ffmpeg</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

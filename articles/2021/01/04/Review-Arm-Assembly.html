@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -362,6 +348,9 @@ In other words: show the stack.
 <p>Obviously there were errors in my interpretation of the code.</p>
 <p>That’s why I coded an <a href="https://github.com/bad-address/iasm">interactive assembler</a> to have a quick feedback of what each instruction does without requiring a compile-upload-debug cycle.</p>
 <p>It really help me to “smooth out certain rough edges” and understand better the code specially when the indexing flavors and how the things are pushed and popped from the stack.</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2023-02-26T01:15:51.515786+00:00</updated>
+  <updated>2023-03-28T18:45:38.459086+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -5901,7 +5901,8 @@ Precise values; linear, proportional and additivity relations; and variables in 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 </content>
     <link href="https://book-of-gehn.github.io/articles/2021/04/25/Congruence-Closure.html" rel="alternate" type="text/html" title="Congruence Closure with Z3"/>
-    <category term="z3m smt" label="z3m smt"/>
+    <category term="z3" label="z3"/>
+    <category term="smt" label="smt"/>
     <category term="sat" label="sat"/>
     <category term="solver" label="solver"/>
     <category term="equivalence" label="equivalence"/>

@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -164,6 +150,9 @@ April 24, 2021
 <p><code><span class="highlight-candombe-inline"><span class="n">scan</span></span></code> checks for <code><span class="highlight-candombe-inline"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">msg</span><span class="p">)</span></span></code> and if it is <code><span class="highlight-candombe-inline"><span class="nb">NULL</span></span></code> it will believe that the subfunction did a full round and it didn’t find a message.</p>
 <p>Under a heavy workload on <em>all</em> the ports, this typo was unnoticed because <code><span class="highlight-candombe-inline"><span class="o">*</span><span class="n">msg</span></span></code> was always not-<code><span class="highlight-candombe-inline"><span class="nb">NULL</span></span></code>.</p>
 <p>But when a single port was with less data, even if the rest of the ports were super-busy, <code><span class="highlight-candombe-inline"><span class="n">scan</span></span></code> did a <code><span class="highlight-candombe-inline"><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></span></code> impacting negatively in the performance. Less work made the things worse!</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="pointer"'>pointer</a>, <a href='https://book-of-gehn.github.io/?tag="memory"'>memory</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

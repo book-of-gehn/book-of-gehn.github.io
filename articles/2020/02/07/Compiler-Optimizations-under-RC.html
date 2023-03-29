@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -219,8 +205,11 @@ Notice how <code><span class="highlight-candombe-inline"><span class="o">++</spa
 <p>This means that other parties like the CPU may perform optimizations and <code><span class="highlight-candombe-inline"><span class="k">volatile</span></span></code> will not help us.</p>
 <h2 id="references">References</h2>
 <ul>
-<li><a href="https://www.kernel.org/doc/html/v4.12/process/volatile-considered-harmful.html">Why the “volatile” type class should not be used</a></li>
-<li><a href="https://blog.regehr.org/archives/28">Nine ways to break your systems code using volatile</a></li>
+<li><p><a href="https://www.kernel.org/doc/html/v4.12/process/volatile-considered-harmful.html">Why the “volatile” type class should not be used</a></p></li>
+<li><p><a href="https://blog.regehr.org/archives/28">Nine ways to break your systems code using volatile</a></p>
+<p class="subtitle">
+<p>Related: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="IDA"'>IDA</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="volatile"'>volatile</a></p>
+</p></li>
 </ul>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

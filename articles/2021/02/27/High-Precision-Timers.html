@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -258,6 +244,9 @@ max    8019.000000     13532.000000      17392.000000      17572.000000</code></
 <p>In second place <code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_PROCESS_CPUTIME_ID</span></span></code> or <code><span class="highlight-candombe-inline"><span class="n">CLOCK_THREAD_CPUTIME_ID</span></span></code>. Good performance, roughly 4 or 5 times slower than <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span></span></code>.</p>
 <p><code><span class="highlight-candombe-inline"><span class="n">clock_gettime</span><span class="p">()</span></span></code> with <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC_RAW</span></span></code> is not bad but it is at least 8 times slower than <code><span class="highlight-candombe-inline"><span class="n">CLOCK_MONOTONIC</span></span></code>.</p>
 <p>The rest of the clocks are <strong>not</strong> useful.</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="timers"'>timers</a>, <a href='https://book-of-gehn.github.io/?tag="clocks"'>clocks</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

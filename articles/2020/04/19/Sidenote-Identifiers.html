@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -113,11 +99,14 @@ April 19, 2020
 <p><em>Keep it simple. Use a plain number.</em></p>
 <p>Just:</p>
 <ul>
-<li>do not allow a human to set the id, make the id unique by software.</li>
-<li>do not associate any meaning to it, it is just a number.</li>
-<li>be careful, assigning numbers incrementally will allow and attacker to guess what will be the next id. This may or may not be a problem.</li>
-<li>do not reuse any id, <strong>never</strong>.</li>
-<li>make sure that the space of possible numbers is large enough.</li>
+<li><p>do not allow a human to set the id, make the id unique by software.</p></li>
+<li><p>do not associate any meaning to it, it is just a number.</p></li>
+<li><p>be careful, assigning numbers incrementally will allow and attacker to guess what will be the next id. This may or may not be a problem.</p></li>
+<li><p>do not reuse any id, <strong>never</strong>.</p></li>
+<li><p>make sure that the space of possible numbers is large enough.</p>
+<p class="subtitle">
+<p>Related: <a href='https://book-of-gehn.github.io/?tag="identifier"'>identifier</a></p>
+</p></li>
 </ul>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

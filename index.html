@@ -75,20 +75,40 @@
             </form>
     </nav>
 
-    <div style="display: none;" id="search_error"></div>
+    <div style="display: none;" id="search_msg"></div>
     <article style="display: none;" class="group" id="search_results">
     </article>
 </header>
-<article class="group">
-<h1>
-</h1>
-<span class="index-single-post">
-<hr class="slender post-layout">
+<article class="group" id="article_main_group">
+<script>
+$(document).ready(function () {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+
+    const re = /[^a-zA-Z0-9+\-*\s]+/g;
+
+    const tag = urlParams.get("tag").replace(re, " ")
+
+    const searchForm = document.querySelector('#blog-search-form');
+    const searchField = searchForm.querySelector('input');
+
+    searchField.value = tag;
+    filterPostsByQuery(tag);
+});
+</script>
+<div class="index-single-post" id="articles-2023-01-23-Key-Recovering-from-CBC-with-IV-eq-K-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html">
 <h2 class="larger">
 Key Recovering from CBC with \(IV = K\)
 </h2>
-</a> <br><span class="smaller">January 23, 2023</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="CBC"'>CBC</a>
+</p>
+<p class="small-subtitle">
+January 23, 2023
+</p>
 <div>
 <p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'/>
@@ -102,14 +122,20 @@ Key Recovering from CBC with \(IV = K\)
 <p>Using \(IV = K\) means that the adversary can recover the secret key with a single message.</p>
 <p>In this post I describe the attack in 3 simple diagrams.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-10-01-Diff-Between-Dataframes-for-Testing-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/10/01/Diff-Between-Dataframes-for-Testing.html">
 <h2 class="larger">
 Diff Between Data Frames for Testing
 </h2>
-</a> <br><span class="smaller">October 1, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="python"'>python</a>, <a href='https://book-of-gehn.github.io/?tag="dataframe"'>dataframe</a>, <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>
+</p>
+<p class="small-subtitle">
+October 1, 2022
+</p>
 <div>
 <p>Let’s say that we want to compare two Pandas’ dataframes for unit testing.</p>
 <p>One is the <em>expected</em> dataframe, crafted by us and it will be the <em>source of truth</em> for the test.</p>
@@ -118,39 +144,57 @@ Diff Between Data Frames for Testing
 <p>We want to know <strong>where are the differences</strong>.</p>
 <p>Knowing exactly what is different makes the debugging much easier – trying to figure out which column in which row there is a different by hand is <strong>not fun</strong>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-08-27-Compress-Old-Audio-Files-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/08/27/Compress-Old-Audio-Files.html">
 <h2 class="larger">
 Compress Old Audio Files
 </h2>
-</a> <br><span class="smaller">August 27, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="misc"'>misc</a>, <a href='https://book-of-gehn.github.io/?tag="ffmpeg"'>ffmpeg</a>
+</p>
+<p class="small-subtitle">
+August 27, 2022
+</p>
 <div>
 <p>We the pass of the years one keeps storing files, music in my case.</p>
 <p>A few thousands.</p>
 <p>But technology improved in this sense and new encoders exist that can compress (loosely) the same audio with the same quality but at a much smaller bit rate, and therefore, resulting in much smaller files.</p>
 <p>Quick and dirty script follows!</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-07-17-Lessons-Learnt-Optimizing-Pyte-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/07/17/Lessons-Learnt-Optimizing-Pyte.html">
 <h2 class="larger">
 Lessons Learnt Optimizing Pyte
 </h2>
-</a> <br><span class="smaller">July 17, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="python"'>python</a>, <a href='https://book-of-gehn.github.io/?tag="pyte"'>pyte</a>, <a href='https://book-of-gehn.github.io/?tag="terminal"'>terminal</a>, <a href='https://book-of-gehn.github.io/?tag="optimization"'>optimization</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
+</p>
+<p class="small-subtitle">
+July 17, 2022
+</p>
 <div>
 <p>Few thoughts about Python code optimization and benchmarking for <a href="https://github.com/selectel/pyte">pyte</a> and <a href="/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html">summarized here</a>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-07-15-Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html">
 <h2 class="larger">
 Sparse Aware Optimizations for Terminal Emulator Pyte
 </h2>
-</a> <br><span class="smaller">July 15, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="python"'>python</a>, <a href='https://book-of-gehn.github.io/?tag="pyte"'>pyte</a>, <a href='https://book-of-gehn.github.io/?tag="byexample"'>byexample</a>, <a href='https://book-of-gehn.github.io/?tag="optimization"'>optimization</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
+</p>
+<p class="small-subtitle">
+July 15, 2022
+</p>
 <div>
 <p><a href="https://byexamples.github.io/byexample/">byexample</a> is a tool that reads snippets of code from your documentation, executes them and compares the obtained results with the expected ones, from your docs too.</p>
 <p>If a mismatch happen we say that the <em>example</em> in your documentation failed which could mean one fo two things:</p>
@@ -177,14 +221,20 @@ That’s how <code>byexample</code>’s <a href="https://byexamples.github.io/by
 <p>But <code>pyte</code> may take <strong>seconds</strong> to process a single output so <code>byexample</code> never enabled it by default.</p>
 <p>This post describes the <em>why</em> and <em>how</em> of the <a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations">optimizations contributed</a> to <code>pyte</code> to go from seconds to <strong>microseconds</strong>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-07-14-TLDR-Screen-Optimizations-Results-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html">
 <h2 class="larger">
 TL;DR Screen Optimizations Results for Terminal Emulator Pyte
 </h2>
-</a> <br><span class="smaller">July 14, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="python"'>python</a>, <a href='https://book-of-gehn.github.io/?tag="pyte"'>pyte</a>, <a href='https://book-of-gehn.github.io/?tag="byexample"'>byexample</a>, <a href='https://book-of-gehn.github.io/?tag="optimization"'>optimization</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="tldr"'>tldr</a>, <a href='https://book-of-gehn.github.io/?tag="tl;dr"'>tl;dr</a>
+</p>
+<p class="small-subtitle">
+July 14, 2022
+</p>
 <div>
 <p>This post describes to some level of detail all the performance boosts and speedups due the <a href="https://github.com/byexamples/pyte/tree/Screen-Optimizations">optimizations contributed</a> to <a href="https://github.com/selectel/pyte">pyte</a> and <a href="/articles/2022/07/15/Sparse-Aware-Optimizations-for-Terminal-Emulator-Pyte.html">summarized here</a></p>
 <p>For large geometries (240x800, 2400x8000), <code>Screen.display</code> runs orders of magnitud faster and consumes between 1.10 and 50.0 times less memory.</p>
@@ -195,14 +245,20 @@ TL;DR Screen Optimizations Results for Terminal Emulator Pyte
 <p>However there are a few regressions, most of them small but some up to 4 times.</p>
 <p>At the moment of writing this post, the PR is still pending to review.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-04-27-Linux-Control-Group-No-Internal-Process-Constraint-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">
 <h2 class="larger">
 Control Group - No Internal Process Constraint
 </h2>
-</a> <br><span class="smaller">April 27, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="linux"'>linux</a>, <a href='https://book-of-gehn.github.io/?tag="kernel"'>kernel</a>, <a href='https://book-of-gehn.github.io/?tag="cgroup"'>cgroup</a>
+</p>
+<p class="small-subtitle">
+April 27, 2022
+</p>
 <div>
 <!--
 $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byexample: +fail-fast
@@ -216,14 +272,20 @@ Previous posts: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-O
 <p>In <code>v2</code> the hierarchy is subject to the <em>no internal process</em> constraint which ensures that a controller will have all the processes in leaves of its domain tree.</p>
 <p>This is the last of a 3-post series about <code>cgroup</code> and certainly, this <em>no internal process</em> constraint was the hardest to understand.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-04-24-Linux-Control-Group-Resource-Distribution-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">
 <h2 class="larger">
 Control Group - Resource Distribution
 </h2>
-</a> <br><span class="smaller">April 24, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="linux"'>linux</a>, <a href='https://book-of-gehn.github.io/?tag="kernel"'>kernel</a>, <a href='https://book-of-gehn.github.io/?tag="cgroup"'>cgroup</a>, <a href='https://book-of-gehn.github.io/?tag="fork bomb"'>fork bomb</a>
+</p>
+<p class="small-subtitle">
+April 24, 2022
+</p>
 <div>
 <p><label for='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='ClByZXZpb3VzIHBvc3Q6IFtoaWVyYXJjaGljYWwgb3JnYW5pemF0aW9uXSgvYXJ0aWNsZXMvMjAyMi8wNC8yMy9MaW51eC1Db250cm9sLUdyb3VwLUhpZXJhcmNoaWNhbC1Pcmdhbml6YXRpb24uaHRtbCkKPGJyIC8+Ck5leHQgY29taW5nIHBvc3Q6IFtubyBpbnRlcm5hbCBwcm9jZXNzIGNvbnN0cmFpbnRdKC9hcnRpY2xlcy8yMDIyLzA0LzI3L0xpbnV4LUNvbnRyb2wtR3JvdXAtTm8tSW50ZXJuYWwtUHJvY2Vzcy1Db25zdHJhaW50Lmh0bWwpCm1hcmdpbm5vdGVz' class='margin-toggle'/>
@@ -242,14 +304,20 @@ Previous post: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Or
 <p>Once you run out of pids, no other process can be started leaving the system unusable.</p>
 <p>In this post we will explore the rules of resources distribution in a <code>cgroup</code> hierarchy and in particular how to avoid fork bombs to explode.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-04-23-Linux-Control-Group-Hierarchical-Organization-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">
 <h2 class="larger">
 Control Group - Hierarchical Organization
 </h2>
-</a> <br><span class="smaller">April 23, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="linux"'>linux</a>, <a href='https://book-of-gehn.github.io/?tag="kernel"'>kernel</a>, <a href='https://book-of-gehn.github.io/?tag="cgroup"'>cgroup</a>
+</p>
+<p class="small-subtitle">
+April 23, 2022
+</p>
 <div>
 <p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1zdGF0ZXMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1zdGF0ZXMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'/>
@@ -262,14 +330,20 @@ Control Group - Hierarchical Organization
 <p>This post focus in the organization of cgroups and it is the first of a 3-posts series about <code>cgroup</code> in its new <code>v2</code> version.</p>
 <p>In the next posts we will see how the <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">resources are distributed</a> among the cgroups and <a href="/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">which constraints</a> do we have.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-03-06-Multiprocessing-Spawn-of-Dynamically-Imported-Code-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/03/06/Multiprocessing-Spawn-of-Dynamically-Imported-Code.html">
 <h2 class="larger">
 Multiprocessing Spawn of Dynamically Imported Code
 </h2>
-</a> <br><span class="smaller">March 6, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="python"'>python</a>
+</p>
+<p class="small-subtitle">
+March 6, 2022
+</p>
 <div>
 <p>The following snippet loads any Python module in the <code>./plugins/</code> folder.</p>
 <p>This is the Python 3.x way to load code dynamically.</p>
@@ -313,14 +387,20 @@ Multiprocessing Spawn of Dynamically Imported Code
 <p>Well, it <em>will</em> work in Linux but not in MacOS or Windows.</p>
 <p>In this post I will show why it will <strong>not</strong> work for dynamically loaded code (like from a plugin) and how to fix it.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-02-07-Hanoi-File-System-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/02/07/Hanoi-File-System.html">
 <h2 class="larger">
 Hanoi File System
 </h2>
-</a> <br><span class="smaller">February 7, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="kernel"'>kernel</a>, <a href='https://book-of-gehn.github.io/?tag="file system"'>file system</a>, <a href='https://book-of-gehn.github.io/?tag="fuse"'>fuse</a>
+</p>
+<p class="small-subtitle">
+February 7, 2022
+</p>
 <div>
 <p>Yeup, why not implement the classic <a href="https://en.wikipedia.org/wiki/Tower_of_Hanoi">Tower of Hanoi</a> using folders as the towers and files as the discs?</p>
 <p>Using <a href="https://github.com/libfuse/libfuse">FUSE</a> we can implement a <em>file system</em> that can enforce the rules of the puzzle.</p>
@@ -330,14 +410,20 @@ Hanoi File System
 </ul>
 <p>Sounds fun?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2022-02-01-Fix-Ownership-of-Files-in-a-Mounted-Volume-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2022/02/01/Fix-Ownership-of-Files-in-a-Mounted-Volume.html">
 <h2 class="larger">
 Fix Ownership of Files in a Mounted Volume
 </h2>
-</a> <br><span class="smaller">February 1, 2022</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="docker"'>docker</a>
+</p>
+<p class="small-subtitle">
+February 1, 2022
+</p>
 <div>
 <p>The file system of a docker container is ephemeral: it will disappear as soon as the container is destroyed.</p>
 <p>To prevent data losses you can mount a folder <em>of the host</em> into the container which will survive the destroy of the container.</p>
@@ -352,14 +438,20 @@ Fix Ownership of Files in a Mounted Volume
 <p>But, an here is the twist, inside the container you will be using for the mapping the <code>/etc/passwd</code> and <code>/etc/groups</code> files <em>of the container</em> and not of the host.</p>
 <p>Same file numbers, different mappings.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-11-13-IPv4-Scan-Part-IV-Hop-Distance-and-IP-Distribution-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/11/13/IPv4-Scan-Part-IV-Hop-Distance-and-IP-Distribution.html">
 <h2 class="larger">
 IPv4 Scan 2021 - Hop-Distance Average and IP Distribution
 </h2>
-</a> <br><span class="smaller">November 13, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href='https://book-of-gehn.github.io/?tag="julia"'>julia</a>, <a href='https://book-of-gehn.github.io/?tag="categorical"'>categorical</a>, <a href='https://book-of-gehn.github.io/?tag="ordinal"'>ordinal</a>, <a href='https://book-of-gehn.github.io/?tag="parquet"'>parquet</a>, <a href='https://book-of-gehn.github.io/?tag="statistics"'>statistics</a>, <a href='https://book-of-gehn.github.io/?tag="seaborn"'>seaborn</a>
+</p>
+<p class="small-subtitle">
+November 13, 2021
+</p>
 <div>
 <p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90dGxfaGlzdF9sb2dfc2NhbGUuc3ZnJyAvPgpIaXN0b2dyYW0gb2YgVFRMIG9ic2VydmVkOiB0aGUgcGVha3MgaW5kaWNhdGUgdGhlIGRpZmZlcmVudCBvcGVyYXRpdmUgc3lzdGVtcyBhbmQgdGhlaXIgcmVsYXRpdmUgcG9zaXRpb24gcmVzcGVjdCB0aGUgZXhwZWN0ZWQgcG9zaXRpb25zIGVzdGltYXRlIHRoZSBtZWFuIGRpc3RhbmNlIGJldHdlZW4gdGhlIGhvc3RzIGFuZCB0aGUgc2Nhbm5lciBpbiBob3AgY291bnQuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90dGxfaGlzdF9sb2dfc2NhbGUuc3ZnJyAvPgpIaXN0b2dyYW0gb2YgVFRMIG9ic2VydmVkOiB0aGUgcGVha3MgaW5kaWNhdGUgdGhlIGRpZmZlcmVudCBvcGVyYXRpdmUgc3lzdGVtcyBhbmQgdGhlaXIgcmVsYXRpdmUgcG9zaXRpb24gcmVzcGVjdCB0aGUgZXhwZWN0ZWQgcG9zaXRpb25zIGVzdGltYXRlIHRoZSBtZWFuIGRpc3RhbmNlIGJldHdlZW4gdGhlIGhvc3RzIGFuZCB0aGUgc2Nhbm5lciBpbiBob3AgY291bnQuCm1hcmdpbg==' class='margin-toggle'/>
@@ -375,14 +467,20 @@ Histogram of TTL observed: the peaks indicate the different operative systems an
 <li>how are the hosts distributed?</li>
 </ul>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-11-13-IPv4-Scan-Part-V-TTL-Boost-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html">
 <h2 class="larger">
 IPv4 Scan 2021 - TTL Boost (or reset)
 </h2>
-</a> <br><span class="smaller">November 13, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href='https://book-of-gehn.github.io/?tag="julia"'>julia</a>, <a href='https://book-of-gehn.github.io/?tag="statistics"'>statistics</a>, <a href='https://book-of-gehn.github.io/?tag="seaborn"'>seaborn</a>
+</p>
+<p class="small-subtitle">
+November 13, 2021
+</p>
 <div>
 <p>In <a href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">the post about Hop-Stability</a> we analyzed the TTL of the responses from all the scanned hosts.</p>
 <p>In particular we used the TTL range: the difference between the smallest and the greatest TTL seen per host.</p>
@@ -396,14 +494,20 @@ Histogram of TTL range between rounds of scans to the same host showing how much
 <p>The analysis shown that only 0.39998% of 43056567 unique hosts had unstable routes.</p>
 <p>However the analysis was only using a few statistics, when we plot the <em>histogram of TTL ranges</em> we see much more <strong>mysteries to solve</strong>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-10-16-IPv4-Scan-Part-III-Hop-stability-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">
 <h2 class="larger">
 IPv4 Scan 2021 - Hop-Count Route Stability
 </h2>
-</a> <br><span class="smaller">October 16, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href='https://book-of-gehn.github.io/?tag="julia"'>julia</a>, <a href='https://book-of-gehn.github.io/?tag="statistics"'>statistics</a>, <a href='https://book-of-gehn.github.io/?tag="seaborn"'>seaborn</a>
+</p>
+<p class="small-subtitle">
+October 16, 2021
+</p>
 <div>
 <p><a href="https://github.com/robertdavidgraham/masscan/">masscan</a> tracks the <em>time to live</em> of each packet coming from the host under scan.</p>
 <p><label for='ClllcyBhbmQgbm86IHRoZXkgc2hvdWxkIG5vdCBidXQgc29tZSBuZXR3b3JrIGRldmljZXMgd2lsbCAqbWFuZ2xlIHRoZSBwYWNrZXRzCmFzIHRoZXkgd2FudCosIGluY2x1ZGluZyBzZXR0aW5nIGFyYml0cmFyeSBUVExzLgoKU2VlIHRoZSBvYnNlcnZhdGlvbnMgZG9uZSBpbiB0aGUKW1RUTCBCb29zdCBwb3N0XSgvYXJ0aWNsZXMvMjAyMS8xMS8xMy9JUHY0LVNjYW4tUGFydC1WLVRUTC1Cb29zdC5odG1sKS4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
@@ -430,14 +534,20 @@ Assuming that the packet goes straight-forward to us. If there are <em>loops</em
 <p>The inverse is not true: a constant hop-count does not imply that the route taken is the same, only the route/s have the same hops.</p>
 <p>In this post I will <a href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">continue exploring</a> how much a <em>route</em> is <em>stable</em> in terms of <em>hop-counts</em>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-09-19-IPv4-Scan-Part-II-Multiprobes-Analysis-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">
 <h2 class="larger">
 IPv4 Scan 2021 - Multiprobes Analysis
 </h2>
-</a> <br><span class="smaller">September 19, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href='https://book-of-gehn.github.io/?tag="julia"'>julia</a>, <a href='https://book-of-gehn.github.io/?tag="categorical"'>categorical</a>, <a href='https://book-of-gehn.github.io/?tag="ordinal"'>ordinal</a>, <a href='https://book-of-gehn.github.io/?tag="parquet"'>parquet</a>, <a href='https://book-of-gehn.github.io/?tag="statistics"'>statistics</a>, <a href='https://book-of-gehn.github.io/?tag="seaborn"'>seaborn</a>
+</p>
+<p class="small-subtitle">
+September 19, 2021
+</p>
 <div>
 <p>To my surprise the <a href="https://www.kaggle.com/signalspikes/internet-port-scan-1">dataset</a> preprocessed in my <a href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">previous post</a> <strong>has</strong> duplicated entries. These are scans to the same host and port but with a different timestamp.</p>
 <p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90aW1lX2ludGVydmFsX2hpc3Quc3ZnJyAvPgpIaXN0b2dyYW0gb2YgdGhlIGludGVydmFsIGJldHdlZW4gcHJvYmVzIHRvIHRoZSBzYW1lIGhvc3QtcG9ydCBpbiBzZWNvbmRzLgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
@@ -461,14 +571,20 @@ Histogram of the interval between probes to the same host-port in seconds.
 </ul>
 <p>Goodbye Pandas, hello <a href="https://julialang.org/">Julia</a>?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-09-10-IPv4-Scan-Dataset-Preprocessing-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">
 <h2 class="larger">
 IPv4 Scan 2021 - Dataset Preprocessing
 </h2>
-</a> <br><span class="smaller">September 10, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href='https://book-of-gehn.github.io/?tag="reset_index"'>reset_index</a>, <a href='https://book-of-gehn.github.io/?tag="json"'>json</a>, <a href='https://book-of-gehn.github.io/?tag="categorical"'>categorical</a>, <a href='https://book-of-gehn.github.io/?tag="parquet"'>parquet</a>
+</p>
+<p class="small-subtitle">
+September 10, 2021
+</p>
 <div>
 <p>The <a href="https://www.kaggle.com/signalspikes/internet-port-scan-1">dataset</a> is a survey or port scan of the whole IPv4 range made with <a href="https://github.com/robertdavidgraham/masscan">masscan</a>.</p>
 <p>The dataset however is much smaller than the expected mostly because most of the hosts didn’t response and/or they had all the scanned ports closed.</p>
@@ -477,25 +593,37 @@ IPv4 Scan 2021 - Dataset Preprocessing
 <p>Even with such reduced scope the dataset occupies around 9 GB.</p>
 <p>This post is a walk-through for loading and preprocessing it.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-08-22-Rooting-Android-with-a-Dirty-COW-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/08/22/Rooting-Android-with-a-Dirty-COW.html">
 <h2 class="larger">
 Rooting Android with a Dirty COW
 </h2>
-</a> <br><span class="smaller">August 22, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="android"'>android</a>, <a href='https://book-of-gehn.github.io/?tag="root"'>root</a>, <a href='https://book-of-gehn.github.io/?tag="privilege"'>privilege</a>, <a href='https://book-of-gehn.github.io/?tag="priv-esc"'>priv-esc</a>, <a href='https://book-of-gehn.github.io/?tag="escalation"'>escalation</a>, <a href='https://book-of-gehn.github.io/?tag="dirty-cow"'>dirty-cow</a>
+</p>
+<p class="small-subtitle">
+August 22, 2021
+</p>
 <div>
 <p>I’ve recently got a quite old Android phone to play with. I guess the first thing to do is getting root, don’t you think?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-08-14-Fresh-Python-Defaults-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/08/14/Fresh-Python-Defaults.html">
 <h2 class="larger">
 Fresh Python Defaults
 </h2>
-</a> <br><span class="smaller">August 14, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="Python"'>Python</a>
+</p>
+<p class="small-subtitle">
+August 14, 2021
+</p>
 <div>
 <p>When defining a Python function you can define the default value of its parameters.</p>
 <p>The defaults are evaluated <em>once</em> and bound to the function’s signature.</p>
@@ -523,25 +651,37 @@ Fresh Python Defaults
 <p>Could Python have a way to prevent such thing? Or better, could Python have a way to <em>restart</em> or <em>refresh</em> the mutable defaults in each call?</p>
 <p>This question raised up in the <code class="none">python-list</code>. Let’s see how far we get.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-08-12-Difference-of-Two-Squares-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/08/12/Difference-of-Two-Squares.html">
 <h2 class="larger">
 Difference of two squares
 </h2>
-</a> <br><span class="smaller">August 12, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="math"'>math</a>
+</p>
+<p class="small-subtitle">
+August 12, 2021
+</p>
 <div>
 
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-07-12-SMT-Goals-and-Strategies-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/07/12/SMT-Goals-and-Strategies.html">
 <h2 class="larger">
 SMT Goals and Strategies
 </h2>
-</a> <br><span class="smaller">July 12, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>
+</p>
+<p class="small-subtitle">
+July 12, 2021
+</p>
 <div>
 <p>SMT/SAT problems are in general <em>undecidable</em>: basically we cannot know if we can get even an answer. The <em>search space</em> is in general infinite.</p>
 <p>But several concrete problems have a reduced space and <em>may be tractable</em>: while theoretical really hard, we can find a solution in a reasonable time.</p>
@@ -551,14 +691,20 @@ SMT Goals and Strategies
 <p>This post is a quick overview of concepts like <em>strategies</em>, <em>tactics</em>, <em>tacticals</em>, <em>merit order</em>, <em>cost functions</em>, <em>heuristic functions</em>, <em>goals</em>, <em>approximations</em>, <em>redundancy control</em>, <em>search strategies</em>, <em>probes</em> and a few more.</p>
 <p>Quite a heavy post I’m afraid.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-07-11-Home-Made-Python-F-String-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/07/11/Home-Made-Python-F-String.html">
 <h2 class="larger">
 Home Made Python F-String
 </h2>
-</a> <br><span class="smaller">July 11, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="Python"'>Python</a>
+</p>
+<p class="small-subtitle">
+July 11, 2021
+</p>
 <div>
 <p>Python 3.6 introduced the so called <em>f-strings</em>: literal strings that support formatting from the variable in the local context.</p>
 <p>Before 3.6 you would to do something like this:</p>
@@ -576,14 +722,20 @@ Home Made Python F-String
 <p>A few days ago <a href="https://yurichev.com/news/20210707_py_problem/">Yurichev</a> posted: could we achieve a similar feature but without using the f-strings?.</p>
 <p>Challenge accepted.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-06-14-Performance-of-ITE-Expressions-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/06/14/Performance-of-ITE-Expressions.html">
 <h2 class="larger">
 Performance of ITE Expressions (incomplete)
 </h2>
-</a> <br><span class="smaller">June 14, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="if ITE"'>if ITE</a>, <a href='https://book-of-gehn.github.io/?tag="bithack"'>bithack</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
+</p>
+<p class="small-subtitle">
+June 14, 2021
+</p>
 <div>
 <p>A <em>branch</em> is an expensive operation even in modern CPUs because the computer will know which of the paths is taken only in the latest stages of the CPU pipeline.</p>
 <p>In the meantime, the CPU <em>stalls</em>.</p>
@@ -600,14 +752,20 @@ Minimum <code>check-elapsed</code> time (y axis) per branch/branchless function 
 <p>The question is: which is better for a solver like Z3? Which makes the SMT/SAT solver faster?</p>
 <p>After two weeks working on this post <strong>I still don’t have an answer but at least I know some unknowns.</strong></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-06-12-Document-building-from-static-blog-to-textbook-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/06/12/Document-building-from-static-blog-to-textbook.html">
 <h2 class="larger">
 Document Building: from static web blogs to textbooks
 </h2>
-</a> <br><span class="smaller">June 12, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="blog"'>blog</a>, <a href='https://book-of-gehn.github.io/?tag="latex"'>latex</a>
+</p>
+<p class="small-subtitle">
+June 12, 2021
+</p>
 <div>
 <p>I’ve being writing for a long time. I’m far from being a good writer but having the consistency to write at least a blog post every month gave me more expressive power.</p>
 <p>Being a non-English native speaker, that also put me in an uncomfortable position –out of the confort zone– but looking back, even with all my mistakes, I really improved.</p>
@@ -620,14 +778,20 @@ Document Building: from static web blogs to textbooks
 <p>And while those have been incredible powerful, I hit the limitations of them in time to time.</p>
 <p>This writeup is meant to brainstorm and design a new way to work.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-06-05-Seaborn-Cheatsheet-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/06/05/Seaborn-Cheatsheet.html">
 <h2 class="larger">
 Seaborn Cheatsheet
 </h2>
-</a> <br><span class="smaller">June 5, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="seaborn"'>seaborn</a>, <a href='https://book-of-gehn.github.io/?tag="matplotlib"'>matplotlib</a>, <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href='https://book-of-gehn.github.io/?tag="plotting"'>plotting</a>, <a href='https://book-of-gehn.github.io/?tag="cheatsheet"'>cheatsheet</a>
+</p>
+<p class="small-subtitle">
+June 5, 2021
+</p>
 <div>
 <p>Plotting data was always for me a weak point: it always took me a lot of time to make the plots and graphs, reading the documentation, <em>googling</em> how to do one particular tweak and things like that.</p>
 <p>So I challenge myself: could I build a <em>cheatsheet</em> about plotting?</p>
@@ -638,14 +802,20 @@ Seaborn Cheatsheet
 <p><a href="https://seaborn.pydata.org/">Seaborn</a> is a very simple but powerful plotting library on top of <a href="https://matplotlib.org/">matplotlib</a> designed for statistical analysis.</p>
 <p>Quick links: <a href="/assets/seaborn-cheatsheet-v1.pdf">PDF (no bg)</a>, <a href="/assets/seaborn-cheatsheet-bg-v1.pdf">PDF (bg)</a>, <a href="/assets/seaborn-cheatsheet-v1.svg">SVG (no bg)</a>, <a href="/assets/seaborn-cheatsheet-bg-v1.svg">SVG (bg)</a> .</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-05-26-Casting-Broadcasting-LUT-and-Bitwise-Ops-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/05/26/Casting-Broadcasting-LUT-and-Bitwise-Ops.html">
 <h2 class="larger">
 Casting, broadcasting, LUT and bitwise ops
 </h2>
-</a> <br><span class="smaller">May 26, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="bitvec bithacks"'>bitvec bithacks</a>
+</p>
+<p class="small-subtitle">
+May 26, 2021
+</p>
 <div>
 <p>Z3 has a few basic symbolic operation over bit vectors.</p>
 <p>But some others are missing (or at least I couldn’t find them).</p>
@@ -657,39 +827,57 @@ Casting, broadcasting, LUT and bitwise ops
 </blockquote>
 <p>This post is a kind-of sequel of <a href="/articles/2021/05/17/Verifying-Some-Bithacks.html">Verifying some Bithacks post</a> and prequel of some future posts.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-05-17-Verifying-Some-Bithacks-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/05/17/Verifying-Some-Bithacks.html">
 <h2 class="larger">
 Verifying some bithacks
 </h2>
-</a> <br><span class="smaller">May 17, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="bitvec"'>bitvec</a>, <a href='https://book-of-gehn.github.io/?tag="verify bithacks"'>verify bithacks</a>
+</p>
+<p class="small-subtitle">
+May 17, 2021
+</p>
 <div>
 <p>We are going to verify some of the <a href="https://graphics.stanford.edu/~seander/bithacks.html">bit twiddling hacks</a> made and collected by Sean Eron Anderson and other authors.</p>
 <p>This is <em>the</em> classical scenario to put on test your Z3 skills.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-05-09-Solving-a-Murder-Case-with-Z3-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/05/09/Solving-a-Murder-Case-with-Z3.html">
 <h2 class="larger">
 Solving a Murder Case with Z3
 </h2>
-</a> <br><span class="smaller">May 9, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="propositional logic"'>propositional logic</a>, <a href='https://book-of-gehn.github.io/?tag="first order"'>first order</a>
+</p>
+<p class="small-subtitle">
+May 9, 2021
+</p>
 <div>
 <p>Victor has been murdered!</p>
 <p>There are strong evidences that point that Victor was murdered by a single person. The investigation led to three suspects: Art, Bob, and Carl.</p>
 <p>But who is the murder?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-05-02-Planning-Space-Missions-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/05/02/Planning-Space-Missions.html">
 <h2 class="larger">
 Planning Space Missions with Z3
 </h2>
-</a> <br><span class="smaller">May 2, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="integer linear optimization"'>integer linear optimization</a>
+</p>
+<p class="small-subtitle">
+May 2, 2021
+</p>
 <div>
 <p>A space company is planning the next 4 years. It has several projects, each one with its own budget requirement per year, but the company has a limited budget to invest.</p>
 <p>Moreover, some projects <em>depends</em> on others to make them feasible and some projects <em>cannot be done</em> if other projects due unbreakable restrictions.</p>
@@ -773,14 +961,20 @@ Planning Space Missions with Z3
 </div>
 <p>Under an incredible amount of assumptions and good luck, what is the best strategy to maximize the profit?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-04-29-Blending-Whisky-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/04/29/Blending-Whisky.html">
 <h2 class="larger">
 Blending Whisky with Z3
 </h2>
-</a> <br><span class="smaller">April 29, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="linear optimization"'>linear optimization</a>, <a href='https://book-of-gehn.github.io/?tag="blending"'>blending</a>
+</p>
+<p class="small-subtitle">
+April 29, 2021
+</p>
 <div>
 <p>A whisky producer uses three kind of licor to make their whisky: \(A\), \(B\) and \(C\).</p>
 <p>Three kind of whisky can be made using the licor in the following proportions:</p>
@@ -844,14 +1038,20 @@ Blending Whisky with Z3
 <p>Note: the prices are in $ per liter and the stock are in liters.</p>
 <p>The goal is to maximize the profit.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-04-27-Optimum-Packaging-of-Chocolate-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/04/27/Optimum-Packaging-of-Chocolate.html">
 <h2 class="larger">
 Optimum Packaging of Chocolate
 </h2>
-</a> <br><span class="smaller">April 27, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="linear optimization"'>linear optimization</a>
+</p>
+<p class="small-subtitle">
+April 27, 2021
+</p>
 <div>
 <p>A small business sells two types of chocolate packs: A and B.</p>
 <p>The pack A has 300 grams of bittersweet chocolate, 500 grams of chocolate with walnuts and 200 grams of white chocolate.</p>
@@ -860,25 +1060,37 @@ Optimum Packaging of Chocolate
 <p>Let’s assume that this small business has for today 100 kilograms of bittersweet chocolate, 120 kilograms of chocolate with walnuts and 100 kilograms of while chocolate.</p>
 <p>How many packs of A and B type should be packed to maximize the profits?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-04-25-Congruence-Closure-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/04/25/Congruence-Closure.html">
 <h2 class="larger">
 Congruence Closure with Z3
 </h2>
-</a> <br><span class="smaller">April 25, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="equivalence"'>equivalence</a>, <a href='https://book-of-gehn.github.io/?tag="congruence"'>congruence</a>, <a href='https://book-of-gehn.github.io/?tag="equivalence"'>equivalence</a>, <a href='https://book-of-gehn.github.io/?tag="set"'>set</a>
+</p>
+<p class="small-subtitle">
+April 25, 2021
+</p>
 <div>
 <p>Assume that you know that \(a = b\), \(b = c\) and \(d = e\). What can you tell me about the claim \(a = c\) ? Is it true or false?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-04-24-Deadly-Typos-2020-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/04/24/Deadly-Typos-2020.html">
 <h2 class="larger">
 Deadly Typos 2020
 </h2>
-</a> <br><span class="smaller">April 24, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="pointer"'>pointer</a>, <a href='https://book-of-gehn.github.io/?tag="memory"'>memory</a>
+</p>
+<p class="small-subtitle">
+April 24, 2021
+</p>
 <div>
 <p>A quick summary of the top 3 <em>typos</em> that I found (or I wrote) in code that they were small but they had a deep impact on the functionality.</p>
 <p>In fact, the three bugs could summarized as follows:</p>
@@ -889,28 +1101,40 @@ Deadly Typos 2020
 </ul>
 <p>Do you want to see what is this about?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-03-07-Quiescent-Environment-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/03/07/Quiescent-Environment.html">
 <h2 class="larger">
 Quiescent Environment
 </h2>
-</a> <br><span class="smaller">March 7, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="quiescent"'>quiescent</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
+</p>
+<p class="small-subtitle">
+March 7, 2021
+</p>
 <div>
 <p>You are working in optimizing a piece of software to reduce the CPU cycles that it takes.</p>
 <p>To compare your improvements, it is reasonable to measure the elapsed time before and after your change.</p>
 <p>Unless you are using a simulator, it is impossible to run a program <em>isolated</em> from the rest and your measurements will be noisy.</p>
 <p>If you want to take precise measurements you need a <em>quiescent</em> environment as much as possible.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-02-27-High-Precision-Timers-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/02/27/High-Precision-Timers.html">
 <h2 class="larger">
 High Precision Timers (userspace)
 </h2>
-</a> <br><span class="smaller">February 27, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="timers"'>timers</a>, <a href='https://book-of-gehn.github.io/?tag="clocks"'>clocks</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
+</p>
+<p class="small-subtitle">
+February 27, 2021
+</p>
 <div>
 <p>You want to measure the time that it takes <code>foo()</code> to run so you do the following:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="nf">experiment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
@@ -924,14 +1148,20 @@ High Precision Timers (userspace)
 
 <p>The question is, what <code>now()</code> function you would use?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-02-18-Ksplice-Pointer-Challenge-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/02/18/Ksplice-Pointer-Challenge.html">
 <h2 class="larger">
 Ksplice-Pointer-Challenge
 </h2>
-</a> <br><span class="smaller">February 18, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="pointer"'>pointer</a>, <a href='https://book-of-gehn.github.io/?tag="memory"'>memory</a>
+</p>
+<p class="small-subtitle">
+February 18, 2021
+</p>
 <div>
 <p>What does the following code?</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
@@ -946,103 +1176,157 @@ Ksplice-Pointer-Challenge
 </code></pre></div>
 
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-02-15-Necklaces-Lyndon-Words-and-De-Bruijn-Sequences-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/02/15/Necklaces-Lyndon-Words-and-De-Bruijn-Sequences.html">
 <h2 class="larger">
 Necklaces, Lyndon words and De Bruijn Sequences
 </h2>
-</a> <br><span class="smaller">February 15, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="necklace"'>necklace</a>, <a href='https://book-of-gehn.github.io/?tag="lyndon"'>lyndon</a>, <a href='https://book-of-gehn.github.io/?tag="debruijn"'>debruijn</a>, <a href='https://book-of-gehn.github.io/?tag="string"'>string</a>
+</p>
+<p class="small-subtitle">
+February 15, 2021
+</p>
 <div>
 <p>What have in common a dense arrays for mapping numbers power of 2 to some objects, DNA sequencing and brute-forcing the lock pad of your neighbor?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-02-04-Smashing-ARM-Stack-for-Fun-Part-VII-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/02/04/Smashing-ARM-Stack-for-Fun-Part-VII.html">
 <h2 class="larger">
 Smashing ARM Stack for Fun - Part VII
 </h2>
-</a> <br><span class="smaller">February 4, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="exploiting"'>exploiting</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>, <a href='https://book-of-gehn.github.io/?tag="azeria-labs"'>azeria-labs</a>, <a href='https://book-of-gehn.github.io/?tag="egg"'>egg</a>, <a href='https://book-of-gehn.github.io/?tag="shellcode"'>shellcode</a>, <a href='https://book-of-gehn.github.io/?tag="PIC"'>PIC</a>
+</p>
+<p class="small-subtitle">
+February 4, 2021
+</p>
 <div>
 <p>It’s time to solve the last challenge of this 7 parts serie.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-01-26-Smashing-ARM-Stack-for-Fun-Part-VI-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/01/26/Smashing-ARM-Stack-for-Fun-Part-VI.html">
 <h2 class="larger">
 Smashing ARM Stack for Fun - Part VI
 </h2>
-</a> <br><span class="smaller">January 26, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="exploiting"'>exploiting</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>, <a href='https://book-of-gehn.github.io/?tag="azeria-labs"'>azeria-labs</a>, <a href='https://book-of-gehn.github.io/?tag="egg"'>egg</a>, <a href='https://book-of-gehn.github.io/?tag="shellcode"'>shellcode</a>, <a href='https://book-of-gehn.github.io/?tag="PIC"'>PIC</a>
+</p>
+<p class="small-subtitle">
+January 26, 2021
+</p>
 <div>
 <p>We have the same vulnerability than we have in <a href="/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-V.html">stack4</a> but this time we will make our own egg/shellcode.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-01-20-Smashing-ARM-Stack-for-Fun-Part-V-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/01/20/Smashing-ARM-Stack-for-Fun-Part-V.html">
 <h2 class="larger">
 Smashing ARM Stack for Fun - Part V
 </h2>
-</a> <br><span class="smaller">January 20, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="exploiting"'>exploiting</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>, <a href='https://book-of-gehn.github.io/?tag="azeria-labs"'>azeria-labs</a>, <a href='https://book-of-gehn.github.io/?tag="egg"'>egg</a>, <a href='https://book-of-gehn.github.io/?tag="shellcode"'>shellcode</a>
+</p>
+<p class="small-subtitle">
+January 20, 2021
+</p>
 <div>
 <p><a href="https://github.com/azeria-labs/ARM-challenges">Fifth challenge</a> with a small introduction to <em>process continuation</em>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-01-19-Smashing-ARM-Stack-for-Fun-Part-IV-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/01/19/Smashing-ARM-Stack-for-Fun-Part-IV.html">
 <h2 class="larger">
 Smashing ARM Stack for Fun - Part IV
 </h2>
-</a> <br><span class="smaller">January 19, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="exploiting"'>exploiting</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>, <a href='https://book-of-gehn.github.io/?tag="azeria-labs"'>azeria-labs</a>, <a href='https://book-of-gehn.github.io/?tag="objdump"'>objdump</a>
+</p>
+<p class="small-subtitle">
+January 19, 2021
+</p>
 <div>
 <p>This time the goal is to make the program print the message <code><span class="highlight-candombe-inline"><span class="s">&quot;code flow successfully changed&quot;</span></span></code>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-01-18-Smashing-ARM-Stack-for-Fun-Part-III-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/01/18/Smashing-ARM-Stack-for-Fun-Part-III.html">
 <h2 class="larger">
 Smashing ARM Stack for Fun - Part III
 </h2>
-</a> <br><span class="smaller">January 18, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="exploiting"'>exploiting</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>, <a href='https://book-of-gehn.github.io/?tag="azeria-labs"'>azeria-labs</a>
+</p>
+<p class="small-subtitle">
+January 18, 2021
+</p>
 <div>
 <p>Another fast moving post about exploiting the <a href="https://github.com/azeria-labs/ARM-challenges">third Arm challenge</a></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-01-17-Smashing-ARM-Stack-for-Fun-Part-II-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/01/17/Smashing-ARM-Stack-for-Fun-Part-II.html">
 <h2 class="larger">
 Smashing ARM Stack for Fun - Part II
 </h2>
-</a> <br><span class="smaller">January 17, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="exploiting"'>exploiting</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>, <a href='https://book-of-gehn.github.io/?tag="azeria-labs"'>azeria-labs</a>
+</p>
+<p class="small-subtitle">
+January 17, 2021
+</p>
 <div>
 <p>This is going to be a fast moving post, directly to the details, about exploiting the <a href="https://github.com/azeria-labs/ARM-challenges">second Arm challenge</a></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-01-14-Smashing-ARM-Stack-for-Fun-Part-I-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/01/14/Smashing-ARM-Stack-for-Fun-Part-I.html">
 <h2 class="larger">
 Smashing ARM Stack for Fun - Part I
 </h2>
-</a> <br><span class="smaller">January 14, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="exploiting"'>exploiting</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="qemu"'>qemu</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>, <a href='https://book-of-gehn.github.io/?tag="azeria-labs"'>azeria-labs</a>
+</p>
+<p class="small-subtitle">
+January 14, 2021
+</p>
 <div>
 <p>This is the first of a serie of posts about exploiting 32 bits Arm binaries.</p>
 <p>These <a href="https://github.com/azeria-labs/ARM-challenges">challenges</a> were <a href="https://azeria-labs.com/part-3-stack-overflow-challenges/">taken</a> from <a href="https://azeria-labs.com">Azeria Labs</a>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-01-09-Interactive-Assembler-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/01/09/Interactive-Assembler.html">
 <h2 class="larger">
 iasm: Interactive Assembler
 </h2>
-</a> <br><span class="smaller">January 9, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>
+</p>
+<p class="small-subtitle">
+January 9, 2021
+</p>
 <div>
 <p>I crossed with a series of <a href="https://github.com/azeria-labs/ARM-challenges">Arm challenges</a> by causality and I decided to give it a shoot.</p>
 <p>But I have <strong>0</strong> knowledge about Arm so the disassembly of the binaries were too strange for me.</p>
@@ -1055,63 +1339,93 @@ iasm: Interactive Assembler
 <p>Too tedious.</p>
 <p>So I decided to shorten the cycle writing an <a href="https://github.com/bad-address/iasm"><em>interactive</em> assembler</a>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2021-01-04-Review-Arm-Assembly-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2021/01/04/Review-Arm-Assembly.html">
 <h2 class="larger">
 Review Arm Assembly
 </h2>
-</a> <br><span class="smaller">January 4, 2021</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="iasm"'>iasm</a>
+</p>
+<p class="small-subtitle">
+January 4, 2021
+</p>
 <div>
 <p>There is no other way to learn something that playing with it.</p>
 <p>Take assembly code, read it and predice what will do. Then test it.</p>
 <p>Those mistakes, those mismatches between what you think and what it really is, those <em>surprises</em> are what move us forward into learning. Deeper.</p>
 <p>In this post I will dig into Arm, assisted with an <a href="https://github.com/bad-address/iasm">interactive assembler</a>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-12-27-TLDR-Quick-Overview-of-Arm-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/12/27/TLDR-Quick-Overview-of-Arm.html">
 <h2 class="larger">
 TL;DR Quick Overview of Arm
 </h2>
-</a> <br><span class="smaller">December 27, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="tldr"'>tldr</a>, <a href='https://book-of-gehn.github.io/?tag="tl;dr"'>tl;dr</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>
+</p>
+<p class="small-subtitle">
+December 27, 2020
+</p>
 <div>
 <p>Speed-reading of <a href="https://www.coranac.com/tonc/text/asm.htm">Whirlwind Tour of ARM Assembly</a>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-12-15-Qemulating-Rasbian-ARM-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/12/15/Qemulating-Rasbian-ARM.html">
 <h2 class="larger">
 QEMUlating a Rasbian (ARM)
 </h2>
-</a> <br><span class="smaller">December 15, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="qemu"'>qemu</a>, <a href='https://book-of-gehn.github.io/?tag="ARM"'>ARM</a>, <a href='https://book-of-gehn.github.io/?tag="Rasbian"'>Rasbian</a>
+</p>
+<p class="small-subtitle">
+December 15, 2020
+</p>
 <div>
 <p>Quick how-to download and run a Raspbian Buster (ARM) emulating the vm with QEMU.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-12-05-Self-Licensing-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/12/05/Self-Licensing.html">
 <h2 class="larger">
 Self-Licensing
 </h2>
-</a> <br><span class="smaller">December 5, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="psychology"'>psychology</a>
+</p>
+<p class="small-subtitle">
+December 5, 2020
+</p>
 <div>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img style="max_width: 60%;" class='' alt='' src='/img/sociology/self-licensing-small.png' /></figure></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-11-29-RC-on-XDP-RX-Queue-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/11/29/RC-on-XDP-RX-Queue.html">
 <h2 class="larger">
 RC-on-XDP-RX-Queue
 </h2>
-</a> <br><span class="smaller">November 29, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="debugging"'>debugging</a>, <a href='https://book-of-gehn.github.io/?tag="queue"'>queue</a>, <a href='https://book-of-gehn.github.io/?tag="lock free"'>lock free</a>, <a href='https://book-of-gehn.github.io/?tag="kernel"'>kernel</a>
+</p>
+<p class="small-subtitle">
+November 29, 2020
+</p>
 <div>
 <p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
@@ -1122,14 +1436,20 @@ RC-on-XDP-RX-Queue
 <p>Six months and when you are about to release it, you find not one but three bugs that shake all your understanding of XDP.</p>
 <p>A debugging race against the clock begins.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-11-19-Qubes-Networking-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/11/19/Qubes-Networking.html">
 <h2 class="larger">
 Qubes OS Networking
 </h2>
-</a> <br><span class="smaller">November 19, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="qubes"'>qubes</a>, <a href='https://book-of-gehn.github.io/?tag="networking"'>networking</a>, <a href='https://book-of-gehn.github.io/?tag="ip"'>ip</a>, <a href='https://book-of-gehn.github.io/?tag="route"'>route</a>, <a href='https://book-of-gehn.github.io/?tag="arp"'>arp</a>, <a href='https://book-of-gehn.github.io/?tag="firewall"'>firewall</a>, <a href='https://book-of-gehn.github.io/?tag="iptables"'>iptables</a>
+</p>
+<p class="small-subtitle">
+November 19, 2020
+</p>
 <div>
 <p><a href="https://www.qubes-os.org/">Qubes OS</a> has an interesting network system to isolate more-or-less trusted <em>application</em> virtual machines (App) from absolute untrusted <em>network</em> VMs (Net).</p>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL3F1YmVzL3F1YmVzLWlwcy5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
@@ -1141,14 +1461,20 @@ Qubes OS Networking
 <p>An additional VM is put in the middle between App VMs and Net VMs. This absolute trusted <em>proxy</em> VM serves as a safe firewall (Proxy).</p>
 <p>In this post will explore how these VMs connect and how the packets are forwarded up and down along this chain of VMs.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-11-12-TLDR-Stylometrics-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/11/12/TLDR-Stylometrics.html">
 <h2 class="larger">
 TL;DR Stylometrics
 </h2>
-</a> <br><span class="smaller">November 12, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="tldr"'>tldr</a>, <a href='https://book-of-gehn.github.io/?tag="tl;dr"'>tl;dr</a>, <a href='https://book-of-gehn.github.io/?tag="stylometric"'>stylometric</a>
+</p>
+<p class="small-subtitle">
+November 12, 2020
+</p>
 <div>
 <p>A ghost writer is a person that writes a document, essay or paper but the work is presented by other person who <em>claims</em> to be the author.</p>
 <p><a href="https://thebestschools.org/resources/detecting-deterring-ghostwritten-papers-best-practices/">Detecting deterring ghostwritten papers</a> is an article written by a (ex)ghost writer and explains what happens behind the scene when a student pays for this <em>dark</em> service.</p>
@@ -1156,14 +1482,20 @@ TL;DR Stylometrics
 <p>Given a set of documents, could we determine of they were written or not by the person or people who claim to be the authors?</p>
 <p>This problem is known as <em>authorship attribution</em> and I will show a few papers that I read about this, in particular around the concept of <em>stylometric</em>, fingerprints that the real author leaves when he or she writes.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-10-11-Kasiski-Test-Part-I-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/10/11/Kasiski-Test-Part-I.html">
 <h2 class="larger">
 Kasiski Test - Part I
 </h2>
-</a> <br><span class="smaller">October 11, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="vigenere"'>vigenere</a>, <a href='https://book-of-gehn.github.io/?tag="kasiski"'>kasiski</a>
+</p>
+<p class="small-subtitle">
+October 11, 2020
+</p>
 <div>
 <p>The tricky part of breaking the <a href="https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher">Vigenere cipher</a> consists in finding the length of the key.</p>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9jcnlwdG8va2FzaXNraS9rYXNpc2tpX3NjYW5fcG9zaXRpb25zLnBuZycgLz5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
@@ -1177,14 +1509,20 @@ Kasiski Test - Part I
 <p>In 1863, Kasiski published a method to guess the length of the secret key, method that we know today as the <a href="https://en.wikipedia.org/wiki/Kasiski_examination">Kasiski test</a>.</p>
 <p>Let’s explore a \(O(\vert s \vert)\) solution with a worst case of \(O(\vert s \vert^2)\)</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-09-13-Debug-the-Case-of-a-CPU-Burning-Ruby-Process-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/09/13/Debug-the-Case-of-a-CPU-Burning-Ruby-Process.html">
 <h2 class="larger">
 Debug: the Case of a CPU Burning Ruby Process
 </h2>
-</a> <br><span class="smaller">September 13, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="debugging"'>debugging</a>, <a href='https://book-of-gehn.github.io/?tag="rbspy"'>rbspy</a>, <a href='https://book-of-gehn.github.io/?tag="perf"'>perf</a>
+</p>
+<p class="small-subtitle">
+September 13, 2020
+</p>
 <div>
 <p><code>executor.rb</code> is a little program that starts and finishes other programs based on the needs of the system.</p>
 <p>It is expected to have one and only one <code>executor.rb</code> process running with little overhead.</p>
@@ -1192,14 +1530,20 @@ Debug: the Case of a CPU Burning Ruby Process
 <p>For the rest, the system was working properly so one of the <code>executor.rb</code> was doing its job.</p>
 <p>But what was the <em>“twin evil”</em> process doing with the CPU?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-09-09-Reds-and-Blues-Architecture-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/09/09/Reds-and-Blues-Architecture.html">
 <h2 class="larger">
 Reds and Blues Architecture
 </h2>
-</a> <br><span class="smaller">September 9, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="architecture"'>architecture</a>, <a href='https://book-of-gehn.github.io/?tag="queue"'>queue</a>, <a href='https://book-of-gehn.github.io/?tag="distributing"'>distributing</a>
+</p>
+<p class="small-subtitle">
+September 9, 2020
+</p>
 <div>
 <p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMDAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZXNpZ24vcmVkLWJsdWUtYXJjaC9yZWRzLWFuZC1ibHVlcy1vcmlnaW5hbC5wbmcnIC8+Ck9yaWdpbmFsIGRlc2lnbjogYSBsaXR0bGUgbWVzc3kgd2l0aCBJTyBtaXhlZCB3aXRoIENQVSBib3VuZGVkIGNvZGUuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMDAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZXNpZ24vcmVkLWJsdWUtYXJjaC9yZWRzLWFuZC1ibHVlcy1vcmlnaW5hbC5wbmcnIC8+Ck9yaWdpbmFsIGRlc2lnbjogYSBsaXR0bGUgbWVzc3kgd2l0aCBJTyBtaXhlZCB3aXRoIENQVSBib3VuZGVkIGNvZGUuCm1hcmdpbg==' class='margin-toggle'/>
@@ -1211,52 +1555,76 @@ Original design: a little messy with IO mixed with CPU bounded code.
 <p>When you spend nights debugging searching where is the bottleneck, it is when you blame the you of the past for a so <em>opaque</em> and slow architecture.</p>
 <p>This is the proposal of a simple architecture that allows introspection and enables – too many times forgotten – basic optimizations.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-05-16-Debugging-Lock-Free-Algorithms-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/05/16/Debugging-Lock-Free-Algorithms.html">
 <h2 class="larger">
 Debugging Lock Free Algorithms
 </h2>
-</a> <br><span class="smaller">May 16, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="lock free"'>lock free</a>, <a href='https://book-of-gehn.github.io/?tag="data structure"'>data structure</a>, <a href='https://book-of-gehn.github.io/?tag="debugging"'>debugging</a>
+</p>
+<p class="small-subtitle">
+May 16, 2020
+</p>
 <div>
 <p>Debugging multithread code is hard and lock free algorithms is harder.</p>
 <p>What cleaver tricks can we use?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-04-28-Lock-Free-Queue-Part-II-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/04/28/Lock-Free-Queue-Part-II.html">
 <h2 class="larger">
 Lock Free Queue - Part II
 </h2>
-</a> <br><span class="smaller">April 28, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="lock free"'>lock free</a>, <a href='https://book-of-gehn.github.io/?tag="data structure"'>data structure</a>, <a href='https://book-of-gehn.github.io/?tag="queue"'>queue</a>
+</p>
+<p class="small-subtitle">
+April 28, 2020
+</p>
 <div>
 <p>If implementing a lock-free queue for only one producer and consumer is tricky, adding more producers and consumers moves this to the next level.</p>
 <p>This is the continuation of the <a href="/articles/2020/03/22/Lock-Free-Queue-Part-I.html">lock-free single-producer single-consumer queue</a></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-04-19-Sidenote-Identifiers-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/04/19/Sidenote-Identifiers.html">
 <h2 class="larger">
 Sidenote: Identifiers
 </h2>
-</a> <br><span class="smaller">April 19, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="identifier"'>identifier</a>
+</p>
+<p class="small-subtitle">
+April 19, 2020
+</p>
 <div>
 <p>What would be a nice identifier for the people in, let’s say, a database?</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img style="max_width: 40%;" class='' alt='' src='/img/misc/ids/email.png' /></figure></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-03-22-Lock-Free-Queue-Part-I-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/03/22/Lock-Free-Queue-Part-I.html">
 <h2 class="larger">
 Lock-Free Queue - Part I
 </h2>
-</a> <br><span class="smaller">March 22, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="lock free"'>lock free</a>, <a href='https://book-of-gehn.github.io/?tag="data structure"'>data structure</a>, <a href='https://book-of-gehn.github.io/?tag="queue"'>queue</a>
+</p>
+<p class="small-subtitle">
+March 22, 2020
+</p>
 <div>
 <p>While implementing a bounded queue or <em>ring buffer</em> in a single-thread universe is relatively easy, doing the same when you have two threads, the implementation of a lock-free queue is <em>more challenging</em>.</p>
 <p><figure><figcaption><span markdown='1'>
@@ -1264,14 +1632,20 @@ Lock-Free Queue - Part I
 <img  class='' alt='' src='/img/threading/lock-free/queue/queue-sp-sc.png' /></figure></p>
 <p>In this first part will analyse and implement a lock-free single-producer single-consumer queue. A multi-producer multi-consumer queue is described in the <a href="/articles/2020/04/28/Lock-Free-Queue-Part-II.html">second part</a>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-02-15-CPU-Cache-Coherence-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/02/15/CPU-Cache-Coherence.html">
 <h2 class="larger">
 Effects of CPU Cache Coherence
 </h2>
-</a> <br><span class="smaller">February 15, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="cache"'>cache</a>, <a href='https://book-of-gehn.github.io/?tag="CPU"'>CPU</a>
+</p>
+<p class="small-subtitle">
+February 15, 2020
+</p>
 <div>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvY2FjaGUtY29oZXJlbmNlL2NudC1jcHUtMm5kY3B1LWhlYXRtYXAucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvY2FjaGUtY29oZXJlbmNlL2NudC1jcHUtMm5kY3B1LWhlYXRtYXAucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
@@ -1281,14 +1655,20 @@ Effects of CPU Cache Coherence
 <p>Most modern cpus see a single <em>shared</em> main memory seeing the same thing, <em>eventually</em>.</p>
 <p>This post explores what is behind this <em>“eventually”</em> term.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2020-02-07-Compiler-Optimizations-under-RC-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2020/02/07/Compiler-Optimizations-under-RC.html">
 <h2 class="larger">
 Compiler Optimizations under a Race Condition
 </h2>
-</a> <br><span class="smaller">February 7, 2020</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="IDA"'>IDA</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="volatile"'>volatile</a>
+</p>
+<p class="small-subtitle">
+February 7, 2020
+</p>
 <div>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvb3B0aW1pemF0aW9uLXVuZGVyLXJjL3JjTzAtYnVzeS1sb29wLnBuZycgLz5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy90aHJlYWRpbmcvb3B0aW1pemF0aW9uLXVuZGVyLXJjL3JjTzAtYnVzeS1sb29wLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
@@ -1298,26 +1678,38 @@ Compiler Optimizations under a Race Condition
 <p>When two or more concurrent tasks perform non-atomic read/write operations over the same data we have a <em>race condition</em> and the system will be in an undefined state.</p>
 <p>But what exactly does that suppose to mean? What is behind the generic <em>undefined state</em>?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-10-27-Writeup-EKO2019-RPG-Part-I-Reversing-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/10/27/Writeup-EKO2019-RPG-Part-I-Reversing.html">
 <h2 class="larger">
 RPG - Part I (IDA writeup - EKO 2019)
 </h2>
-</a> <br><span class="smaller">October 27, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="eko"'>eko</a>, <a href='https://book-of-gehn.github.io/?tag="challenge"'>challenge</a>, <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="IDA"'>IDA</a>
+</p>
+<p class="small-subtitle">
+October 27, 2019
+</p>
 <div>
 <p><code>rpg</code> is a buggy game where the player can attack to and defend from attacks of monsters.</p>
 <p>Let’s see if we can know how it works.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-10-23-Constant-Rate-Loop-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/10/23/Constant-Rate-Loop.html">
 <h2 class="larger">
 Constant Rate Loop
 </h2>
-</a> <br><span class="smaller">October 23, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="algorithm"'>algorithm</a>, <a href='https://book-of-gehn.github.io/?tag="game"'>game</a>, <a href='https://book-of-gehn.github.io/?tag="clocks"'>clocks</a>, <a href='https://book-of-gehn.github.io/?tag="frame rating"'>frame rating</a>
+</p>
+<p class="small-subtitle">
+October 23, 2019
+</p>
 <div>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9iaXRlLmdpZicgLz4KU2FtZSBhbmltYXRpb24gdGhhdCBsYXN0IDEgc2Vjb25kIGluIGEgbG9vcC4gRnJvbSB0b3AgdG8gZG93biwgdGhlIGZpcnN0CmlzIGFuIGFuaW1hdGlvbiB3aXRob3V0IGFueSBmcmFtZSBsb3N0LCB0aGUgc2Vjb25kIGhhZCBsb3N0IHNvbWUgZnJhbWVzCmJ1dCBgYGRyYXcoKWBgIGlzIHN0aWxsIGluIHN5bmMsIHRoZSBsYXN0IG9uZSBsb3N0IHRoZSBzYW1lIGFtb3VudApvZiBmcmFtZXMgYnV0IGBgZHJhdygpYGAgdXNlZCBpdHMgb3duIG5vdGlvbiBvZiB0aW1lIGFuIGdvdCBvdXQgb2Ygc3luYy4KIFs8aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiBjb2RlXSgvYXNzZXRzL2Ryb3BfaXRlcmF0aW9ucy5weSkKIG1hcmdpbg==' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9nYW1lL2NvbnN0YW50LXJhdGUtbG9vcC9iaXRlLmdpZicgLz4KU2FtZSBhbmltYXRpb24gdGhhdCBsYXN0IDEgc2Vjb25kIGluIGEgbG9vcC4gRnJvbSB0b3AgdG8gZG93biwgdGhlIGZpcnN0CmlzIGFuIGFuaW1hdGlvbiB3aXRob3V0IGFueSBmcmFtZSBsb3N0LCB0aGUgc2Vjb25kIGhhZCBsb3N0IHNvbWUgZnJhbWVzCmJ1dCBgYGRyYXcoKWBgIGlzIHN0aWxsIGluIHN5bmMsIHRoZSBsYXN0IG9uZSBsb3N0IHRoZSBzYW1lIGFtb3VudApvZiBmcmFtZXMgYnV0IGBgZHJhdygpYGAgdXNlZCBpdHMgb3duIG5vdGlvbiBvZiB0aW1lIGFuIGdvdCBvdXQgb2Ygc3luYy4KIFs8aSBjbGFzcz0iZmFiIGZhLWdpdGh1YiI+PC9pPiBjb2RlXSgvYXNzZXRzL2Ryb3BfaXRlcmF0aW9ucy5weSkKIG1hcmdpbg==' class='margin-toggle'/>
@@ -1332,51 +1724,75 @@ Same animation that last 1 second in a loop. From top to down, the first is an a
 </span></figcaption>
 <img  class='' alt='' src='/img/game/constant-rate-loop/rest-drop.png' /></figure></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-10-04-Index-of-Coincidence-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/10/04/Index-of-Coincidence.html">
 <h2 class="larger">
 Index of Coincidence Explained
 </h2>
-</a> <br><span class="smaller">October 4, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="index of coincidence"'>index of coincidence</a>
+</p>
+<p class="small-subtitle">
+October 4, 2019
+</p>
 <div>
 <p>The concept of Index of Coincidence was introduced by William Friedman in 1922-1923 in the paper titled “The Index of Coincidence and its Applications in Cryptoanalysis” [<a href="/assets/biblio/index_of_coincidence_1923.pdf">1</a>].</p>
 <p>The Navy Department (US) worked in the following years on this topic coming, in 1955, with a paper titled “The Index of Coincidence” by Howard Campaigne [<a href="/assets/biblio/index_of_coincidence_1955.pdf">2</a>].</p>
 <p>However I found some confusing and misleading concepts in the <em>modern</em> literature.</p>
 <p>This post is a summary of what I could understand from Howard’s work.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-10-01-Writeup-EKO2019-Cipherchat-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/10/01/Writeup-EKO2019-Cipherchat.html">
 <h2 class="larger">
 Cipherchat (Crypto writeup - EKO 2019)
 </h2>
-</a> <br><span class="smaller">October 1, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="challenge"'>challenge</a>, <a href='https://book-of-gehn.github.io/?tag="eko"'>eko</a>, <a href='https://book-of-gehn.github.io/?tag="hacking"'>hacking</a>, <a href='https://book-of-gehn.github.io/?tag="python"'>python</a>, <a href='https://book-of-gehn.github.io/?tag="bytecode"'>bytecode</a>
+</p>
+<p class="small-subtitle">
+October 1, 2019
+</p>
 <div>
 <p>We start with a <a href="/assets/cipherchat.pcap">communication</a> between two machines, encrypted with an unknown algorithm and the challenge is to break it.</p>
 <p>As a <em>hint</em> we have the code that the client used to talk with the server.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-09-29-Writeup-EKO2019-Weirdo-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/09/29/Writeup-EKO2019-Weirdo.html">
 <h2 class="larger">
 Weirdo (SQLi writeup - EKO 2019)
 </h2>
-</a> <br><span class="smaller">September 29, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="challenge"'>challenge</a>, <a href='https://book-of-gehn.github.io/?tag="eko"'>eko</a>, <a href='https://book-of-gehn.github.io/?tag="sql"'>sql</a>, <a href='https://book-of-gehn.github.io/?tag="hacking"'>hacking</a>
+</p>
+<p class="small-subtitle">
+September 29, 2019
+</p>
 <div>
 <p>Quick writeup of a SQL injection challenge.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-08-22-CTR-Bitfliping-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/08/22/CTR-Bitfliping.html">
 <h2 class="larger">
 CTR Bitflipping
 </h2>
-</a> <br><span class="smaller">August 22, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="CTR"'>CTR</a>, <a href='https://book-of-gehn.github.io/?tag="counter"'>counter</a>, <a href='https://book-of-gehn.github.io/?tag="forgery"'>forgery</a>
+</p>
+<p class="small-subtitle">
+August 22, 2019
+</p>
 <div>
 <p>No much to explain: encryption <strong>does not</strong> offer any protection against forgery.</p>
 <p><label for='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
@@ -1386,41 +1802,59 @@ CTR Bitflipping
 </span></p>
 <p>We saw this in the <a href="/articles/2018/07/03/CBC-Bitflipping.html">CBC Bitflipping post</a> and we will see it again here but this time it will be the CTR encryption mode our victim.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-08-04-Better-Compression-Log-Files-PoC-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/08/04/Better-Compression-Log-Files-PoC.html">
 <h2 class="larger">
 Better Compression of Log Files (PoC)
 </h2>
-</a> <br><span class="smaller">August 4, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="scripting"'>scripting</a>, <a href='https://book-of-gehn.github.io/?tag="string compression"'>string compression</a>
+</p>
+<p class="small-subtitle">
+August 4, 2019
+</p>
 <div>
 <p>The logs present several patterns that are repeated again and again; LZMA takes advantage of that and reaches very high compress ratios.</p>
 <p>Doing a quick test, LZMA at the 6 level of compression, compressed a 2.5 GB log into 147 MB very tight binary blog. A ratio of 94.069%, not bad!</p>
 <p>But could we get better results?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-07-25-From-Regex-to-Nondeterministic-Finite-Automata-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/07/25/From-Regex-to-Nondeterministic-Finite-Automata.html">
 <h2 class="larger">
 From a Regex to a Nondeterministic Finite Automata
 </h2>
-</a> <br><span class="smaller">July 25, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="regex"'>regex</a>, <a href='https://book-of-gehn.github.io/?tag="automata"'>automata</a>, <a href='https://book-of-gehn.github.io/?tag="state machine"'>state machine</a>, <a href='https://book-of-gehn.github.io/?tag="NFA"'>NFA</a>, <a href='https://book-of-gehn.github.io/?tag="string"'>string</a>
+</p>
+<p class="small-subtitle">
+July 25, 2019
+</p>
 <div>
 <p>Before building complex state machine we need to learn the basics blocks.</p>
 <p>When the solution to a problem can be seen as set of states with transitions from ones to others, modeling them as a nondeterministic finite automatas makes clear how the solution works and allows to spot deficiencies.</p>
 <p>A regular expression is an example of this. As an introductory step let’s review how to turn a regex into a NFA.</p>
 <p>Take at look of the <a href="https://github.com/eldipa/nfa">source code in Github</a>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-05-08-CTR-Edit-Inject-Plaintext-Attacks-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/05/08/CTR-Edit-Inject-Plaintext-Attacks.html">
 <h2 class="larger">
 CTR Edit/Inject Plaintext Attacks
 </h2>
-</a> <br><span class="smaller">May 8, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="CTR"'>CTR</a>, <a href='https://book-of-gehn.github.io/?tag="counter"'>counter</a>, <a href='https://book-of-gehn.github.io/?tag="forgery"'>forgery</a>
+</p>
+<p class="small-subtitle">
+May 8, 2019
+</p>
 <div>
 <p>A CTR-mode cipher turns a block cipher into a stream cipher.</p>
 <p>With this, a ciphertext can be edited <em>in place</em> generating enough of the key stream, decrypting and re-encrypting the edited portion.</p>
@@ -1435,40 +1869,58 @@ CTR Edit/Inject Plaintext Attacks
 </span></figcaption>
 <img style="width: 80%;" class='' alt='' src='/img/matasano/ctr-edit-slicing-window.svg' /></figure></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-03-20-Affine-Ciphers-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/03/20/Affine-Ciphers.html">
 <h2 class="larger">
 Affine Cipher
 </h2>
-</a> <br><span class="smaller">March 20, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="affine"'>affine</a>, <a href='https://book-of-gehn.github.io/?tag="differential attack"'>differential attack</a>
+</p>
+<p class="small-subtitle">
+March 20, 2019
+</p>
 <div>
 <p>A <em>linear</em> cipher like the Hill Cipher is <a href="/articles/2019/01/02/Break-Hill-Cipher-with-a-Known-Plaintext-Attack.html">vulnerable</a> to a known plaintext attack: just resolve a set of linear equations and get the secret key.</p>
 <p>An <em>affine</em> cipher is a little harder to break, however it could be vulnerable to a <em>differential</em> attack.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-03-15-Separate-your-SSH-Agent-Identities-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/03/15/Separate-your-SSH-Agent-Identities.html">
 <h2 class="larger">
 Separate your SSH Agent Identities
 </h2>
-</a> <br><span class="smaller">March 15, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="bash"'>bash</a>, <a href='https://book-of-gehn.github.io/?tag="scripting"'>scripting</a>, <a href='https://book-of-gehn.github.io/?tag="security"'>security</a>
+</p>
+<p class="small-subtitle">
+March 15, 2019
+</p>
 <div>
 <p>Using a <code>ssh-agent</code> to handle our keys is handy.</p>
 <p>When you need to access to different hosts jumping from one to another, <em>forwarding</em> the agent is much more secure than copying and pasting your keys around.</p>
 <p>But if one host gets compromised it will expose your agent: even if the attacker will not get your secret keys he will be able to login into any system as you.</p>
 <p>You cannot prevent this, but you can restrict this to reduce the splash damage.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-02-03-Cape-Encryption-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/02/03/Cape-Encryption.html">
 <h2 class="larger">
 Cape Encryption
 </h2>
-</a> <br><span class="smaller">February 3, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>
+</p>
+<p class="small-subtitle">
+February 3, 2019
+</p>
 <div>
 <p><label for='CltjYXBlJ3Mgc2l0ZV0oaHR0cHM6Ly9naXRodWIuY29tL2dpb2JsdS9DYXBlL3RyZWUvMjk0ZjgxMGFjNDgzMWFmMjY4MzJlNzBlNGJhNWQwNzM5MDgyMzJlMikKbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CltjYXBlJ3Mgc2l0ZV0oaHR0cHM6Ly9naXRodWIuY29tL2dpb2JsdS9DYXBlL3RyZWUvMjk0ZjgxMGFjNDgzMWFmMjY4MzJlNzBlNGJhNWQwNzM5MDgyMzJlMikKbWFyZ2lubm90ZXM=' class='margin-toggle'/>
@@ -1484,14 +1936,20 @@ Cape Encryption
 <p>In addition, it offers another symmetric stream cipher, a slightly different of the first one, implemented in <code>cape_hash</code>.</p>
 <p>In this write-up we are going to analyze the <code>cape_hash</code> stream cipher and see if we can break it.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2019-01-02-Break-Hill-Cipher-with-a-Known-Plaintext-Attack-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2019/01/02/Break-Hill-Cipher-with-a-Known-Plaintext-Attack.html">
 <h2 class="larger">
 Break Hill Cipher with a Known Plaintext Attack
 </h2>
-</a> <br><span class="smaller">January 2, 2019</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="hill cipher"'>hill cipher</a>
+</p>
+<p class="small-subtitle">
+January 2, 2019
+</p>
 <div>
 <p>Given a matrix secret key \(K\) with shape \(n\textrm{x}n\), the <a href="https://en.wikipedia.org/wiki/Hill_cipher">Hill cipher</a> splits the plaintext into blocks of length \(n\) and for each block, computes the ciphertext block doing a linear transformation in module \(m\)</p>
 $$ K p_i = c_i\quad(\textrm{mod } m)$$
@@ -1500,14 +1958,20 @@ $$ p_i = [K]^{-1} c_i \quad(\textrm{mod } m)$$
 <p>To make sense, the secret key \(K\) must be chosen such as its inverse exists in module \(m\).</p>
 <p>Ready to break it?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-12-23-Mersenne-Twister-PRNG-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/12/23/Mersenne-Twister-PRNG.html">
 <h2 class="larger">
 Breaking MT19937 Crypto
 </h2>
-</a> <br><span class="smaller">December 23, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="MT19937"'>MT19937</a>, <a href='https://book-of-gehn.github.io/?tag="PRG"'>PRG</a>
+</p>
+<p class="small-subtitle">
+December 23, 2018
+</p>
 <div>
 <p>The Mersenne-Twister 19937 or just MT19937 is one of the most used pseudo random number generator with a quite large cycle length and with a nice random quality.</p>
 <p>However it was not designed to be used for crypto.</p>
@@ -1518,14 +1982,20 @@ Breaking MT19937 Crypto
 </span></p>
 <p>But some folks may not know this…</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-12-04-Fixed-Nonce-CTR-Attack-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/12/04/Fixed-Nonce-CTR-Attack.html">
 <h2 class="larger">
 Fixed Nonce CTR Attack
 </h2>
-</a> <br><span class="smaller">December 4, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="CTR"'>CTR</a>, <a href='https://book-of-gehn.github.io/?tag="counter nonce"'>counter nonce</a>, <a href='https://book-of-gehn.github.io/?tag="PRG"'>PRG</a>, <a href='https://book-of-gehn.github.io/?tag="chi-square"'>chi-square</a>, <a href='https://book-of-gehn.github.io/?tag="undistinguishable"'>undistinguishable</a>
+</p>
+<p class="small-subtitle">
+December 4, 2018
+</p>
 <div>
 <p>The Counter mode, or just CTR mode, turns a block cipher into a stream cipher.</p>
 <p>More specifically, it builds a pseudo random generator (PRG) from a block cipher and then generates a random string using the PRG to encrypt/decrypt the payload performing a simple xor.</p>
@@ -1537,14 +2007,20 @@ Fixed Nonce CTR Attack
 </span></p>
 <p>Ready to break it?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-10-28-CBC-Padding-Oracle-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/10/28/CBC-Padding-Oracle.html">
 <h2 class="larger">
 CBC Padding Oracle Attack
 </h2>
-</a> <br><span class="smaller">October 28, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="CBC"'>CBC</a>, <a href='https://book-of-gehn.github.io/?tag="cipher block chaining"'>cipher block chaining</a>, <a href='https://book-of-gehn.github.io/?tag="padding oracle"'>padding oracle</a>
+</p>
+<p class="small-subtitle">
+October 28, 2018
+</p>
 <div>
 <p>AES and other ciphers work on blocks; if the plaintext length is not multiple of the block size a padding is added.</p>
 <p>If during the decryption the pad is checked and returns an error, we can use this to build a <em>padding oracle</em>: a function that will tell us if an encrypted plaintext has a valid pad or not.</p>
@@ -1556,14 +2032,20 @@ CBC Padding Oracle Attack
 </span></p>
 <p>Ready? <em>Go!</em></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-10-01-Magic-Bash-Runes-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/10/01/Magic-Bash-Runes.html">
 <h2 class="larger">
 () { Magic Bash Runes
 </h2>
-</a> <br><span class="smaller">October 1, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="bash"'>bash</a>, <a href='https://book-of-gehn.github.io/?tag="shellshock"'>shellshock</a>, <a href='https://book-of-gehn.github.io/?tag="hacking"'>hacking</a>
+</p>
+<p class="small-subtitle">
+October 1, 2018
+</p>
 <div>
 <p>Despite of been 4 years old, <code>Shellshock</code> is still a very interesting topic to me not for the vulnerability itself but for the large ways to trigger it even in the most unexpected places.</p>
 <p>Take the 4 characters <code>() {</code> and open the world.</p>
@@ -1575,14 +2057,20 @@ Fragments found in the field.
 </span></p>
 <p>Creativity and few hours reading man pages are all what you need.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-09-16-Ouroboros-Circular-Buffer-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/09/16/Ouroboros-Circular-Buffer.html">
 <h2 class="larger">
 Ouroboros - Circular Buffer
 </h2>
-</a> <br><span class="smaller">September 16, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="circular buffer"'>circular buffer</a>, <a href='https://book-of-gehn.github.io/?tag="data structure"'>data structure</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
+</p>
+<p class="small-subtitle">
+September 16, 2018
+</p>
 <div>
 <p><code>struct circular_buffer</code> is a simple but quite efficient implementation of a circular buffer over a continuous and finite memory slice.</p>
 <p>The name <a href="https://en.wikipedia.org/wiki/Ouroboros">Ouroboros</a> comes from the Ancient Greek and symbolize a snake eating its own tail – a convenient image for a circular buffer.</p>
@@ -1591,14 +2079,20 @@ Ouroboros - Circular Buffer
 <img  class='' alt='' src='/img/queues/circular-buffer/buffer_0_10.png' /></figure></p>
 <p>Source code can be found in the <a href="https://github.com/eldipa/tiburoncin">tiburoncin project</a>. Enjoy it!</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-07-03-CBC-Bitflipping-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/07/03/CBC-Bitflipping.html">
 <h2 class="larger">
 CBC Bitflipping
 </h2>
-</a> <br><span class="smaller">July 3, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="CBC"'>CBC</a>, <a href='https://book-of-gehn.github.io/?tag="cipher block chaining"'>cipher block chaining</a>, <a href='https://book-of-gehn.github.io/?tag="forgery"'>forgery</a>, <a href='https://book-of-gehn.github.io/?tag="forge"'>forge</a>, <a href='https://book-of-gehn.github.io/?tag="bit flipping"'>bit flipping</a>
+</p>
+<p class="small-subtitle">
+July 3, 2018
+</p>
 <div>
 <p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2NiYy1kZWMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2NiYy1kZWMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
@@ -1614,14 +2108,20 @@ CBC Bitflipping
 </span></p>
 <p>Without any message integrity, a CBC ciphertext can be patched to modify the plaintext at will.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-07-01-Cut-and-Paste-ECB-Blocks-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/07/01/Cut-and-Paste-ECB-Blocks.html">
 <h2 class="larger">
 Cut and Paste ECB blocks
 </h2>
-</a> <br><span class="smaller">July 1, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="ECB"'>ECB</a>, <a href='https://book-of-gehn.github.io/?tag="forgery"'>forgery</a>, <a href='https://book-of-gehn.github.io/?tag="forge"'>forge</a>
+</p>
+<p class="small-subtitle">
+July 1, 2018
+</p>
 <div>
 <p>In this game we control partially a plaintext that is encrypted under ECB mode with a secret key.</p>
 <p>This time the idea is not to reveal the key but to <em>forge</em> a plaintext.</p>
@@ -1632,14 +2132,20 @@ Cut and Paste ECB blocks
 </span></p>
 <p>Welcome to the <a href="https://cryptopals.com/sets/2/challenges/13">ECB cut-and-paste</a> challenge!</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-06-10-Breaking-ECB-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/06/10/Breaking-ECB.html">
 <h2 class="larger">
 Breaking ECB
 </h2>
-</a> <br><span class="smaller">June 10, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="ECB"'>ECB</a>
+</p>
+<p class="small-subtitle">
+June 10, 2018
+</p>
 <div>
 <p><label for='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'/>
@@ -1648,14 +2154,20 @@ Breaking ECB
 </span></p>
 <p>In the previous post we built <a href="/articles/2018/06/09/ECB-CBC-Oracle.html">an ECB/CBC oracle</a>; now it’s time to take this to the next level and break ECB <a href="https://cryptopals.com/sets/2/challenges/14">one byte at time</a>.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-06-09-ECB-CBC-Oracle-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/06/09/ECB-CBC-Oracle.html">
 <h2 class="larger">
 ECB/CBC Oracle
 </h2>
-</a> <br><span class="smaller">June 9, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="ECB"'>ECB</a>, <a href='https://book-of-gehn.github.io/?tag="CBC"'>CBC</a>, <a href='https://book-of-gehn.github.io/?tag="oracle PKCS#7"'>oracle PKCS#7</a>
+</p>
+<p class="small-subtitle">
+June 9, 2018
+</p>
 <div>
 <p>In this post will review the Cipher Block Chaining mode (or CBC) and how we can build <a href="https://cryptopals.com/sets/2/challenges/11">an ECB/CBC detection oracle</a> to distinguish ECB from CBC using <a href="https://pypi.org/project/cryptonita/">cryptonita</a></p>
 <p><figure><figcaption><span markdown='1'>
@@ -1668,14 +2180,20 @@ ECB/CBC Oracle
 </span></p>
 <p>This will be the bases for <a href="/articles/2018/06/10/Breaking-ECB.html">breaking ECB</a> in a later post.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-05-20-Detecting-Penguins-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/05/20/Detecting-Penguins.html">
 <h2 class="larger">
 Detecting Penguins
 </h2>
-</a> <br><span class="smaller">May 20, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="ECB"'>ECB</a>, <a href='https://book-of-gehn.github.io/?tag="electronic code block"'>electronic code block</a>
+</p>
+<p class="small-subtitle">
+May 20, 2018
+</p>
 <div>
 <p><figure><figcaption><span markdown='1'>
 The ECB encrypted image on the right and its plaintext original version on the left. Image taken from <a href="https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation">wikipedia</a>.
@@ -1688,14 +2206,20 @@ The ECB encrypted image on the right and its plaintext original version on the l
 </span></p>
 <p>Can you see the penguin?</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-05-01-Breaking-Vigenere-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/05/01/Breaking-Vigenere.html">
 <h2 class="larger">
 Breaking Vigenere
 </h2>
-</a> <br><span class="smaller">May 1, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="vigenere"'>vigenere</a>
+</p>
+<p class="small-subtitle">
+May 1, 2018
+</p>
 <div>
 <p>A plaintext was encrypted via a XOR with key of unknown bytes of length, repeating this key as much as needed to cover the full length of the plaintext.</p>
 <p>This is also known as the <a href="https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher">Vigenere cipher</a>.</p>
@@ -1710,14 +2234,20 @@ Breaking Vigenere
 </span></figcaption>
 <img style="width: 100%;" class='' alt='' src='/img/matasano/break_repeat_key_transpose.svg' /></figure></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-04-01-A-string-of-coincidences-is-not-a-coincidence-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/04/01/A-string-of-coincidences-is-not-a-coincidence.html">
 <h2 class="larger">
 A string of coincidences is not a coincidence
 </h2>
-</a> <br><span class="smaller">April 1, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="index coincidence"'>index coincidence</a>
+</p>
+<p class="small-subtitle">
+April 1, 2018
+</p>
 <div>
 <p>A cipher is <em>semantically secure</em> if given a randomly chosen key, its ciphertext cannot be distinguishable from a truly random string.</p>
 <p>Detecting a ciphertext from a pool is enough to consider the cipher as not secure even of we can’t break it.</p>
@@ -1735,14 +2265,20 @@ A string of coincidences is not a coincidence
 </span></p>
 <p>This is obviously a poor and not secure encryption mechanism; let’s find the ciphertext then!</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2018-03-01-In-XOR-We-Trust-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2018/03/01/In-XOR-We-Trust.html">
 <h2 class="larger">
 In XOR we trust
 </h2>
-</a> <br><span class="smaller">March 1, 2018</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="repeating key"'>repeating key</a>
+</p>
+<p class="small-subtitle">
+March 1, 2018
+</p>
 <div>
 <p>This is the first set of exercises for the <a href="https://cryptopals.com/">Matasano Challenge</a> (also known as the Cryptopals Challenge)</p>
 <p>It starts from the very begin, really easy, but it goes up to more challenging exercises quickly.</p>
@@ -1753,14 +2289,20 @@ In XOR we trust
 </span></p>
 <p>Ready? <em>Go!</em></p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2017-04-16-Isolate-wifi-and-keep-traffic-out-Big-Brother-sight-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2017/04/16/Isolate-wifi-and-keep-traffic-out-Big-Brother-sight.html">
 <h2 class="larger">
 Isolate a wifi card and keep your traffic out of the Big Brother sight
 </h2>
-</a> <br><span class="smaller">April 16, 2017</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="wifi"'>wifi</a>, <a href='https://book-of-gehn.github.io/?tag="container"'>container</a>, <a href='https://book-of-gehn.github.io/?tag="hacking"'>hacking</a>
+</p>
+<p class="small-subtitle">
+April 16, 2017
+</p>
 <div>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2lzb2xhdGVfd2lmaV9iaWdfYnJvdGhlcl9zaWdodC5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9uZXR3b3JrL2lzb2xhdGVfd2lmaV9iaWdfYnJvdGhlcl9zaWdodC5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
@@ -1771,14 +2313,20 @@ Isolate a wifi card and keep your traffic out of the Big Brother sight
 <p>But when a friend opened his browser this week and went to <code>google.com</code> the things got odd.</p>
 <p>The browser refused the connection warning him that the SSL certificate of the server wasn’t issue by <code>google.com</code> at all or signed by a trusted authority.</p>
 </div>
-<p></span></p>
-<span class="index-single-post">
-<hr class="slender post-layout">
+</div>
+<div class="index-single-post" id="articles-2016-12-18-Forensics-911-recovering-thesis-html">
+<hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2016/12/18/Forensics-911-recovering-thesis.html">
 <h2 class="larger">
 Forensics 911 - recovering a thesis of one year work
 </h2>
-</a> <br><span class="smaller">December 18, 2016</span> <br/>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="forensics"'>forensics</a>
+</p>
+<p class="small-subtitle">
+December 18, 2016
+</p>
 <div>
 <p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
 <input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIC8+bWFyZ2lu' class='margin-toggle'/>
@@ -1789,7 +2337,7 @@ Forensics 911 - recovering a thesis of one year work
 <p>She was working in her thesis for almost a year, saving all the progresses in that usb stick. But what she didn’t know was that an usb memory has a limited number of writes and with more writes eventually the file system gets corrupted.</p>
 <p>This is the real story behind a forensics rally trying to recover her one year work.</p>
 </div>
-<p></span></p>
+</div>
 </article>
 <span class="print-footer"> - Martin Di Paola</span>
 <footer>

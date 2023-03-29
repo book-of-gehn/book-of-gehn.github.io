@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -212,8 +198,11 @@ While a bulk calls amortize the cost per message, asynchronous calls make more u
 <p>At the end, everything is tainted with reds <em>and</em> blues.</p>
 <h2 id="further-readings">Further readings</h2>
 <ul>
-<li><a href="http://www.brendangregg.com/usemethod.html">Brendan Gregg’s USE method</a></li>
-<li><a href="https://www.youtube.com/watch?v=K9w2cipqfvc">Performance Analysis: The USE Method</a></li>
+<li><p><a href="http://www.brendangregg.com/usemethod.html">Brendan Gregg’s USE method</a></p></li>
+<li><p><a href="https://www.youtube.com/watch?v=K9w2cipqfvc">Performance Analysis: The USE Method</a></p>
+<p class="subtitle">
+<p>Related: <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>, <a href='https://book-of-gehn.github.io/?tag="architecture"'>architecture</a>, <a href='https://book-of-gehn.github.io/?tag="queue"'>queue</a>, <a href='https://book-of-gehn.github.io/?tag="distributing"'>distributing</a></p>
+</p></li>
 </ul>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

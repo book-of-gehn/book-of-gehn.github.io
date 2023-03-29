@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -472,9 +458,12 @@ Updated version: <a href="/assets/python/dataframes/testing/assert_df_equal.py">
 
 <p>It looks complicated but now we know <strong>exactly</strong> where are the differences:</p>
 <ul>
-<li>We have a <em>unexpected</em> row: <code><span class="highlight-candombe-inline"><span class="n">alice</span>  <span class="n">algebra</span>  <span class="mi">3</span></span></code></li>
-<li>For <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="s1">&#39;alice&#39;</span><span class="p">,</span> <span class="s1">&#39;math&#39;</span><span class="p">)</span></span></code> the obtained grade was 3 but expected 5</li>
-<li>For <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="s1">&#39;charlie&#39;</span><span class="p">,</span> <span class="s1">&#39;math&#39;</span><span class="p">)</span></span></code> the obtained grade was 2 but expected 5</li>
+<li><p>We have a <em>unexpected</em> row: <code><span class="highlight-candombe-inline"><span class="n">alice</span>  <span class="n">algebra</span>  <span class="mi">3</span></span></code></p></li>
+<li><p>For <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="s1">&#39;alice&#39;</span><span class="p">,</span> <span class="s1">&#39;math&#39;</span><span class="p">)</span></span></code> the obtained grade was 3 but expected 5</p></li>
+<li><p>For <code><span class="highlight-candombe-inline"><span class="p">(</span><span class="s1">&#39;charlie&#39;</span><span class="p">,</span> <span class="s1">&#39;math&#39;</span><span class="p">)</span></span></code> the obtained grade was 2 but expected 5</p>
+<p class="subtitle">
+<p>Related: <a href='https://book-of-gehn.github.io/?tag="python"'>python</a>, <a href='https://book-of-gehn.github.io/?tag="dataframe"'>dataframe</a>, <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a></p>
+</p></li>
 </ul>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -263,6 +249,9 @@ This unlocks the <a href="https://cryptopals.com/sets/4/challenges/25">Break “
 </code></pre></div>
 
 <p>A similar attack can be done with a <code><span class="highlight-candombe-inline"><span class="n">delete</span></span></code> primitive: instead of injecting padding we remove plaintext therefor moving the known plaintext window to the left instead to the right.</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="CTR"'>CTR</a>, <a href='https://book-of-gehn.github.io/?tag="counter"'>counter</a>, <a href='https://book-of-gehn.github.io/?tag="forgery"'>forgery</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

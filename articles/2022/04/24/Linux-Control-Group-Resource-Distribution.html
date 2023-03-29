@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -314,6 +300,9 @@ root. All of them should be empty by now
 $ cd /sys/fs/cgroup/                                     # byexample: +pass -skip
 $ rmdir $(find /sys/fs/cgroup/test/ -type d | sort -r)   # byexample: +pass -skip
 -->
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="linux"'>linux</a>, <a href='https://book-of-gehn.github.io/?tag="kernel"'>kernel</a>, <a href='https://book-of-gehn.github.io/?tag="cgroup"'>cgroup</a>, <a href='https://book-of-gehn.github.io/?tag="fork bomb"'>fork bomb</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

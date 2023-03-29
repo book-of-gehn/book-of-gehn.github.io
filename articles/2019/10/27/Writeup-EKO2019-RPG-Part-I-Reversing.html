@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -241,9 +227,12 @@ No, there are not memory leaks here. The <em>delete player</em> function is a go
 <p>We found a <strong>memory leak</strong> and a <strong>double free</strong> but we don’t have a real crash. We just reviewed the code.</p>
 <p>We need to keep exploring this, here are some ideas for a future post:</p>
 <ul>
-<li><a href="http://valgrind.org/">Valgrind</a>: we could see if there are more memory corruptions. Play with <a href="http://lcamtuf.coredump.cx/afl/">AFL</a> perhaps?</li>
-<li><a href="https://angr.io/">Angr</a>: trigger the leaking <code>strdup</code> is not trivial, we may use a symbolic execution for that.</li>
-<li>Heap attack: after all, we need to know how the heap management works and plan the attack.</li>
+<li><p><a href="http://valgrind.org/">Valgrind</a>: we could see if there are more memory corruptions. Play with <a href="http://lcamtuf.coredump.cx/afl/">AFL</a> perhaps?</p></li>
+<li><p><a href="https://angr.io/">Angr</a>: trigger the leaking <code>strdup</code> is not trivial, we may use a symbolic execution for that.</p></li>
+<li><p>Heap attack: after all, we need to know how the heap management works and plan the attack.</p>
+<p class="subtitle">
+<p>Related: <a href='https://book-of-gehn.github.io/?tag="eko"'>eko</a>, <a href='https://book-of-gehn.github.io/?tag="challenge"'>challenge</a>, <a href='https://book-of-gehn.github.io/?tag="reversing"'>reversing</a>, <a href='https://book-of-gehn.github.io/?tag="IDA"'>IDA</a></p>
+</p></li>
 </ul>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

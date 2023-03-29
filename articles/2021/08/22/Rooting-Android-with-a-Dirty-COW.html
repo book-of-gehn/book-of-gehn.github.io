@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -165,6 +151,9 @@ $<span class="w"> </span>adb<span class="w"> </span>shell<span class="w"> </span
 </code></pre></div>
 
 <p>We run <code>run-as cookie cookie</code> and we get a root shell; bypassing <a href="https://www.redhat.com/en/topics/linux/what-is-selinux">SELinux</a> will be for another post <a href="https://hernan.de/blog/tailoring-cve-2019-2215-to-achieve-root/">:D</a></p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="android"'>android</a>, <a href='https://book-of-gehn.github.io/?tag="root"'>root</a>, <a href='https://book-of-gehn.github.io/?tag="privilege"'>privilege</a>, <a href='https://book-of-gehn.github.io/?tag="priv-esc"'>priv-esc</a>, <a href='https://book-of-gehn.github.io/?tag="escalation"'>escalation</a>, <a href='https://book-of-gehn.github.io/?tag="dirty-cow"'>dirty-cow</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

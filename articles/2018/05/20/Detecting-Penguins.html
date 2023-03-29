@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -188,6 +174,9 @@ Other vulnerable encryption modes will not be as easily detectable however.
 <h3 id="broken">Broken?</h3>
 <p>Well, distinguishing a encryption from a random string is enough to considere a cipher broken, but trying to get the plaintext from it is another level.</p>
 <p>The 132th plaintext will still be a secret, for now.</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="ECB"'>ECB</a>, <a href='https://book-of-gehn.github.io/?tag="electronic code block"'>electronic code block</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

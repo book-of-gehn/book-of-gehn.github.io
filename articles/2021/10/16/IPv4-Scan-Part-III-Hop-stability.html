@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -257,6 +243,9 @@ From there, a bunch of statistics can be calculated about the TTL ranges for the
 <h2 id="conclusions">Conclusions</h2>
 <p>So with these so-spread bursts and the so-little changed difference in the TTLs we can conclude that most of the hop-count routes are <em>stable</em>.</p>
 <p>We cannot say anything about the real routes that the packets took but we can know that the count of hops that they passed through remained constant.</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href='https://book-of-gehn.github.io/?tag="julia"'>julia</a>, <a href='https://book-of-gehn.github.io/?tag="statistics"'>statistics</a>, <a href='https://book-of-gehn.github.io/?tag="seaborn"'>seaborn</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"

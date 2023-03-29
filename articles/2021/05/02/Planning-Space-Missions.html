@@ -64,20 +64,6 @@
 
     
 
-    <nav class="group">
-            <form id="blog-search-form">
-                <input type="search" placeholder="+must -not *fuzzy*"></input>
-                <span class="query-error"></span>
-                <span class="controls">
-                    <button type="submit">Filter</button>
-                    <button style="display: none;" id="reset_search" type="reset">Clear</button>
-                </span>
-            </form>
-    </nav>
-
-    <div style="display: none;" id="search_error"></div>
-    <article style="display: none;" class="group" id="search_results">
-    </article>
 </header>
 <article class="group">
 <h1>
@@ -316,6 +302,9 @@ $$
 </code></pre></div>
 
 <p>Z3 has a bunch of boolean expressions/functions that can replace the traditional inequalities: <code><span class="highlight-candombe-inline"><span class="n">If</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">AtMost</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">AtLeast</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">Implies</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">And</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">Or</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">Not</span></span></code>.</p>
+<p class="subtitle">
+Related: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="integer linear optimization"'>integer linear optimization</a>
+</p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
         issue-term="pathname"
