@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2023-03-28T18:45:38.459086+00:00</updated>
+  <updated>2023-03-29T17:40:53.547498+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -6014,13 +6014,104 @@ Precise values; linear, proportional and additivity relations; and variables in 
 &lt;p&gt;Unless you are using a simulator, it is impossible to run a program &lt;em&gt;isolated&lt;/em&gt; from the rest and your measurements will be noisy.&lt;/p&gt;
 &lt;p&gt;If you want to take precise measurements you need a &lt;em&gt;quiescent&lt;/em&gt; environment as much as possible.&lt;!--more--&gt;&lt;/p&gt;
 &lt;h2 id="an-incomplete-cheatsheet"&gt;An incomplete cheatsheet&lt;/h2&gt;
-&lt;p&gt;Isolate the machine: - use a bare metal machine or VMs if not possible. Try to avoid container environments. - unplug the network cable or reduce by some mean the traffic (from outside the machine)&lt;/p&gt;
-&lt;p&gt;At hardware level disable: - Hyperthreading (hardware multitenancy) - Intel Turbo Boost or Overclocking &lt;a href="https://askubuntu.com/questions/619875/disabling-intel-turbo-boost-in-ubuntu"&gt;How-to (maybe)&lt;/a&gt; - Dynamic Voltage &amp;amp; Frequency Scaling &lt;a href="https://askubuntu.com/questions/523640/how-i-can-disable-cpu-frequency-scaling-and-set-the-system-to-performance"&gt;How-to (maybe)&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;At the kernel level: - isolate one or more CPUs so you run your programs there without much interruptions from other tasks. Two options: removing the CPUs from the scheduler at boottime &lt;a href="https://www.kernel.org/doc/html/v4.19/admin-guide/kernel-parameters.html?highlight=isolcpu"&gt;(isolcpus)&lt;/a&gt; or assigning them to an isolated cgroup at runtime &lt;a href="https://manpages.ubuntu.com/manpages/bionic/man1/cset.1.html"&gt;(cset)&lt;/a&gt;. - use a preconfigured &lt;a href="https://manpages.debian.org/buster/tuned/tuned.8.en.html"&gt;tuned&lt;/a&gt; setup. &lt;a href="https://github.com/redhat-performance/tuned/blob/master/profiles/realtime/tuned.conf"&gt;(repo)&lt;/a&gt;; &lt;a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/tuning_guide/chap-Realtime-Specific_Tuning"&gt;(guide)&lt;/a&gt;. - disable the interruptions handling in those CPUs. - use thread’s CPU affinity to assign the threads to each CPU (this is mandatory if you disabled the scheduler with &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;isolcpus&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;). See &lt;a href="https://man7.org/linux/man-pages/man1/taskset.1.html"&gt;taskset&lt;/a&gt; - disable not needed kernel threads ? &lt;a href="https://www.kernel.org/doc/Documentation/kernel-per-CPU-kthreads.txt"&gt;may be&lt;/a&gt;; and other sources of noise. See &lt;a href="https://lwn.net/Articles/816298/"&gt;more&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;At the user-space level: - disable all the services that you can - follow some part of the &lt;a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/tuning_guide/chap-general_system_tuning"&gt;general&lt;/a&gt; and &lt;a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/tuning_guide/chap-Realtime-Specific_Tuning"&gt;advanced&lt;/a&gt; tuning guides.&lt;/p&gt;
-&lt;p&gt;At the instrumentation level: - static low-overhead instrumentation if possible, dynamic if you can’t recompile. - prefer deterministic (like counting the elapsed time) over sampling, specially for small-fast function targets; sometimes sampling is the only way however. - use a &lt;a href="/articles/2021/02/27/High-Precision-Timers.html"&gt;high precision clock&lt;/a&gt;. - perhaps a &lt;a href="https://github.com/plasma-umass/coz"&gt;causal profiler (coz)&lt;/a&gt;. See &lt;a href="https://easyperf.net/blog/2020/02/26/coz-vs-sampling-profilers"&gt;post&lt;/a&gt; and &lt;a href="https://www.youtube.com/watch?v=r-TLSBdHe1A"&gt;video&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;At the binary level: - code alignment can be mostly controlled by the compiler, but it may add delays due the increasing of the binary. See &lt;a href="https://easyperf.net/blog/2018/01/25/Code_alignment_options_in_llvm"&gt;post&lt;/a&gt;. - if you cannot control it, randomize it: you will add noise but it will be random noise and not &lt;em&gt;biased noise&lt;/em&gt; which is much worst. &lt;a href="https://github.com/ccurtsinger/stabilizer"&gt;Stabilizer (may be)&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;The experiment: - automate the setup of the machine as much as possible - automate the experiment execution so it can be reproduced again in the future. - run several executions and track the minimum value (if applies); if possible, try to run several different benchmark programs that use your target function. - use different test suites and benchmarks (&lt;a href="https://github.com/google/benchmark"&gt;google’s&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;For the impatient, let’s do a quick cheatsheet. A more detailed checklist follows after.&lt;/p&gt;
+&lt;p&gt;Let’s assume that you want to make the CPUs 2 to 5 &lt;em&gt;very quiet&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Add the following kernel options:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;intel_pstate&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;disabled&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;amd_pstate&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;disabled&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cpufreq_disable&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;nosmt&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;nohz_full&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;2-5&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;isolcpus&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;2-5&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rcu_nocbs&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;2-5&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;You may add also &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;systemd&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unit&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;multi&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to those.&lt;/p&gt;
+&lt;p&gt;With the kernel booted, configure it even further:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&amp;gt;&lt;span class="w"&gt; &lt;/span&gt;/sys/devices/system/cpu/intel_pstate/no_turbo
+&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&amp;gt;&lt;span class="w"&gt; &lt;/span&gt;/sys/devices/system/cpu/cpufreq/boost
+
+&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;X&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;..5&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;do&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;performance&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;tee&lt;span class="w"&gt; &lt;/span&gt;/sys/devices/system/cpu/cpu&lt;span class="nv"&gt;$X&lt;/span&gt;/cpufreq/scaling_governor
+&lt;span class="k"&gt;done&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="an-detailed-but-still-incomplete-checklist"&gt;An detailed but still-incomplete checklist&lt;/h2&gt;
+&lt;p&gt;This checklist goes for the different settings to make one ore more CPUs as much as isolated as possible from anything else so their performance is more detereminisc.&lt;/p&gt;
+&lt;p&gt;Real isolation is impossible as there are a lot of things shared. Making the whole system as quiet as possible helps to reduce the noise.&lt;/p&gt;
+&lt;p&gt;Isolate the machine:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Use a bare metal machine or VMs if not possible. Try to avoid container environments.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Unplug the network cable or reduce by some mean the traffic (from outside the machine)&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="kernel-setup-boot-options-sysfs"&gt;Kernel setup (boot options + sysfs)&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Hyperthreading / Symmetric Multithreading
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Docs:&lt;/em&gt; &lt;a href="https://access.redhat.com/solutions/rhel-smt"&gt;rhel-smt&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Kernel options:&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;nosmt&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Intel Turbo Boost / Overclocking.
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Docs:&lt;/em&gt; &lt;a href="https://askubuntu.com/questions/619875/disabling-intel-turbo-boost-in-ubuntu"&gt;how-to&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Sysfs files:&lt;/em&gt;&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&amp;gt;&lt;span class="w"&gt; &lt;/span&gt;/sys/devices/system/cpu/intel_pstate/no_turbo
+&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&amp;gt;&lt;span class="w"&gt; &lt;/span&gt;/sys/devices/system/cpu/cpufreq/boost
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Dynamic Voltage &amp;amp; Frequency Scaling
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Docs:&lt;/em&gt; &lt;a href="https://askubuntu.com/questions/523640/how-i-can-disable-cpu-frequency-scaling-and-set-the-system-to-performance"&gt;how-to&lt;/a&gt;, &lt;a href="https://wiki.archlinux.org/title/CPU_frequency_scaling"&gt;archlinux&lt;/a&gt;, &lt;a href="https://www.kernel.org/doc/Documentation/cpu-freq/intel-pstate.txt"&gt;kernel doc&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Kernel options:&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;intel_pstate&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;disabled&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;amd_pstate&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;disabled&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cpufreq_disable&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;em&gt;Sysfs files:&lt;/em&gt;&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;performance&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;tee&lt;span class="w"&gt; &lt;/span&gt;/sys/devices/system/cpu/cpu&lt;span class="nv"&gt;$X&lt;/span&gt;/cpufreq/scaling_governor
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Isolate one or more CPUs so you run your programs there without much interruptions from other tasks, including the kernel itself.
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Docs:&lt;/em&gt; &lt;a href="https://www.kernel.org/doc/html/v4.19/admin-guide/kernel-parameters.html"&gt;(kernel)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Kernel options:&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;isolcpus&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;CPUs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (removes the CPUs from the scheduler) &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;rcu_nocbs&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;CPUs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (don’t use these to do rcu callbacks) &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;nohz_full&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;CPUs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (similar)&lt;/li&gt;
+&lt;li&gt;Alternative you may user a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cgroup&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; from userspace with &lt;a href="https://manpages.ubuntu.com/manpages/bionic/man1/cset.1.html"&gt;(cset)&lt;/a&gt; but the kernel options should be much better.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Disable the GUI:
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Kernel options:&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;systemd&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unit&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;multi&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (for &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;systemd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; systems), &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;text&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (it did’t work for me)&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Fuhrer reading:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.kernel.org/doc/Documentation/kernel-per-CPU-kthreads.txt"&gt;kthreads (kernel doc)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://lwn.net/Articles/816298/"&gt;task-isolation mode (LWN article)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="user-spaces-services"&gt;User space’s services&lt;/h3&gt;
+&lt;p&gt;Disable all the services that you can. With isolated CPUs no code should run on them but that doesn’t mean that they are really isolated.&lt;/p&gt;
+&lt;p&gt;The CPUs will share the cache so a busy CPU may interfere with cache misses on an isolated one.&lt;/p&gt;
+&lt;p&gt;Some docs:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/tuning_guide/chap-general_system_tuning"&gt;General tuning&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/tuning_guide/chap-Realtime-Specific_Tuning"&gt;Realtime specific tuning&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://manpages.debian.org/buster/tuned/tuned.8.en.html"&gt;Use a preconfigured tuned setup&lt;/a&gt;, see &lt;a href="https://github.com/redhat-performance/tuned/blob/master/profiles/realtime/tuned.conf"&gt;tuned.conf&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="instrumentation-guidelines"&gt;Instrumentation guidelines&lt;/h2&gt;
+&lt;p&gt;No point to have a quiescent environment if the instrumentation in the experiment is inherently noisy.&lt;/p&gt;
+&lt;p&gt;Some guidelines:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;static low-overhead instrumentation if possible, dynamic if you can’t recompile.&lt;/li&gt;
+&lt;li&gt;prefer deterministic (like counting the elapsed time) over sampling, specially for small-fast function targets; sometimes sampling is the only way however.&lt;/li&gt;
+&lt;li&gt;use a &lt;a href="/articles/2021/02/27/High-Precision-Timers.html"&gt;high precision clock&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;perhaps a &lt;a href="https://github.com/plasma-umass/coz"&gt;causal profiler (coz)&lt;/a&gt;. See &lt;a href="https://easyperf.net/blog/2020/02/26/coz-vs-sampling-profilers"&gt;post&lt;/a&gt; and &lt;a href="https://www.youtube.com/watch?v=r-TLSBdHe1A"&gt;video&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;About the binary under test:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;code alignment can be mostly controlled by the compiler, but it may add delays due the increasing of the binary. See &lt;a href="https://easyperf.net/blog/2018/01/25/Code_alignment_options_in_llvm"&gt;post&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;if you cannot control it, randomize it: you will add noise but it will be random noise and not &lt;em&gt;biased noise&lt;/em&gt; which is much worst. &lt;a href="https://github.com/ccurtsinger/stabilizer"&gt;Stabilizer (may be)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="the-experiment-setup"&gt;The experiment setup&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;automate the setup of the machine as much as possible&lt;/li&gt;
+&lt;li&gt;automate the experiment execution so it can be reproduced again in the future.&lt;/li&gt;
+&lt;li&gt;run several executions and track the minimum value (if applies); if possible, try to run several different benchmark programs that use your target function.&lt;/li&gt;
+&lt;li&gt;use different test suites and benchmarks (&lt;a href="https://github.com/google/benchmark"&gt;google’s&lt;/a&gt;).&lt;/li&gt;
+&lt;li&gt;use thread’s CPU affinity to assign the threads to each (isolated) CPU
+&lt;ul&gt;
+&lt;li&gt;use &lt;a href="https://man7.org/linux/man-pages/man1/taskset.1.html"&gt;taskset&lt;/a&gt; or&lt;/li&gt;
+&lt;li&gt;use &lt;a href="https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html"&gt;sched_setaffinity&lt;/a&gt; or &lt;a href="https://man7.org/linux/man-pages/man3/pthread_setaffinity_np.3.html"&gt;pthread_setaffinity_np&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 id="sources-of-noise-in-the-environment"&gt;Sources of noise in the environment&lt;/h2&gt;
 &lt;p&gt;There are a lot.&lt;/p&gt;
 &lt;p&gt;Other processes running, the OS scheduler making your program to &lt;em&gt;yield&lt;/em&gt; the CPU, the OS interrupting to process a more urgent task (like interruptions) and more.&lt;/p&gt;
