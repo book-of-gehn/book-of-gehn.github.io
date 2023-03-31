@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2023-03-29T17:40:53.547498+00:00</updated>
+  <updated>2023-03-31T14:50:19.170282+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -11,6 +11,187 @@
   <link href="https://book-of-gehn.github.io/atom.xml" rel="self"/>
   <generator uri="https://lkiesow.github.io/python-feedgen" version="0.9.0">python-feedgen</generator>
   <subtitle>blog</subtitle>
+  <entry>
+    <id>https://book-of-gehn.github.io/articles/2023/03/30/Tabulation-Hashing.html</id>
+    <title>Tabulation Hashing Implementation and Analysis</title>
+    <updated>2023-03-30T00:00:00+00:00</updated>
+    <author>
+      <name>Martin Di Paola</name>
+    </author>
+    <content type="html">&lt;p&gt;There are a lot of hash algorithms for different use cases but &lt;em&gt;tabulation hashing&lt;/em&gt; caught my attention years ago for its incredible simplicity and nice independence properties.&lt;/p&gt;
+&lt;p&gt;Fast and simple.&lt;/p&gt;
+&lt;p&gt;I will explore a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;a href="https://github.com/eldipa/tabulation-hashing"&gt;implementation&lt;/a&gt; and see how fast really is.&lt;!--more--&gt;&lt;/p&gt;
+&lt;h2 id="what-is-a-tabulation-hashing"&gt;What is a tabulation hashing?&lt;/h2&gt;
+&lt;p&gt;The idea is to take keys of \(k\) bits and convert them into hashes of \(h\) bits.&lt;/p&gt;
+&lt;p&gt;We split the key into chunks of \(c\) bits and we construct a table of &lt;em&gt;random numbers&lt;/em&gt; of \(h\) bits each.&lt;/p&gt;
+&lt;p&gt;This table will have one row per chunk and each row will be \(2^c\) numbers long.&lt;/p&gt;
+&lt;p&gt;The tabulation hashing is completed defined then by these parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;key of \(k\) bits&lt;/li&gt;
+&lt;li&gt;hash of \(h\) bits&lt;/li&gt;
+&lt;li&gt;chunk of \(c\) bits&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;While in theory we can choose any value, the size of a chunk (\(c\)) should be small as the rows grows exponentially (\(2^c\)) and we want &lt;em&gt;small tables to keep them in the cache&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;And how a key is actually hashed? The following diagrams should explain it:&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Hash a key in 3 simple steps:
+&lt;br /&gt;&lt;br /&gt;
+1.- Take the key, split it into \(k/c\) chunks.
+&lt;br /&gt;&lt;br /&gt;
+2.- Use each to &lt;em&gt;index&lt;/em&gt; each row of the table obtaining then \(k/c\) random numbers of \(h\) bits.
+&lt;br /&gt;&lt;br /&gt;
+3.- Finally xor’ them and the result will be the hash of the key.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/hashes/tabulation-hashing/tabulationhashing.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id="cython-implementation"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implementation&lt;/h2&gt;
+&lt;p&gt;While we have 3 free parameters, I will restrict these:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;keys of 32 or 64 bits&lt;/li&gt;
+&lt;li&gt;hashes of 32 or 64 bits&lt;/li&gt;
+&lt;li&gt;chunk of 8 bits&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;We could code a specific implementation for each key/hash bit size but &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; thankfully supports a kind of C++ templates called &lt;em&gt;fused types&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;So, here are the definitions:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;libc.stdint&lt;/span&gt; &lt;span class="k"&gt;cimport&lt;/span&gt; &lt;span class="n"&gt;uint32_t&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;uint64_t&lt;/span&gt;
+
+&lt;span class="k"&gt;ctypedef&lt;/span&gt; &lt;span class="k"&gt;fused&lt;/span&gt; &lt;span class="n"&gt;key_dtype&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;uint32_t&lt;/span&gt;
+    &lt;span class="n"&gt;uint64_t&lt;/span&gt;
+
+&lt;span class="k"&gt;ctypedef&lt;/span&gt; &lt;span class="k"&gt;fused&lt;/span&gt; &lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;uint32_t&lt;/span&gt;
+    &lt;span class="n"&gt;uint64_t&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now let’s write a &lt;em&gt;single&lt;/em&gt; generic hash function:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;boundscheck&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;wraparound&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;infer_types&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;cdef&lt;/span&gt; &lt;span class="kr"&gt;inline&lt;/span&gt; &lt;span class="kt"&gt;hash_dtype&lt;/span&gt; &lt;span class="nf"&gt;c_hash_x&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key_dtype&lt;/span&gt; &lt;span class="n"&gt;k&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;span class="p"&gt;[::&lt;/span&gt;&lt;span class="mf"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;nogil&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;cdef&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;hash_dtype&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h4&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h6&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h7&lt;/span&gt;
+        &lt;span class="n"&gt;key_dtype&lt;/span&gt; &lt;span class="n"&gt;k0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;k1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;k2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;k3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;k4&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;k5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;k6&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;k7&lt;/span&gt;
+
+    &lt;span class="n"&gt;k0&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x000000ff&lt;/span&gt;
+    &lt;span class="n"&gt;k1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;8&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x000000ff&lt;/span&gt;
+    &lt;span class="n"&gt;k2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;16&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x000000ff&lt;/span&gt;
+    &lt;span class="n"&gt;k3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;24&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x000000ff&lt;/span&gt;
+
+    &lt;span class="n"&gt;h0&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;k0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="n"&gt;h1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;k1&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mf"&gt;256&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="n"&gt;h2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;k2&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mf"&gt;256&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mf"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="n"&gt;h3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;k3&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mf"&gt;256&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mf"&gt;3&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+    &lt;span class="n"&gt;h&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;h0&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;h1&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;h2&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;h3&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;key_dtype&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="n"&gt;uint64_t&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;k4&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;32&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x000000ff&lt;/span&gt;
+        &lt;span class="n"&gt;k5&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;40&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x000000ff&lt;/span&gt;
+        &lt;span class="n"&gt;k6&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;48&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x000000ff&lt;/span&gt;
+        &lt;span class="n"&gt;k7&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="mf"&gt;56&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="n"&gt;x000000ff&lt;/span&gt;
+
+        &lt;span class="n"&gt;h4&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;k4&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mf"&gt;256&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mf"&gt;4&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+        &lt;span class="n"&gt;h5&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;k5&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mf"&gt;256&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mf"&gt;5&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+        &lt;span class="n"&gt;h6&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;k6&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mf"&gt;256&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mf"&gt;6&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+        &lt;span class="n"&gt;h7&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;k7&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mf"&gt;256&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mf"&gt;7&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+        &lt;span class="n"&gt;h&lt;/span&gt; &lt;span class="o"&gt;^=&lt;/span&gt; &lt;span class="n"&gt;h4&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;h5&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;h6&lt;/span&gt; &lt;span class="o"&gt;^&lt;/span&gt; &lt;span class="n"&gt;h7&lt;/span&gt;
+
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Few notes of the implementation:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will replace &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;key_dtype&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; by the specific types (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint32_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint64_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;) doing a cross product of types. In this case &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will generate 4 functions in total.&lt;/li&gt;
+&lt;li&gt;the conditional &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;key_dtype&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="n"&gt;uint64_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is resolved by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in compile time so it is a handy way to write conditional code without the C preprocessor.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;span class="p"&gt;[::&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; tells to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; that we expect a &lt;strong&gt;memory view&lt;/strong&gt;, in particular an unidimensional contiguous array (faster access).&lt;/li&gt;
+&lt;li&gt;with &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;boundscheck&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;wraparound&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we will be playing with the table as a plain C array (faster access): no out of bound exceptions or fancy Pythonic indexing.&lt;/li&gt;
+&lt;li&gt;the entire &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;c_hash_x&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function does not use any Python object: everything is C data. In such case we can release the GIL during its execution with &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;nogil&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (concurrent friendly)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;c_hash_x&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cdef&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function which means it can be called only from within C code.&lt;/p&gt;
+&lt;p&gt;To make it accessible from Python we code:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;hash_x&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key_dtype&lt;/span&gt; &lt;span class="n"&gt;k&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;span class="p"&gt;[::&lt;/span&gt;&lt;span class="mf"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;c_hash_x&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;C functions are &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;static&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; by default so the C compiler should optimize the call. In fact, I marked &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;c_hash_x&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; as &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;inline&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to hint the compiler.&lt;/p&gt;
+&lt;h2 id="hash-a-vector-of-keys"&gt;Hash a vector of keys&lt;/h2&gt;
+&lt;p&gt;The tabulation hashing shines when we hash a vector of keys as much of the table rows will be in the cache.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; code is:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;boundscheck&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;wraparound&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;infer_types&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="nd"&gt;@cython&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cdivision&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;hash_vec_full&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key_dtype&lt;/span&gt;&lt;span class="p"&gt;[::&lt;/span&gt;&lt;span class="mf"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="n"&gt;kvec&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;span class="p"&gt;[::&lt;/span&gt;&lt;span class="mf"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;span class="p"&gt;[::&lt;/span&gt;&lt;span class="mf"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="n"&gt;out&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;cdef&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;hash_dtype&lt;/span&gt; &lt;span class="n"&gt;hi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt;
+        &lt;span class="n"&gt;key_dtype&lt;/span&gt; &lt;span class="n"&gt;k&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;xi&lt;/span&gt;
+
+        &lt;span class="n"&gt;uint32_t&lt;/span&gt; &lt;span class="n"&gt;vec_size&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;kvec&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;shape&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+        &lt;span class="n"&gt;uint32_t&lt;/span&gt; &lt;span class="n"&gt;row&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;shift&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;rebase&lt;/span&gt;
+        &lt;span class="n"&gt;uint32_t&lt;/span&gt; &lt;span class="n"&gt;nrows&lt;/span&gt;
+
+    &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="k"&gt;nogil&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;vec_size&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="n"&gt;k&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;kvec&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+            &lt;span class="n"&gt;h&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;c_hash_x&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;key_dtype&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;span class="p"&gt;](&lt;/span&gt;&lt;span class="n"&gt;k&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;A few notes:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;as before we require the arrays to be contiguous&lt;/li&gt;
+&lt;li&gt;a Python function cannot be marked as &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;nogil&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; but we can mark as subpart of it with a context manager&lt;/li&gt;
+&lt;li&gt;the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;c_hash_x&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;key_dtype&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;hash_dtype&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; tells &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to call the &lt;em&gt;specialized&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;c_hash_x&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function for those types.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="runtime-performance"&gt;Runtime performance&lt;/h2&gt;
+&lt;p&gt;I’ll analyse the &lt;a href="https://github.com/eldipa/tabulation-hashing/releases/tag/1.0.1"&gt;1.0.1 version&lt;/a&gt; of the tabulation hashing implementation.&lt;/p&gt;
+&lt;p&gt;For comparison I will use a simple linear hashing:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;h = (a * k + b)     (mod N)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Where &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; are random numbers of \(h\) bits and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is \(2^h\)&lt;/p&gt;
+&lt;p&gt;The beauty of this function is that is really simple and fast because we can use &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;numpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to write a vectorized version to hash several keys in one shot.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Comparison of elapsed time (in nanoseconds) of tabulation hashing and linear hashing for a 32-32 \(k\)-\(h\) bits on the left and 64-64 bits on the right.
+&lt;br /&gt;&lt;br /&gt;
+The experiment run 1000 times for each setting and the plot shows the &lt;em&gt;minimum&lt;/em&gt; elapsed time for each.
+&lt;br /&gt;&lt;br /&gt;
+The error (dispersion) of the metric is too tiny to be visible but a more detailed analysis of the noise in the measurement is provided bellow.
+&lt;br /&gt;&lt;br /&gt;
+Here the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;order&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; means datasets of \(2^{order}\) random numbers to hash.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/hashes/tabulation-hashing/cmp_runtime_32-32_and_64-64_full_lin.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Linear hashing performs better than tabulation hashing, probably because &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;numpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is well optimized for computing a multiplication and a addition in a vectorized fashion.&lt;/p&gt;
+&lt;p&gt;In contrast my &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implementation does not take any advantage of such instructions.&lt;/p&gt;
+&lt;p&gt;Nevertheless tabulation hashing shows a consistent performance across the different datasets.&lt;/p&gt;
+&lt;p&gt;Note also that the performance of the linear hashing gets worst on larger datasets. The &lt;em&gt;why&lt;/em&gt; is an open question.&lt;/p&gt;
+&lt;p&gt;For reference here is the &lt;a href="/assets/hashes/tabulation-hashing/"&gt;code for plotting and raw dataset&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="noise-measurement-evaluation"&gt;Noise measurement evaluation&lt;/h2&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/hashes/tabulation-hashing/cmp_runtime_noise_full_lin.svg' /&gt;
+&lt;figcaption&gt;
+Dispersion of the elapsed time measured in each experiment (in nanoseconds). On top is tabulation hashing, on bottom is linear hashing.
+&lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Here we can see how the elapsed times of linear hashing are left-shifted meaning that it ran faster than tabulation hashing.&lt;/p&gt;
+&lt;p&gt;But the dispersion density is much interesting!&lt;/p&gt;
+&lt;p&gt;For tabulation hashing we have very high peaks which means smaller dispersion of the measurements.&lt;/p&gt;
+&lt;p&gt;Tabulation hashing in mostly affected by cache misses as it is primary a set of memory lookups.&lt;/p&gt;
+&lt;p&gt;Linear hashing may use the ALU more intensively. Would this explain the dispersion?&lt;/p&gt;
+&lt;p&gt;I’m not sure: I disabled &lt;a href="/articles/2021/03/07/Quiescent-Environment.html"&gt;hyperthreading/SMT and isolated the CPUs&lt;/a&gt; for the experiment so nobody should had interfered with the ALU.&lt;/p&gt;
+&lt;h2 id="conclusions-and-further-research"&gt;Conclusions and further research&lt;/h2&gt;
+&lt;p&gt;Tabulation hashing is slower than linear hashing but close.&lt;/p&gt;
+&lt;p&gt;The comparison however is not taking into account that a linear hashing has less math properties than the tabulation hashing.&lt;/p&gt;
+&lt;p&gt;For example the latter is 3-way independence which some applications requires and a linear hashing would not be applicable.&lt;/p&gt;
+&lt;p&gt;My &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; &lt;a href="https://github.com/eldipa/tabulation-hashing"&gt;implementation&lt;/a&gt; does not make any of vectorized memory access nor parallelism so it is not exploiting the full capabilities of a modern CPU.&lt;/p&gt;
+&lt;p&gt;Something that I may explore in the future.&lt;/p&gt;
+</content>
+    <link href="https://book-of-gehn.github.io/articles/2023/03/30/Tabulation-Hashing.html" rel="alternate" type="text/html" title="Tabulation Hashing Implementation and Analysis"/>
+    <category term="hash" label="hash"/>
+    <category term="hashing" label="hashing"/>
+    <category term="perf" label="perf"/>
+    <category term="performance" label="performance"/>
+    <category term="cython" label="cython"/>
+    <published>2023-03-30T00:00:00+00:00</published>
+  </entry>
   <entry>
     <id>https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html</id>
     <title>Key Recovering from CBC with `IV = K`{.mathjax}</title>
