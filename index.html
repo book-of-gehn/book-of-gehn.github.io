@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>The Book of Gehn</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
   <meta name="description" content="blog">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
@@ -22,7 +24,6 @@
       }
     });
   </script>
-  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
 
   <script src="/js/jquery-3.6.0.min.js"></script>
@@ -62,8 +63,6 @@
         
         
 
-    
-
     <nav class="group">
             <form id="blog-search-form">
                 <input type="search" placeholder="+must -not *fuzzy*"></input>
@@ -96,6 +95,40 @@ $(document).ready(function () {
     filterPostsByQuery(tag);
 });
 </script>
+<div class="index-single-post" id="articles-2023-04-05-Hash-Length-Extension-Attack-html">
+<hr class="slender post-layout" />
+<a href="https://book-of-gehn.github.io/articles/2023/04/05/Hash-Length-Extension-Attack.html">
+<h2 class="larger">
+Keyed Hash Length Extension Attack
+</h2>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="hash"'>hash</a>, <a href='https://book-of-gehn.github.io/?tag="extension"'>extension</a>
+</p>
+<p class="small-subtitle">
+April 5, 2023
+</p>
+<div>
+<p>How can we know if a message is authentic or not?</p>
+<p>A trusted party with access to a private key <code>k</code> can compute an <em>authentication code</em> or MAC.</p>
+<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyAvPgpDb21wdXRlIHRoZSAqbWVzc2FnZSBhdXRoZW50aWNhdGlvbiBjb2RlKiAoTUFDKSBkb2luZyBgSChrIOKIpSBtKWAuCgpJbiB0aGVvcnkgb25seSB3aG8ga25vd3MgdGhlIHNlY3JldCBrZXkgYGtgIGNhbiBjcmVhdGUgYW5kIHZlcmlmeSB0aG9zZSwKYnV0IG5vLCB0aGlzIHNjaGVtYSBlcyBicm9rZW4uCgpUaGlzIHBvc3QgY292ZXJzICptYXRhc2FubyBjaGFsbGVuZ2VzKiBmcm9tClsyOCB0byAzMF0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzQpIHNvICpzcG9pbGVyIGFsZXJ0Ki4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyAvPgpDb21wdXRlIHRoZSAqbWVzc2FnZSBhdXRoZW50aWNhdGlvbiBjb2RlKiAoTUFDKSBkb2luZyBgSChrIOKIpSBtKWAuCgpJbiB0aGVvcnkgb25seSB3aG8ga25vd3MgdGhlIHNlY3JldCBrZXkgYGtgIGNhbiBjcmVhdGUgYW5kIHZlcmlmeSB0aG9zZSwKYnV0IG5vLCB0aGlzIHNjaGVtYSBlcyBicm9rZW4uCgpUaGlzIHBvc3QgY292ZXJzICptYXRhc2FubyBjaGFsbGVuZ2VzKiBmcm9tClsyOCB0byAzMF0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzQpIHNvICpzcG9pbGVyIGFsZXJ0Ki4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/set-4-hashes/hash-verifier-generic.svg' />
+Compute the <em>message authentication code</em> (MAC) doing <code>H(k ∥ m)</code>.
+<br /><br />
+In theory only who knows the secret key <code>k</code> can create and verify those, but no, this schema es broken.
+<br /><br />
+This post covers <em>matasano challenges</em> from <a href="https://cryptopals.com/sets/4">28 to 30</a> so <em>spoiler alert</em>.
+</span></p>
+<p>A <em>keyed hash</em> prefixes the message with the key <code>k</code> and computes a hash like SHA-1. The resulting hash is the MAC for the given message.</p>
+<p>Then, someone that knows also <code>k</code> can verify if a message is authentic or not computing the MAC and comparing it with the one provided with the message.</p>
+<p>If the computed hash matches the one provided, the message is authentic, otherwise it is not.</p>
+<p>Unfortunately this <em>prefix-keyed hash</em> for MAC is <strong>broken</strong>.</p>
+<p>Some very well known hash functions <em>expose</em> their internal states which allows an adversary to <strong>append</strong> data to the message and <strong>continue</strong> the hash computation and generate a <strong>new valid MAC</strong>.</p>
+<p>Hence the name <em>“extension length attack”</em>.</p>
+</div>
+</div>
 <div class="index-single-post" id="articles-2023-03-30-Tabulation-Hashing-html">
 <hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2023/03/30/Tabulation-Hashing.html">

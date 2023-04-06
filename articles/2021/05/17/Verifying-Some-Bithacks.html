@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Verifying some bithacks</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
   <meta name="description" content="Verifying some bithacks">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
@@ -22,7 +24,6 @@
       }
     });
   </script>
-  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
 
   <script src="/js/jquery-3.6.0.min.js"></script>
@@ -435,8 +436,8 @@ a single 1</code></pre>
 <p><code><span class="highlight-candombe-inline"><span class="k">for</span></span></code>-loops like those forces us to model <strong>all</strong> the iterations.</p>
 <p>With respect to Z3, <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code> works pretty well but it lacks of a way to <em>promote</em> or <em>upcast</em> to wider <code><span class="highlight-candombe-inline"><span class="n">BitVecs</span></span></code>. This needs to be done by hand.</p>
 <p>And don’t forget that <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code> is a <strong>signed integer</strong> so <code><span class="highlight-candombe-inline"><span class="o">&lt;</span></span></code> are signed by default.</p>
-<p class="subtitle">
-Related: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="bitvec"'>bitvec</a>, <a href='https://book-of-gehn.github.io/?tag="verify bithacks"'>verify bithacks</a>
+<p class="small-subtitle-with-top-margin">
+Related tags: <a href='https://book-of-gehn.github.io/?tag="z3"'>z3</a>, <a href='https://book-of-gehn.github.io/?tag="smt"'>smt</a>, <a href='https://book-of-gehn.github.io/?tag="sat"'>sat</a>, <a href='https://book-of-gehn.github.io/?tag="solver"'>solver</a>, <a href='https://book-of-gehn.github.io/?tag="bitvec"'>bitvec</a>, <a href='https://book-of-gehn.github.io/?tag="verify bithacks"'>verify bithacks</a>
 </p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Deadly Typos 2020</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
   <meta name="description" content="Deadly Typos 2020">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
@@ -22,7 +24,6 @@
       }
     });
   </script>
-  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
 
   <script src="/js/jquery-3.6.0.min.js"></script>
@@ -150,8 +151,8 @@ April 24, 2021
 <p><code><span class="highlight-candombe-inline"><span class="n">scan</span></span></code> checks for <code><span class="highlight-candombe-inline"><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">msg</span><span class="p">)</span></span></code> and if it is <code><span class="highlight-candombe-inline"><span class="nb">NULL</span></span></code> it will believe that the subfunction did a full round and it didn’t find a message.</p>
 <p>Under a heavy workload on <em>all</em> the ports, this typo was unnoticed because <code><span class="highlight-candombe-inline"><span class="o">*</span><span class="n">msg</span></span></code> was always not-<code><span class="highlight-candombe-inline"><span class="nb">NULL</span></span></code>.</p>
 <p>But when a single port was with less data, even if the rest of the ports were super-busy, <code><span class="highlight-candombe-inline"><span class="n">scan</span></span></code> did a <code><span class="highlight-candombe-inline"><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></span></code> impacting negatively in the performance. Less work made the things worse!</p>
-<p class="subtitle">
-Related: <a href='https://book-of-gehn.github.io/?tag="pointer"'>pointer</a>, <a href='https://book-of-gehn.github.io/?tag="memory"'>memory</a>
+<p class="small-subtitle-with-top-margin">
+Related tags: <a href='https://book-of-gehn.github.io/?tag="pointer"'>pointer</a>, <a href='https://book-of-gehn.github.io/?tag="memory"'>memory</a>
 </p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

@@ -8,7 +8,228 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Fri, 31 Mar 2023 14:50:19 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 06 Apr 2023 18:26:07 +0000</lastBuildDate>
+    <item>
+      <title>Keyed Hash Length Extension Attack</title>
+      <link>https://book-of-gehn.github.io/articles/2023/04/05/Hash-Length-Extension-Attack.html</link>
+      <description>&lt;p&gt;How can we know if a message is authentic or not?&lt;/p&gt;
+&lt;p&gt;A trusted party with access to a private key \(k\) can compute an &lt;em&gt;authentication code&lt;/em&gt; or MAC.&lt;/p&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyAvPgpDb21wdXRlIHRoZSAqbWVzc2FnZSBhdXRoZW50aWNhdGlvbiBjb2RlKiAoTUFDKSBkb2luZyBgSChrIOKIpSBtKWAuCgpJbiB0aGVvcnkgb25seSB3aG8ga25vd3MgdGhlIHNlY3JldCBrZXkgYGtgIGNhbiBjcmVhdGUgYW5kIHZlcmlmeSB0aG9zZSwKYnV0IG5vLCB0aGlzIHNjaGVtYSBlcyBicm9rZW4uCgpUaGlzIHBvc3QgY292ZXJzICptYXRhc2FubyBjaGFsbGVuZ2VzKiBmcm9tClsyOCB0byAzMF0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzQpIHNvICpzcG9pbGVyIGFsZXJ0Ki4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyAvPgpDb21wdXRlIHRoZSAqbWVzc2FnZSBhdXRoZW50aWNhdGlvbiBjb2RlKiAoTUFDKSBkb2luZyBgSChrIOKIpSBtKWAuCgpJbiB0aGVvcnkgb25seSB3aG8ga25vd3MgdGhlIHNlY3JldCBrZXkgYGtgIGNhbiBjcmVhdGUgYW5kIHZlcmlmeSB0aG9zZSwKYnV0IG5vLCB0aGlzIHNjaGVtYSBlcyBicm9rZW4uCgpUaGlzIHBvc3QgY292ZXJzICptYXRhc2FubyBjaGFsbGVuZ2VzKiBmcm9tClsyOCB0byAzMF0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzQpIHNvICpzcG9pbGVyIGFsZXJ0Ki4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/set-4-hashes/hash-verifier-generic.svg' /&gt;
+Compute the &lt;em&gt;message authentication code&lt;/em&gt; (MAC) doing \(H(k ∥ m)\).
+&lt;br /&gt;&lt;br /&gt;
+In theory only who knows the secret key \(k\) can create and verify those, but no, this schema es broken.
+&lt;br /&gt;&lt;br /&gt;
+This post covers &lt;em&gt;matasano challenges&lt;/em&gt; from &lt;a href="https://cryptopals.com/sets/4"&gt;28 to 30&lt;/a&gt; so &lt;em&gt;spoiler alert&lt;/em&gt;.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;A &lt;em&gt;keyed hash&lt;/em&gt; prefixes the message with the key \(k\) and computes a hash like SHA-1. The resulting hash is the MAC for the given message.&lt;/p&gt;
+&lt;p&gt;Then, someone that knows also \(k\) can verify if a message is authentic or not computing the MAC and comparing it with the one provided with the message.&lt;/p&gt;
+&lt;p&gt;If the computed hash matches the one provided, the message is authentic, otherwise it is not.&lt;/p&gt;
+&lt;p&gt;Unfortunately this &lt;em&gt;prefix-keyed hash&lt;/em&gt; for MAC is &lt;strong&gt;broken&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Some very well known hash functions &lt;em&gt;expose&lt;/em&gt; their internal states which allows an adversary to &lt;strong&gt;append&lt;/strong&gt; data to the message and &lt;strong&gt;continue&lt;/strong&gt; the hash computation and generate a &lt;strong&gt;new valid MAC&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Hence the name &lt;em&gt;“extension length attack”&lt;/em&gt;.&lt;!--more--&gt;&lt;/p&gt;
+&lt;h2 id="overview-of-keyed-sha-1"&gt;Overview of keyed SHA-1&lt;/h2&gt;
+&lt;p&gt;Let’s take a look as how SHA-1 is used as a MAC.&lt;/p&gt;
+&lt;p&gt;The plaintext message is prefixed with the secret key and hashed.&lt;/p&gt;
+&lt;p&gt;SHA-1 pads the inputs to encode its length and to end with data multiple of 64 bytes (512 bits).&lt;/p&gt;
+&lt;p&gt;The padding is a single bit 1 followed by a bunch of bits 0.&lt;/p&gt;
+&lt;p&gt;The last 8 bytes of the padding are reserved for storing the length of the un-padded input in bits.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/set-4-hashes/hash-overview.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id="hashs-states"&gt;Hash’s states&lt;/h2&gt;
+&lt;p&gt;Initially SHA-1 begins with a well known state (composed by 5 &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint32_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; integers).&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;h0&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x67452301&lt;/span&gt;
+&lt;span class="n"&gt;h1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0xEFCDAB89&lt;/span&gt;
+&lt;span class="n"&gt;h2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x98BADCFE&lt;/span&gt;
+&lt;span class="n"&gt;h3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x10325476&lt;/span&gt;
+&lt;span class="n"&gt;h4&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0xC3D2E1F0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Once the input is padded, the resulting data is chopped into 64 bytes blocks and for each block the state of the hash evolves.&lt;/p&gt;
+&lt;p&gt;Starting from the initial state \(h_0\), it evolves to \(h_1\) after having processed the block \(b_0\). Then, it evolves to \(h_2\) after the block \(b_1\) and so on.&lt;/p&gt;
+&lt;p&gt;The final state is then used to compute the final hash.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/set-4-hashes/hash-states.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Note how the hash states \(h_1\) depends of the first block \(b_0\) which contains the secret key (or at least the begin of it).&lt;/p&gt;
+&lt;p&gt;Therefore, the \(h_1\) cannot be guessed by an adversary or any other internal state.&lt;/p&gt;
+&lt;p&gt;The final state however is &lt;em&gt;totally exposed&lt;/em&gt; by SHA-1: the concatenation of the state’s variables &lt;strong&gt;is&lt;/strong&gt; the resulting hash.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;sha1&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;h0&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x67452301&lt;/span&gt;
+    &lt;span class="n"&gt;h1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0xEFCDAB89&lt;/span&gt;
+    &lt;span class="n"&gt;h2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x98BADCFE&lt;/span&gt;
+    &lt;span class="n"&gt;h3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x10325476&lt;/span&gt;
+    &lt;span class="n"&gt;h4&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0xC3D2E1F0&lt;/span&gt;
+
+    &lt;span class="c1"&gt;# pad msg and evolve h0, h1, h2, h3, h4&lt;/span&gt;
+    &lt;span class="c1"&gt;# ....&lt;/span&gt;
+
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%08x%08x%08x%08x%08x&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;h0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h4&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;And &lt;strong&gt;that&lt;/strong&gt; can be a problem.&lt;/p&gt;
+&lt;h2 id="length-extension-attack"&gt;Length Extension Attack&lt;/h2&gt;
+&lt;p&gt;The idea is to recover the hashing state from a MAC and continue the hashing &lt;em&gt;as if&lt;/em&gt; we were hashing a &lt;em&gt;longer&lt;/em&gt; message.&lt;/p&gt;
+&lt;p&gt;This allows us to &lt;em&gt;extend&lt;/em&gt; a authentic message with arbitrary payload and compute a valid MAC for it without knowing the secret key.&lt;/p&gt;
+&lt;p&gt;In the diagram below, we take the original MAC (the “final” hash state \(h_8\)) and compute the hash of the “remaining” message &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;ext&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Knowing \(H(k ∥ ptext)\) we use it as the starting state and compute \(H(ext)\).
+&lt;br /&gt;&lt;br /&gt;
+The resulting hash will be &lt;em&gt;equivalent&lt;/em&gt; to \(H(k ∥ ptext ∥ pad ∥ ext)\): a valid MAC for the message \(ptext ∥ pad ∥ ext\).
+&lt;br /&gt;&lt;br /&gt;
+An adversary can submit \(ptext ∥ pad ∥ ext\) and pass it as authentic without knowing the key \(k\).
+&lt;br /&gt;&lt;br /&gt;
+\(ptext\) is assumed to be known by the adversary; \(pad\) isn’t but it can be guessed.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/set-4-hashes/hash-ext-states.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;The extended message must be padded &lt;em&gt;as if&lt;/em&gt; we were padding the whole message: in \(pad'\) we need to write the length of the whole message.&lt;/p&gt;
+&lt;p&gt;From the perspective of SHA-1 the whole input is the original message \(ptext\), the padding of the original SHA-1 call and the appended message \(ext\).&lt;/p&gt;
+&lt;p&gt;In other words, we compute \(H(ext)\) starting not from the initial hashing state \(h_0\) but from \(h_8 = H(k ∥ ptext)\).&lt;/p&gt;
+&lt;p&gt;The resulting hash will be equivalent to compute \(H(k ∥ ptext ∥ pad ∥ ext)\) but without the requiring of knowing the key.&lt;/p&gt;
+&lt;h2 id="proof-of-concept-code"&gt;Proof of concept (code!)&lt;/h2&gt;
+&lt;p&gt;Assume that someone checks is the user is admin or not verifying and reviewing a plaintext.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.toys.hashes.sha1&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;sha1&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.toys.hashes.keyed&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;prefix_key_hash&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;foobar&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;# unknown&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;login&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login_req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;unverified_hash&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;verbose&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;h&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;prefix_key_hash&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sha1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;login_req&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;unverified_hash&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;verbose&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Bad MAC. Login aborted.&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;False&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;admin=True&amp;quot;&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;login_req&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;verbose&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Logged as admin&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;         &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;verbose&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Logged as normal user&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;So a normal user would be logged as a “normal user”&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;login_req&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;user=john;comment=cheese&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;mac&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;prefix_key_hash&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sha1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;login_req&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login_req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;mac&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;Logged&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;normal&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;
+&lt;span class="kc"&gt;True&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Without knowing the key we cannot just “hack” the logging request and pretend to be admin:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login_req&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;;admin=True&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;mac&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;Bad&lt;/span&gt; &lt;span class="n"&gt;MAC&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="n"&gt;Login&lt;/span&gt; &lt;span class="n"&gt;aborted&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;
+&lt;span class="kc"&gt;False&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;But we can do an extension length attack.&lt;/p&gt;
+&lt;h3 id="get-the-hash-state-from-the-mac"&gt;Get the hash state from the MAC&lt;/h3&gt;
+&lt;p&gt;First, we extract the hash state (a fancy way to say “decode 5 &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint32_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;”):&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.conv&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;repack&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;extract_hash_fun_state&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hash_hex&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;words_bytes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hash_hex&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;encoding&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;nblocks&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;repack&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;words_bytes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ifmt&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;4s&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ofmt&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;gt;I&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;h0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h4&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;extract_hash_fun_state&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mac&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%08x%08x%08x%08x%08x&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;h0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h4&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;mac&lt;/span&gt;
+&lt;span class="kc"&gt;True&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="guess-the-padding"&gt;Guess the padding&lt;/h3&gt;
+&lt;p&gt;Let’s create a padding function like SHA-1 defines based on a given message length:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;pad_like_sha1&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg_length&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;bit_len&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;msg_length&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="c1"&gt;# Padding used by SHA1&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;padding&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\x80&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;padding&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\x00&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="mi"&gt;56&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg_length&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="mi"&gt;64&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="mi"&gt;64&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;padding&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;bit_len&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;to_bytes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;big&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;padding&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We know the length of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;login_req&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; but we don’t know the length of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; so we cannot reconstruct the original padding of the original MAC.&lt;/p&gt;
+&lt;p&gt;Nevertheless it can be brute-forced.&lt;/p&gt;
+&lt;p&gt;Basically we create a pad for a possible message length and extend the hashing of the original MAC with an empty string.&lt;/p&gt;
+&lt;p&gt;Then we submit to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; the new login request with the new (forged) MAC and see if it is valid or not:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;is_ok&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg_length&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;pad&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pad_like_sha1&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg_length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;new_mac&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;sha1&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h4&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;forged_message_len&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;msg_length&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pad&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="n"&gt;new_login_req&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;login_req&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;pad&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;new_login_req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;new_mac&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;verbose&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The minimum message length is the length of the plaintext (&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;login_req&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;); an educated guess for the key length would be 16 and a maximum of 256.&lt;/p&gt;
+&lt;p&gt;So the space is defined as:&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.space&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;IntSpace&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;minimum&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login_req&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;msg_length_space&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;IntSpace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;minimum&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;minimum&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;256&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;minimum&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Let’s use &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;is_ok&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; as an &lt;em&gt;oracle&lt;/em&gt; function to &lt;em&gt;explore&lt;/em&gt; the space of possible lengths.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;guessed_msg_length&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;search&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg_length_space&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;is_ok&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;guessed_msg_length&lt;/span&gt;
+&lt;span class="mi"&gt;30&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3 id="login-as-admin"&gt;Login as admin&lt;/h3&gt;
+&lt;p&gt;Now we can extend the original &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;login_req&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; with anything and compute for it a valid MAC.&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;;admin=True&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;pad&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pad_like_sha1&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;guessed_msg_length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;new_login_req&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;login_req&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;pad&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;ext&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;new_mac&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;sha1&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;h4&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;forged_message_len&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;guessed_msg_length&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pad&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ext&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;new_login_req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;new_mac&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;Logged&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;admin&lt;/span&gt;
+&lt;span class="kc"&gt;True&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Note how &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;login_req&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;pad&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; will be always part of your messages.&lt;/p&gt;
+&lt;p&gt;Therefore it could be possible that a more sophisticated &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function may detect the forgery but certainly it was not the crypto so prefix-keyed hashes as MAC are a bad idea.&lt;/p&gt;
+&lt;h2 id="beyond-sha-1"&gt;Beyond SHA-1&lt;/h2&gt;
+&lt;p&gt;SHA-1 exposes its entire state but it is not the only one.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CkNoZWNrIFtoYXNoX2V4dGVuZGVyXShodHRwczovL2dpdGh1Yi5jb20vaWFnb3g4Ni9oYXNoX2V4dGVuZGVyKSB0b29sCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkNoZWNrIFtoYXNoX2V4dGVuZGVyXShodHRwczovL2dpdGh1Yi5jb20vaWFnb3g4Ni9oYXNoX2V4dGVuZGVyKSB0b29sCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+Check &lt;a href="https://github.com/iagox86/hash_extender"&gt;hash_extender&lt;/a&gt; tool
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;The bibliography says that more are susceptible:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;MD4&lt;/li&gt;
+&lt;li&gt;MD5&lt;/li&gt;
+&lt;li&gt;RIPEMD-160&lt;/li&gt;
+&lt;li&gt;SHA-0&lt;/li&gt;
+&lt;li&gt;SHA-1&lt;/li&gt;
+&lt;li&gt;SHA-256&lt;/li&gt;
+&lt;li&gt;SHA-512&lt;/li&gt;
+&lt;li&gt;WHIRLPOOL&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This doesn’t mean that those are broken: a hash function by itself not really care if you can extend the hashing.&lt;/p&gt;
+&lt;p&gt;It is when a MAC is constructed as \(H(k ∥ m)\) when the extension capability becomes a problem and breaks the MAC construction.&lt;/p&gt;
+&lt;p&gt;While you could use a hash function that does not expose all its internal state (like SHA-512/224) it is still a too risky decision.&lt;/p&gt;
+&lt;p&gt;And the &lt;em&gt;suffix-keyed hash&lt;/em&gt;, \(H(m ∥ k)\), is also broken but it is not so trivial (it requires a collision).&lt;/p&gt;
+&lt;p&gt;Prefer &lt;a href="https://en.wikipedia.org/wiki/HMAC"&gt;HMAC&lt;/a&gt; instead.&lt;/p&gt;
+</description>
+      <guid isPermaLink="false">https://book-of-gehn.github.io/articles/2023/04/05/Hash-Length-Extension-Attack.html</guid>
+      <category>cryptography</category>
+      <category>matasano</category>
+      <category>cryptonita</category>
+      <category>hash</category>
+      <category>extension</category>
+      <pubDate>Wed, 05 Apr 2023 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>Tabulation Hashing Implementation and Analysis</title>
       <link>https://book-of-gehn.github.io/articles/2023/03/30/Tabulation-Hashing.html</link>

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Better Compression of Log Files (PoC)</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
   <meta name="description" content="Better Compression of Log Files (PoC)">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
@@ -22,7 +24,6 @@
       }
     });
   </script>
-  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
 
   <script src="/js/jquery-3.6.0.min.js"></script>
@@ -129,8 +130,8 @@ August 4, 2019
 <p>Think in <code>host evaluator: info No evaluator for</code>. It is very likely to be repeated several times but if its <em>frequency</em> is too low, several <em>other</em> lines could appear between one repetition and the other which may confuse and reduce the performance of the compressor.</p>
 <p>Clustering the lines should bring them closer but if the operation is not invertible without meta data (like the <a href="https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform">Burrows-Wheeler transform</a>) it may not be worthy.</p>
 <p>Also, a clustering will go against of the natural clustering of the <em>time dependent</em> strings. Not good.</p>
-<p class="subtitle">
-Related: <a href='https://book-of-gehn.github.io/?tag="scripting"'>scripting</a>, <a href='https://book-of-gehn.github.io/?tag="string compression"'>string compression</a>
+<p class="small-subtitle-with-top-margin">
+Related tags: <a href='https://book-of-gehn.github.io/?tag="scripting"'>scripting</a>, <a href='https://book-of-gehn.github.io/?tag="string compression"'>string compression</a>
 </p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Quiescent Environment</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
   <meta name="description" content="Quiescent Environment">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
@@ -22,7 +24,6 @@
       }
     });
   </script>
-  <!-- <script src='/js/MathJax-2.7.7/MathJax.js' async></script> -->
   <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
 
   <script src="/js/jquery-3.6.0.min.js"></script>
@@ -259,8 +260,8 @@ I wrote a few posts about this: a lock free queue <a href="/articles/2020/03/22/
 <p>Version B may be <em>faster</em> than A just because <code><span class="highlight-candombe-inline"><span class="n">bar</span><span class="p">()</span></span></code> was moved closer to <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> and the code of <code><span class="highlight-candombe-inline"><span class="n">bar</span><span class="p">()</span></span></code> gets into the cache at the moment that <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> does the call.</p>
 <p>Code layout, <a href="https://easyperf.net/blog/2018/01/18/Code_alignment_issues">code alignment</a>, data alignment, and who knows what else may change.</p>
 <p>And trust me, <a href="https://users.cs.northwestern.edu/~robby/courses/322-2013-spring/mytkowicz-wrong-data.pdf">Producing Wrong Data Without Doing Anything Obviously Wrong!</a> is very common and almost unavoidable.</p>
-<p class="subtitle">
-Related: <a href='https://book-of-gehn.github.io/?tag="quiescent"'>quiescent</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
+<p class="small-subtitle-with-top-margin">
+Related tags: <a href='https://book-of-gehn.github.io/?tag="quiescent"'>quiescent</a>, <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a>
 </p>
 <script src="https://utteranc.es/client.js"
         repo="book-of-gehn/book-of-gehn.github.io"
