@@ -95,6 +95,28 @@ $(document).ready(function () {
     filterPostsByQuery(tag);
 });
 </script>
+<div class="index-single-post" id="articles-2023-04-09-Hash-Length-Extension-Attack-on-SHA224-html">
+<hr class="slender post-layout" />
+<a href="https://book-of-gehn.github.io/articles/2023/04/09/Hash-Length-Extension-Attack-on-SHA224.html">
+<h2 class="larger">
+Follow up: Length Extension Attack on SHA-224
+</h2>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="hash"'>hash</a>, <a href='https://book-of-gehn.github.io/?tag="extension"'>extension</a>
+</p>
+<p class="small-subtitle">
+April 9, 2023
+</p>
+<div>
+<p>In the <a href="/articles/2023/04/05/Hash-Length-Extension-Attack.html">previous post</a> we reviewed why and how an extension length attack is possible on some hash function and how we can use it to break a prefix-keyed MAC.</p>
+<p>Long story short: when the full internal state of the hashing is exposed, an extension attack is possibly.</p>
+<p>So hash functions that <strong>don’t</strong> expose their internal state are okay, right?</p>
+<p>Yes in general but the <em>devil is in the details</em>…</p>
+<p>SHA-224 does not expose its full state and it is one of those <em>“safe”</em> hash functions (sometimes it is found in the literature as such) <strong>but…</strong></p>
+<p>In this quick post we will see why SHA-224 is vulnerable to <em>length extension attack</em> <strong>even</strong> if its internal state is not fully exposed.</p>
+</div>
+</div>
 <div class="index-single-post" id="articles-2023-04-05-Hash-Length-Extension-Attack-html">
 <hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2023/04/05/Hash-Length-Extension-Attack.html">
@@ -126,7 +148,7 @@ This post covers <em>matasano challenges</em> from <a href="https://cryptopals.c
 <p>If the computed hash matches the one provided, the message is authentic, otherwise it is not.</p>
 <p>Unfortunately this <em>prefix-keyed hash</em> for MAC is <strong>broken</strong>.</p>
 <p>Some very well known hash functions <em>expose</em> their internal states which allows an adversary to <strong>append</strong> data to the message and <strong>continue</strong> the hash computation and generate a <strong>new valid MAC</strong>.</p>
-<p>Hence the name <em>“extension length attack”</em>.</p>
+<p>Hence the name <em>“length extension attack”</em>.</p>
 </div>
 </div>
 <div class="index-single-post" id="articles-2023-03-30-Tabulation-Hashing-html">

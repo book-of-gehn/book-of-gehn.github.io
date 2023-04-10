@@ -90,7 +90,7 @@ This post covers <em>matasano challenges</em> from <a href="https://cryptopals.c
 <p>If the computed hash matches the one provided, the message is authentic, otherwise it is not.</p>
 <p>Unfortunately this <em>prefix-keyed hash</em> for MAC is <strong>broken</strong>.</p>
 <p>Some very well known hash functions <em>expose</em> their internal states which allows an adversary to <strong>append</strong> data to the message and <strong>continue</strong> the hash computation and generate a <strong>new valid MAC</strong>.</p>
-<p>Hence the name <em>“extension length attack”</em>.<!--more--></p>
+<p>Hence the name <em>“length extension attack”</em>.<!--more--></p>
 <h2 id="overview-of-keyed-sha-1">Overview of keyed SHA-1</h2>
 <p>Let’s take a look as how SHA-1 is used as a MAC.</p>
 <p>The plaintext message is prefixed with the secret key and hashed.</p>
@@ -187,7 +187,7 @@ An adversary can submit \(ptext ∥ pad ∥ ext\) and pass it as authentic witho
 <span class="kc">False</span>
 </code></pre></div>
 
-<p>But we can do an extension length attack.</p>
+<p>But we can do an length extension attack.</p>
 <h3 id="get-the-hash-state-from-the-mac">Get the hash state from the MAC</h3>
 <p>First, we extract the hash state (a fancy way to say “decode 5 <code><span class="highlight-candombe-inline"><span class="kt">uint32_t</span></span></code>”):</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.conv</span> <span class="kn">import</span> <span class="n">repack</span>

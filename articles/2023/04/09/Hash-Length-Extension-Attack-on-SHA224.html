@@ -1,0 +1,227 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Follow up: Length Extension Attack on SHA-224</title>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
+  <meta name="description" content="Follow up: Length Extension Attack on SHA-224">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      //root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2023/04/09/Hash-Length-Extension-Attack-on-SHA224.html">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+</header>
+<article class="group">
+<h1>
+Follow up: Length Extension Attack on SHA-224
+</h1>
+<p class="subtitle">
+April 9, 2023
+</p>
+<p>In the <a href="/articles/2023/04/05/Hash-Length-Extension-Attack.html">previous post</a> we reviewed why and how an extension length attack is possible on some hash function and how we can use it to break a prefix-keyed MAC.</p>
+<p>Long story short: when the full internal state of the hashing is exposed, an extension attack is possibly.</p>
+<p>So hash functions that <strong>don’t</strong> expose their internal state are okay, right?</p>
+<p>Yes in general but the <em>devil is in the details</em>…</p>
+<p>SHA-224 does not expose its full state and it is one of those <em>“safe”</em> hash functions (sometimes it is found in the literature as such) <strong>but…</strong></p>
+<p>In this quick post we will see why SHA-224 is vulnerable to <em>length extension attack</em> <strong>even</strong> if its internal state is not fully exposed.<!--more--></p>
+<h2 id="what-is-sha-224">What is SHA-224?</h2>
+<p>SHA-224 is based on SHA-256.</p>
+<p>It has 8 <code><span class="highlight-candombe-inline"><span class="kt">uint32_t</span></span></code> registers like SHA-256 but the hash digest is made of all except the last register, yielding hashes of 224 bits instead of 256 bits.</p>
+<p>At first glance this truncated output should prevent a length extension attack but take a closer look.</p>
+<p>Only 32 bits are missing!</p>
+<!--
+>>> from cryptonita import B
+>>> from cryptonita.toys.hashes.sha256 import sha224
+>>> from cryptonita.toys.hashes.keyed import prefix_key_hash
+
+>>> key = B('foobar') # unknown
+
+>>> def login(login_req, unverified_hash, verbose=True):
+...     h = prefix_key_hash(sha224, key, login_req)
+...     if h != unverified_hash:
+...         if verbose: print(f"Bad MAC. Login aborted. Ours: {h}, Theirs: {unverified_hash}")
+...         return False
+...
+...     if b"admin=True" in login_req.split(b";"):
+...         if verbose: print("Logged as admin")
+...     else:
+...         if verbose: print("Logged as normal user")
+...
+...     return True
+
+>>> def pad_like_sha224(msg_length):
+...     bit_len = msg_length * 8
+...
+...     # Padding used by SHA224
+...     padding = b'A' * msg_length
+...     padding += b'\x80'
+...     while (len(padding) * 8 + 64) % 512 != 0:
+...         padding += b'\x00'
+...
+...     padding += bit_len.to_bytes(8, 'big')
+...
+...     return padding[msg_length:]
+
+>>> from cryptonita.conv import repack
+>>> def extract_hash_fun_state(hash_hex):
+...     words_bytes = B(hash_hex, encoding=16).nblocks(4)
+...
+...     return repack(words_bytes, ifmt='4s', ofmt='>I')
+-->
+<h2 id="scenario-setup">Scenario setup</h2>
+<p>Like in the previous post, we will assume a <code><span class="highlight-candombe-inline"><span class="n">login</span><span class="p">()</span></span></code> function that verifies the authenticity of a login request, this time using SHA-224</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">login_req</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;user=john;comment=cheese&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">mac</span> <span class="o">=</span> <span class="n">prefix_key_hash</span><span class="p">(</span><span class="n">sha224</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">login_req</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">login</span><span class="p">(</span><span class="n">login_req</span><span class="p">,</span> <span class="n">mac</span><span class="p">)</span>
+<span class="n">Logged</span> <span class="k">as</span> <span class="n">normal</span> <span class="n">user</span>
+<span class="kc">True</span>
+</code></pre></div>
+
+<h2 id="the-attack">The attack</h2>
+<p>From the digest we extract 7 of the 8 state registers. Only 2 unknowns remains: the length of the original message (including the secret key) and the value of the 8th register <code><span class="highlight-candombe-inline"><span class="n">h7</span></span></code></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">h0</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">h6</span> <span class="o">=</span> <span class="n">extract_hash_fun_state</span><span class="p">(</span><span class="n">mac</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="s1">&#39;</span><span class="si">%08x%08x%08x%08x%08x%08x%08x</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">h0</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">h6</span><span class="p">))</span> <span class="o">==</span> <span class="n">mac</span>
+<span class="kc">True</span>
+</code></pre></div>
+
+<p><label for='CkJydXRlLWZvcmNpbmcgYDJeezMyfWAgaXMgcGVyZmVjdGx5IHBvc3NpYmxlIGJ1dCBhIGxpdHRsZSBzbG93IGZvciBtZSBzbyBJCndvdWxkIGRvIHNvbWUgY2hlYXRpbmc6IHRoZSBtYWdpYyBudW1iZXIgNzc3NDg5MTAwIHdhcyBwaWNrZWQgb24gcHVycG9zZQp0byBzcGVlZHVwIHRoZSB0aGluZ3MuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkJydXRlLWZvcmNpbmcgYDJeezMyfWAgaXMgcGVyZmVjdGx5IHBvc3NpYmxlIGJ1dCBhIGxpdHRsZSBzbG93IGZvciBtZSBzbyBJCndvdWxkIGRvIHNvbWUgY2hlYXRpbmc6IHRoZSBtYWdpYyBudW1iZXIgNzc3NDg5MTAwIHdhcyBwaWNrZWQgb24gcHVycG9zZQp0byBzcGVlZHVwIHRoZSB0aGluZ3MuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+Brute-forcing \(2^{32}\) is perfectly possible but a little slow for me so I would do some cheating: the magic number 777489100 was picked on purpose to speedup the things.
+</span></p>
+<p>We compute the <em>Cartesian product</em> of the two <code><span class="highlight-candombe-inline"><span class="n">IntSpace</span></span></code> to describe any possible message length and <code><span class="highlight-candombe-inline"><span class="n">h7</span></span></code> combination:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.space</span> <span class="kn">import</span> <span class="n">IntSpace</span><span class="p">,</span> <span class="n">product</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">minimum</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">login_req</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">msg_length_space</span> <span class="o">=</span> <span class="n">IntSpace</span><span class="p">(</span><span class="n">minimum</span><span class="p">,</span> <span class="n">minimum</span><span class="o">+</span><span class="mi">256</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">minimum</span><span class="o">+</span><span class="mi">16</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">h7_space</span> <span class="o">=</span> <span class="n">IntSpace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mh">0xffffffff</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">777489100</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">params_space</span> <span class="o">=</span> <span class="n">product</span><span class="p">(</span><span class="n">h7_space</span><span class="p">,</span> <span class="n">msg_length_space</span><span class="p">)</span>
+</code></pre></div>
+
+<p>As before we need an <em>oracle</em> function to tell us if a particular message length/<code><span class="highlight-candombe-inline"><span class="n">h7</span></span></code> combination produced a valid MAC or not:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">is_ok</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">h7</span><span class="p">,</span> <span class="n">msg_length</span> <span class="o">=</span> <span class="n">params</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">pad</span> <span class="o">=</span> <span class="n">pad_like_sha224</span><span class="p">(</span><span class="n">msg_length</span><span class="p">)</span>
+<span class="o">...</span>     <span class="n">new_mac</span> <span class="o">=</span> <span class="n">sha224</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">h0</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">h6</span><span class="p">,</span> <span class="n">h7</span><span class="p">,</span> <span class="n">forged_message_len</span><span class="o">=</span><span class="n">msg_length</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">pad</span><span class="p">))</span>
+<span class="o">...</span>
+<span class="o">...</span>     <span class="n">new_login_req</span> <span class="o">=</span> <span class="n">login_req</span> <span class="o">+</span> <span class="n">pad</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">login</span><span class="p">(</span><span class="n">new_login_req</span><span class="p">,</span> <span class="n">new_mac</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Explore the <em>parameters space</em>…</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">search</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">brute_forced_h7</span><span class="p">,</span> <span class="n">guessed_msg_length</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="n">params_space</span><span class="p">,</span> <span class="n">is_ok</span><span class="p">)</span>    <span class="c1"># byexample: +timeout=30</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">brute_forced_h7</span><span class="p">,</span> <span class="n">guessed_msg_length</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">777489071</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+</code></pre></div>
+
+<p>And finally forge the MAC and profit!</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="s1">&#39;;admin=True&#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pad</span> <span class="o">=</span> <span class="n">pad_like_sha224</span><span class="p">(</span><span class="n">guessed_msg_length</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">new_login_req</span> <span class="o">=</span> <span class="n">login_req</span> <span class="o">+</span> <span class="n">pad</span> <span class="o">+</span> <span class="n">ext</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">new_mac</span> <span class="o">=</span> <span class="n">sha224</span><span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="n">h0</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h3</span><span class="p">,</span> <span class="n">h4</span><span class="p">,</span> <span class="n">h5</span><span class="p">,</span> <span class="n">h6</span><span class="p">,</span> <span class="n">brute_forced_h7</span><span class="p">,</span> <span class="n">forged_message_len</span><span class="o">=</span><span class="n">guessed_msg_length</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">pad</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ext</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">login</span><span class="p">(</span><span class="n">new_login_req</span><span class="p">,</span> <span class="n">new_mac</span><span class="p">)</span>
+<span class="n">Logged</span> <span class="k">as</span> <span class="n">admin</span>
+<span class="kc">True</span>
+</code></pre></div>
+
+<h2 id="final-thoughts">Final thoughts</h2>
+<p>We were lucky: for SHA-224 only 32 bits are missing. Other truncated hashes are much harder to break.</p>
+<p>For example SHA-512/224 is the 224 bits version based on SHA-512: 228 bits are missing!</p>
+<p>Nevertheless take this as a lesson: <strong>do not overlook</strong>, sometimes you may find vulnerabilities and attack vectors just by seeing the things closely.</p>
+<p class="small-subtitle-with-top-margin">
+Related tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="hash"'>hash</a>, <a href='https://book-of-gehn.github.io/?tag="extension"'>extension</a>
+</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+</article>
+<span class="print-footer">Follow up: Length Extension Attack on SHA-224 - April 9, 2023 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+
+    <img src='http://192.34.63.156:6127/img/http%3A//127.0.0.1%3A4000/articles/2023/04/09/Hash-Length-Extension-Attack-on-SHA224.html.png' onerror="this.style.display='none'" async></img>
+</footer>
+</body>
+</html>
