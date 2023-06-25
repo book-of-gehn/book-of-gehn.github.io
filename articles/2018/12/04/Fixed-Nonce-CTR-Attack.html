@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Fixed Nonce CTR Attack The Counter mode, or just CTR mode, turns a block cipher into a stream cipher. More specifically, it builds a pseudo random generator (PRG) from a block cipher and then generates a random string using the PRG to encrypt/decrypt the payload performing a simple xor. The idea is to initialize the PRG with a different seed each time but if this does not happen, all the plaintexts will be encrypted with the same pseudo random key stream – totally insecure. – Spoiler Alert! – Ready to break it?">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Fixed Nonce CTR Attack",
+          
+          
+          "datePublished": "2018-12-04T00:00:00+00:00",
+          "dateModified": "2018-12-04T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Fixed Nonce CTR Attack</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Fixed Nonce CTR Attack">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2018/12/04/Fixed-Nonce-CTR-Attack.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2018/12/04/Fixed-Nonce-CTR-Attack.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Key Recovering from CBC with `IV = K`{.mathjax} CBC requires an initialization vector (IV) that needs to be agreed by both encryption and decryption peers. IV needs to be random so you may be get tempted and use the secret key as IV. No, please don’t. The IV is not required to be secret and there is a good reason for that: it can be recovered with a single chosen ciphertext attack. Using means that the adversary can recover the secret key with a single message. In this post I describe the attack in 3 simple diagrams.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Key Recovering from CBC with `IV = K`{.mathjax}",
+          
+          
+          "datePublished": "2023-01-23T00:00:00+00:00",
+          "dateModified": "2023-01-23T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Key Recovering from CBC with `IV = K`{.mathjax}</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Key Recovering from CBC with `IV = K`{.mathjax}">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

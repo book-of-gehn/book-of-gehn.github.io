@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="IPv4 Scan 2021 - TTL Boost (or reset) In the post about Hop-Stability we analyzed the TTL of the responses from all the scanned hosts. In particular we used the TTL range: the difference between the smallest and the greatest TTL seen per host. Histogram of TTL range between rounds of scans to the same host showing how much stable the routes are. With a range of 0 or very close we claimed that the route to the host was stable; with range larger than 7 we said the contrary. The analysis shown that only 0.39998% of 43056567 unique hosts had unstable routes. However the analysis was only using a few statistics, when we plot the histogram of TTL ranges we see much more mysteries to solve.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "IPv4 Scan 2021 - TTL Boost (or reset)",
+          
+          
+          "datePublished": "2021-11-13T00:00:00+00:00",
+          "dateModified": "2021-11-13T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>IPv4 Scan 2021 - TTL Boost (or reset)</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="IPv4 Scan 2021 - TTL Boost (or reset)">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

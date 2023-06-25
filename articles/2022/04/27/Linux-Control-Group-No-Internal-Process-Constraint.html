@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Control Group - No Internal Process Constraint Previous posts: hierarchical organization and resources distribution In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder. In v2 the hierarchy is subject to the no internal process constraint which ensures that a controller will have all the processes in leaves of its domain tree. This is the last of a 3-post series about cgroup and certainly, this no internal process constraint was the hardest to understand.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Control Group - No Internal Process Constraint",
+          
+          
+          "datePublished": "2022-04-27T00:00:00+00:00",
+          "dateModified": "2022-04-27T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Control Group - No Internal Process Constraint</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Control Group - No Internal Process Constraint">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/04/27/Linux-Control-Group-No-Internal-Process-Constraint.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

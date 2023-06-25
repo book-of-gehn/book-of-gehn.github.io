@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Multiprocessing Spawn of Dynamically Imported Code The following snippet loads any Python module in the folder. This is the Python 3.x way to load code dynamically. The loaded modules work as any other Python module. In a plugin system you typically will lookup for a specific function or a class that will serve as entry point or hooks for the plugin. For example, in byexample the plugins must define classes that inherit from , , or . These extend functionality to find, parse and run examples in different languages and hook –via – most of the execution logic. Imagine now that one of the plugins implements a function that needs to be executed in background, in a separated Python process. We could do something like: This is plain simple use of …. and it will not work. Well, it will work in Linux but not in MacOS or Windows. In this post I will show why it will not work for dynamically loaded code (like from a plugin) and how to fix it.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Multiprocessing Spawn of Dynamically Imported Code",
+          
+          
+          "datePublished": "2022-03-06T00:00:00+00:00",
+          "dateModified": "2022-03-06T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Multiprocessing Spawn of Dynamically Imported Code</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Multiprocessing Spawn of Dynamically Imported Code">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/03/06/Multiprocessing-Spawn-of-Dynamically-Imported-Code.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/03/06/Multiprocessing-Spawn-of-Dynamically-Imported-Code.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

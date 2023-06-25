@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Fresh Python Defaults When defining a Python function you can define the default value of its parameters. The defaults are evaluated once and bound to the function’s signature. That means that mutable defaults are a bad idea: if you modify them in a call, the modification will persist cross calls because for Python its is the same object. A mutable default can be used as the function’s private state as an alternative to functional-traditional closures and object-oriented classes. But in general a mutable default is most likely to be a bug. Could Python have a way to prevent such thing? Or better, could Python have a way to restart or refresh the mutable defaults in each call? This question raised up in the python-list. Let’s see how far we get.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Fresh Python Defaults",
+          
+          
+          "datePublished": "2021-08-14T00:00:00+00:00",
+          "dateModified": "2021-08-14T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Fresh Python Defaults</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Fresh Python Defaults">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/08/14/Fresh-Python-Defaults.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/08/14/Fresh-Python-Defaults.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

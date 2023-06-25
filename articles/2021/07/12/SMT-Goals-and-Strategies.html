@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="SMT Goals and Strategies SMT/SAT problems are in general undecidable: basically we cannot know if we can get even an answer. The search space is in general infinite. But several concrete problems have a reduced space and may be tractable: while theoretical really hard, we can find a solution in a reasonable time. Still, a solver may need some extra help to navigate across the search space. A strategy is a guide that hopefully will lead to a solution ( or ) in a reasonable time using a reasonable amount of resources. It is quite an art and the concepts were around for more than 30 years. This post is a quick overview of concepts like strategies, tactics, tacticals, merit order, cost functions, heuristic functions, goals, approximations, redundancy control, search strategies, probes and a few more. Quite a heavy post I’m afraid.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "SMT Goals and Strategies",
+          
+          
+          "datePublished": "2021-07-12T00:00:00+00:00",
+          "dateModified": "2021-07-12T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>SMT Goals and Strategies</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="SMT Goals and Strategies">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/07/12/SMT-Goals-and-Strategies.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/07/12/SMT-Goals-and-Strategies.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

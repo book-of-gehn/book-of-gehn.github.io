@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="IPv4 Scan 2021 - Multiprobes Analysis To my surprise the dataset preprocessed in my previous post has duplicated entries. These are scans to the same host and port but with a different timestamp. Histogram of the interval between probes to the same host-port in seconds. Questions like “which open port is more likely” will biased because the same host-port may be counted more than once. On the other hand, this opens new questions: - which is the reason to scan the same port more than once? If it is fixed by the scanner we can deduce that ports scanned once were scanned more times but the other probes failed and get an estimation of such. - is the same port opened due different reasons? - could we characterize the scanner based on the timestamps like scanning patterns? The second surprise was that even working with small samples (around 100MB), Pandas/Dask has serious performance problems: - consumes much more memory (gigas) - CPU at 100% all the time - simple operations like take forever. Goodbye Pandas, hello Julia?">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "IPv4 Scan 2021 - Multiprobes Analysis",
+          
+          
+          "datePublished": "2021-09-19T00:00:00+00:00",
+          "dateModified": "2021-09-19T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>IPv4 Scan 2021 - Multiprobes Analysis</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="IPv4 Scan 2021 - Multiprobes Analysis">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

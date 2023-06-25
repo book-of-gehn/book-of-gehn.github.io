@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Casting, broadcasting, LUT and bitwise ops Z3 has a few basic symbolic operation over bit vectors. But some others are missing (or at least I couldn’t find them). Cast bit vectors to change the vector width, like when you want to upcast or promote a to , is one of them. Arbitrary bitwise operations is another one. Z3 provides the basic , and but arbitrary functions needs to be defined and applied by hand. And about function definitions, Z3 does not have a simple way to define a function from a lookup table (LUT) or truth table. A much tricker that I thought! This post is a kind-of sequel of Verifying some Bithacks post and prequel of some future posts.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Casting, broadcasting, LUT and bitwise ops",
+          
+          
+          "datePublished": "2021-05-26T00:00:00+00:00",
+          "dateModified": "2021-05-26T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Casting, broadcasting, LUT and bitwise ops</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Casting, broadcasting, LUT and bitwise ops">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/05/26/Casting-Broadcasting-LUT-and-Bitwise-Ops.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/05/26/Casting-Broadcasting-LUT-and-Bitwise-Ops.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Follow up: Length Extension Attack on SHA-224 In the previous post we reviewed why and how an extension length attack is possible on some hash function and how we can use it to break a prefix-keyed MAC. Long story short: when the full internal state of the hashing is exposed, an extension attack is possibly. So hash functions that don’t expose their internal state are okay, right? Yes in general but the devil is in the details… SHA-224 does not expose its full state and it is one of those “safe” hash functions (sometimes it is found in the literature as such) but… In this quick post we will see why SHA-224 is vulnerable to length extension attack even if its internal state is not fully exposed.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Follow up: Length Extension Attack on SHA-224",
+          
+          
+          "datePublished": "2023-04-09T00:00:00+00:00",
+          "dateModified": "2023-04-09T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Follow up: Length Extension Attack on SHA-224</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Follow up: Length Extension Attack on SHA-224">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2023/04/09/Hash-Length-Extension-Attack-on-SHA224.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2023/04/09/Hash-Length-Extension-Attack-on-SHA224.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

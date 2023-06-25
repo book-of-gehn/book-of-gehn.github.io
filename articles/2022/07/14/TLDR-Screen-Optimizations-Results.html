@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="TL;DR Screen Optimizations Results for Terminal Emulator Pyte This post describes to some level of detail all the performance boosts and speedups due the optimizations contributed to pyte and summarized here For large geometries (240x800, 2400x8000), runs orders of magnitud faster and consumes between 1.10 and 50.0 times less memory. For smaller geometries the minimum improvement was of 2 times faster. is now between 1.10 and 7.30 times faster and if is tuned, the speedup is between 1.14 and 12.0. For memory usage, is between 1.10 and 17.0 times lighter and up to 44.0 times lighter if is tuned. is between 1.10 and 1.50 slower but several cases improve if the is tuned (but not all). However there are a few regressions, most of them small but some up to 4 times. At the moment of writing this post, the PR is still pending to review.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "TL;DR Screen Optimizations Results for Terminal Emulator Pyte",
+          
+          
+          "datePublished": "2022-07-14T00:00:00+00:00",
+          "dateModified": "2022-07-14T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>TL;DR Screen Optimizations Results for Terminal Emulator Pyte</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="TL;DR Screen Optimizations Results for Terminal Emulator Pyte">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/07/14/TLDR-Screen-Optimizations-Results.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

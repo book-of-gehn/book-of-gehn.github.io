@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Control Group - Resource Distribution Previous post: hierarchical organization Next coming post: no internal process constraint A system has hundreds of resources that process may use (and exhaust!): controlling them it is not trivial and requires a precise intervention by part of the kernel. We’ll use the simplest resource to understand: the amount of process ids or pids. While CPU and memory are the most common resources that can be exhausted, the process id space is not infinite: it is an integer typically in the range of 1 to . A malicious or really-bugged program can trivially consume all the available pids spawning thousands of processes and threads long before other resource get exhausted. This the so called fork bomb. Once you run out of pids, no other process can be started leaving the system unusable. In this post we will explore the rules of resources distribution in a cgroup hierarchy and in particular how to avoid fork bombs to explode.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Control Group - Resource Distribution",
+          
+          
+          "datePublished": "2022-04-24T00:00:00+00:00",
+          "dateModified": "2022-04-24T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Control Group - Resource Distribution</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Control Group - Resource Distribution">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

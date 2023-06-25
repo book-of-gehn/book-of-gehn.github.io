@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2023-04-10T00:18:22.295045+00:00</updated>
+  <updated>2023-06-25T03:21:25.903924+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -10,7 +10,7 @@
   <link href="https://book-of-gehn.github.io" rel="alternate"/>
   <link href="https://book-of-gehn.github.io/atom.xml" rel="self"/>
   <generator uri="https://lkiesow.github.io/python-feedgen" version="0.9.0">python-feedgen</generator>
-  <subtitle>blog</subtitle>
+  <subtitle>The low and the high level of a lot of things: crypto, math, hacking and computer stuff.</subtitle>
   <entry>
     <id>https://book-of-gehn.github.io/articles/2023/04/09/Hash-Length-Extension-Attack-on-SHA224.html</id>
     <title>Follow up: Length Extension Attack on SHA-224</title>

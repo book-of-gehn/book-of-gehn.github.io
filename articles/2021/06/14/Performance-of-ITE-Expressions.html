@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Performance of ITE Expressions (incomplete) A branch is an expensive operation even in modern CPUs because the computer will know which of the paths is taken only in the latest stages of the CPU pipeline. In the meantime, the CPU stalls. Modern CPUs use branch prediction, speculative execution and instruction reordering to minimize the impact of a branch. They do a good job but still a branch is potentially expensive so they are replaced by branchless variants. Minimum time (y axis) per branch/branchless function (x axis). or ITE for short, are symbolic expression that denotes a value chosen from two possible values based on a condition. These are the symbolic branch. Naturally we could rewrite a symbolic ITE with a symbolic branchless expression. The question is: which is better for a solver like Z3? Which makes the SMT/SAT solver faster? After two weeks working on this post I still don’t have an answer but at least I know some unknowns.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Performance of ITE Expressions (incomplete)",
+          
+          
+          "datePublished": "2021-06-14T00:00:00+00:00",
+          "dateModified": "2021-06-14T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Performance of ITE Expressions (incomplete)</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Performance of ITE Expressions (incomplete)">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/06/14/Performance-of-ITE-Expressions.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/06/14/Performance-of-ITE-Expressions.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

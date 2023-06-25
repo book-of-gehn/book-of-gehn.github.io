@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Keyed Hash Length Extension Attack How can we know if a message is authentic or not? A trusted party with access to a private key can compute an authentication code or MAC. Compute the message authentication code (MAC) doing . In theory only who knows the secret key can create and verify those, but no, this schema es broken. This post covers matasano challenges from 28 to 30 so spoiler alert. A keyed hash prefixes the message with the key and computes a hash like SHA-1. The resulting hash is the MAC for the given message. Then, someone that knows also can verify if a message is authentic or not computing the MAC and comparing it with the one provided with the message. If the computed hash matches the one provided, the message is authentic, otherwise it is not. Unfortunately this prefix-keyed hash for MAC is broken. Some very well known hash functions expose their internal states which allows an adversary to append data to the message and continue the hash computation and generate a new valid MAC. Hence the name “length extension attack”.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Keyed Hash Length Extension Attack",
+          
+          
+          "datePublished": "2023-04-05T00:00:00+00:00",
+          "dateModified": "2023-04-05T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Keyed Hash Length Extension Attack</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Keyed Hash Length Extension Attack">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2023/04/05/Hash-Length-Extension-Attack.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2023/04/05/Hash-Length-Extension-Attack.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

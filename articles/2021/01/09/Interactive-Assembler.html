@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="iasm: Interactive Assembler I crossed with a series of Arm challenges by causality and I decided to give it a shoot. But I have 0 knowledge about Arm so the disassembly of the binaries were too strange for me. I stepped back to plan it better: my idea was to use GDB to debug small snippets of Arm code, learn about it before jumping into the challenges. I setup a QEMU virtual machine running Rasbian in an Arm CPU. With a GCC and GDB running there I started but the compile-load-debug cycle was too inflexible. I could not use it to explore. If I wanted to see the effect of a particular instruction I needed to write it in assembly, compile it and debug it. And the time between the “what does X?” and the “X does this” was too large, reducing the momentum that you have when you explore something new. Too tedious. So I decided to shorten the cycle writing an interactive assembler.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "iasm: Interactive Assembler",
+          
+          
+          "datePublished": "2021-01-09T00:00:00+00:00",
+          "dateModified": "2021-01-09T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>iasm: Interactive Assembler</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="iasm: Interactive Assembler">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/01/09/Interactive-Assembler.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2021/01/09/Interactive-Assembler.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

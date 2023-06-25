@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="CBC Padding Oracle Attack AES and other ciphers work on blocks; if the plaintext length is not multiple of the block size a padding is added. If during the decryption the pad is checked and returns an error, we can use this to build a padding oracle: a function that will tell us if an encrypted plaintext has a valid pad or not. It may not sound too much exiting but armed with this padding oracle we can break CBC one byte at time. – Spoiler Alert! – Ready? Go!">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "CBC Padding Oracle Attack",
+          
+          
+          "datePublished": "2018-10-28T00:00:00+00:00",
+          "dateModified": "2018-10-28T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>CBC Padding Oracle Attack</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="CBC Padding Oracle Attack">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2018/10/28/CBC-Padding-Oracle.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2018/10/28/CBC-Padding-Oracle.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

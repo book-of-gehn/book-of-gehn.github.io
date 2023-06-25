@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Qubes OS Networking Qubes OS has an interesting network system to isolate more-or-less trusted application virtual machines (App) from absolute untrusted network VMs (Net). These last ones have the drivers required to handle ethernet and wifi cards which expose them to a potentially deathly bug lurking in the drivers. An additional VM is put in the middle between App VMs and Net VMs. This absolute trusted proxy VM serves as a safe firewall (Proxy). In this post will explore how these VMs connect and how the packets are forwarded up and down along this chain of VMs.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Qubes OS Networking",
+          
+          
+          "datePublished": "2020-11-19T00:00:00+00:00",
+          "dateModified": "2020-11-19T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Qubes OS Networking</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Qubes OS Networking">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/11/19/Qubes-Networking.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/11/19/Qubes-Networking.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 

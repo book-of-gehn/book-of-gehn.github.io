@@ -4,10 +4,41 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <meta name="description" content="Debug: the Case of a CPU Burning Ruby Process executor.rb is a little program that starts and finishes other programs based on the needs of the system. It is expected to have one and only one executor.rb process running with little overhead. In one of the machines in the lab I found the opposite: two executor.rb instances and one of them running at top speed, consuming 100% of CPU. For the rest, the system was working properly so one of the executor.rb was doing its job. But what was the “twin evil” process doing with the CPU?">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Debug: the Case of a CPU Burning Ruby Process",
+          
+          
+          "datePublished": "2020-09-13T00:00:00+00:00",
+          "dateModified": "2020-09-13T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
   <title>Debug: the Case of a CPU Burning Ruby Process</title>
+
   <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
-  <meta name="description" content="Debug: the Case of a CPU Burning Ruby Process">
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/09/13/Debug-the-Case-of-a-CPU-Burning-Ruby-Process.html">
 
   <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
 
@@ -38,8 +69,6 @@
   <script src='/js/fix_syntax_highlight.min.js'></script>
   <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
   <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
-
-  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2020/09/13/Debug-the-Case-of-a-CPU-Burning-Ruby-Process.html">
 
   <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
 
