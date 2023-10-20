@@ -189,7 +189,7 @@ I talk a marginally about this in my <a href="/articles/2020/02/15/CPU-Cache-Coh
 </code></pre></div>
 
 <p>If a fork happen after one thread increments the counter but before someone decrements it, the child process will get stuck waiting for the counter to be zero.</p>
-<p>This makes totally sense for <code>executor.rb</code> which main task is to fork and exec other processes.</p>
+<p>This makes totally sense for <code>executor.rb</code> that main task is to fork and exec other processes.</p>
 <p>But I need to be sure that this is the bug.</p>
 <h2 id="confirming-the-bug-with-gdb">Confirming the bug with GDB</h2>
 <p>I attached <a href="https://www.gnu.org/software/gdb/">gdb</a> to ruby process and confirmed the bug.</p>

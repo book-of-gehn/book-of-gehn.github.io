@@ -355,7 +355,7 @@ a single 1</code></pre>
 </code></pre></div>
 
 <p>The extra assumption <code><span class="highlight-candombe-inline"><span class="n">s</span> <span class="o">!=</span> <span class="mi">64</span></span></code> is because while 64 is a valid position, it is <em>also</em> used as an error.</p>
-<p>A trivial error settings which <em>violates</em> the minimum/maximum range could be:</p>
+<p>A trivial error settings that <em>violates</em> the minimum/maximum range could be:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">solver</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="mi">64</span><span class="p">,</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">not_in_range</span><span class="p">)</span>
 <span class="n">sat</span>
 </code></pre></div>
@@ -413,7 +413,7 @@ a single 1</code></pre>
 <span class="o">...</span>     <span class="k">return</span> <span class="n">c</span>
 </code></pre></div>
 
-<p>In the code above I introduced an auxiliary <code><span class="highlight-candombe-inline"><span class="n">c</span></span></code> variable. This is because the C variable <code><span class="highlight-candombe-inline"><span class="n">c</span> <span class="o">=</span> <span class="mi">0</span></span></code> will be interpreted by Z3’s <code><span class="highlight-candombe-inline"><span class="n">If</span></span></code> as a boolean (<code><span class="highlight-candombe-inline"><span class="n">false</span></span></code>) which cannot be promoted later to a <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code>.</p>
+<p>In the code above I introduced an auxiliary <code><span class="highlight-candombe-inline"><span class="n">c</span></span></code> variable. This is because the C variable <code><span class="highlight-candombe-inline"><span class="n">c</span> <span class="o">=</span> <span class="mi">0</span></span></code> will be interpreted by Z3’s <code><span class="highlight-candombe-inline"><span class="n">If</span></span></code> as a boolean (<code><span class="highlight-candombe-inline"><span class="n">false</span></span></code>) that cannot be promoted later to a <code><span class="highlight-candombe-inline"><span class="n">BitVec</span></span></code>.</p>
 <p>To enforce the correct type, we use a <code><span class="highlight-candombe-inline"><span class="n">BitVecVal</span></span></code> value initialized to 0.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">good_cases</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="n">v</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">bad_cases</span> <span class="o">=</span> <span class="n">bit_count</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">r</span>

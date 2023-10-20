@@ -1,0 +1,27 @@
+# assumptions:
+#  - apmitm is the name of the wireless card to make it into an access point
+#  - wlan0 is the other card that it should have internet connection
+#
+#  - apmitm's network is 10.23.0.0/24 (you can change this)
+#  - wlan0's network is 192.168.0.0/24 (this depends on your gateway)
+#
+# Adjust this readme and the config files accordingly
+
+ip addr add 10.23.0.1/24 dev apmitm
+
+iptables -P FORWARD DROP
+iptables -A FORWARD -s 10.23.0.0/24 -p udp --dport 53 -i apmitm -j REJECT
+iptables -A FORWARD -s 10.23.0.0/24 -p tcp -i apmitm -j ACCEPT
+iptables -A FORWARD -s 10.23.0.0/24 -p udp -i apmitm -j ACCEPT
+iptables -A FORWARD -d 10.23.0.0/24 -p tcp -i wlan0 -j ACCEPT
+iptables -A FORWARD -d 10.23.0.0/24 -p udp -i wlan0 -j ACCEPT
+
+iptables -t nat -A POSTROUTING -s 10.23.0.0/24 -o wlan0 -j MASQUERADE
+
+iptables -A INPUT -s 10.23.0.0/24 -p udp --dport 53 -j NFQUEUE --queue-num 1
+
+echo  1 > /proc/sys/net/ipv4/ip_forward
+
+hostapd hostapd.conf
+dnsmasq -C dnsmasq.conf
+python3 filterdns.py

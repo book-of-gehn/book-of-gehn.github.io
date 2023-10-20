@@ -104,11 +104,11 @@ December 27, 2020
 </p>
 <p>Speed-reading of <a href="https://www.coranac.com/tonc/text/asm.htm">Whirlwind Tour of ARM Assembly</a>.<!--more--></p>
 <h1 id="the-arm-instruction-set">The Arm instruction set</h1>
-<p>Arm is a Reduced Instruction Set Computer (RISC) which have a small set of instructions of fixed size in contrast with the Complex Instruction Set Computer (CISC).</p>
+<p>Arm is a Reduced Instruction Set Computer (RISC) that have a small set of instructions of fixed size in contrast with the Complex Instruction Set Computer (CISC).</p>
 <p>In Arm the instructions are of 32 bits and the Thumb version has 16 and 32 bits instructions.</p>
 <p>ARMv3 to ARMv7 versions has 32 bits addresses, previous version has 26 bits and ARMv8 introduced the 64 bits addresses.</p>
 <h3 id="almost-everything-is-conditional">Almost everything is conditional</h3>
-<p>Instructions can be executed conditionally. This avoids explicit jumps which are slower and the overall code size is smaller.</p>
+<p>Instructions can be executed conditionally. This avoids explicit jumps that are slower and the overall code size is smaller.</p>
 <p>Use this for small snippets and fallback to traditional branches/jumps when the code is too large.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="c1">; r2 = max(r0, r1), traditional impl with branches</span>
 <span class="w">    </span><span class="nf">cmp</span><span class="w">     </span><span class="nb">r0</span><span class="p">,</span><span class="w"> </span><span class="nb">r1</span>
@@ -246,7 +246,7 @@ December 27, 2020
 </blockquote>
 <h3 id="bulk-loadstore">Bulk load/store</h3>
 <p>Several registers can be loaded or stored with a single <em>load multiple</em> (<code><span class="highlight-candombe-inline"><span class="nf">ldm</span></span></code>) and <em>store multiple</em> (<code><span class="highlight-candombe-inline"><span class="nf">stm</span></span></code>) instructions.</p>
-<p>They have a base address, a <em>set</em> of registers and an <em>indexing affix</em> which controls how to “iterate the array/memory”.</p>
+<p>They have a base address, a <em>set</em> of registers and an <em>indexing affix</em> that controls how to “iterate the array/memory”.</p>
 <p>Four indexing exists: increment of the base address after/before accessing the memory (<code><span class="highlight-candombe-inline"><span class="nf">ia</span></span></code>/<code><span class="highlight-candombe-inline"><span class="nf">ib</span></span></code>) and decrement of the base address after/before (<code><span class="highlight-candombe-inline"><span class="nf">da</span></span></code>/<code><span class="highlight-candombe-inline"><span class="kd">db</span></span></code>).</p>
 <p><code><span class="highlight-candombe-inline"><span class="nf">ia</span></span></code> is the default.</p>
 <p>In short:</p>
@@ -279,7 +279,7 @@ December 27, 2020
 <h2 id="conditionals-and-branches">Conditionals and branches</h2>
 <p>Three branches: <em>branch</em> (<code><span class="highlight-candombe-inline"><span class="nf">b</span></span></code>) for <code><span class="highlight-candombe-inline"><span class="nf">if</span></span></code> and <code><span class="highlight-candombe-inline"><span class="nf">while</span></span></code> constructs, <em>branch with link</em> (<code><span class="highlight-candombe-inline"><span class="nf">bl</span></span></code>) for function call and <em>branch with exchange</em> (<code><span class="highlight-candombe-inline"><span class="nf">bx</span></span></code>) for returning from a call or to switch between Arm and Thumb modes.</p>
 <p>The first two receive a label while the last one operates with a register.</p>
-<p>More branches exist including <em>branch with change to Jazelle</em> (<code><span class="highlight-candombe-inline"><span class="nf">bxj</span></span></code>) which can switch to a special mode that <a href="https://en.wikipedia.org/wiki/Jazelle">executes Java bytecode</a> if supported.</p>
+<p>More branches exist including <em>branch with change to Jazelle</em> (<code><span class="highlight-candombe-inline"><span class="nf">bxj</span></span></code>) that can switch to a special mode that <a href="https://en.wikipedia.org/wiki/Jazelle">executes Java bytecode</a> if supported.</p>
 <p>Due instruction size constrains, labels cannot be in arbitrary positions. The <code><span class="highlight-candombe-inline"><span class="nf">b</span></span></code> and <code><span class="highlight-candombe-inline"><span class="nf">bl</span></span></code> requires the destination addresses to be in a range relative to <code><span class="highlight-candombe-inline"><span class="nf">PC</span></span></code> of [-32MB;+32MB].</p>
 <p>The range shrinks for other flavours of Arm to [-16MB;+16MB] and to [-252,256].</p>
 <p>The branches can, as other instructions, be conditional executed. So <code><span class="highlight-candombe-inline"><span class="nf">bne</span></span></code> stands for branch if not equals.</p>

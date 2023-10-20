@@ -1,0 +1,480 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="description" content="Man in the Middle Access Point I was curious about what a phone does behind the scene when it has a wifi connection. In this post I will go step by step on how to turn a wifi card into an access point and how to setup DHCP, DNS, routing and firewall rules to make a computer into a man in the middle box. There are no hacks, spoofing or poisoning. I will go just through the happy case when I control the target device. Despite of this, it was a interesting problem to solve. And when I made the mitm box work and I was celebrating, a careful inspection to the traffic shown a few surprises.">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Man in the Middle Access Point",
+          
+          
+          "datePublished": "2023-10-20T00:00:00+00:00",
+          "dateModified": "2023-10-20T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
+  <title>Man in the Middle Access Point</title>
+
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2023/10/20/Man-in-the-Middle-Access-Point.html">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      //root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+</header>
+<article class="group">
+<h1>
+Man in the Middle Access Point
+</h1>
+<p class="subtitle">
+October 20, 2023
+</p>
+<p>I was curious about what a phone does behind the scene when it has a wifi connection. In this post I will go step by step on how to turn a wifi card into an access point and how to setup DHCP, DNS, routing and firewall rules to make a computer into a <em>man in the middle</em> box.</p>
+<p>There are no hacks, spoofing or poisoning. I will go just through the happy case when <em>I</em> control the target device. Despite of this, it was a interesting problem to solve.</p>
+<p>And when I made the <em>mitm</em> box work and I was celebrating, a careful inspection to the traffic shown a <em>few surprises</em>.<!--more--></p>
+<p>TLDR: all the final configuration files can be found <a href="/assets/network/fake-ap-dnsmasq-hostapd-mitm/">here</a>.</p>
+<h1 id="setup-a-wireless-card-as-an-access-point">Setup a wireless card as an access point</h1>
+<p>This is the initial setup: a machine with two wireless cards, one (<code><span class="highlight-candombe-inline">wlan0</span></code>) connected to an access point on <code><span class="highlight-candombe-inline"><span class="m">192</span>.168.0.0/24</span></code> network and the other card (<code><span class="highlight-candombe-inline">apmitm</span></code>) disconnected.</p>
+<p>This machine will serve as the <em>man in the middle</em> between the access point and the target device.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagram2.png' /></figure></p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>show
+<span class="m">2</span>:<span class="w"> </span>wlan0:<span class="w"> </span>&lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt;<span class="w"> </span>mtu<span class="w"> </span><span class="m">1500</span><span class="w"> </span>qdisc<span class="w"> </span>noqueue<span class="w"> </span>state<span class="w"> </span>UP<span class="w"> </span>mode<span class="w"> </span>DORMANT<span class="w"> </span>group<span class="w"> </span>default<span class="w"> </span>qlen<span class="w"> </span><span class="m">1000</span>
+<span class="w">    </span>link/ether<span class="w"> </span>aa:aa:aa:aa:aa:aa<span class="w"> </span>brd<span class="w"> </span>ff:ff:ff:ff:ff:ff
+<span class="m">3</span>:<span class="w"> </span>apmitm:<span class="w"> </span>&lt;BROADCAST,MULTICAST&gt;<span class="w"> </span>mtu<span class="w"> </span><span class="m">1500</span><span class="w"> </span>qdisc<span class="w"> </span>noop<span class="w"> </span>state<span class="w"> </span>DOWN<span class="w"> </span>mode<span class="w"> </span>DEFAULT<span class="w"> </span>group<span class="w"> </span>default<span class="w"> </span>qlen<span class="w"> </span><span class="m">1000</span>
+<span class="w">    </span>link/ether<span class="w"> </span>bb:bb:bb:bb:bb:bb<span class="w"> </span>brd<span class="w"> </span>ff:ff:ff:ff:ff:ff
+</code></pre></div>
+
+<p>We use <code><span class="highlight-candombe-inline">hostapd</span></code> to set our <code><span class="highlight-candombe-inline">apmitm</span></code> wireless interface into an access point. The configuration is straight forward:</p>
+<p><label for='ClRoZSBwYXJhbWV0ZXJzIHNob3VsZCBiZSBzZWxmLWV4cGxhbmF0b3J5OgoKbyBgc3NpZGAgYW5kIGBjaGFubmVsYCBkZWZpbmUgdGhlIG5hbWUgb2YgdGhlIHdpcmVsZXNzIG5ldHdvcmsKIHRvIHNldHVwIGFuZCBpbiB3aGljaCBjaGFubmVsIHdlIHdpbGwgYmUgdHJhbnNtaXR0aW5nLgoKbyBgbWFjYWRkcl9hY2xgIGFsbG93cyB1cyBmaWx0ZXIgd2hpY2ggY2xpZW50cyBhcmUgYWxsb3dlZCB0bwpjb25uZWN0IHRvIHVzLiBUaGlzIGlzIGhhbmR5IGlmIHdlIHdhbnQgdG8gcGlucG9pbnQgb3VyIHRhcmdldC4KCm8gYGF1dGhfYWxnc2AgYW5kIGB3cGFgIGNvbmZpZ3VyZSB0aGUgZW5jcnlwdGlvbi4gYGhvc3RhcGRgIHN1cHBvcnRzCm9wZW4sIHdlcCwgd3BhIGFuZCB3cGEyIChpbiB0aGUgZXhhbXBsZSBpdCBpcyBzZXQgdG8gb3BlbikKClRoZXJlIGFyZSBtdWNoIG1vcmUgcGFyYW1ldGVycyBidXQgdGhlc2UgYXJlIHRoZSBiYXNpYy4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBwYXJhbWV0ZXJzIHNob3VsZCBiZSBzZWxmLWV4cGxhbmF0b3J5OgoKbyBgc3NpZGAgYW5kIGBjaGFubmVsYCBkZWZpbmUgdGhlIG5hbWUgb2YgdGhlIHdpcmVsZXNzIG5ldHdvcmsKIHRvIHNldHVwIGFuZCBpbiB3aGljaCBjaGFubmVsIHdlIHdpbGwgYmUgdHJhbnNtaXR0aW5nLgoKbyBgbWFjYWRkcl9hY2xgIGFsbG93cyB1cyBmaWx0ZXIgd2hpY2ggY2xpZW50cyBhcmUgYWxsb3dlZCB0bwpjb25uZWN0IHRvIHVzLiBUaGlzIGlzIGhhbmR5IGlmIHdlIHdhbnQgdG8gcGlucG9pbnQgb3VyIHRhcmdldC4KCm8gYGF1dGhfYWxnc2AgYW5kIGB3cGFgIGNvbmZpZ3VyZSB0aGUgZW5jcnlwdGlvbi4gYGhvc3RhcGRgIHN1cHBvcnRzCm9wZW4sIHdlcCwgd3BhIGFuZCB3cGEyIChpbiB0aGUgZXhhbXBsZSBpdCBpcyBzZXQgdG8gb3BlbikKClRoZXJlIGFyZSBtdWNoIG1vcmUgcGFyYW1ldGVycyBidXQgdGhlc2UgYXJlIHRoZSBiYXNpYy4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+The parameters should be self-explanatory:
+<br /><br />
+o <code><span class="highlight-candombe-inline">ssid</span></code> and <code><span class="highlight-candombe-inline">channel</span></code> define the name of the wireless network to setup and in which channel we will be transmitting.
+<br /><br />
+o <code><span class="highlight-candombe-inline">macaddr_acl</span></code> allows us filter which clients are allowed to connect to us. This is handy if we want to pinpoint our target.
+<br /><br />
+o <code><span class="highlight-candombe-inline">auth_algs</span></code> and <code><span class="highlight-candombe-inline">wpa</span></code> configure the encryption. <code><span class="highlight-candombe-inline">hostapd</span></code> supports open, wep, wpa and wpa2 (in the example it is set to open)
+<br /><br />
+There are much more parameters but these are the basic.
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>hostapd.conf
+
+<span class="nv">interface</span><span class="o">=</span>apmitm
+
+<span class="nv">logger_syslog</span><span class="o">=</span><span class="m">0</span>
+<span class="nv">logger_syslog_level</span><span class="o">=</span><span class="m">2</span>
+<span class="nv">logger_stdout</span><span class="o">=</span>-1
+<span class="nv">logger_stdout_level</span><span class="o">=</span><span class="m">2</span>
+
+<span class="nv">ssid</span><span class="o">=</span><span class="nb">test</span>
+<span class="nv">channel</span><span class="o">=</span><span class="m">1</span>
+
+<span class="nv">macaddr_acl</span><span class="o">=</span><span class="m">0</span>
+<span class="nv">auth_algs</span><span class="o">=</span><span class="m">1</span>
+<span class="nv">wpa</span><span class="o">=</span><span class="m">0</span>
+</code></pre></div>
+
+<p>How to trick the target to connect our access point (<code><span class="highlight-candombe-inline">apmitm</span></code>) and not the other one is out the scope for this post. I’m going to assume that <em>you</em> control the target device so you decide which AP to connect to.</p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>hostapd<span class="w"> </span>hostapd.conf
+
+Configuration<span class="w"> </span>file:<span class="w"> </span>hostapd.conf
+Using<span class="w"> </span>interface<span class="w"> </span>apmitm<span class="w"> </span>with<span class="w"> </span>hwaddr<span class="w"> </span>bb:bb:bb:bb:bb:bb<span class="w"> </span>and<span class="w"> </span>ssid<span class="w"> </span><span class="s2">&quot;test&quot;</span>
+apmitm:<span class="w"> </span>interface<span class="w"> </span>state<span class="w"> </span>UNINITIALIZED-&gt;ENABLED
+apmitm:<span class="w"> </span>AP-ENABLED
+
+apmitm:<span class="w"> </span>STA<span class="w"> </span>cc:cc:cc:cc:cc:cc<span class="w"> </span>IEEE<span class="w"> </span><span class="m">802</span>.11:<span class="w"> </span>authenticated
+apmitm:<span class="w"> </span>STA<span class="w"> </span>cc:cc:cc:cc:cc:cc<span class="w"> </span>IEEE<span class="w"> </span><span class="m">802</span>.11:<span class="w"> </span>associated<span class="w"> </span><span class="o">(</span>aid<span class="w"> </span><span class="m">1</span><span class="o">)</span>
+apmitm:<span class="w"> </span>AP-STA-CONNECTED<span class="w"> </span>cc:cc:cc:cc:cc:cc
+apmitm:<span class="w"> </span>STA<span class="w"> </span>cc:cc:cc:cc:cc:cc<span class="w"> </span>RADIUS:<span class="w"> </span>starting<span class="w"> </span>accounting<span class="w"> </span>session<span class="w"> </span>BB24CA4FFFFFFFFF
+</code></pre></div>
+
+<p><figure><figcaption><span markdown='1'>
+Target connects to <code><span class="highlight-candombe-inline">apmitm</span></code> but the connection will not hold. So far our setup does not assign any IP address to the target and most of the network managers that may be running in the target will eventually give up and disconnect the device.
+<br /><br />
+You will see something like:
+<br /><br />
+<span class="pseudo-pre"><code><span class="highlight-candombe">AP-STA-DISCONNECTED<span class="w"> </span>cc:cc...</span></code></span>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagram3.png' /></figure></p>
+<h1 id="configure-a-dhcp-and-assign-ip-addresses">Configure a DHCP and assign IP addresses</h1>
+<p>Despite the name, <code><span class="highlight-candombe-inline">dnsmasq</span></code> can work as DHCP server too. IMO it is a little tricky to setup because <code><span class="highlight-candombe-inline">dnsmasq</span></code> will try to bind and server on <em>localhost</em> if it is not explicitly disabled.</p>
+<p>Here is the configuration file:</p>
+<p><label for='Ck5vdGUgaG93IGV4cGxpY2l0IHdlIGFyZTogd2Ugc2F5IHRoZSBpbnRlcmZhY2UgbmFtZSwKdGhlIElQIGFkZHJlc3Mgd2hlcmUgd2Ugd2FudCB0byBsaXN0ZW4sIHdlIGV4cGxpY2l0bHkKc2F5IG5vICpsb2NhbGhvc3QqIGFuZCB3ZSBpbnN0cnVjdCB0byBgZG5zbWFzcWAgdG8KKmJpbmQqIG9uICoqdGhlKiogaW50ZXJmYWNlIHRoYXQgd2Ugc2FpZCAoYGFwbWl0bWApLgoKYGRoY3AtcmFuZ2VgIGRlZmluZXMgdGhlIElQIHNldCB0byBvZmZlcjogdGhlIHN5bnRheAppcyBgc3RhcnQtYWRkcmVzcyxlbmQtYWRkcmVzcyxuZXR3b3JrLW1hc2ssdGltZS10by1sZWF2ZWAuCgpgcG9ydD0wYCBkaXNhYmxlcyBETlMuIFdlIHdpbGwgZW5hYmxlIGl0IGluIHNob3J0LgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='Ck5vdGUgaG93IGV4cGxpY2l0IHdlIGFyZTogd2Ugc2F5IHRoZSBpbnRlcmZhY2UgbmFtZSwKdGhlIElQIGFkZHJlc3Mgd2hlcmUgd2Ugd2FudCB0byBsaXN0ZW4sIHdlIGV4cGxpY2l0bHkKc2F5IG5vICpsb2NhbGhvc3QqIGFuZCB3ZSBpbnN0cnVjdCB0byBgZG5zbWFzcWAgdG8KKmJpbmQqIG9uICoqdGhlKiogaW50ZXJmYWNlIHRoYXQgd2Ugc2FpZCAoYGFwbWl0bWApLgoKYGRoY3AtcmFuZ2VgIGRlZmluZXMgdGhlIElQIHNldCB0byBvZmZlcjogdGhlIHN5bnRheAppcyBgc3RhcnQtYWRkcmVzcyxlbmQtYWRkcmVzcyxuZXR3b3JrLW1hc2ssdGltZS10by1sZWF2ZWAuCgpgcG9ydD0wYCBkaXNhYmxlcyBETlMuIFdlIHdpbGwgZW5hYmxlIGl0IGluIHNob3J0LgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Note how explicit we are: we say the interface name, the IP address where we want to listen, we explicitly say no <em>localhost</em> and we instruct to <code><span class="highlight-candombe-inline">dnsmasq</span></code> to <em>bind</em> on <strong>the</strong> interface that we said (<code><span class="highlight-candombe-inline">apmitm</span></code>).
+<br /><br />
+<code><span class="highlight-candombe-inline">dhcp-range</span></code> defines the IP set to offer: the syntax is <code><span class="highlight-candombe-inline">start-address,end-address,network-mask,time-to-leave</span></code>.
+<br /><br />
+<code><span class="highlight-candombe-inline"><span class="nv">port</span><span class="o">=</span><span class="m">0</span></span></code> disables DNS. We will enable it in short.
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>dnsmasq-v1.conf
+<span class="nv">interface</span><span class="o">=</span>apmitm
+listen-address<span class="o">=</span><span class="m">10</span>.23.0.1
+except-interface<span class="o">=</span>lo
+bind-interfaces
+
+log-dhcp
+no-daemon
+
+dhcp-range<span class="o">=</span><span class="m">10</span>.23.0.15,10.23.0.88,255.255.255.0,12h
+
+<span class="nv">port</span><span class="o">=</span><span class="m">0</span>
+</code></pre></div>
+
+<p>We assign an IP address to <code><span class="highlight-candombe-inline">apmitm</span></code> and we run <code><span class="highlight-candombe-inline">dnsmasq</span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="m">10</span>.23.0.1/24<span class="w"> </span>dev<span class="w"> </span>apmitm
+</code></pre></div>
+
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>dnsmasq<span class="w"> </span>-C<span class="w"> </span>dnsmasq-v1.conf
+
+dnsmasq:<span class="w"> </span>started,<span class="w"> </span>version<span class="w"> </span><span class="m">2</span>.80<span class="w"> </span>DNS<span class="w"> </span>disabled
+dnsmasq:<span class="w"> </span>compile<span class="w"> </span><span class="nb">time</span><span class="w"> </span>options:<span class="w"> </span>IPv6<span class="w"> </span>GNU-getopt<span class="w"> </span>DBus<span class="w"> </span>i18n<span class="w"> </span>IDN<span class="w"> </span>DHCP<span class="w"> </span>DHCPv6
+no-Lua<span class="w"> </span>TFTP<span class="w"> </span>conntrack<span class="w"> </span>ipset<span class="w"> </span>auth<span class="w"> </span>nettlehash<span class="w"> </span>DNSSEC<span class="w"> </span>loop-detect<span class="w"> </span>inotify<span class="w"> </span>dumpfile
+
+dnsmasq-dhcp:<span class="w"> </span>DHCP,<span class="w"> </span>IP<span class="w"> </span>range<span class="w"> </span><span class="m">10</span>.23.0.15<span class="w"> </span>--<span class="w"> </span><span class="m">10</span>.23.0.88,<span class="w"> </span>lease<span class="w"> </span><span class="nb">time</span><span class="w"> </span>12h
+dnsmasq-dhcp:<span class="w"> </span>DHCP,<span class="w"> </span>sockets<span class="w"> </span>bound<span class="w"> </span>exclusively<span class="w"> </span>to<span class="w"> </span>interface<span class="w"> </span>apmitm
+
+dnsmasq-dhcp:<span class="w"> </span>available<span class="w"> </span>DHCP<span class="w"> </span>range:<span class="w"> </span><span class="m">10</span>.23.0.15<span class="w"> </span>--<span class="w"> </span><span class="m">10</span>.23.0.88
+dnsmasq-dhcp:<span class="w"> </span>DHCPDISCOVER<span class="o">(</span>apmitm<span class="o">)</span><span class="w"> </span>cc:cc:cc:cc:cc:cc
+dnsmasq-dhcp:<span class="w"> </span>tags:<span class="w"> </span>apmitm
+
+dnsmasq-dhcp:<span class="w"> </span>DHCPOFFER<span class="o">(</span>apmitm<span class="o">)</span><span class="w"> </span><span class="m">10</span>.23.0.35<span class="w"> </span>cc:cc:cc:cc:cc:cc
+dnsmasq-dhcp:<span class="w"> </span>requested<span class="w"> </span>options:<span class="w"> </span><span class="m">1</span>:netmask,<span class="w"> </span><span class="m">33</span>:static-route,<span class="w"> </span><span class="m">3</span>:router,<span class="w"> </span><span class="m">6</span>:dns-server,
+dnsmasq-dhcp:<span class="w"> </span>requested<span class="w"> </span>options:<span class="w"> </span><span class="m">15</span>:domain-name,<span class="w"> </span><span class="m">28</span>:broadcast,<span class="w"> </span><span class="m">51</span>:lease-time,
+dnsmasq-dhcp:<span class="w"> </span>requested<span class="w"> </span>options:<span class="w"> </span><span class="m">58</span>:T1,<span class="w"> </span><span class="m">59</span>:T2
+
+dnsmasq-dhcp:<span class="w"> </span>next<span class="w"> </span>server:<span class="w"> </span><span class="m">10</span>.23.0.1
+dnsmasq-dhcp:<span class="w"> </span>sent<span class="w"> </span>size:<span class="w">  </span><span class="m">1</span><span class="w"> </span>option:<span class="w"> </span><span class="m">53</span><span class="w"> </span>message-type<span class="w">  </span><span class="m">2</span>
+dnsmasq-dhcp:<span class="w"> </span>sent<span class="w"> </span>size:<span class="w">  </span><span class="m">4</span><span class="w"> </span>option:<span class="w"> </span><span class="m">54</span><span class="w"> </span>server-identifier<span class="w">  </span><span class="m">10</span>.23.0.1
+dnsmasq-dhcp:<span class="w"> </span>sent<span class="w"> </span>size:<span class="w">  </span><span class="m">4</span><span class="w"> </span>option:<span class="w"> </span><span class="m">51</span><span class="w"> </span>lease-time<span class="w">  </span>12h
+
+dnsmasq-dhcp:<span class="w"> </span>sent<span class="w"> </span>size:<span class="w">  </span><span class="m">4</span><span class="w"> </span>option:<span class="w">  </span><span class="m">1</span><span class="w"> </span>netmask<span class="w">  </span><span class="m">255</span>.255.255.0
+dnsmasq-dhcp:<span class="w"> </span>sent<span class="w"> </span>size:<span class="w">  </span><span class="m">4</span><span class="w"> </span>option:<span class="w"> </span><span class="m">28</span><span class="w"> </span>broadcast<span class="w">  </span><span class="m">10</span>.23.0.255
+dnsmasq-dhcp:<span class="w"> </span>sent<span class="w"> </span>size:<span class="w">  </span><span class="m">4</span><span class="w"> </span>option:<span class="w">  </span><span class="m">3</span><span class="w"> </span>router<span class="w">  </span><span class="m">10</span>.23.0.1
+dnsmasq-dhcp:<span class="w"> </span>available<span class="w"> </span>DHCP<span class="w"> </span>range:<span class="w"> </span><span class="m">10</span>.23.0.15<span class="w"> </span>--<span class="w"> </span><span class="m">10</span>.23.0.88
+
+dnsmasq-dhcp:<span class="w"> </span>DHCPREQUEST<span class="o">(</span>apmitm<span class="o">)</span><span class="w"> </span><span class="m">10</span>.23.0.35<span class="w"> </span>cc:cc:cc:cc:cc:cc
+dnsmasq-dhcp:<span class="w"> </span>tags:<span class="w"> </span>apmitm
+
+dnsmasq-dhcp:<span class="w"> </span>DHCPACK<span class="o">(</span>apmitm<span class="o">)</span><span class="w"> </span><span class="m">10</span>.23.0.35<span class="w"> </span>cc:cc:cc:cc:cc:cc
+&lt;...&gt;
+</code></pre></div>
+
+<p><figure><figcaption><span markdown='1'>
+The target requests (among other things) an IP address for itself and the IP of the DNS server.
+<br /><br />
+By the moment our <code><span class="highlight-candombe-inline">dnsmasq</span></code> only offers an IP address for the target.
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagram4.png' /></figure></p>
+<p>Now the target <strong>has</strong> an IP but <strong>no internet</strong>.</p>
+<p><figure><figcaption><span markdown='1'>
+The target issues some DNS queries but none are responded. In deed neither the man in the middle is forwarding those queries nor the <code><span class="highlight-candombe-inline">dnsmasq</span></code> is acting as a DNS server to respond them.
+<br /><br />
+The target is connected but it will not have internet.
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagramA1.png' /></figure></p>
+<h1 id="configure-a-dns-server">Configure a DNS server</h1>
+<p>We can instruct <code><span class="highlight-candombe-inline">dnsmasq</span></code> to work as a DNS forwarder just adding a valid port to its configuration. When the target requests an IP from the DHCP, it will also receive the DNS server IP.</p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>dnsmasq-v2.conf
+&lt;...&gt;
+<span class="nv">port</span><span class="o">=</span><span class="m">53</span>
+log-queries<span class="o">=</span>extra
+</code></pre></div>
+
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagram5.png' /></figure></p>
+<p>Let’s take a look at the <code><span class="highlight-candombe-inline">dnsmasq</span></code> logs. The DNS forwarding works but <code><span class="highlight-candombe-inline">dnsmasq</span></code> seems to be forwarding the queries to locahost or kind-of, it is forwarding to <code><span class="highlight-candombe-inline"><span class="m">127</span>.0.0.53</span></code>:</p>
+<div class="highlight-candombe"><pre><span></span><code>&lt;...&gt;
+dnsmasq:<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="m">10</span>.23.0.35/58954<span class="w"> </span>query<span class="o">[</span>A<span class="o">]</span><span class="w"> </span>pool.ntp.org<span class="w"> </span>from<span class="w"> </span><span class="m">10</span>.23.0.35
+dnsmasq:<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="m">10</span>.23.0.35/58954<span class="w"> </span>forwarded<span class="w"> </span>pool.ntp.org<span class="w"> </span>to<span class="w"> </span><span class="m">127</span>.0.0.53
+dnsmasq:<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="m">10</span>.23.0.35/58954<span class="w"> </span>reply<span class="w"> </span>pool.ntp.org<span class="w"> </span>is<span class="w"> </span><span class="m">162</span>.159.200.123
+</code></pre></div>
+
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagram7.png' /></figure></p>
+<p>In the logs it is clear why <code><span class="highlight-candombe-inline">dnsmasq</span></code> is doing this:</p>
+<div class="highlight-candombe"><pre><span></span><code>dnsmasq:<span class="w"> </span>reading<span class="w"> </span>/etc/resolv.conf
+dnsmasq:<span class="w"> </span>using<span class="w"> </span>nameserver<span class="w"> </span><span class="m">127</span>.0.0.53#53
+dnsmasq:<span class="w"> </span><span class="nb">read</span><span class="w"> </span>/etc/hosts<span class="w"> </span>-<span class="w"> </span><span class="m">7</span><span class="w"> </span>addresses
+</code></pre></div>
+
+<p>The default is to read <code><span class="highlight-candombe-inline">/etc/resolv.conf</span></code> and get the local machine’s upstream nameserver. In my case I’m running a local DNS server in that address. Moreover <code><span class="highlight-candombe-inline">dnsmasq</span></code> will server the entries from the local <code><span class="highlight-candombe-inline">/etc/hosts</span></code> too.</p>
+<p>From <code><span class="highlight-candombe-inline">dnsmasq</span></code> perspective this is correct: it was designed to work as a <em>local</em> DNS forwarder for <em>local</em> queries and these defaults make it simple to install.</p>
+<p>But we don’t want that; we want to have full control of the DNS. Luckly it is just a matter of a few extra options:</p>
+<p><label for='CldpdGggYHNlcnZlcmAgd2Ugc2F5IHRoZSB1cHN0cmVhbSBzZXJ2ZXIgYW5kIHdpdGggYG5vLXJlc29sdmAgd2UgZW5zdXJlCnRoYXQgYGRuc21hc3FgIHdpbGwgbm90IHBpY2sgYW55IG90aGVyLgoKYG5vLWhvc3RzYCAoYXMgeW91IG1heSBndWVzcykgZGlzYWJsZXMgcmVhZGluZyBgL2V0Yy9ob3N0c2AuIFRoZQpgZG9tYWluLW5lZWRlZGAgbWFrZXMgYGRuc21hc3FgIHRvIHJlc29sdmUgZnVsbCBkb21haW5zOiBxdWVyaWVzCmZvciBsb2NhbCBkb21haW5zIGFyZSBub3QgcmVzb2x2ZWQgKHRoaW5rIGluIGEgbG9jYWwgbmFtZSBgZm9vYAppbnN0ZWFkIG9mIGEgZnVsbCBkb21haW4gYGZvby5leGFtcGxlLmNvbWApLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldpdGggYHNlcnZlcmAgd2Ugc2F5IHRoZSB1cHN0cmVhbSBzZXJ2ZXIgYW5kIHdpdGggYG5vLXJlc29sdmAgd2UgZW5zdXJlCnRoYXQgYGRuc21hc3FgIHdpbGwgbm90IHBpY2sgYW55IG90aGVyLgoKYG5vLWhvc3RzYCAoYXMgeW91IG1heSBndWVzcykgZGlzYWJsZXMgcmVhZGluZyBgL2V0Yy9ob3N0c2AuIFRoZQpgZG9tYWluLW5lZWRlZGAgbWFrZXMgYGRuc21hc3FgIHRvIHJlc29sdmUgZnVsbCBkb21haW5zOiBxdWVyaWVzCmZvciBsb2NhbCBkb21haW5zIGFyZSBub3QgcmVzb2x2ZWQgKHRoaW5rIGluIGEgbG9jYWwgbmFtZSBgZm9vYAppbnN0ZWFkIG9mIGEgZnVsbCBkb21haW4gYGZvby5leGFtcGxlLmNvbWApLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+With <code><span class="highlight-candombe-inline">server</span></code> we say the upstream server and with <code><span class="highlight-candombe-inline">no-resolv</span></code> we ensure that <code><span class="highlight-candombe-inline">dnsmasq</span></code> will not pick any other.
+<br /><br />
+<code><span class="highlight-candombe-inline">no-hosts</span></code> (as you may guess) disables reading <code><span class="highlight-candombe-inline">/etc/hosts</span></code>. The <code><span class="highlight-candombe-inline">domain-needed</span></code> makes <code><span class="highlight-candombe-inline">dnsmasq</span></code> to resolve full domains: queries for local domains are not resolved (think in a local name <code><span class="highlight-candombe-inline">foo</span></code> instead of a full domain <code><span class="highlight-candombe-inline">foo.example.com</span></code>).
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>dnsmasq-v3.conf
+<span class="nv">server</span><span class="o">=</span><span class="m">8</span>.8.4.4
+
+domain-needed
+no-hosts
+no-resolv
+</code></pre></div>
+
+<p>Now the output looks correct:</p>
+<div class="highlight-candombe"><pre><span></span><code>dnsmasq:<span class="w"> </span><span class="m">6</span><span class="w"> </span><span class="m">10</span>.23.0.35/20969<span class="w"> </span>query<span class="o">[</span>A<span class="o">]</span><span class="w"> </span>pool.ntp.org<span class="w"> </span>from<span class="w"> </span><span class="m">10</span>.23.0.35
+dnsmasq:<span class="w"> </span><span class="m">6</span><span class="w"> </span><span class="m">10</span>.23.0.35/20969<span class="w"> </span>forwarded<span class="w"> </span>pool.ntp.org<span class="w"> </span>to<span class="w"> </span><span class="m">8</span>.8.4.4
+dnsmasq:<span class="w"> </span><span class="m">6</span><span class="w"> </span><span class="m">10</span>.23.0.35/20969<span class="w"> </span>reply<span class="w"> </span>pool.ntp.org<span class="w"> </span>is<span class="w"> </span><span class="m">162</span>.159.200.123
+</code></pre></div>
+
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagram8.png' /></figure></p>
+<h1 id="route-the-targets-packets">Route the target’s packets</h1>
+<p>Now that we have the DNS working the target is resolving the domains but the TCP connections fail. Our <em>man in the middle</em> is not acting as a <em>router</em> so all the packets not destined to it are dropped.</p>
+<p><figure><figcaption><span markdown='1'>
+The target tries to connect (TCP) but it just doesn’t receive any response back. The problem is that mitm is not acting as a router.
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagramA2.png' /></figure></p>
+<p>First we need to setup some <em>routes</em>:</p>
+<ul>
+<li>an entry to direct the traffic coming from the target and destined to elsewhere should go to the man in the middle’s gateway</li>
+<li>an entry to direct the traffic back to the targets, but only if it is destined to its network</li>
+</ul>
+<p>These two routes should work:</p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>route<span class="w"> </span>show
+
+default<span class="w"> </span>via<span class="w"> </span><span class="m">192</span>.168.0.1<span class="w"> </span>dev<span class="w"> </span>wlan0<span class="w"> </span>proto<span class="w"> </span>dhcp<span class="w"> </span>metric<span class="w"> </span><span class="m">600</span>
+<span class="m">10</span>.23.0.0/24<span class="w"> </span>dev<span class="w"> </span>apmitm<span class="w"> </span>proto<span class="w"> </span>kernel<span class="w"> </span>scope<span class="w"> </span>link<span class="w"> </span>src<span class="w"> </span><span class="m">10</span>.23.0.1
+</code></pre></div>
+
+<p>But it is not enough. Linux will not forward packets by default: we need to <em>allow</em> which packets can be forwarded (via <code><span class="highlight-candombe-inline">iptables</span></code>) and tell the kernel that we want to work as a router (with the <code><span class="highlight-candombe-inline">ip_forward</span></code> variable)</p>
+<h2 id="route-packets-from-the-target">Route packets from the target</h2>
+<p><label for='CldpdGggYC1QIEZPUldBUkQgRFJPUGAgd2UgZHJvcCBhbnkgcGFja2V0IHVubGVzcyBpdCBpcyBleHBsaWNpdGx5IGFsbG93ZWQKKHdlIGRvbid0IHdhbnQgdG8gZm9yd2FyZCAqYW55dGhpbmcqKS4KClRoZSBvdGhlciB0d28gcnVsZXMgYWxsb3cgdGhlIGZvcndhcmRpbmcgb25seSBpZiB0aGV5IGNvbWUgZnJvbSB0YXJnZXQncwpuZXR3b3JrIChgLXMgMTAuMjMuMC4wLzI0YCkgYW5kIGZyb20gdGhlIGV4cGVjdGVkIGludGVyZmFjZSAoYC1pCmFwbWl0bWApLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldpdGggYC1QIEZPUldBUkQgRFJPUGAgd2UgZHJvcCBhbnkgcGFja2V0IHVubGVzcyBpdCBpcyBleHBsaWNpdGx5IGFsbG93ZWQKKHdlIGRvbid0IHdhbnQgdG8gZm9yd2FyZCAqYW55dGhpbmcqKS4KClRoZSBvdGhlciB0d28gcnVsZXMgYWxsb3cgdGhlIGZvcndhcmRpbmcgb25seSBpZiB0aGV5IGNvbWUgZnJvbSB0YXJnZXQncwpuZXR3b3JrIChgLXMgMTAuMjMuMC4wLzI0YCkgYW5kIGZyb20gdGhlIGV4cGVjdGVkIGludGVyZmFjZSAoYC1pCmFwbWl0bWApLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+With <code><span class="highlight-candombe-inline">-P<span class="w"> </span>FORWARD<span class="w"> </span>DROP</span></code> we drop any packet unless it is explicitly allowed (we don’t want to forward <em>anything</em>).
+<br /><br />
+The other two rules allow the forwarding only if they come from target’s network (<code><span class="highlight-candombe-inline">-s<span class="w"> </span><span class="m">10</span>.23.0.0/24</span></code>) and from the expected interface (<code><span class="highlight-candombe-inline">-i<span class="w"> </span>apmitm</span></code>).
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>iptables<span class="w"> </span>-P<span class="w"> </span>FORWARD<span class="w"> </span>DROP
+$<span class="w"> </span>iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-s<span class="w"> </span><span class="m">10</span>.23.0.0/24<span class="w"> </span>-p<span class="w"> </span>tcp<span class="w"> </span>-i<span class="w"> </span>apmitm<span class="w"> </span>-j<span class="w"> </span>ACCEPT
+$<span class="w"> </span>iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-s<span class="w"> </span><span class="m">10</span>.23.0.0/24<span class="w"> </span>-p<span class="w"> </span>udp<span class="w"> </span>-i<span class="w"> </span>apmitm<span class="w"> </span>-j<span class="w"> </span>ACCEPT
+
+$<span class="w"> </span><span class="nb">echo</span><span class="w">  </span><span class="m">1</span><span class="w"> </span>&gt;<span class="w"> </span>/proc/sys/net/ipv4/ip_forward
+</code></pre></div>
+
+<p>And this works… almost. While the packets from the target are forwarded to the gateway, it is the gateway now that it is dropping the packets.</p>
+<p>The gateway expects packets from its network <code><span class="highlight-candombe-inline"><span class="m">192</span>.168.0.0/24</span></code> and the packets come from the <strong>other</strong> network <code><span class="highlight-candombe-inline"><span class="m">10</span>.23.0.0/24</span></code>.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagramA3.png' /></figure></p>
+<p>We need to setup a <em>network address translator</em> (NAT) to map any outgoing packet from the <em>other</em> network to the man in the middle’s <em>own</em> address so the gateway will think that the packets come from us.</p>
+<p>The magic of NAT is that the packets back to us (with our address) will be <em>reverse-mapped</em> to the original target’s IP.</p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-s<span class="w"> </span><span class="m">10</span>.23.0.0/24<span class="w"> </span>-o<span class="w"> </span>wlan0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
+</code></pre></div>
+
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagramA4.png' /></figure></p>
+<h2 id="route-packets-to-the-target">Route packets to the target</h2>
+<p>Finally, we need two more forwarding rules for packets <em>destined</em> to target’s network:</p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-d<span class="w"> </span><span class="m">10</span>.23.0.0/24<span class="w"> </span>-p<span class="w"> </span>tcp<span class="w"> </span>-i<span class="w"> </span>wlan0<span class="w"> </span>-j<span class="w"> </span>ACCEPT
+$<span class="w"> </span>iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-d<span class="w"> </span><span class="m">10</span>.23.0.0/24<span class="w"> </span>-p<span class="w"> </span>udp<span class="w"> </span>-i<span class="w"> </span>wlan0<span class="w"> </span>-j<span class="w"> </span>ACCEPT
+</code></pre></div>
+
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagram12.png' /></figure></p>
+<p><strong>But…</strong></p>
+<h1 id="ensure-full-control-of-the-dns">Ensure full control of the DNS</h1>
+<p>There are two subtle problems that I only spotted sniffing with <code><span class="highlight-candombe-inline">wireshark</span></code>:</p>
+<ul>
+<li>the target is issuing DNS queries to <code><span class="highlight-candombe-inline"><span class="m">8</span>.8.8.8</span></code>. It seems that the target uses it not just as a fallback but as second opinion (aka <em>“I don’t trust in the DNS server offered by the DHCP so I will use mine”</em>)</li>
+<li>the target is also issuing DNS queries of unexpected type. <code><span class="highlight-candombe-inline">dnsmasq</span></code> has no problem to forward those <em>but</em> it has not capabilities to block them in anyway (so we loose the control of the DNS responses)</li>
+</ul>
+<p><figure><figcaption><span markdown='1'>
+The target querying <code><span class="highlight-candombe-inline"><span class="m">8</span>.8.8.8</span></code>. Why does it work? It is not because <code><span class="highlight-candombe-inline">dnsmasq</span></code> is forwarding the queries at the DNS layer but because the man in the middle box is forwarding (routing) the UDP packets.
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagramA6.png' /></figure></p>
+<p><figure><figcaption><span markdown='1'>
+Unknown DNS query. Actually is not unknown but my <code><span class="highlight-candombe-inline">wireshark</span></code> does not know about it. It is used for some https stuff.
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagramA5.png' /></figure></p>
+<p>So we want two things:</p>
+<ul>
+<li>reject any DNS request unless it is sent to our <code><span class="highlight-candombe-inline">dnsmasq</span></code> (the target will receive ICMP destination unreachable)</li>
+<li>drop any DNS request directed to our <code><span class="highlight-candombe-inline">dnsmasq</span></code> that it is neither <code><span class="highlight-candombe-inline">A</span></code> nor <code><span class="highlight-candombe-inline">AAAA</span></code> types (just we are not responding to those queries)</li>
+</ul>
+<p>The reject is just a matter of adding a firewall rule:</p>
+<p><label for='CkFsdGVybmF0aXZlbHkgeW91IGNvdWxkIHJlZGlyZWN0IHRoZSBwYWNrZXRzIHRvIGBkbnNtYXNxYCBpbnN0ZWFkIG9mCnJlamVjdGluZyB0aGVtLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkFsdGVybmF0aXZlbHkgeW91IGNvdWxkIHJlZGlyZWN0IHRoZSBwYWNrZXRzIHRvIGBkbnNtYXNxYCBpbnN0ZWFkIG9mCnJlamVjdGluZyB0aGVtLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+Alternatively you could redirect the packets to <code><span class="highlight-candombe-inline">dnsmasq</span></code> instead of rejecting them.
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>iptables<span class="w"> </span>-A<span class="w"> </span>FORWARD<span class="w"> </span>-s<span class="w"> </span><span class="m">10</span>.23.0.0/24<span class="w"> </span>-p<span class="w"> </span>udp<span class="w"> </span>--dport<span class="w"> </span><span class="m">53</span><span class="w"> </span>-i<span class="w"> </span>apmitm<span class="w"> </span>-j<span class="w"> </span>REJECT
+</code></pre></div>
+
+<p>The drop is much trickier: <code><span class="highlight-candombe-inline">dnsmasq</span></code> does not have a way to block these types of queries and <code><span class="highlight-candombe-inline">iptables</span></code> works only at the L3 layer and it doesn’t know how to parse DNS.</p>
+<p>Luckily, we can delegate the accept/reject/drop decision to an user application with <code><span class="highlight-candombe-inline">nfqueue</span></code>.</p>
+<div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>iptables<span class="w"> </span>-A<span class="w"> </span>INPUT<span class="w"> </span>-s<span class="w"> </span><span class="m">10</span>.23.0.0/24<span class="w"> </span>-p<span class="w"> </span>udp<span class="w"> </span>--dport<span class="w"> </span><span class="m">53</span><span class="w"> </span>-j<span class="w"> </span>NFQUEUE<span class="w"> </span>--queue-num<span class="w"> </span><span class="m">1</span>
+</code></pre></div>
+
+<p>Now we need to run a program that reads from that queue and decide if the UDP packet is accepted or dropped.</p>
+<p><label for='ClRoZSBgaGFuZGxlYCBmdW5jdGlvbiB0YWtlcyBhIHBhY2tldCAqbmYqIG9iamVjdCBhbmQgYnVpbGRzIGEgIGBzY2FweWAgSVAuIFRoZW4sIGlmIGl0IGlzCmEgRE5TIHF1ZXJ5IGFuZCBhbGwgdGhlIHF1ZXN0aW9ucyBhcmUgb2YgdHlwZSBgQWAgb3IgYEFBQUFgLCBhY2NlcHQgdGhlCnBhY2tldDsgb3RoZXJ3aXNlIGRyb3AgaXQuCgpUbyBnZXQgdGhlc2UgKm5mKiBwYWNrZXRzIGZyb20gdGhlIHF1ZXVlIGNyZWF0ZWQgYnkgYGlwdGFibGVzYCwgd2UgdXNlCnRoZSBgTmV0ZmlsdGVyUXVldWVgIHdyYXBwZXI6IHdlIGJpbmQgdG8gdGhlIGBoYW5kbGVgIGZ1bmN0aW9uIHRvIHRoZQpxdWV1ZSBhbmQgd2UgY3JlYXRlIGFuZCBydW4gYSBVTklYIHNvY2tldC4KClRvIG1ha2UgaXQgcnVuIHlvdSBuZWVkIHRvIGluc3RhbGwgZGV2IGxpYnJhcmllcwpgYnVpbGQtZXNzZW50aWFsYCwgYHB5dGhvbjMtZGV2YCBhbmQgYGxpYm5ldGZpbHRlci1xdWV1ZS1kZXZgICh3aXRoIGBhcHQtZ2V0YCkKYW5kIHRoZW4gaW5zdGFsbCB0aGUgUHl0aG9uIHBhY2thZ2VzIGBOZXRmaWx0ZXJRdWV1ZWAgYW5kIGBzY2FweWAgKHdpdGggYHBpcGApCgpUaGVuIHJ1biB0aGUgc2NyaXB0IGFzIHJvb3QuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBgaGFuZGxlYCBmdW5jdGlvbiB0YWtlcyBhIHBhY2tldCAqbmYqIG9iamVjdCBhbmQgYnVpbGRzIGEgIGBzY2FweWAgSVAuIFRoZW4sIGlmIGl0IGlzCmEgRE5TIHF1ZXJ5IGFuZCBhbGwgdGhlIHF1ZXN0aW9ucyBhcmUgb2YgdHlwZSBgQWAgb3IgYEFBQUFgLCBhY2NlcHQgdGhlCnBhY2tldDsgb3RoZXJ3aXNlIGRyb3AgaXQuCgpUbyBnZXQgdGhlc2UgKm5mKiBwYWNrZXRzIGZyb20gdGhlIHF1ZXVlIGNyZWF0ZWQgYnkgYGlwdGFibGVzYCwgd2UgdXNlCnRoZSBgTmV0ZmlsdGVyUXVldWVgIHdyYXBwZXI6IHdlIGJpbmQgdG8gdGhlIGBoYW5kbGVgIGZ1bmN0aW9uIHRvIHRoZQpxdWV1ZSBhbmQgd2UgY3JlYXRlIGFuZCBydW4gYSBVTklYIHNvY2tldC4KClRvIG1ha2UgaXQgcnVuIHlvdSBuZWVkIHRvIGluc3RhbGwgZGV2IGxpYnJhcmllcwpgYnVpbGQtZXNzZW50aWFsYCwgYHB5dGhvbjMtZGV2YCBhbmQgYGxpYm5ldGZpbHRlci1xdWV1ZS1kZXZgICh3aXRoIGBhcHQtZ2V0YCkKYW5kIHRoZW4gaW5zdGFsbCB0aGUgUHl0aG9uIHBhY2thZ2VzIGBOZXRmaWx0ZXJRdWV1ZWAgYW5kIGBzY2FweWAgKHdpdGggYHBpcGApCgpUaGVuIHJ1biB0aGUgc2NyaXB0IGFzIHJvb3QuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+The <code><span class="highlight-candombe-inline">handle</span></code> function takes a packet <em>nf</em> object and builds a <code><span class="highlight-candombe-inline">scapy</span></code> IP. Then, if it is a DNS query and all the questions are of type <code><span class="highlight-candombe-inline">A</span></code> or <code><span class="highlight-candombe-inline">AAAA</span></code>, accept the packet; otherwise drop it.
+<br /><br />
+To get these <em>nf</em> packets from the queue created by <code><span class="highlight-candombe-inline">iptables</span></code>, we use the <code><span class="highlight-candombe-inline">NetfilterQueue</span></code> wrapper: we bind to the <code><span class="highlight-candombe-inline">handle</span></code> function to the queue and we create and run a UNIX socket.
+<br /><br />
+To make it run you need to install dev libraries <code><span class="highlight-candombe-inline">build-essential</span></code>, <code><span class="highlight-candombe-inline">python3-dev</span></code> and <code><span class="highlight-candombe-inline">libnetfilter-queue-dev</span></code> (with <code><span class="highlight-candombe-inline">apt-get</span></code>) and then install the Python packages <code><span class="highlight-candombe-inline">NetfilterQueue</span></code> and <code><span class="highlight-candombe-inline">scapy</span></code> (with <code><span class="highlight-candombe-inline">pip</span></code>)
+<br /><br />
+Then run the script as root.
+</span></p>
+<div class="highlight-candombe"><pre><span></span><code><span class="kn">from</span> <span class="nn">netfilterqueue</span> <span class="kn">import</span> <span class="n">NetfilterQueue</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">from</span> <span class="nn">scapy.all</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="n">nfpkt</span><span class="p">):</span>
+    <span class="n">pkt</span> <span class="o">=</span> <span class="n">IP</span><span class="p">(</span><span class="n">nfpkt</span><span class="o">.</span><span class="n">get_payload</span><span class="p">())</span>
+
+    <span class="c1"># Check if it&#39;s a DNS query packet (qr=0)</span>
+    <span class="k">if</span> <span class="n">DNS</span> <span class="ow">in</span> <span class="n">pkt</span> <span class="ow">and</span> <span class="n">pkt</span><span class="p">[</span><span class="n">DNS</span><span class="p">]</span><span class="o">.</span><span class="n">qr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">queries</span> <span class="o">=</span> <span class="n">pkt</span><span class="p">[</span><span class="n">DNS</span><span class="p">]</span><span class="o">.</span><span class="n">qd</span>
+
+        <span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="n">queries</span><span class="p">:</span>
+            <span class="c1"># Check for A (IPv4) and AAAA (IPv6)</span>
+            <span class="k">if</span> <span class="n">query</span><span class="o">.</span><span class="n">qtype</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">query</span><span class="o">.</span><span class="n">qtype</span> <span class="o">!=</span> <span class="mi">28</span><span class="p">:</span>
+                <span class="n">nfpkt</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
+                <span class="k">return</span>
+
+        <span class="n">nfpkt</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">nfpkt</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
+    <span class="k">return</span>
+
+
+<span class="n">nfqueue</span> <span class="o">=</span> <span class="n">NetfilterQueue</span><span class="p">()</span>
+<span class="n">nfqueue</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">handle</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">fromfd</span><span class="p">(</span><span class="n">nfqueue</span><span class="o">.</span><span class="n">get_fd</span><span class="p">(),</span> <span class="n">socket</span><span class="o">.</span><span class="n">AF_UNIX</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">nfqueue</span><span class="o">.</span><span class="n">run_socket</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">nfqueue</span><span class="o">.</span><span class="n">unbind</span><span class="p">()</span>
+</code></pre></div>
+
+<h1 id="finally-thoughts">Finally thoughts</h1>
+<p>I didn’t explore how to trick the target to connect us instead the access point. It has its little tricks but for this post was too much.</p>
+<p><code><span class="highlight-candombe-inline">dnsmasq</span></code> really made everything easy but it falls short when we need to handle and customize how we want to responde to each DNS query. We cast some <code><span class="highlight-candombe-inline">iptables</span></code> spells but clearly <code><span class="highlight-candombe-inline">dnsmasq</span></code> is not designed for this use case.</p>
+<p>Nevertheless it was an opportunity to play with <code><span class="highlight-candombe-inline">NFQUEUE</span></code>.</p>
+<p>And on top of all of that: <strong>sniff</strong>, always work with <code><span class="highlight-candombe-inline">wireshark</span></code> open on <strong>both</strong> interfaces. Not only gives you insight of what is happening or why it is not working, but also you may found things that you <strong>never</strong> thought before.</p>
+<p class="small-subtitle-with-top-margin">
+Related tags: <a href='https://book-of-gehn.github.io/?tag="hostapd"'>hostapd</a>, <a href='https://book-of-gehn.github.io/?tag="dnsmasq"'>dnsmasq</a>, <a href='https://book-of-gehn.github.io/?tag="iptables"'>iptables</a>, <a href='https://book-of-gehn.github.io/?tag="route"'>route</a>, <a href='https://book-of-gehn.github.io/?tag="ap"'>ap</a>, <a href='https://book-of-gehn.github.io/?tag="wifi"'>wifi</a>, <a href='https://book-of-gehn.github.io/?tag="mitm"'>mitm</a>
+</p>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+</article>
+<span class="print-footer">Man in the Middle Access Point - October 20, 2023 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+
+    <img src='http://192.34.63.156:6127/img/http%3A//127.0.0.1%3A4000/articles/2023/10/20/Man-in-the-Middle-Access-Point.html.png' onerror="this.style.display='none'" async></img>
+</footer>
+</body>
+</html>

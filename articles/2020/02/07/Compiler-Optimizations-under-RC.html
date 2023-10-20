@@ -134,12 +134,12 @@ $<span class="w"> </span>./rcO0<span class="w"> </span><span class="m">0</span><
 Sum<span class="w"> </span><span class="m">5120</span>
 </code></pre></div>
 
-<p><label for='ClRoZSBhcnJheSBvZiBgREFUQVNaID09IDI1NmAgbnVtYmVycyBpcyBpbml0aWFsbHkgemVyb2VkLiBUd28KdGhyZWFkcyBpbmNyZW1lbnQgZWFjaCB2YWx1ZSBieSBvbmUgYFJPVU5EUyA9PSAxMGAgdGltZXMuCgpUaGUgZGlzcGxheWVkIG51bWJlciBpcwp0aGUgc3VtIG9mIHRoZSB2YWx1ZXMgd2hpY2ggc2hvdWxkIGdpdmUgYDI1NiAqIDEwICogMiA9PSA1MTIwYC4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
-<input type='checkbox' id='ClRoZSBhcnJheSBvZiBgREFUQVNaID09IDI1NmAgbnVtYmVycyBpcyBpbml0aWFsbHkgemVyb2VkLiBUd28KdGhyZWFkcyBpbmNyZW1lbnQgZWFjaCB2YWx1ZSBieSBvbmUgYFJPVU5EUyA9PSAxMGAgdGltZXMuCgpUaGUgZGlzcGxheWVkIG51bWJlciBpcwp0aGUgc3VtIG9mIHRoZSB2YWx1ZXMgd2hpY2ggc2hvdWxkIGdpdmUgYDI1NiAqIDEwICogMiA9PSA1MTIwYC4KIG1hcmdpbm5vdGVz' class='margin-toggle'/>
+<p><label for='ClRoZSBhcnJheSBvZiBgREFUQVNaID09IDI1NmAgbnVtYmVycyBpcyBpbml0aWFsbHkgemVyb2VkLiBUd28KdGhyZWFkcyBpbmNyZW1lbnQgZWFjaCB2YWx1ZSBieSBvbmUgYFJPVU5EUyA9PSAxMGAgdGltZXMuCgpUaGUgZGlzcGxheWVkIG51bWJlciBpcwp0aGUgc3VtIG9mIHRoZSB2YWx1ZXMgdGhhdCBzaG91bGQgZ2l2ZSBgMjU2ICogMTAgKiAyID09IDUxMjBgLgogbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='ClRoZSBhcnJheSBvZiBgREFUQVNaID09IDI1NmAgbnVtYmVycyBpcyBpbml0aWFsbHkgemVyb2VkLiBUd28KdGhyZWFkcyBpbmNyZW1lbnQgZWFjaCB2YWx1ZSBieSBvbmUgYFJPVU5EUyA9PSAxMGAgdGltZXMuCgpUaGUgZGlzcGxheWVkIG51bWJlciBpcwp0aGUgc3VtIG9mIHRoZSB2YWx1ZXMgdGhhdCBzaG91bGQgZ2l2ZSBgMjU2ICogMTAgKiAyID09IDUxMjBgLgogbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
 The array of <code><span class="highlight-candombe-inline"><span class="n">DATASZ</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">256</span></span></code> numbers is initially zeroed. Two threads increment each value by one <code><span class="highlight-candombe-inline"><span class="n">ROUNDS</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">10</span></span></code> times.
 <br /><br />
-The displayed number is the sum of the values which should give <code><span class="highlight-candombe-inline"><span class="mi">256</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">5120</span></span></code>.
+The displayed number is the sum of the values that should give <code><span class="highlight-candombe-inline"><span class="mi">256</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">5120</span></span></code>.
 </span></p>
 <p>Surprisingly the code seems to work computing the correct result.</p>
 <p>I ran several times and I always got the same.</p>
@@ -171,7 +171,7 @@ The busy loop was rewritten as one conditional: if the condition is not set the 
 <span class="o">++</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span></span></code></span>
 </span></p>
 <p>If the <code><span class="highlight-candombe-inline"><span class="k">while</span></span></code>-loop waits for a different value but it does not change it, nobody will change it ever so, unless the condition is set from the begin, it is an infinite loop.</p>
-<p>So the compiler decided to rewrite it as a single check and an infinite loop which explains why the program hangs.</p>
+<p>So the compiler decided to rewrite it as a single check and an infinite loop that explains why the program hangs.</p>
 <h2 id="volatile">Volatile</h2>
 <p><label for='CldyaXRlcyAoKnN0b3JlcyopIHRvbzogYSBjb21waWxlciBjb3VsZCBvcHRpbWl6ZSBpc3N1aW5nCm9ubHkgdGhlIGxhc3Qgb2YgbWFueSB3cml0ZXMgaWYgbm90IHJlYWQgKCpsb2FkKikgaGFwcGVuIGluIGJldHdlZW4gb3IgaXQgY291bGQKaXNzdWUgb25lIG9mIHRoZW0gaWYgYWxsIG9mIHRoZW0gd3JpdGUgdGhlIHNhbWUgdmFsdWUuCgpgdm9sYXRpbGVgIGRpc2FibGVzIHRoZXNlIGFzc3VtcHRpb25zLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CldyaXRlcyAoKnN0b3JlcyopIHRvbzogYSBjb21waWxlciBjb3VsZCBvcHRpbWl6ZSBpc3N1aW5nCm9ubHkgdGhlIGxhc3Qgb2YgbWFueSB3cml0ZXMgaWYgbm90IHJlYWQgKCpsb2FkKikgaGFwcGVuIGluIGJldHdlZW4gb3IgaXQgY291bGQKaXNzdWUgb25lIG9mIHRoZW0gaWYgYWxsIG9mIHRoZW0gd3JpdGUgdGhlIHNhbWUgdmFsdWUuCgpgdm9sYXRpbGVgIGRpc2FibGVzIHRoZXNlIGFzc3VtcHRpb25zLiBtYXJnaW5ub3Rlcw==' class='margin-toggle'/>

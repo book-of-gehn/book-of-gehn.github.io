@@ -114,6 +114,28 @@ $(document).ready(function () {
     filterPostsByQuery(tag);
 });
 </script>
+<div class="index-single-post" id="articles-2023-10-20-Man-in-the-Middle-Access-Point-html">
+<hr class="slender post-layout" />
+<a href="https://book-of-gehn.github.io/articles/2023/10/20/Man-in-the-Middle-Access-Point.html">
+<h2 class="larger">
+Man in the Middle Access Point
+</h2>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="hostapd"'>hostapd</a>, <a href='https://book-of-gehn.github.io/?tag="dnsmasq"'>dnsmasq</a>, <a href='https://book-of-gehn.github.io/?tag="iptables"'>iptables</a>, <a href='https://book-of-gehn.github.io/?tag="route"'>route</a>, <a href='https://book-of-gehn.github.io/?tag="ap"'>ap</a>, <a href='https://book-of-gehn.github.io/?tag="wifi"'>wifi</a>, <a href='https://book-of-gehn.github.io/?tag="mitm"'>mitm</a>
+</p>
+<p class="small-subtitle">
+October 20, 2023
+</p>
+<div>
+<p>I was curious about what a phone does behind the scene when it has a wifi connection. In this post I will go step by step on how to turn a wifi card into an access point and how to setup DHCP, DNS, routing and firewall rules to make a computer into a <em>man in the middle</em> box.</p>
+<p>There are no hacks, spoofing or poisoning. I will go just through the happy case when <em>I</em> control the target device. Despite of this, it was a interesting problem to solve.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<img  class='' alt='' src='/img/network/fake-ap-dnsmasq-hostapd-mitm/diagram5.png' /></figure></p>
+<p>And when I made the <em>mitm</em> box work and I was celebrating, a careful inspection to the traffic shown a <em>few surprises</em>.</p>
+</div>
+</div>
 <div class="index-single-post" id="articles-2023-04-09-Hash-Length-Extension-Attack-on-SHA224-html">
 <hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2023/04/09/Hash-Length-Extension-Attack-on-SHA224.html">
@@ -166,7 +188,7 @@ This post covers <em>matasano challenges</em> from <a href="https://cryptopals.c
 <p>Then, someone that knows also <code>k</code> can verify if a message is authentic or not computing the MAC and comparing it with the one provided with the message.</p>
 <p>If the computed hash matches the one provided, the message is authentic, otherwise it is not.</p>
 <p>Unfortunately this <em>prefix-keyed hash</em> for MAC is <strong>broken</strong>.</p>
-<p>Some very well known hash functions <em>expose</em> their internal states which allows an adversary to <strong>append</strong> data to the message and <strong>continue</strong> the hash computation and generate a <strong>new valid MAC</strong>.</p>
+<p>Some very well known hash functions <em>expose</em> their internal states that allows an adversary to <strong>append</strong> data to the message and <strong>continue</strong> the hash computation and generate a <strong>new valid MAC</strong>.</p>
 <p>Hence the name <em>“length extension attack”</em>.</p>
 </div>
 </div>
@@ -232,7 +254,7 @@ October 1, 2022
 <div>
 <p>Let’s say that we want to compare two Pandas’ dataframes for unit testing.</p>
 <p>One is the <em>expected</em> dataframe, crafted by us and it will be the <em>source of truth</em> for the test.</p>
-<p>The other is the <em>obtained</em> dataframe which is the result of the experiment that we want to check.</p>
+<p>The other is the <em>obtained</em> dataframe that is the result of the experiment that we want to check.</p>
 <p>Doing a naive comparison will not work: first we may want to <em>tolerate</em> some minor differences due computation imprecision; and second, and most important, we don’t want to know <em>just</em> if the dataframes are different or not</p>
 <p>We want to know <strong>where are the differences</strong>.</p>
 <p>Knowing exactly what is different makes the debugging much easier – trying to figure out which column in which row there is a different by hand is <strong>not fun</strong>.</p>
@@ -290,7 +312,7 @@ July 15, 2022
 </p>
 <div>
 <p><a href="https://byexamples.github.io/byexample/">byexample</a> is a tool that reads snippets of code from your documentation, executes them and compares the obtained results with the expected ones, from your docs too.</p>
-<p>If a mismatch happen we say that the <em>example</em> in your documentation failed which could mean one fo two things:</p>
+<p>If a mismatch happen we say that the <em>example</em> in your documentation failed that could mean one of two things:</p>
 <ul>
 <li>your code (the snippet) does not do what you expect so it has a bug</li>
 <li>or the code does exactly what it is supposed but you forgot to update your doc.</li>
@@ -362,7 +384,7 @@ $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byex
 Previous posts: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">hierarchical organization</a> <br /> and <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">resources distribution</a>
 </span></p>
 <p>In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder.</p>
-<p>In <code>v2</code> the hierarchy is subject to the <em>no internal process</em> constraint which ensures that a controller will have all the processes in leaves of its domain tree.</p>
+<p>In <code>v2</code> the hierarchy is subject to the <em>no internal process</em> constraint that ensures that a controller will have all the processes in leaves of its domain tree.</p>
 <p>This is the last of a 3-post series about <code>cgroup</code> and certainly, this <em>no internal process</em> constraint was the hardest to understand.</p>
 </div>
 </div>
@@ -519,7 +541,7 @@ February 1, 2022
 </p>
 <div>
 <p>The file system of a docker container is ephemeral: it will disappear as soon as the container is destroyed.</p>
-<p>To prevent data losses you can mount a folder <em>of the host</em> into the container which will survive the destroy of the container.</p>
+<p>To prevent data losses you can mount a folder <em>of the host</em> into the container that will survive the destroy of the container.</p>
 <p>But it is not uncommon to find issues with the ownership and permissions of the <em>shared</em> files.</p>
 <p>The file system of the host represents who is the owner of each file with an user and a group numbers.</p>
 <p>Plain numbers.</p>
@@ -610,7 +632,7 @@ Yes and no: they should not but some network devices will <em>mangle the packets
 <br /><br />
 See the observations done in the <a href="/articles/2021/11/13/IPv4-Scan-Part-V-TTL-Boost.html">TTL Boost post</a>.
 </span></p>
-<p>These time to live (TTL) are numbers between 0 and 255 set by the host. In its journey, the packet goes through different routers which each decrements by one the TTL.</p>
+<p>These time to live (TTL) are numbers between 0 and 255 set by the host. In its journey, the packet goes through different routers that each decrements by one the TTL.</p>
 <p>Once a packet has a TTL of zero, the router will discard it.</p>
 <p><label for='CkFzc3VtaW5nIHRoYXQgdGhlIHBhY2tldCBnb2VzIHN0cmFpZ2h0LWZvcndhcmQgdG8gdXMuIElmIHRoZXJlIGFyZQoqbG9vcHMqIGluIHRoZSByb3V0aW5nIHN5c3RlbXMsIHRoZSBwYWNrZXQgd2lsbCBsb29wIGJldHdlZW4gdGhlIGRldmljZXMKZ29pbmcgbm93aGVyZS4KPGJyIC8+ClRoYXQncyB0aGUgcG9pbnQgb2YgdGhlIFRUTDogdG8gY2F0Y2ggYW5kIGRyb3AgcGFja2V0cyBsb29waW5nIGFyb3VuZC4KIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CkFzc3VtaW5nIHRoYXQgdGhlIHBhY2tldCBnb2VzIHN0cmFpZ2h0LWZvcndhcmQgdG8gdXMuIElmIHRoZXJlIGFyZQoqbG9vcHMqIGluIHRoZSByb3V0aW5nIHN5c3RlbXMsIHRoZSBwYWNrZXQgd2lsbCBsb29wIGJldHdlZW4gdGhlIGRldmljZXMKZ29pbmcgbm93aGVyZS4KPGJyIC8+ClRoYXQncyB0aGUgcG9pbnQgb2YgdGhlIFRUTDogdG8gY2F0Y2ggYW5kIGRyb3AgcGFja2V0cyBsb29waW5nIGFyb3VuZC4KIG1hcmdpbm5vdGVz' class='margin-toggle'/>
@@ -1550,7 +1572,7 @@ November 19, 2020
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/network/qubes/qubes-ips.png' />
 </span></p>
-<p>These last ones have the drivers required to handle ethernet and wifi cards which expose them to a potentially deathly bug lurking in the drivers.</p>
+<p>These last ones have the drivers required to handle ethernet and wifi cards that expose them to a potentially deathly bug lurking in the drivers.</p>
 <p>An additional VM is put in the middle between App VMs and Net VMs. This absolute trusted <em>proxy</em> VM serves as a safe firewall (Proxy).</p>
 <p>In this post will explore how these VMs connect and how the packets are forwarded up and down along this chain of VMs.</p>
 </div>

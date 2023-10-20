@@ -143,9 +143,9 @@ nn
 <p>This <a href="https://github.com/timwr/CVE-2016-5195/tree/f5671399e040a168307058c598d62de64bb441d8">Github repository</a> is a PoC for exploiting Dirty COW on Androids. After a few hours of reviewing I was confident that it would be safe to use it.</p>
 <p>The repository has:</p>
 <ul>
-<li><code>dirtycow.c</code> which implements the exploit</li>
+<li><code>dirtycow.c</code> that implements the exploit</li>
 <li><code>dcow.c</code>, a tiny program interface</li>
-<li><code>run-as.c</code> which it uses <code>selinux</code> to run as root</li>
+<li><code>run-as.c</code> that uses <code>selinux</code> to run as root</li>
 </ul>
 <p>I had only modified <code>run-as.c</code> a little to call the original <em>unpatched</em> <code>run-as</code> program by default and drop a root shell only under a special condition. We don’t want that <em>anyone</em> can call it and become root!</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">pkgname</span><span class="p">;</span>

@@ -121,8 +121,8 @@ April 16, 2017
 </span></p>
 <p>Now the challenge is how to separate the private traffic so it can go only through the wifi while ensuring that the corporate traffic stays where it belongs, under the sight of the <em>Big Brother</em>.</p>
 <h3 id="isolate-a-wifi-card-with-network-namespaces">Isolate a wifi card with Network Namespaces</h3>
-<p>In a modern linux implementation we can use a <code>Network Namespace</code> which can create isolated full network stacks with their own routes and firewall rules.</p>
-<p>Any program running inside that namespace will see only that network stack which it is perfect for our purpose.</p>
+<p>In a modern linux implementation we can use a <code>Network Namespace</code> that can create isolated full network stacks with their own routes and firewall rules.</p>
+<p>Any program running inside that namespace will see only that network stack that it is perfect for our purpose.</p>
 <p>Let’s create it first; pick a nice name and run:</p>
 <div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;starbucks&quot;</span>
 </code></pre></div>
@@ -184,7 +184,7 @@ wlan0<span class="w"> </span><span class="o">(</span>phy<span class="w"> </span>
 $<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>wpa_supplicant<span class="w"> </span>-B<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;wlan0&quot;</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;/tmp/starbucks_wpa_file&quot;</span>
 </code></pre></div>
 
-<p>In both cases, the <code>$SSID</code> is the name of the wifi network which you want to connect.</p>
+<p>In both cases, the <code>$SSID</code> is the name of the wifi network that you want to connect.</p>
 <p>To setup the IP address, the gateway and the DNS server we can use a DHCP client:</p>
 <div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ip<span class="w"> </span>netns<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;starbucks&quot;</span><span class="w"> </span>dhclient<span class="w"> </span><span class="s2">&quot;wlan0&quot;</span>
 </code></pre></div>

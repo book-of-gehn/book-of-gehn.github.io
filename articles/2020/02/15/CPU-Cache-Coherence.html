@@ -270,7 +270,7 @@ High-level diagram. The colours are qualitative following the same color palette
 </span></figcaption>
 <img  class='' alt='' src='/img/threading/cache-coherence/cpus-cache-arch.png' /></figure></p>
 <h2 id="open-questions">Open questions</h2>
-<p>We used an array of 8 elements of <code><span class="highlight-candombe-inline"><span class="kt">int</span></span></code> which gives us 32 bytes. Current technology uses cache lines of 64 bytes. Will the results in this post change if we use larger arrays?</p>
+<p>We used an array of 8 elements of <code><span class="highlight-candombe-inline"><span class="kt">int</span></span></code> that gives us 32 bytes. Current technology uses cache lines of 64 bytes. Will the results in this post change if we use larger arrays?</p>
 <p>We saw how two threads running in the same cpu fight each other because none <em>yields</em> the cpu; <a href="http://man7.org/linux/man-pages/man2/sched_yield.2.html">sched_yield</a> is POSIX function to <em>relinquish</em> the cpu. What would happen?</p>
 <p>The heatmap was not entirely symmetric. Does it mean that we need to collect more data and try to understand and suppress the noise, or is there something else?</p>
 <p>What about <a href="https://en.wikipedia.org/wiki/Non-uniform_memory_access">NUMA</a> (Non Uniform Memory Address)? Could the results shown in this post be explained by it?</p>

@@ -137,7 +137,7 @@ December 23, 2018
 </code></pre></div>
 
 <p>Exploring 64 bits is quite hard but the seed is <strong>not random</strong>, therefore we do not need to explore the <em>whole space</em> but a <strong>smaller space</strong>.</p>
-<p>Instead we just explore the numbers in the vicinity of the current time which turns the <a href="https://cryptopals.com/sets/3/challenges/22">crack an MT19937 seed</a> into a much simpler task.</p>
+<p>Instead we just explore the numbers in the vicinity of the current time that turns the <a href="https://cryptopals.com/sets/3/challenges/22">crack an MT19937 seed</a> into a much simpler task.</p>
 <p>First, assuming that we known the first output of the PRNG, we build an oracle function to tell if we have found or not the secret seed.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 

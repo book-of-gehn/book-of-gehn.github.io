@@ -31,7 +31,7 @@ Lchild:
     @; r0 is already the address of the prog (char*)
     @; execve(prog, argv, envp)
     add r1, sp, #0            @; char *argv[]
-    add r2, sp, #12           @; char *envp[] (&argv[3] which points NULL)
+    add r2, sp, #12           @; char *envp[] (&argv[3] that points NULL)
     mov r7, #0x0b
     svc #0
 

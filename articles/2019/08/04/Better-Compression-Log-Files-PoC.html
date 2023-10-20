@@ -150,13 +150,13 @@ August 4, 2019
 </table>
 </div>
 <h3 id="open-questions">Open questions</h3>
-<p>The compressed date times represent the 41.480% of the total. The current implementation encodes the deltas in 8 bytes and compresses the stream using LZMA which may not be the best tool for this.</p>
+<p>The compressed date times represent the 41.480% of the total. The current implementation encodes the deltas in 8 bytes and compresses the stream using LZMA that may not be the best tool for this.</p>
 <p>8 bytes perhaps is too much: if there is a log line each hour we can represent the delta in microseconds using only 32 bits.</p>
 <p>We could also pack them instead of compress them using <a href="https://github.com/lemire/FrameOfReference">frames of reference</a>. With a little of extra code, this would open the opportunity to do searches by time without decompressing the whole thing.</p>
 <p>LZMA and others are very good compressing repeated substrings that are <em>closer</em> each other.</p>
 <p>This is perfect of strings that represent ids in the logs that appear in consecutive lines like <code>4b7c9f29-f945-3641-e737-39c180263f85</code></p>
 <p>But what about substrings that are repeated everywhere in a <em>time independent</em>?</p>
-<p>Think in <code>host evaluator: info No evaluator for</code>. It is very likely to be repeated several times but if its <em>frequency</em> is too low, several <em>other</em> lines could appear between one repetition and the other which may confuse and reduce the performance of the compressor.</p>
+<p>Think in <code>host evaluator: info No evaluator for</code>. It is very likely to be repeated several times but if its <em>frequency</em> is too low, several <em>other</em> lines could appear between one repetition and the other that may confuse and reduce the performance of the compressor.</p>
 <p>Clustering the lines should bring them closer but if the operation is not invertible without meta data (like the <a href="https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform">Burrows-Wheeler transform</a>) it may not be worthy.</p>
 <p>Also, a clustering will go against of the natural clustering of the <em>time dependent</em> strings. Not good.</p>
 <p class="small-subtitle-with-top-margin">

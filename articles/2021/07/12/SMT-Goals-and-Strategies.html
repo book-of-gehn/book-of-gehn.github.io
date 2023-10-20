@@ -171,7 +171,7 @@ $$
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/z3/prooftree.svg' type='image/svg+xml'></object></figure></p>
 <p>Formally, to say proof <em>tree</em> we need to restrict the tactics to not generate repeated goals (so we don’t have cycles).</p>
 <p>Having then a <em>single</em> starting goal, the <em>successive application</em> of the tactics forms a <em>tree</em>.</p>
-<p>We can extend this and have <em>multiple</em> starting goals in which case we will have an <em>acyclic graph</em> like described in [3]. (in [3] is more specific and refers to <em>goals</em> and <em>tactics</em> as <em>states</em> (of a proof) and <em>rules of induction</em> but they are the same idea).</p>
+<p>We can extend this and have <em>multiple</em> starting goals in that case we will have an <em>acyclic graph</em> like described in [3]. (in [3] is more specific and refers to <em>goals</em> and <em>tactics</em> as <em>states</em> (of a proof) and <em>rules of induction</em> but they are the same idea).</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/z3/tree2.svg' type='image/svg+xml'></object></figure></p>
@@ -204,7 +204,7 @@ $$
 <p><code><span class="highlight-candombe-inline"><span class="n">orelse</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span></span></code> applies <code><span class="highlight-candombe-inline"><span class="n">t1</span></span></code> and if it failed applies <code><span class="highlight-candombe-inline"><span class="n">t2</span></span></code>.</p>
 <p>This is a handy way to build the <em>strategy</em> to solve the problem in terms of tacticals and tactics.</p>
 <h2 id="probes-or-formula-measures">Probes or formula measures</h2>
-<p>A <em>probe</em> or <em>formula measure</em> is a tactic which does not modify the goal set but it fails or not based on attributes or properties of the current goal set.</p>
+<p>A <em>probe</em> or <em>formula measure</em> is a tactic that does not modify the goal set but it fails or not based on attributes or properties of the current goal set.</p>
 <p>A <em>probe</em> could count how many variables a formula has or if the inequations follow are written in a particular way.</p>
 <p>Based on a <em>probe</em> one tactic or other could be applied next.</p>
 <p>For example <code><span class="highlight-candombe-inline"><span class="n">orelse</span><span class="p">(</span><span class="n">then</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">t1</span><span class="p">),</span> <span class="n">t2</span><span class="p">)</span></span></code> applies <code><span class="highlight-candombe-inline"><span class="n">t1</span></span></code> <em>if</em> the probe (or check) <code><span class="highlight-candombe-inline"><span class="n">c1</span></span></code> didn’t fail otherwise <code><span class="highlight-candombe-inline"><span class="n">t2</span></span></code> is applied.</p>

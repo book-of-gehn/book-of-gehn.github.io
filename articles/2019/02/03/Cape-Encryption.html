@@ -299,7 +299,7 @@ Even if the alphabet of all ASCII printable has 100 symbols and the proposed has
 <span class="o">&gt;&gt;&gt;</span> <span class="n">all_in_alphabet</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">all_in_alphabet</span><span class="p">,</span> <span class="n">alphabet</span><span class="o">=</span><span class="n">alphabet</span><span class="p">)</span>
 </code></pre></div>
 
-<p>Now, we filter out any key which decrypted message does not fit in out plaintext model.</p>
+<p>Now, we filter out any key that the decrypted message does not fit in out plaintext model.</p>
 <p>Once again we will obtain a <strong>guess</strong>, but a shorter one this time:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita.attacks</span> <span class="kn">import</span> <span class="n">brute_force</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">gkey1</span> <span class="o">=</span> <span class="n">brute_force</span><span class="p">(</span><span class="n">tciphertexts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">score_func</span><span class="o">=</span><span class="n">all_in_alphabet</span><span class="p">,</span> <span class="n">key_space</span><span class="o">=</span><span class="n">gkey1</span><span class="p">)</span>
@@ -348,7 +348,7 @@ Even if the alphabet of all ASCII printable has 100 symbols and the proposed has
 </code></pre></div>
 
 <h2 id="final-thoughts">Final thoughts</h2>
-<p><code>cape_hash</code> is symmetric cipher which, despite of having a 65536 bytes length key, the key stream is repeated each 256 of plaintext enabling a <em>cipher only attack</em>.</p>
+<p><code>cape_hash</code> is symmetric cipher that, despite of having a 65536 bytes length key, the key stream is repeated each 256 of plaintext enabling a <em>cipher only attack</em>.</p>
 <p>Even with a short plaintext of just 2852 we got 11 bytes xored with the same key byte and this was enough to get almost 60% of the plaintext.</p>
 <p><label for='CkJhc2VkIG9uIHRoZSBkb2N1bWVudGF0aW9uIG1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CkJhc2VkIG9uIHRoZSBkb2N1bWVudGF0aW9uIG1hcmdpbm5vdGVz' class='margin-toggle'/>

@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta name="description" content="Keyed Hash Length Extension Attack How can we know if a message is authentic or not? A trusted party with access to a private key can compute an authentication code or MAC. Compute the message authentication code (MAC) doing . In theory only who knows the secret key can create and verify those, but no, this schema es broken. This post covers matasano challenges from 28 to 30 so spoiler alert. A keyed hash prefixes the message with the key and computes a hash like SHA-1. The resulting hash is the MAC for the given message. Then, someone that knows also can verify if a message is authentic or not computing the MAC and comparing it with the one provided with the message. If the computed hash matches the one provided, the message is authentic, otherwise it is not. Unfortunately this prefix-keyed hash for MAC is broken. Some very well known hash functions expose their internal states which allows an adversary to append data to the message and continue the hash computation and generate a new valid MAC. Hence the name “length extension attack”.">
+  <meta name="description" content="Keyed Hash Length Extension Attack How can we know if a message is authentic or not? A trusted party with access to a private key can compute an authentication code or MAC. Compute the message authentication code (MAC) doing . In theory only who knows the secret key can create and verify those, but no, this schema es broken. This post covers matasano challenges from 28 to 30 so spoiler alert. A keyed hash prefixes the message with the key and computes a hash like SHA-1. The resulting hash is the MAC for the given message. Then, someone that knows also can verify if a message is authentic or not computing the MAC and comparing it with the one provided with the message. If the computed hash matches the one provided, the message is authentic, otherwise it is not. Unfortunately this prefix-keyed hash for MAC is broken. Some very well known hash functions expose their internal states that allows an adversary to append data to the message and continue the hash computation and generate a new valid MAC. Hence the name “length extension attack”.">
 
   
   <script type="application/ld+json">
@@ -118,7 +118,7 @@ This post covers <em>matasano challenges</em> from <a href="https://cryptopals.c
 <p>Then, someone that knows also \(k\) can verify if a message is authentic or not computing the MAC and comparing it with the one provided with the message.</p>
 <p>If the computed hash matches the one provided, the message is authentic, otherwise it is not.</p>
 <p>Unfortunately this <em>prefix-keyed hash</em> for MAC is <strong>broken</strong>.</p>
-<p>Some very well known hash functions <em>expose</em> their internal states which allows an adversary to <strong>append</strong> data to the message and <strong>continue</strong> the hash computation and generate a <strong>new valid MAC</strong>.</p>
+<p>Some very well known hash functions <em>expose</em> their internal states that allows an adversary to <strong>append</strong> data to the message and <strong>continue</strong> the hash computation and generate a <strong>new valid MAC</strong>.</p>
 <p>Hence the name <em>“length extension attack”</em>.<!--more--></p>
 <h2 id="overview-of-keyed-sha-1">Overview of keyed SHA-1</h2>
 <p>Let’s take a look as how SHA-1 is used as a MAC.</p>
@@ -144,7 +144,7 @@ This post covers <em>matasano challenges</em> from <a href="https://cryptopals.c
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
 <img style="width: 100%;" class='' alt='' src='/img/matasano/set-4-hashes/hash-states.svg' /></figure></p>
-<p>Note how the hash states \(h_1\) depends of the first block \(b_0\) which contains the secret key (or at least the begin of it).</p>
+<p>Note how the hash states \(h_1\) depends of the first block \(b_0\) that contains the secret key (or at least the begin of it).</p>
 <p>Therefore, the \(h_1\) cannot be guessed by an adversary or any other internal state.</p>
 <p>The final state however is <em>totally exposed</em> by SHA-1: the concatenation of the state’s variables <strong>is</strong> the resulting hash.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">sha1</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>

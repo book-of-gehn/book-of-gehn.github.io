@@ -250,7 +250,7 @@ No, there are not memory leaks here. The <em>delete player</em> function is a go
 <ul>
 <li><code>monster_attack</code> does not free its argument so we may have a <strong>memory leak</strong> which content is controlled by us.</li>
 <li><code>monster_attack</code> does free the <code>player_struct</code> but it doesn’t set <code>is_user_created</code> to 0 so we may have a <strong>double free</strong> if we call <code>delete_player</code> later.</li>
-<li>unfortunately <code>monster_attack</code> may return 0 which makes <code>player_attack</code> to call <code>exit()</code>; only under a specific path <code>monster_attack</code> returns 1.</li>
+<li>unfortunately <code>monster_attack</code> may return 0 that makes <code>player_attack</code> to call <code>exit()</code>; only under a specific path <code>monster_attack</code> returns 1.</li>
 </ul>
 <p>Something similar happen in <code>monster_defense</code> and <code>roar</code> functions with the exception that <code>roar</code> returns always 0.</p>
 <h2 id="next-steps">Next Steps</h2>

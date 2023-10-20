@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta name="description" content="Fix Ownership of Files in a Mounted Volume The file system of a docker container is ephemeral: it will disappear as soon as the container is destroyed. To prevent data losses you can mount a folder of the host into the container which will survive the destroy of the container. But it is not uncommon to find issues with the ownership and permissions of the shared files. The file system of the host represents who is the owner of each file with an user and a group numbers. Plain numbers. Humans, on the other hand, think in terms of user names: “this is the file of Alice; this other is of Bob”. The mapping between the numbers that the file system uses and the names that the humans understand is stored in and . And here we have a problem. These two files, and , live in the host’s file system and they are used to map the files’ numbers to names when you are seeing the files from the host. When you enter into the docker container (or run a command inside), the shared files, mounted with , will have the same file numbers. But, an here is the twist, inside the container you will be using for the mapping the and files of the container and not of the host. Same file numbers, different mappings.">
+  <meta name="description" content="Fix Ownership of Files in a Mounted Volume The file system of a docker container is ephemeral: it will disappear as soon as the container is destroyed. To prevent data losses you can mount a folder of the host into the container that will survive the destroy of the container. But it is not uncommon to find issues with the ownership and permissions of the shared files. The file system of the host represents who is the owner of each file with an user and a group numbers. Plain numbers. Humans, on the other hand, think in terms of user names: “this is the file of Alice; this other is of Bob”. The mapping between the numbers that the file system uses and the names that the humans understand is stored in and . And here we have a problem. These two files, and , live in the host’s file system and they are used to map the files’ numbers to names when you are seeing the files from the host. When you enter into the docker container (or run a command inside), the shared files, mounted with , will have the same file numbers. But, an here is the twist, inside the container you will be using for the mapping the and files of the container and not of the host. Same file numbers, different mappings.">
 
   
   <script type="application/ld+json">
@@ -103,7 +103,7 @@ Fix Ownership of Files in a Mounted Volume
 February 1, 2022
 </p>
 <p>The file system of a docker container is ephemeral: it will disappear as soon as the container is destroyed.</p>
-<p>To prevent data losses you can mount a folder <em>of the host</em> into the container which will survive the destroy of the container.</p>
+<p>To prevent data losses you can mount a folder <em>of the host</em> into the container that will survive the destroy of the container.</p>
 <p>But it is not uncommon to find issues with the ownership and permissions of the <em>shared</em> files.</p>
 <p>The file system of the host represents who is the owner of each file with an user and a group numbers.</p>
 <p>Plain numbers.</p>
@@ -196,7 +196,7 @@ I’m using different numbers to make it easier to read but it is not necessary.
 You can skip this step for the scenario 1 and use the original UID/GID <code><span class="highlight-candombe-inline"><span class="m">1001</span></span></code>/<code><span class="highlight-candombe-inline"><span class="m">1024</span></span></code>
 </span></p>
 <p>For example, let’s pick <code><span class="highlight-candombe-inline"><span class="m">1201</span></span></code> for the UID and <code><span class="highlight-candombe-inline"><span class="m">1224</span></span></code> for the group.</p>
-<p>We can check this running <code><span class="highlight-candombe-inline">grep</span></code> and getting a 0 response which means that the id was not found (so it is not used)</p>
+<p>We can check this running <code><span class="highlight-candombe-inline">grep</span></code> and getting a 0 response that means that the id was not found (so it is not used)</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="m">1201</span><span class="w"> </span>/etc/passwd
 <span class="m">0</span>
 <span class="o">(</span>host<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="m">1224</span><span class="w"> </span>/etc/group

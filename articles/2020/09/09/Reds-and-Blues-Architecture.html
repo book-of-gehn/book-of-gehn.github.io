@@ -107,7 +107,7 @@ September 9, 2020
 <p>This is the proposal of a simple architecture that allows introspection and enables – too many times forgotten – basic optimizations.<!--more--></p>
 <h2 id="a-case-of-study">A case of study</h2>
 <p>Imagine that we need to accept requests from a client and forward them to a server.</p>
-<p>The server will do the real job and it will return us the result of the operation which we will store in a database.</p>
+<p>The server will do the real job and it will return us the result of the operation that we will store in a database.</p>
 <p>But the server is stateful and processing the same request twice will corrupt the server.</p>
 <p>It is our job to filter the duplicates out.</p>
 <p>For that we use the same database to query if the given task was already seen or if it is a novel one.</p>
@@ -183,7 +183,7 @@ Metrics: in and out over time, plus drops and queue’s length. When two queues 
 <li>saturation: degree of extra work that the resource didn’t handle, often queued</li>
 <li>errors: well, that, errors, like drops.</li>
 </ul>
-<p>There are two categories of resources which differ in the definition of <em>utilization</em>:</p>
+<p>There are two categories of resources that differ in the definition of <em>utilization</em>:</p>
 <ul>
 <li>IO resources, like network, disk: the utilization is the amount of time that the resource was busy.</li>
 <li>Capacity resources, like the memory: the utilization in this case is the amount of memory in use.</li>

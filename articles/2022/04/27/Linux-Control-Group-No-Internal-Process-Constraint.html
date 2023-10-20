@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta name="description" content="Control Group - No Internal Process Constraint Previous posts: hierarchical organization and resources distribution In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder. In v2 the hierarchy is subject to the no internal process constraint which ensures that a controller will have all the processes in leaves of its domain tree. This is the last of a 3-post series about cgroup and certainly, this no internal process constraint was the hardest to understand.">
+  <meta name="description" content="Control Group - No Internal Process Constraint Previous posts: hierarchical organization and resources distribution In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder. In v2 the hierarchy is subject to the no internal process constraint that ensures that a controller will have all the processes in leaves of its domain tree. This is the last of a 3-post series about cgroup and certainly, this no internal process constraint was the hardest to understand.">
 
   
   <script type="application/ld+json">
@@ -111,7 +111,7 @@ $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byex
 Previous posts: <a href="/articles/2022/04/23/Linux-Control-Group-Hierarchical-Organization.html">hierarchical organization</a> <br /> and <a href="/articles/2022/04/24/Linux-Control-Group-Resource-Distribution.html">resources distribution</a>
 </span></p>
 <p>In the previous post we saw that we cannot enable a controller or add a process to a cgroup freely. That would make the implementation of each controller harder.</p>
-<p>In <code>v2</code> the hierarchy is subject to the <em>no internal process</em> constraint which ensures that a controller will have all the processes in leaves of its domain tree.</p>
+<p>In <code>v2</code> the hierarchy is subject to the <em>no internal process</em> constraint that ensures that a controller will have all the processes in leaves of its domain tree.</p>
 <p>This is the last of a 3-post series about <code>cgroup</code> and certainly, this <em>no internal process</em> constraint was the hardest to understand. <!--more--></p>
 <p>Let’s create the following <code>cgroup</code> hierarchy to play with. Notice how we enable the resource controller <code>+cpu</code> on <code>test/</code>’s and <code>test/cg1/</code>’s subtrees but not on <code>test/cg2/</code>’s.</p>
 <p><label for='CmBgYHNoZWxsCiQgY2QgL3N5cy9mcy9jZ3JvdXAKJCBta2RpciAtcCB0ZXN0L2NnMS9jZzFfMQokIG1rZGlyIC1wIHRlc3QvY2cxL2NnMV8yCiQgbWtkaXIgLXAgdGVzdC9jZzIvY2cyXzEKJCBta2RpciAtcCB0ZXN0L2NnMi9jZzJfMgoKJCBlY2hvICcrY3B1JyA+IHRlc3QvY2dyb3VwLnN1YnRyZWVfY29udHJvbAokIGVjaG8gJytjcHUnID4gdGVzdC9jZzEvY2dyb3VwLnN1YnRyZWVfY29udHJvbApgYGAKbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
@@ -263,7 +263,7 @@ $<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><sp
 &lt;...&gt;write<span class="w"> </span>error:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </span>file<span class="w"> </span>or<span class="w"> </span>directory
 </code></pre></div>
 
-<p>In contrast with <code>test/cg1/</code> we didn’t have trouble enabling on <code>test/cg2/</code>’s and <code>test/cg3/</code>’s children because in the first case <code>test/cg2/</code> is empty and in the second case is the child <code>test/cg3/cg3_1/</code> which it is empty.</p>
+<p>In contrast with <code>test/cg1/</code> we didn’t have trouble enabling on <code>test/cg2/</code>’s and <code>test/cg3/</code>’s children because in the first case <code>test/cg2/</code> is empty and in the second case is the child <code>test/cg3/cg3_1/</code> that it is empty.</p>
 <div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg2/cgroup.subtree_control
 
 $<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;+cpu&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>test/cg3/cgroup.subtree_control

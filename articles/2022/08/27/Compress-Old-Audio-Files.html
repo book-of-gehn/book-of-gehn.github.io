@@ -127,7 +127,7 @@ You could write directly <code><span class="highlight-candombe-inline">.opus</sp
 <div class="highlight-candombe"><pre><span></span><code>ffmpeg<span class="w"> </span>-i<span class="w"> </span><span class="nv">$fn</span><span class="w"> </span>-acodec<span class="w"> </span>libopus<span class="w"> </span>-b:a<span class="w"> </span>50k<span class="w"> </span><span class="nv">$name</span>.webm
 </code></pre></div>
 
-<p>Final tweak, I have some videos which I only care their audio. We can instruct <code><span class="highlight-candombe-inline">ffmpeg</span></code> to get those with the “no video” option (<code><span class="highlight-candombe-inline">-nv</span></code>).</p>
+<p>Final tweak, I have some videos that I only care their audio. We can instruct <code><span class="highlight-candombe-inline">ffmpeg</span></code> to get those with the “no video” option (<code><span class="highlight-candombe-inline">-nv</span></code>).</p>
 <h2 id="scripting">Scripting</h2>
 <p>The <a href="/assets/misc/compress-old-audio-files/compress_audio.sh"><code><span class="highlight-candombe-inline">compress_audio.sh</span></code></a> script follows:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="ch">#!/bin/bash</span>

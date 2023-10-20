@@ -177,7 +177,7 @@ January 19, 2021
 
 <h3 id="a-comment">A comment</h3>
 <p>This is not the only way to do it.</p>
-<p>I could search for a <code><span class="highlight-candombe-inline"><span class="n">puts</span></span></code> call which whole be more likely to be the one that we are looking for:</p>
+<p>I could search for a <code><span class="highlight-candombe-inline"><span class="n">puts</span></span></code> call that would be more likely to be the one that we are looking for:</p>
 <div class="highlight-candombe"><pre><span></span><code>pi@raspberrypi:~$<span class="w"> </span>objdump<span class="w"> </span>-d<span class="w"> </span>stack3<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;puts&quot;</span>
 <span class="m">00010324</span><span class="w"> </span>&lt;puts@plt&gt;:
 <span class="w">   </span><span class="m">10488</span>:<span class="w">       </span>ebffffa5<span class="w">        </span>bl<span class="w">      </span><span class="m">10324</span><span class="w"> </span>&lt;puts@plt&gt;

@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta name="description" content="Qubes OS Networking Qubes OS has an interesting network system to isolate more-or-less trusted application virtual machines (App) from absolute untrusted network VMs (Net). These last ones have the drivers required to handle ethernet and wifi cards which expose them to a potentially deathly bug lurking in the drivers. An additional VM is put in the middle between App VMs and Net VMs. This absolute trusted proxy VM serves as a safe firewall (Proxy). In this post will explore how these VMs connect and how the packets are forwarded up and down along this chain of VMs.">
+  <meta name="description" content="Qubes OS Networking Qubes OS has an interesting network system to isolate more-or-less trusted application virtual machines (App) from absolute untrusted network VMs (Net). These last ones have the drivers required to handle ethernet and wifi cards that expose them to a potentially deathly bug lurking in the drivers. An additional VM is put in the middle between App VMs and Net VMs. This absolute trusted proxy VM serves as a safe firewall (Proxy). In this post will explore how these VMs connect and how the packets are forwarded up and down along this chain of VMs.">
 
   
   <script type="application/ld+json">
@@ -103,11 +103,11 @@ Qubes OS Networking
 November 19, 2020
 </p>
 <p><a href="https://www.qubes-os.org/">Qubes OS</a> has an interesting network system to isolate more-or-less trusted <em>application</em> virtual machines (App) from absolute untrusted <em>network</em> VMs (Net).</p>
-<p>These last ones have the drivers required to handle ethernet and wifi cards which expose them to a potentially deathly bug lurking in the drivers.</p>
+<p>These last ones have the drivers required to handle ethernet and wifi cards that expose them to a potentially deathly bug lurking in the drivers.</p>
 <p>An additional VM is put in the middle between App VMs and Net VMs. This absolute trusted <em>proxy</em> VM serves as a safe firewall (Proxy).</p>
 <p>In this post will explore how these VMs connect and how the packets are forwarded up and down along this chain of VMs.<!--more--></p>
 <p><figure><figcaption><span markdown='1'>
-Three App VMs: one for work, other for personal stuff, both considered relatively-trusted and one more VM for untrusted stuff, all connected to the “firewall” VM which forwards the packets to the Net VM.
+Three App VMs: one for work, other for personal stuff, both considered relatively-trusted and one more VM for untrusted stuff, all connected to the “firewall” VM that forwards the packets to the Net VM.
 <br /><br />
 The “firewall” VM is isolated except for the firewall/routing processing so it is considered trusted while Net VM is not.
 </span></figcaption>
@@ -121,7 +121,6 @@ The “firewall” VM is isolated except for the firewall/routing processing so 
 <span class="w">       </span>valid_lft<span class="w"> </span>forever<span class="w"> </span>preferred_lft<span class="w"> </span>forever
 </code></pre></div>
 
-<hr class="slender post-layout small" />
 <div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>ip<span class="w"> </span>address<span class="w"> </span>show
 <span class="m">2</span>:<span class="w"> </span>eth0:<span class="w"> </span>&lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt;<span class="w"> </span>mtu<span class="w"> </span><span class="m">1500</span><span class="w"> </span>qdisc<span class="w"> </span>pfifo_fast<span class="w"> </span>state<span class="w"> </span>UP<span class="w"> </span>group<span class="w"> </span>default<span class="w"> </span>qlen<span class="w"> </span><span class="m">1000</span>
 <span class="w">    </span>link/ether<span class="w"> </span><span class="m">00</span>:16:3e:5e:6c:18<span class="w"> </span>brd<span class="w"> </span>ff:ff:ff:ff:ff:ff
@@ -150,19 +149,17 @@ The second most-right bit of the same byte is odd so it is a locally administrat
 </span></p>
 <p>The <code>ethX</code> links have different addresses with the same <a href="https://hwaddress.com/company/xensource-inc/">Xensource OUI</a> <code>00:16:3e</code> while the <code>vifX.Y</code> have the same <a href="https://en.wikipedia.org/wiki/MAC_address">unicast-locally administrated</a> MAC: <code>fe:ff:ff:ff:ff:ff</code>.</p>
 <h2 id="routing">Routing</h2>
-<p>Here a ping from the App VM is routed to the Proxy VM which in turns routes the packet to the Net VM and the outside world and the response goes back through the same path to the App VM</p>
+<p>Here a ping from the App VM is routed to the Proxy VM that in turns routes the packet to the Net VM and the outside world and the response goes back through the same path to the App VM</p>
 <div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>ping<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">8</span>.8.8.8
 <span class="m">64</span><span class="w"> </span>bytes<span class="w"> </span>from<span class="w"> </span><span class="m">8</span>.8.8.8:<span class="w"> </span><span class="nv">icmp_seq</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">ttl</span><span class="o">=</span><span class="m">53</span><span class="w"> </span><span class="nv">time</span><span class="o">=</span><span class="m">12</span>.1<span class="w"> </span>ms
 </code></pre></div>
 
-<hr class="slender post-layout small" />
 <div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>eth0
 <span class="m">23</span>:56:57.072295<span class="w"> </span>ARP,<span class="w"> </span>Request<span class="w"> </span>who-has<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>tell<span class="w"> </span><span class="m">10</span>.137.7.27,<span class="w"> </span>length<span class="w"> </span><span class="m">28</span>
 <span class="m">23</span>:56:57.072330<span class="w"> </span>ARP,<span class="w"> </span>Reply<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>is-at<span class="w"> </span>fe:ff:ff:ff:ff:ff,<span class="w"> </span>length<span class="w"> </span><span class="m">28</span>
 <span class="o">(</span>icmp<span class="w"> </span>omitted<span class="o">)</span>
 </code></pre></div>
 
-<hr class="slender post-layout small" />
 <div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>vif37.0
 <span class="m">23</span>:56:57.072295<span class="w"> </span>ARP,<span class="w"> </span>Request<span class="w"> </span>who-has<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>tell<span class="w"> </span><span class="m">10</span>.137.7.27,<span class="w"> </span>length<span class="w"> </span><span class="m">28</span>
 <span class="m">23</span>:56:57.072330<span class="w"> </span>ARP,<span class="w"> </span>Reply<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>is-at<span class="w"> </span>fe:ff:ff:ff:ff:ff,<span class="w"> </span>length<span class="w"> </span><span class="m">28</span>
@@ -174,7 +171,7 @@ The second most-right bit of the same byte is odd so it is a locally administrat
 <span class='marginnote'>
 <img  class='fullwidth' alt='' src='/img/network/qubes/qubes-arp.png' />
 </span></p>
-<p>The ARP request/reply is the App VM asking for the MAC address of its configured gateway, the <code>10.137.7.1</code> which it is the IP of the Proxy VM’s <code>vif37.0</code> interface.</p>
+<p>The ARP request/reply is the App VM asking for the MAC address of its configured gateway, the <code>10.137.7.1</code> that it is the IP of the Proxy VM’s <code>vif37.0</code> interface.</p>
 <div class="highlight-candombe"><pre><span></span><code>root@appvm:#<span class="w"> </span>ip<span class="w"> </span>route<span class="w"> </span>show
 default<span class="w"> </span>via<span class="w"> </span><span class="m">10</span>.137.7.1<span class="w"> </span>dev<span class="w"> </span>eth0
 <span class="m">10</span>.137.7.1<span class="w"> </span>dev<span class="w"> </span>eth0<span class="w"> </span>scope<span class="w"> </span>link
@@ -204,7 +201,6 @@ If you are quickly enough you may see <code>DELAY</code>: the learning about the
 <span class="m">23</span>:56:58.027402<span class="w"> </span>IP<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.27:<span class="w"> </span>ICMP<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>reply,<span class="w"> </span>id<span class="w"> </span><span class="m">1177</span>,<span class="w"> </span>seq<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>length<span class="w"> </span><span class="m">64</span>
 </code></pre></div>
 
-<hr class="slender post-layout small" />
 <div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>vif37.0
 <span class="o">(</span>arp<span class="w"> </span>omitted<span class="o">)</span>
 <span class="m">23</span>:56:58.019581<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.27<span class="w"> </span>&gt;<span class="w"> </span><span class="m">8</span>.8.8.8:<span class="w"> </span>ICMP<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>request,<span class="w"> </span>id<span class="w"> </span><span class="m">1177</span>,<span class="w"> </span>seq<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>length<span class="w"> </span><span class="m">64</span>
@@ -345,7 +341,6 @@ Address:<span class="w"> </span><span class="m">172</span>.217.172.46
 <span class="m">23</span>:58:30.337391<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.1.53<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.27.46734:<span class="w"> </span><span class="m">26595</span><span class="w"> </span><span class="m">1</span>/0/0<span class="w"> </span>A<span class="w"> </span><span class="m">172</span>.217.172.46<span class="w"> </span><span class="o">(</span><span class="m">44</span><span class="o">)</span>
 </code></pre></div>
 
-<hr class="slender post-layout small" />
 <div class="highlight-candombe"><pre><span></span><code>root@proxyvm:#<span class="w"> </span>tcpdump<span class="w"> </span>-n<span class="w"> </span>-i<span class="w"> </span>vif37.0
 ...
 <span class="m">23</span>:58:30.220387<span class="w"> </span>IP<span class="w"> </span><span class="m">10</span>.137.7.27.46734<span class="w"> </span>&gt;<span class="w"> </span><span class="m">10</span>.137.7.1.53:<span class="w"> </span><span class="m">26595</span>+<span class="w"> </span>A?<span class="w"> </span>google.com.<span class="w"> </span><span class="o">(</span><span class="m">28</span><span class="o">)</span>
@@ -421,28 +416,23 @@ Address:<span class="w"> </span><span class="m">172</span>.217.172.46
         crossorigin="anonymous"
         async>
 </script>
-<pre><code>&lt;/article&gt;
-
-
-```{=html}</code></pre>
-<p><span class="print-footer">Qubes OS Networking - November 19, 2020 - Martin Di Paola</span></p>
-<pre><code>
-    ```{=html}
-&lt;footer&gt;
-    &lt;hr class=&quot;slender&quot;&gt;
-    &lt;div class=&quot;credits&quot;&gt;
-        &lt;span&gt;&amp;copy;
+</article>
+<span class="print-footer">Qubes OS Networking - November 19, 2020 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
             Martin Di Paola
-        &lt;/span&gt;&lt;/br&gt;
-            &lt;a class=&quot;raw_link&quot; href=&quot;/atom.xml&quot;&gt;&lt;img height=&quot;16px&quot; width=&quot;16px&quot; src=&quot;/img/rss-32px.png&quot; /&gt;&lt;/a&gt;
-            &lt;a class=&quot;raw_link&quot; href=&quot;https://github.com/eldipa&quot;&gt;&lt;img height=&quot;16px&quot; width=&quot;16px&quot; src=&quot;/img/github.png&quot; /&gt;&lt;/a&gt;
-        &lt;br&gt;
+        </span></br>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
         
-        &lt;a href=&quot;mailto:martinp.dipaola@gmail.com&quot;&gt;martinp.dipaola@gmail.com&lt;/a&gt;&lt;/span&gt;&lt;/br&gt; &lt;br&gt;
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
         
-    &lt;/div&gt;
+    </div>
 
-    &lt;img src=&#39;http://192.34.63.156:6127/img/http%3A//127.0.0.1%3A4000/articles/2020/11/19/Qubes-Networking.html.png&#39; onerror=&quot;this.style.display=&#39;none&#39;&quot; async&gt;&lt;/img&gt;
-&lt;/footer&gt;</code></pre>
+    <img src='http://192.34.63.156:6127/img/http%3A//127.0.0.1%3A4000/articles/2020/11/19/Qubes-Networking.html.png' onerror="this.style.display='none'" async></img>
+</footer>
 </body>
 </html>

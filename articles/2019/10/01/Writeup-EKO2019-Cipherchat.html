@@ -216,7 +216,7 @@ We say <em>almost</em> because to runs of the key stream will be identical until
 <span class='marginnote'>
 The pcap had only one single TCP stream but in much nosier captures it is handy to use <code><span class="highlight-candombe-inline"><span class="n">Statistic</span> <span class="o">&gt;</span> <span class="n">Conversations</span></span></code> in <code><span class="highlight-candombe-inline"><span class="n">wireshark</span></span></code> to summarize the protocols, addresses and ports.
 </span></p>
-<p>Not secret at all. <code><span class="highlight-candombe-inline"><span class="n">srcport</span></span></code> is the source port chosen by the OS which from the <a href="/assets/writeups/eko2019/bytecode/cipherchat.pcap">pcap</a> we know that it is 47898.</p>
+<p>Not secret at all. <code><span class="highlight-candombe-inline"><span class="n">srcport</span></span></code> is the source port chosen by the OS that from the <a href="/assets/writeups/eko2019/bytecode/cipherchat.pcap">pcap</a> we know that it is 47898.</p>
 <p>So</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">srcport</span> <span class="o">=</span> <span class="mi">47898</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">key_seed</span> <span class="o">=</span> <span class="p">(</span><span class="n">srcport</span> <span class="o">&amp;</span> <span class="mi">65280</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>

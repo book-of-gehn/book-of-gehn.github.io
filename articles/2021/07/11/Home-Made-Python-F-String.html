@@ -223,7 +223,7 @@ July 11, 2021
 <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
 </code></pre></div>
 
-<p><code><span class="highlight-candombe-inline"><span class="n">LocalsFormatter</span></span></code> can also use the user-provided variables which will take precedence:</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">LocalsFormatter</span></span></code> can also use the user-provided variables that will take precedence:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">printf</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kargs</span><span class="p">):</span>
 <span class="o">...</span>     <span class="n">f</span> <span class="o">=</span> <span class="n">LocalsFormatter</span><span class="p">(</span><span class="n">caller_ix</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">vformat</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kargs</span><span class="p">))</span>

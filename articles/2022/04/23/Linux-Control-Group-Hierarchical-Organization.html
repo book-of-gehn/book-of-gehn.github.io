@@ -117,7 +117,7 @@ $ test -d /sys/fs/cgroup/test && echo "cgroup test/ already created!"     # byex
 <span class='marginnote'>
 <strong>Notation:</strong> I will write <code>cgroup</code> to denote the Control Group implementation or hierarchy while I will write cgroup or cgroups to refer about one or more groups in particular.
 </span></p>
-<p><code>cgroup</code> can be split into two components: the <em>core</em> which mandates how the cgroups, processes and controllers are organized and the <em>resource controllers</em> which do the real resource distribution and enforce limits.</p>
+<p><code>cgroup</code> can be split into two components: the <em>core</em> that mandates how the cgroups, processes and controllers are organized and the <em>resource controllers</em> that do the real resource distribution and enforce limits.</p>
 <p>In this post I’ll focus on the core only.</p>
 <p>In the <code>v1</code> version, the <code>cgroup</code> system supported multiple hierarchies of cgroups and processes but this flexibility didn’t pay off.</p>
 <p>In v2, <code>cgroup</code> has a single hierarchy where all the cgroups, processes and controllers live and that’s what we are going to explore here.</p>
@@ -214,7 +214,7 @@ domain<span class="w"> </span>threaded
 <p>A resource controller that can distribute the resource among threads is a <em>thread controller</em>. A resource controller that operates only at the process level is a <em>domain controller</em>.</p>
 <p>A main difference with <code>cgroup v1</code> is that in <code>v2</code> all the threads of a process belong to the <em>same</em> domain and hence they are subject to the control of a domain controller.</p>
 <p>We can distribute the resources even further creating <code>threaded</code> partitions but all of them are inside the <em>same</em> <code>domain threaded</code> group.</p>
-<p>In <code>v1</code> the threads of a process could live in a different, totally unrelated part of the hierarchy which made the implementation of the controllers much complex.</p>
+<p>In <code>v1</code> the threads of a process could live in a different, totally unrelated part of the hierarchy that made the implementation of the controllers much complex.</p>
 <h2 id="domain-invalid"><code>domain invalid</code></h2>
 <p>We made <code>test/cg1/t1/</code> into a <code>threaded</code> and that turned its parent <code>test/cg1/</code> into a <code>domain threaded</code>.</p>
 <p>What happen with the sibling of <code>test/cg1/t1/</code>, the <code>test/cg1/t2/</code> cgroup?</p>
@@ -297,19 +297,19 @@ There are 2 exceptions: a <code>domain</code> goes to <code>domain invalid</code
 </span></figcaption>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-states.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="cgroup-hierarchical-organization"><code>cgroup</code> hierarchical organization</h2>
-<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBjZ3JvdXAgKnR5cGUqIGFuZCB0aGUgYXJyb3dzCnJlcHJlc2VudHMgd2hpY2ggY2dyb3VwIHR5cGUgY2FuICpjb250YWluKiB3aGljaCAoc3ViKSBgY2dyb3VwYC4KRm9yIGV4YW1wbGUgb25lIGBkb21haW4gdGhyZWFkZWRgIGNhbiBoYXZlIG9uZSBvciBtb3JlIGB0aHJlYWRlZGAKY2dyb3Vwcy4KCipSb290KiBpcyBhIHZlcnkgc3BlY2lhbCBjZ3JvdXAgd2hpY2ggY2FuIGNvbnRhaW4gYW55IG90aGVyIHR5cGUgb2YKY2dyb3VwOiBgZG9tYWluYCwgYGRvbWFpbiB0aHJlYWRlZGAgYW5kIGB0aHJlYWRlZGAuCgpUaGUgZGlhZ3JhbSBmb2xsb3dzIHRoZSBzZW1hbnRpY3Mgb2YgYW4gVU1MIGRpYWdyYW0ubWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBjZ3JvdXAgKnR5cGUqIGFuZCB0aGUgYXJyb3dzCnJlcHJlc2VudHMgd2hpY2ggY2dyb3VwIHR5cGUgY2FuICpjb250YWluKiB3aGljaCAoc3ViKSBgY2dyb3VwYC4KRm9yIGV4YW1wbGUgb25lIGBkb21haW4gdGhyZWFkZWRgIGNhbiBoYXZlIG9uZSBvciBtb3JlIGB0aHJlYWRlZGAKY2dyb3Vwcy4KCipSb290KiBpcyBhIHZlcnkgc3BlY2lhbCBjZ3JvdXAgd2hpY2ggY2FuIGNvbnRhaW4gYW55IG90aGVyIHR5cGUgb2YKY2dyb3VwOiBgZG9tYWluYCwgYGRvbWFpbiB0aHJlYWRlZGAgYW5kIGB0aHJlYWRlZGAuCgpUaGUgZGlhZ3JhbSBmb2xsb3dzIHRoZSBzZW1hbnRpY3Mgb2YgYW4gVU1MIGRpYWdyYW0ubWFyZ2lu' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBjZ3JvdXAgKnR5cGUqIGFuZCB0aGUgYXJyb3dzCnJlcHJlc2VudHMgd2hpY2ggY2dyb3VwIHR5cGUgY2FuICpjb250YWluKiB3aGljaCAoc3ViKSBgY2dyb3VwYC4KRm9yIGV4YW1wbGUgb25lIGBkb21haW4gdGhyZWFkZWRgIGNhbiBoYXZlIG9uZSBvciBtb3JlIGB0aHJlYWRlZGAKY2dyb3Vwcy4KCipSb290KiBpcyBhIHZlcnkgc3BlY2lhbCBjZ3JvdXAgdGhhdCBjYW4gY29udGFpbiBhbnkgb3RoZXIgdHlwZSBvZgpjZ3JvdXA6IGBkb21haW5gLCBgZG9tYWluIHRocmVhZGVkYCBhbmQgYHRocmVhZGVkYC4KClRoZSBkaWFncmFtIGZvbGxvd3MgdGhlIHNlbWFudGljcyBvZiBhbiBVTUwgZGlhZ3JhbS5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0iZGlzcGxheTogYmxvY2s7IG1hcmdpbi1sZWZ0OiBhdXRvOyBtYXJnaW4tcmlnaHQ6IGF1dG87IiBjbGFzcz0nJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2tlcm5lbC9jZ3JvdXBzL2Nncm91cC1oaWVyYXJjaGljYWwtb3JnLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+PGJyIC8+CkVhY2ggYm94IHJlcHJlc2VudHMgYSBjZ3JvdXAgKnR5cGUqIGFuZCB0aGUgYXJyb3dzCnJlcHJlc2VudHMgd2hpY2ggY2dyb3VwIHR5cGUgY2FuICpjb250YWluKiB3aGljaCAoc3ViKSBgY2dyb3VwYC4KRm9yIGV4YW1wbGUgb25lIGBkb21haW4gdGhyZWFkZWRgIGNhbiBoYXZlIG9uZSBvciBtb3JlIGB0aHJlYWRlZGAKY2dyb3Vwcy4KCipSb290KiBpcyBhIHZlcnkgc3BlY2lhbCBjZ3JvdXAgdGhhdCBjYW4gY29udGFpbiBhbnkgb3RoZXIgdHlwZSBvZgpjZ3JvdXA6IGBkb21haW5gLCBgZG9tYWluIHRocmVhZGVkYCBhbmQgYHRocmVhZGVkYC4KClRoZSBkaWFncmFtIGZvbGxvd3MgdGhlIHNlbWFudGljcyBvZiBhbiBVTUwgZGlhZ3JhbS5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
 <object style="display: block; margin-left: auto; margin-right: auto;" class='' align='middle' data='/img/kernel/cgroups/cgroup-hierarchical-org.svg' type='image/svg+xml'></object>
 <br /> Each box represents a cgroup <em>type</em> and the arrows represents which cgroup type can <em>contain</em> which (sub) <code>cgroup</code>. For example one <code>domain threaded</code> can have one or more <code>threaded</code> cgroups.
 <br /><br />
-<em>Root</em> is a very special cgroup which can contain any other type of cgroup: <code>domain</code>, <code>domain threaded</code> and <code>threaded</code>.
+<em>Root</em> is a very special cgroup that can contain any other type of cgroup: <code>domain</code>, <code>domain threaded</code> and <code>threaded</code>.
 <br /><br />
 The diagram follows the semantics of an UML diagram.
 </span></p>
 <p>We can summarize all the above in the following:</p>
 <ul>
-<li>A domain can be divided into more (sub) <code>domains</code> just creating more (sub) cgroups with <code>mkdir</code>.</li>
+<li>A domain can be divided into more <code>domains</code> just creating more (sub) cgroups with <code>mkdir</code>.</li>
 <li>A cgroup can be turned into a <code>threaded</code> cgroup; its parent cgroup is automatically turned into a <code>domain threaded</code>.</li>
 <li>If a <code>domain threaded</code> is left without <code>threaded</code> cgroups, automatically changes to <code>domain</code>.</li>
 <li>A <code>domain threaded</code> is divided into <code>threaded</code> cgroups and these can be further divided in more (sub) <code>threaded</code> cgroups.</li>

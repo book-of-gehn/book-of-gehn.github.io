@@ -113,7 +113,7 @@ December 18, 2016
 <p>First that all we need an image of the disk to work with it without worrying to damage the original usb with our tests.</p>
 <p>There are quite a few options out there, and <code>dd</code> is the first choice that crossed my mind but not the best.</p>
 <p><code>dd</code> can be found in any linux box by default. It can copy the disk to a file reading one block of data at time and avoiding mounting the file system at all.</p>
-<p>The disk can only be read and written in terms of sectors which in general have a 512 bytes of size. Because of that it is desired to set the size of the blocks of <code>dd</code> for reading and writing to a multiple of the sector size.</p>
+<p>The disk can only be read and written in terms of sectors that in general have a 512 bytes of size. Because of that it is desired to set the size of the blocks of <code>dd</code> for reading and writing to a multiple of the sector size.</p>
 <p>Using a different value, it will result in reading and writing incomplete sectors: it will work but you will need at least a second disk access to complete the same sector so it’s a complete waste of time.</p>
 <p><strong>Rule number two:</strong> the sector size is a key parameter. Some tools will work better with it, others will don’t work at all without it. Always check this size.</p>
 <p>Lets check that with <code>fdisk</code>:</p>
@@ -143,7 +143,7 @@ I/O<span class="w"> </span>size<span class="w"> </span><span class="o">(</span>m
 <p>But as I said before, <code>dd</code> is not the best choice. Think in the above setting, <code>bs=2k</code> means blocks of 2k of size. With only one single bad sector the whole 2k bytes block is lost.</p>
 <p>Don’t get me wrong, <code>dd</code> is not a bad software but it was never been designed for forensics purposes.</p>
 <h2 id="cloning-the-disk-with-gnu-ddrescue">Cloning the disk with <code>GNU ddrescue</code></h2>
-<p>There are a lot of tools for recovering out there, some are based in <code>dd</code>, other don’t. I found quite useful the tool <code>GNU ddrescue</code> which despite the name it’s not based in <code>dd</code> at all.</p>
+<p>There are a lot of tools for recovering out there, some are based in <code>dd</code>, other don’t. I found quite useful the tool <code>GNU ddrescue</code>, which despite the name, it’s not based in <code>dd</code> at all.</p>
 <p>Watch out there, there is also a tool called <code>dd_rescue</code> (notice the underscore) that has nothing to do with <code>GNU ddrescue</code>.</p>
 <p><code>GNU ddrescue</code>, from now on just <code>ddrescue</code>, will copy a disk through three stages.</p>
 <p>In the first, it reads blocks of data and copy them to the output in the same manner that <code>dd</code> but unlike the latter, <code>ddrescue</code> will not stop if it found an error nor will put zeros nor discard the block if the reading fails.</p>
@@ -158,7 +158,7 @@ First, reading from the extremes until the first bad sector (<em>trimming</em>) 
 <p>Instead, it will <em>keep track</em> of all the failed blocks in a log file.</p>
 <p>In the second phase, it will try to read again <em>only</em> the failed blocks, but this time will read sector by sector from the begin of the block until it reaches a bad sector and then it will do the same but starting from the end and going backwards. This is called <em>trimming</em> the block.</p>
 <p>In the third and last phase, it will try to read all the remained trimmed blocks again, sector by sector, but without stopping at the first bad sector. Every single sector will be tried. This is called <em>scraping</em> the block.</p>
-<p>What is the output of all this process? An image of the disk with holes in it representing the missing bad sectors and the log file which keeps track of those holes.</p>
+<p>What is the output of all this process? An image of the disk with holes in it representing the missing bad sectors and the log file that keeps track of those holes.</p>
 <p>Here there are the lines of code:</p>
 <p>For the first phase</p>
 <div class="highlight-candombe"><pre><span></span><code>$<span class="w"> </span>ddrescue<span class="w"> </span>--no-trim<span class="w"> </span>--no-scrape<span class="w"> </span>/dev/sdc<span class="w"> </span>sdc.img<span class="w"> </span>sdc.ddrescue.logfile
@@ -202,7 +202,7 @@ Units<span class="w"> </span>are<span class="w"> </span><span class="k">in</span
 </code></pre></div>
 
 <p>This looks good, the first sector is designated to the partition table and the disk has only one FAT32 partition.</p>
-<p>The lengths are in sector terms so to know the size of the partition in bytes we can just do (8374256 * 512.0) / (1024 ^ 3) which yields 3.99 gigabytes which it makes sense given that the usb stick is of 4 gigabytes.</p>
+<p>The lengths are in sector terms so to know the size of the partition in bytes we can just do (8374256 * 512.0) / (1024 ^ 3) that yields 3.99 gigabytes and it makes sense given that the usb stick is of 4 gigabytes.</p>
 <p>The output of <code>mmls</code> can be a little confusing because it is showing that the first and the second slices start both at the 0 position. So those two slices overlaps and that is wrong and could mean that the partition table is corrupt but it is not.</p>
 <p><code>mmls</code> can show you four things at the same time:</p>
 <ul>

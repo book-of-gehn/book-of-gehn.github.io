@@ -198,7 +198,7 @@ Hash a key in 3 simple steps:
 <li>with <code><span class="highlight-candombe-inline"><span class="nd">@cython</span><span class="o">.</span><span class="n">boundscheck</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></span></code> and <code><span class="highlight-candombe-inline"><span class="nd">@cython</span><span class="o">.</span><span class="n">wraparound</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></span></code> we will be playing with the table as a plain C array (faster access): no out of bound exceptions or fancy Pythonic indexing.</li>
 <li>the entire <code><span class="highlight-candombe-inline"><span class="n">c_hash_x</span></span></code> function does not use any Python object: everything is C data. In such case we can release the GIL during its execution with <code><span class="highlight-candombe-inline"><span class="n">nogil</span></span></code> (concurrent friendly)</li>
 </ul>
-<p><code><span class="highlight-candombe-inline"><span class="n">c_hash_x</span></span></code> is a <code><span class="highlight-candombe-inline"><span class="n">cdef</span></span></code> function which means it can be called only from within C code.</p>
+<p><code><span class="highlight-candombe-inline"><span class="n">c_hash_x</span></span></code> is a <code><span class="highlight-candombe-inline"><span class="n">cdef</span></span></code> function that means it can be called only from within C code.</p>
 <p>To make it accessible from Python we code:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="k">def</span> <span class="nf">hash_x</span><span class="p">(</span><span class="n">key_dtype</span> <span class="n">k</span><span class="p">,</span> <span class="n">hash_dtype</span><span class="p">[::</span><span class="mf">1</span><span class="p">]</span> <span class="n">table</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">c_hash_x</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
@@ -263,14 +263,14 @@ Dispersion of the elapsed time measured in each experiment (in nanoseconds). On 
 </figcaption></figure></p>
 <p>Here we can see how the elapsed times of linear hashing are left-shifted meaning that it ran faster than tabulation hashing.</p>
 <p>But the dispersion density is much interesting!</p>
-<p>For tabulation hashing we have very high peaks which means smaller dispersion of the measurements.</p>
+<p>For tabulation hashing we have very high peaks that means smaller dispersion of the measurements.</p>
 <p>Tabulation hashing in mostly affected by cache misses as it is primary a set of memory lookups.</p>
 <p>Linear hashing may use the ALU more intensively. Would this explain the dispersion?</p>
 <p>I’m not sure: I disabled <a href="/articles/2021/03/07/Quiescent-Environment.html">hyperthreading/SMT and isolated the CPUs</a> for the experiment so nobody should had interfered with the ALU.</p>
 <h2 id="conclusions-and-further-research">Conclusions and further research</h2>
 <p>Tabulation hashing is slower than linear hashing but close.</p>
 <p>The comparison however is not taking into account that a linear hashing has less math properties than the tabulation hashing.</p>
-<p>For example the latter is 3-way independence which some applications requires and a linear hashing would not be applicable.</p>
+<p>For example the latter is 3-way independence that some applications require and a linear hashing would not be applicable.</p>
 <p>My <code><span class="highlight-candombe-inline"><span class="n">cython</span></span></code> <a href="https://github.com/eldipa/tabulation-hashing">implementation</a> does not make any of vectorized memory access nor parallelism so it is not exploiting the full capabilities of a modern CPU.</p>
 <p>Something that I may explore in the future.</p>
 <p class="small-subtitle-with-top-margin">
