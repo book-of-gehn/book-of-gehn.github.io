@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2023-10-20T12:54:29.318164+00:00</updated>
+  <updated>2024-09-22T03:20:56.834222+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -13,6 +13,185 @@
   <link href="https://book-of-gehn.github.io/feed.xml" rel="self"/>
   <generator uri="https://lkiesow.github.io/python-feedgen" version="0.9.0">python-feedgen</generator>
   <subtitle>The low and the high level of a lot of things: crypto, math, hacking and computer stuff.</subtitle>
+  <entry>
+    <id>https://book-of-gehn.github.io/articles/2024/09/21/Behind-memcpy-memmove.html</id>
+    <title>Behind `memcpy`/`memmove`: overlap, words and alignment</title>
+    <updated>2024-09-21T00:00:00+00:00</updated>
+    <author>
+      <name>Martin Di Paola</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IGF1dG87IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3hvei9tZW1jcHlfaW8vMDBfbm9fb3ZlcmxhcF9zZXR1cC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IGF1dG87IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3hvei9tZW1jcHlfaW8vMDBfbm9fb3ZlcmxhcF9zZXR1cC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="width: auto;" class='fullwidth' align='middle' data='/img/xoz/memcpy_io/00_no_overlap_setup.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;How do &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;/&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memmove&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; work?&lt;/p&gt;
+&lt;p&gt;I ended asking that question a few days ago while I was implementing the copy between sections of a file for the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xoz&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; library.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memmove&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; deal with memory, not with files, but I imagined that I could borrow some ideas anyways.&lt;/p&gt;
+&lt;p&gt;And I did.&lt;!--more--&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; copyies bytes from a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; buffer into another that does not overlap (both buffers are in differen parts of the memory) &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memmove&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; does the same thing, copying from &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; but handling carefuly the situation of overlap.&lt;/p&gt;
+&lt;p&gt;Under the hood, both functions are implemented in the same way. But why the stdlib has 2 separated functions then?&lt;/p&gt;
+&lt;p&gt;When doing the &lt;em&gt;“copy”&lt;/em&gt; between overlapping buffers, you will end up being overriding part of the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; content.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CldlbGwsIHF1YW50dW0gaW5mb3JtYXRpb24gY2Fubm90IGJlIGNvcGllZCB3aXRob3V0IGRlc3Ryb3lpbmcgdGhlCm9yaWdpbmFsIG9uZS4gSXQgaXMgY2FsbGVkICp0ZWxlcG9ydGF0aW9uKi4KCkkgZ3Vlc3MgdGhlIHBoeXNpY3MgYXJlIG1vcmUgc2NpLWZpIGluY2xpbmVkIGZvciBwaWNraW5nIHRlcm1zLgpJdCBpcyBvYnZpb3VzIHRvIG1lIHRoYXQgdGhlIFVuaXZlcnNlIGlzIGp1c3QgY2FsbGluZyBgbWVtbW92ZWAuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CldlbGwsIHF1YW50dW0gaW5mb3JtYXRpb24gY2Fubm90IGJlIGNvcGllZCB3aXRob3V0IGRlc3Ryb3lpbmcgdGhlCm9yaWdpbmFsIG9uZS4gSXQgaXMgY2FsbGVkICp0ZWxlcG9ydGF0aW9uKi4KCkkgZ3Vlc3MgdGhlIHBoeXNpY3MgYXJlIG1vcmUgc2NpLWZpIGluY2xpbmVkIGZvciBwaWNraW5nIHRlcm1zLgpJdCBpcyBvYnZpb3VzIHRvIG1lIHRoYXQgdGhlIFVuaXZlcnNlIGlzIGp1c3QgY2FsbGluZyBgbWVtbW92ZWAuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+Well, quantum information cannot be copied without destroying the original one. It is called &lt;em&gt;teleportation&lt;/em&gt;.
+&lt;br /&gt;&lt;br /&gt;
+I guess the physics are more sci-fi inclined for picking terms. It is obvious to me that the Universe is just calling &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memmove&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Imagine wanting to &lt;em&gt;copy&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and got &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; corrupted, the copies does not work like that! It makes sense to name the function &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memmove&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; because it feels that the content is moved from &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (so you don’t care what was left in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;) and leave &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for when it is a truly copy.&lt;/p&gt;
+&lt;p&gt;For the rest of the post I will refer to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for simplicity in the wording, even if we are going to see how to handle overlapping buffers like &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memmove&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; does.&lt;/p&gt;
+&lt;h2 id="copy-one-byte-at-time---bytecopy"&gt;Copy one byte at time - bytecopy&lt;/h2&gt;
+&lt;p&gt;Let’s start with the most obvious algorithm: &lt;em&gt;copy one byte at time&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IGF1dG87IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3hvei9tZW1jcHlfaW8vMDFfbm9fb3ZlcmxhcF8xX2J5dGVfY29weV9hbHRlcm5hdGl2ZV9zaG90LnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IGF1dG87IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3hvei9tZW1jcHlfaW8vMDFfbm9fb3ZlcmxhcF8xX2J5dGVfY29weV9hbHRlcm5hdGl2ZV9zaG90LnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object style="width: auto;" class='fullwidth' align='middle' data='/img/xoz/memcpy_io/01_no_overlap_1_byte_copy_alternative_shot.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;naivecopy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;size_t&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sz&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sz&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;sz&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;When we copy between two &lt;em&gt;non-overlaping&lt;/em&gt; areas, eveything goes smooth but when they do overlap, this doesn’t work.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/02_overlap_1_byte_copy_incorrect_alt.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;The problem is that when we do the write we are overriding data we didn’t copyied yet.&lt;/p&gt;
+&lt;p&gt;So we just need start copying from the overlapping bytes before they are overriden.&lt;/p&gt;
+&lt;p&gt;There are 2 cases:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;when the overlap is at the begin of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we copy &lt;em&gt;forwards&lt;/em&gt; as in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;naivecopy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;when the overlap is at the end of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we copy &lt;em&gt;backwards&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/02_overlap_1_byte_copy_fwd_bwd_correct.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Let’s call these &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bytecopy_fwd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bytecopy_bwd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; respectively and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bytecopy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; the main algorithm that call one or the other depending of the overlap.&lt;/p&gt;
+&lt;h2 id="copy-multiple-bytes-at-time---wordcopy-and-blockcopy"&gt;Copy multiple bytes at time - wordcopy and blockcopy&lt;/h2&gt;
+&lt;p&gt;&lt;label for='ClRoZSB0ZXJtICoid29yZCIqIGlzIG1pc2xlYWRpbmc6IGEgNjQgYml0cyBhcmNoaXRlY3R1cmUgbWF5IHN1cHBvcnQgb3BlcmFuZHMKbGFyZ2VyIHRoYW4gaXRzIHdvcmQgc2l6ZSwgbGlrZSBgdWludDEyOF90YC4gU28gZG9uJ3QgdGFrZSB0aGlzIHRlcm0KdG8gc3RyaWN0bHkuCgpBVlggaW5zdHJ1Y3Rpb25zIGNhbiB0aGVzZSBkYXlzIHdvcmsgd2l0aCA1MTIgYml0cyBidXQgaXRzIHVzZWZ1bG5lc3MKZm9yIGNvcHlpbmcgc2VlbXMgbm90IGJlIGNsZWFyIGFjY29yZGluZwpbdGhpcyBwb3N0XShodHRwczovL3N0YWNrb3ZlcmZsb3cuY29tL3F1ZXN0aW9ucy82NjkyMzA0NS93aHktZ2xpYmMtbWVtY3B5LW5vdC1jaG9vc2UtYXZ4NTEyLXZlcnNpb24pLgpXaGlsZSBpdCBjYW4gY29weSBkYXRhIGZhc3RlciwgaXQgbWF5IGRlZ3JhZGUgdGhlIHBlcmZvcm1hbmNlIG9mIHRoZSBzeXN0ZW0gZHVlCmhvdyB0aGV5IGFyZSBpbXBsZW1lbnRlZAooW290aGVyIHBvc3RdKGh0dHBzOi8vc3RhY2tvdmVyZmxvdy5jb20vcXVlc3Rpb25zLzU2ODUyODEyL3NpbWQtaW5zdHJ1Y3Rpb25zLWxvd2VyaW5nLWNwdS1mcmVxdWVuY3kpKS4KCkF0IHRoZSBlbmQgb2YgdGhlIGRheSBpcyBhIHBlci1hcmNoaXRlY3R1cmUgYW5hbHlzaXM6IGp1c3QgcGljawp0aGUgbGFyZ2VzdCBhbmQgZmFzdGVzdCB3b3JkIHNpemUuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='ClRoZSB0ZXJtICoid29yZCIqIGlzIG1pc2xlYWRpbmc6IGEgNjQgYml0cyBhcmNoaXRlY3R1cmUgbWF5IHN1cHBvcnQgb3BlcmFuZHMKbGFyZ2VyIHRoYW4gaXRzIHdvcmQgc2l6ZSwgbGlrZSBgdWludDEyOF90YC4gU28gZG9uJ3QgdGFrZSB0aGlzIHRlcm0KdG8gc3RyaWN0bHkuCgpBVlggaW5zdHJ1Y3Rpb25zIGNhbiB0aGVzZSBkYXlzIHdvcmsgd2l0aCA1MTIgYml0cyBidXQgaXRzIHVzZWZ1bG5lc3MKZm9yIGNvcHlpbmcgc2VlbXMgbm90IGJlIGNsZWFyIGFjY29yZGluZwpbdGhpcyBwb3N0XShodHRwczovL3N0YWNrb3ZlcmZsb3cuY29tL3F1ZXN0aW9ucy82NjkyMzA0NS93aHktZ2xpYmMtbWVtY3B5LW5vdC1jaG9vc2UtYXZ4NTEyLXZlcnNpb24pLgpXaGlsZSBpdCBjYW4gY29weSBkYXRhIGZhc3RlciwgaXQgbWF5IGRlZ3JhZGUgdGhlIHBlcmZvcm1hbmNlIG9mIHRoZSBzeXN0ZW0gZHVlCmhvdyB0aGV5IGFyZSBpbXBsZW1lbnRlZAooW290aGVyIHBvc3RdKGh0dHBzOi8vc3RhY2tvdmVyZmxvdy5jb20vcXVlc3Rpb25zLzU2ODUyODEyL3NpbWQtaW5zdHJ1Y3Rpb25zLWxvd2VyaW5nLWNwdS1mcmVxdWVuY3kpKS4KCkF0IHRoZSBlbmQgb2YgdGhlIGRheSBpcyBhIHBlci1hcmNoaXRlY3R1cmUgYW5hbHlzaXM6IGp1c3QgcGljawp0aGUgbGFyZ2VzdCBhbmQgZmFzdGVzdCB3b3JkIHNpemUuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+The term &lt;em&gt;“word”&lt;/em&gt; is misleading: a 64 bits architecture may support operands larger than its word size, like &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;uint128_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. So don’t take this term to strictly.
+&lt;br /&gt;&lt;br /&gt;
+AVX instructions can these days work with 512 bits but its usefulness for copying seems not be clear according &lt;a href="https://stackoverflow.com/questions/66923045/why-glibc-memcpy-not-choose-avx512-version"&gt;this post&lt;/a&gt;. While it can copy data faster, it may degrade the performance of the system due how they are implemented (&lt;a href="https://stackoverflow.com/questions/56852812/simd-instructions-lowering-cpu-frequency"&gt;other post&lt;/a&gt;).
+&lt;br /&gt;&lt;br /&gt;
+At the end of the day is a per-architecture analysis: just pick the largest and fastest word size.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Instead of copying byte by byte we can do it &lt;em&gt;word by word&lt;/em&gt;. Modern computers can operate with &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint32_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint64_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, or even &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;uint128_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in a single instruction so a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implementation using them can go 4, 8 or even 16 times faster.&lt;/p&gt;
+&lt;p&gt;&lt;label for='ClRvIGJlIHByZWNpc2UsIHRoZSBnbGliYyB1c2VzIGB2bV9jb3B5YCB0aGF0IG1hcHMgdGhlIHBhZ2VzIG9mIGBkc3RgIHRvCnRoZSBwYWdlcyBvZiBgc3JjYCBvbiAqY29weS1vbi13cml0ZSouIFNvIGB2bV9jb3B5YCBkZWZlcnMgdGhlIGNvcHkKdW50aWwgYSBwYWdlIGZhdWx0LjxiciAvPgpXaGVuIGNvcHlpbmcgbGFyZ2UgYnVmZmVycyB3aXRoIGluZnJlcXVlbnQgd3JpdGVzLCB0aGlzIGxhenkgY29weQphdm9pZHMgdGhlIGNvc3RzIG9mIGEgcmVhbCBjb3B5LgoKUmVmZXJlbmNlOiBbZGV2ZWxvcGVyIGFwcGxlIGRvY3NdKGh0dHBzOi8vd2ViLmFyY2hpdmUub3JnL3dlYi8yMDI0MDkwMTE3MzIyNS9odHRwczovL2RldmVsb3Blci5hcHBsZS5jb20vbGlicmFyeS9hcmNoaXZlL2RvY3VtZW50YXRpb24vUGVyZm9ybWFuY2UvQ29uY2VwdHVhbC9NYW5hZ2luZ01lbW9yeS9BcnRpY2xlcy9NZW1vcnlBbGxvYy5odG1sKQptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='ClRvIGJlIHByZWNpc2UsIHRoZSBnbGliYyB1c2VzIGB2bV9jb3B5YCB0aGF0IG1hcHMgdGhlIHBhZ2VzIG9mIGBkc3RgIHRvCnRoZSBwYWdlcyBvZiBgc3JjYCBvbiAqY29weS1vbi13cml0ZSouIFNvIGB2bV9jb3B5YCBkZWZlcnMgdGhlIGNvcHkKdW50aWwgYSBwYWdlIGZhdWx0LjxiciAvPgpXaGVuIGNvcHlpbmcgbGFyZ2UgYnVmZmVycyB3aXRoIGluZnJlcXVlbnQgd3JpdGVzLCB0aGlzIGxhenkgY29weQphdm9pZHMgdGhlIGNvc3RzIG9mIGEgcmVhbCBjb3B5LgoKUmVmZXJlbmNlOiBbZGV2ZWxvcGVyIGFwcGxlIGRvY3NdKGh0dHBzOi8vd2ViLmFyY2hpdmUub3JnL3dlYi8yMDI0MDkwMTE3MzIyNS9odHRwczovL2RldmVsb3Blci5hcHBsZS5jb20vbGlicmFyeS9hcmNoaXZlL2RvY3VtZW50YXRpb24vUGVyZm9ybWFuY2UvQ29uY2VwdHVhbC9NYW5hZ2luZ01lbW9yeS9BcnRpY2xlcy9NZW1vcnlBbGxvYy5odG1sKQptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+To be precise, the glibc uses &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;vm_copy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; that maps the pages of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to the pages of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; on &lt;em&gt;copy-on-write&lt;/em&gt;. So &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;vm_copy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; defers the copy until a page fault.&lt;br /&gt; When copying large buffers with infrequent writes, this lazy copy avoids the costs of a real copy.
+&lt;br /&gt;&lt;br /&gt;
+Reference: &lt;a href="https://web.archive.org/web/20240901173225/https://developer.apple.com/library/archive/documentation/Performance/Conceptual/ManagingMemory/Articles/MemoryAlloc.html"&gt;developer apple docs&lt;/a&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;And if supported by the architecture, we could use even larger chunks or &lt;em&gt;blocks&lt;/em&gt;. &lt;a href="https://github.com/bminor/glibc/blob/751a5502bea1d13551c62c47bb9bd25bff870cda/sysdeps/mach/pagecopy.h#L26-L32"&gt;glibc&lt;/a&gt; for example has &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;PAGE_COPY_FWD_MAYBE&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; that copyies entire pages: few kilobytes in a single operation!&lt;/p&gt;
+&lt;p&gt;We may call these algorithm &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;wordcopy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;blockcopy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; respectively.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/03_no_overlap_n_byte_copy_correct.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;label for='CklmIHdlIGFyZSB0YWxraW5nIG9mIGB1aW50NjRfdGAgb3Igc2ltaWxhciB3b3JkIHNpemVzLCBhbGwgdGhlCmltcGxlbWVudGF0aW9ucyB0aGF0IEkgc2F3IGRvbid0IHRyeSBzbWFsbGVyIHdvcmQgc2l6ZXMgYW5kIGZhbGxiYWNrCmltbWVkaWF0ZWx5IHRvIGBieXRlY29weWAuCgpIb3dldmVyLCBzb21lIGltcGxlbWVudGF0aW9ucywKbGlrZSBbZ2xpYmMncyBtZW1jcHldKGh0dHBzOi8vZ2l0aHViLmNvbS9sYXR0ZXJhL2dsaWJjL2Jsb2IvODk1ZWY3OWUwNGE5NTNjYWMxNDkzODYzYmNhZTI5YWQ4NTY1N2VlMS9zdHJpbmcvbWVtY3B5LmMjTDI2LUw1OCksCmNvcHkgYnkgcGFnZSBzaXplcyAoYSBmZXcga2lsb2J5dGVzKSwgdGhlbiBjb3B5IGJ5IHdvcmQgYW5kIGZpbmFsbHkKY29weSB0aGUgbGFzdCBieXRlcyBieSBvbmUgYnl0ZSBhdCB0aW1lLjxiciAvPgpBbmQgaXQgbWFrZXMgc2Vuc2UsIGZyb20gY29weSBhIGZldyBraWxvYnl0ZXMgcGVyIG9wZXJhdGlvbiB0byBjb3B5Cm9uZSBieXRlIGF0IHRpbWUsIHRoZXJlIGlzIHJvb20gdG8gZG8gYSBtdWNoIGVmZmljaWVudCBjb3B5IGluIGJldHdlZW4uCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CklmIHdlIGFyZSB0YWxraW5nIG9mIGB1aW50NjRfdGAgb3Igc2ltaWxhciB3b3JkIHNpemVzLCBhbGwgdGhlCmltcGxlbWVudGF0aW9ucyB0aGF0IEkgc2F3IGRvbid0IHRyeSBzbWFsbGVyIHdvcmQgc2l6ZXMgYW5kIGZhbGxiYWNrCmltbWVkaWF0ZWx5IHRvIGBieXRlY29weWAuCgpIb3dldmVyLCBzb21lIGltcGxlbWVudGF0aW9ucywKbGlrZSBbZ2xpYmMncyBtZW1jcHldKGh0dHBzOi8vZ2l0aHViLmNvbS9sYXR0ZXJhL2dsaWJjL2Jsb2IvODk1ZWY3OWUwNGE5NTNjYWMxNDkzODYzYmNhZTI5YWQ4NTY1N2VlMS9zdHJpbmcvbWVtY3B5LmMjTDI2LUw1OCksCmNvcHkgYnkgcGFnZSBzaXplcyAoYSBmZXcga2lsb2J5dGVzKSwgdGhlbiBjb3B5IGJ5IHdvcmQgYW5kIGZpbmFsbHkKY29weSB0aGUgbGFzdCBieXRlcyBieSBvbmUgYnl0ZSBhdCB0aW1lLjxiciAvPgpBbmQgaXQgbWFrZXMgc2Vuc2UsIGZyb20gY29weSBhIGZldyBraWxvYnl0ZXMgcGVyIG9wZXJhdGlvbiB0byBjb3B5Cm9uZSBieXRlIGF0IHRpbWUsIHRoZXJlIGlzIHJvb20gdG8gZG8gYSBtdWNoIGVmZmljaWVudCBjb3B5IGluIGJldHdlZW4uCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+If we are talking of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint64_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; or similar word sizes, all the implementations that I saw don’t try smaller word sizes and fallback immediately to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bytecopy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.
+&lt;br /&gt;&lt;br /&gt;
+However, some implementations, like &lt;a href="https://github.com/lattera/glibc/blob/895ef79e04a953cac1493863bcae29ad85657ee1/string/memcpy.c#L26-L58"&gt;glibc’s memcpy&lt;/a&gt;, copy by page sizes (a few kilobytes), then copy by word and finally copy the last bytes by one byte at time.&lt;br /&gt; And it makes sense, from copy a few kilobytes per operation to copy one byte at time, there is room to do a much efficient copy in between.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;When dealing with input sizes not multiple of the word/block size, we need to copy by smaller sizes towards the end and copying byte by byte in the last steps.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/03_no_overlap_n_byte_copy_no_multiple_size_correct.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h3 id="overlapping-areas"&gt;Overlapping areas&lt;/h3&gt;
+&lt;p&gt;To deal with overlapping areas we have the same fordward/backward algorithms than before but copying word by word so let’s call them &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;wordcopy_fwd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;wordcopy_bwd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; respectively.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;But…&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;label for='CkluIG1vc3QgYXJjaGl0ZWN0dXJlcyByZWFkaW5nL3dyaXRpbmcgd29yZHMgYXJlIG9ubHkgcG9zc2libGUgZnJvbS90bwphZGRyZXNzZXMgYWxpZ25lZCB0byB0aGUgd29yZCBzaXplLgpTbyB0aGUgcGF0aG9sb2dpY2FsIGV4YW1wbGUgc2hvdWxkIG5ldmVyIGhhcHBlbi4KCkhvd2V2ZXIsIGFzIG1lbnRpb25lZCBiZWZvcmUsIHJlbGF4IHRoZSB0ZXJtICoid29yZCIqLiBJbiBgeG96YCBmb3IKZXhhbXBsZSwgdGhlIGNvcHkgYmV0d2VlbiBwYXJ0cyBvZiBhIGZpbGVzIGRvZXMgbm90IHJlcXVpcmUgYW55CmFsaWdubWVudCBzbyBJIGZhY2VkIHRoaXMgKip2ZXJ5Kiogb3ZlcmxhcHBlZCBjYXNlLgptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkluIG1vc3QgYXJjaGl0ZWN0dXJlcyByZWFkaW5nL3dyaXRpbmcgd29yZHMgYXJlIG9ubHkgcG9zc2libGUgZnJvbS90bwphZGRyZXNzZXMgYWxpZ25lZCB0byB0aGUgd29yZCBzaXplLgpTbyB0aGUgcGF0aG9sb2dpY2FsIGV4YW1wbGUgc2hvdWxkIG5ldmVyIGhhcHBlbi4KCkhvd2V2ZXIsIGFzIG1lbnRpb25lZCBiZWZvcmUsIHJlbGF4IHRoZSB0ZXJtICoid29yZCIqLiBJbiBgeG96YCBmb3IKZXhhbXBsZSwgdGhlIGNvcHkgYmV0d2VlbiBwYXJ0cyBvZiBhIGZpbGVzIGRvZXMgbm90IHJlcXVpcmUgYW55CmFsaWdubWVudCBzbyBJIGZhY2VkIHRoaXMgKip2ZXJ5Kiogb3ZlcmxhcHBlZCBjYXNlLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+In most architectures reading/writing words are only possible from/to addresses aligned to the word size. So the pathological example should never happen.
+&lt;br /&gt;&lt;br /&gt;
+However, as mentioned before, relax the term &lt;em&gt;“word”&lt;/em&gt;. In &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xoz&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for example, the copy between parts of a files does not require any alignment so I faced this &lt;strong&gt;very&lt;/strong&gt; overlapped case.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;When the source and destination areas are &lt;strong&gt;very&lt;/strong&gt; overlapped, it may be possible that the read of a word overlap with its write (left diagram), The solution is to copy into a local variable in between (right diagram).&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/04_overlap_n_byte_copy_incorrect_and_with_temp_buffer.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id="alignment"&gt;Alignment&lt;/h2&gt;
+&lt;p&gt;In general, copying words/blocks requires that both the source and the destination are aligned to the word/block size.&lt;/p&gt;
+&lt;h3 id="eventually-src-and-dst-get-aligned"&gt;Eventually &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; get aligned&lt;/h3&gt;
+&lt;p&gt;If we are lucky, we could have &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; addresses misaligned but by the same amount. This is the same to say that both addresses share the same \(N\) lower bits where \(N\) is the \(\log_2\left(word size\right)\) or&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;wordsize&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;wordsize&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If that is the case we can call &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bytecopy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; until both gets aligned and then go full speed with copying by words/blocks.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/05_misaligned_n_byte_copy_correct.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h3 id="only-dst-gets-eventually-aligned"&gt;Only &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; gets eventually aligned&lt;/h3&gt;
+&lt;p&gt;As before we start with by calling &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bytecopy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; until &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is aligned but not necessary &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is.&lt;/p&gt;
+&lt;p&gt;Consider the following:&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/05_src_misaligned_but_dst_aligned_setup.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Take the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; address and compute:&lt;/p&gt;
+&lt;p&gt;&lt;label for='CkluIHRoaXMgZXhhbXBsZSwgYHNyY2AgaXMgYXQgYWRkcmVzcyAzIHNvIHdpdGggYHdvcmRzaXplYCBvZiA0IGJ5dGVzCmBzaDFgIGlzIDMgYW5kIGBzaDJgIGlzIDEuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkluIHRoaXMgZXhhbXBsZSwgYHNyY2AgaXMgYXQgYWRkcmVzcyAzIHNvIHdpdGggYHdvcmRzaXplYCBvZiA0IGJ5dGVzCmBzaDFgIGlzIDMgYW5kIGBzaDJgIGlzIDEuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+In this example, &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is at address 3 so with &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;wordsize&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; of 4 bytes &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;sh1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is 3 and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;sh2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is 1.
+&lt;/span&gt;&lt;/p&gt;
+&lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sh1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;%&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;wordsize&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sh2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;wordsize&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sh1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;sh1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;sh2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; are how many bytes we should shift a word to make it aligned either towards lower addresses or higher addresses.&lt;/p&gt;
+&lt;p&gt;Now the trick: for writing 1 word into &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, we read 2 words from &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;, &lt;em&gt;combine&lt;/em&gt; (or &lt;em&gt;merge&lt;/em&gt;) them and write that into &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;label for='ClRoaXMgaXMgdmFsaWQgb25seSBmb3IgKmJpZyBlbmRpYW4qIGFyY2hpdGVjdHVyZXMuIEZvciAqbGl0dGxlIGVuZGlhbiosCmludmVydCB0aGUgc2hpZnQgZGlyZWN0aW9ucy4KClJlZmVyZW5jZTogW2dsaWJjJ3MgTUVSR0VdKGh0dHBzOi8vZ2l0aHViLmNvbS9ibWlub3IvZ2xpYmMvYmxvYi9lNjRhMWU4MWFhZGY2YzQwMTE3NGFjOTQ3MWNlZDBmMDEyNWMyOTEyL3N5c2RlcHMvZ2VuZXJpYy9tZW1jb3B5LmgjTDY2LUw3MSkKbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='ClRoaXMgaXMgdmFsaWQgb25seSBmb3IgKmJpZyBlbmRpYW4qIGFyY2hpdGVjdHVyZXMuIEZvciAqbGl0dGxlIGVuZGlhbiosCmludmVydCB0aGUgc2hpZnQgZGlyZWN0aW9ucy4KClJlZmVyZW5jZTogW2dsaWJjJ3MgTUVSR0VdKGh0dHBzOi8vZ2l0aHViLmNvbS9ibWlub3IvZ2xpYmMvYmxvYi9lNjRhMWU4MWFhZGY2YzQwMTE3NGFjOTQ3MWNlZDBmMDEyNWMyOTEyL3N5c2RlcHMvZ2VuZXJpYy9tZW1jb3B5LmgjTDY2LUw3MSkKbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+This is valid only for &lt;em&gt;big endian&lt;/em&gt; architectures. For &lt;em&gt;little endian&lt;/em&gt;, invert the shift directions.
+&lt;br /&gt;&lt;br /&gt;
+Reference: &lt;a href="https://github.com/bminor/glibc/blob/e64a1e81aadf6c401174ac9471ced0f0125c2912/sysdeps/generic/memcopy.h#L66-L71"&gt;glibc’s MERGE&lt;/a&gt;
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;The &lt;em&gt;combine&lt;/em&gt; (also called &lt;em&gt;merge&lt;/em&gt;) of two words takes the left word (lower addr) and shifts it by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;sh1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to the left; takes the right word (higher addr) and shifts it by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;sh2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to the right and finally bitwise &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;or&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; them and write the result into &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;dst&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/06_merge_all.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Note how the word-aligned read &lt;object style="width: auto; display: inline-block; vertical-align: bottom;" class='' align='middle' data='/img/xoz/memcpy_io/06_bcde.svg' type='image/svg+xml'&gt;&lt;/object&gt; is right shifted 1 byte making room for the single byte from the previous word &lt;object style="width: auto; display: inline-block; vertical-align: bottom;" class='' align='middle' data='/img/xoz/memcpy_io/06_a.svg' type='image/svg+xml'&gt;&lt;/object&gt; and in combination, &lt;object style="width: auto; display: inline-block; vertical-align: bottom;" class='' align='middle' data='/img/xoz/memcpy_io/06_abcd.svg' type='image/svg+xml'&gt;&lt;/object&gt; is formed and written.&lt;/p&gt;
+&lt;p&gt;The remaining byte &lt;object style="width: auto; display: inline-block; vertical-align: bottom;" class='' align='middle' data='/img/xoz/memcpy_io/06_e.svg' type='image/svg+xml'&gt;&lt;/object&gt; is not thrown away but used to build the next word to write.&lt;/p&gt;
+&lt;p&gt;The first loop iteration is slighly special because we cannot read a full word (we cannot read behind the initial &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; pointer).&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/05_src_misaligned_but_dst_aligned_merge_p1.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;For the rest of the loop iterations we don’t need any padding and work with entire words.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object style="width: auto;" class='' align='middle' data='/img/xoz/memcpy_io/05_src_misaligned_but_dst_aligned_merge_p2.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;The shifts and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;or&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; operations are not free so this &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implementation is slower than the one with the inputs aligned but still much faster that a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;bytecopy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The key insight is that while we are reading 2 words per write, we can hold in a local variable a word to used in the next iteration. So we are &lt;em&gt;not&lt;/em&gt; reading the whole &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;src&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; buffer twice.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CkhlcmUgYXJlIHRoZQpbZ2xpYmMncyBpbXBsZW1lbnRhdGlvbnNdKGh0dHBzOi8vZ2l0aHViLmNvbS9sYXR0ZXJhL2dsaWJjL2Jsb2IvODk1ZWY3OWUwNGE5NTNjYWMxNDkzODYzYmNhZTI5YWQ4NTY1N2VlMS9zdHJpbmcvd29yZGNvcHkuYyNMMzQwKS4KbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkhlcmUgYXJlIHRoZQpbZ2xpYmMncyBpbXBsZW1lbnRhdGlvbnNdKGh0dHBzOi8vZ2l0aHViLmNvbS9sYXR0ZXJhL2dsaWJjL2Jsb2IvODk1ZWY3OWUwNGE5NTNjYWMxNDkzODYzYmNhZTI5YWQ4NTY1N2VlMS9zdHJpbmcvd29yZGNvcHkuYyNMMzQwKS4KbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+Here are the &lt;a href="https://github.com/lattera/glibc/blob/895ef79e04a953cac1493863bcae29ad85657ee1/string/wordcopy.c#L340"&gt;glibc’s implementations&lt;/a&gt;.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Let’s call this algorithm &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;wordcopy_dst_aligned&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and like before it has two flavours &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;wordcopy_dst_aligned_fwd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;wordcopy_dst_aligned_bwd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; for handling overlap.&lt;/p&gt;
+&lt;h2 id="my-take-aways"&gt;My take aways&lt;/h2&gt;
+&lt;p&gt;I didn’t know the &lt;em&gt;combine&lt;/em&gt; / &lt;em&gt;merge&lt;/em&gt; trick or the possibility to lazy copy entire pages.&lt;/p&gt;
+&lt;p&gt;Taking the seemingly simple &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memcpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;memmove&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; functions and seeing their implementations shown me that even a plain copy can hide some interesting tricks.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;What are your take aways?&lt;/em&gt;&lt;/p&gt;
+</content>
+    <link href="https://book-of-gehn.github.io/articles/2024/09/21/Behind-memcpy-memmove.html" rel="alternate" type="text/html" title="Behind `memcpy`/`memmove`: overlap, words and alignment"/>
+    <category term="memory" label="memory"/>
+    <category term="memcpy" label="memcpy"/>
+    <category term="copy" label="copy"/>
+    <category term="bytes" label="bytes"/>
+    <category term="xoz" label="xoz"/>
+    <published>2024-09-21T00:00:00+00:00</published>
+  </entry>
   <entry>
     <id>https://book-of-gehn.github.io/articles/2023/10/20/Man-in-the-Middle-Access-Point.html</id>
     <title>Man in the Middle Access Point</title>
@@ -522,10 +701,10 @@ Brute-forcing \(2^{32}\) is perfectly possible but a little slow for me so I wou
     </author>
     <content type="html">&lt;p&gt;How can we know if a message is authentic or not?&lt;/p&gt;
 &lt;p&gt;A trusted party with access to a private key \(k\) can compute an &lt;em&gt;authentication code&lt;/em&gt; or MAC.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyAvPgpDb21wdXRlIHRoZSAqbWVzc2FnZSBhdXRoZW50aWNhdGlvbiBjb2RlKiAoTUFDKSBkb2luZyBgSChrIOKIpSBtKWAuCgpJbiB0aGVvcnkgb25seSB3aG8ga25vd3MgdGhlIHNlY3JldCBrZXkgYGtgIGNhbiBjcmVhdGUgYW5kIHZlcmlmeSB0aG9zZSwKYnV0IG5vLCB0aGlzIHNjaGVtYSBlcyBicm9rZW4uCgpUaGlzIHBvc3QgY292ZXJzICptYXRhc2FubyBjaGFsbGVuZ2VzKiBmcm9tClsyOCB0byAzMF0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzQpIHNvICpzcG9pbGVyIGFsZXJ0Ki4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyAvPgpDb21wdXRlIHRoZSAqbWVzc2FnZSBhdXRoZW50aWNhdGlvbiBjb2RlKiAoTUFDKSBkb2luZyBgSChrIOKIpSBtKWAuCgpJbiB0aGVvcnkgb25seSB3aG8ga25vd3MgdGhlIHNlY3JldCBrZXkgYGtgIGNhbiBjcmVhdGUgYW5kIHZlcmlmeSB0aG9zZSwKYnV0IG5vLCB0aGlzIHNjaGVtYSBlcyBicm9rZW4uCgpUaGlzIHBvc3QgY292ZXJzICptYXRhc2FubyBjaGFsbGVuZ2VzKiBmcm9tClsyOCB0byAzMF0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzQpIHNvICpzcG9pbGVyIGFsZXJ0Ki4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQ29tcHV0ZSB0aGUgKm1lc3NhZ2UgYXV0aGVudGljYXRpb24gY29kZSogKE1BQykgZG9pbmcgYEgoayDiiKUgbSlgLgoKSW4gdGhlb3J5IG9ubHkgd2hvIGtub3dzIHRoZSBzZWNyZXQga2V5IGBrYCBjYW4gY3JlYXRlIGFuZCB2ZXJpZnkgdGhvc2UsCmJ1dCBubywgdGhpcyBzY2hlbWEgZXMgYnJva2VuLgoKVGhpcyBwb3N0IGNvdmVycyAqbWF0YXNhbm8gY2hhbGxlbmdlcyogZnJvbQpbMjggdG8gMzBdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80KSBzbyAqc3BvaWxlciBhbGVydCouCm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQ29tcHV0ZSB0aGUgKm1lc3NhZ2UgYXV0aGVudGljYXRpb24gY29kZSogKE1BQykgZG9pbmcgYEgoayDiiKUgbSlgLgoKSW4gdGhlb3J5IG9ubHkgd2hvIGtub3dzIHRoZSBzZWNyZXQga2V5IGBrYCBjYW4gY3JlYXRlIGFuZCB2ZXJpZnkgdGhvc2UsCmJ1dCBubywgdGhpcyBzY2hlbWEgZXMgYnJva2VuLgoKVGhpcyBwb3N0IGNvdmVycyAqbWF0YXNhbm8gY2hhbGxlbmdlcyogZnJvbQpbMjggdG8gMzBdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80KSBzbyAqc3BvaWxlciBhbGVydCouCm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/set-4-hashes/hash-verifier-generic.svg' /&gt;
+&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/set-4-hashes/hash-verifier-generic.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 Compute the &lt;em&gt;message authentication code&lt;/em&gt; (MAC) doing \(H(k ∥ m)\).
 &lt;br /&gt;&lt;br /&gt;
 In theory only who knows the secret key \(k\) can create and verify those, but no, this schema es broken.
@@ -546,7 +725,7 @@ This post covers &lt;em&gt;matasano challenges&lt;/em&gt; from &lt;a href="https
 &lt;p&gt;The last 8 bytes of the padding are reserved for storing the length of the un-padded input in bits.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/set-4-hashes/hash-overview.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/set-4-hashes/hash-overview.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="hashs-states"&gt;Hash’s states&lt;/h2&gt;
 &lt;p&gt;Initially SHA-1 begins with a well known state (composed by 5 &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint32_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; integers).&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;h0&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x67452301&lt;/span&gt;
@@ -561,7 +740,7 @@ This post covers &lt;em&gt;matasano challenges&lt;/em&gt; from &lt;a href="https
 &lt;p&gt;The final state is then used to compute the final hash.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/set-4-hashes/hash-states.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/set-4-hashes/hash-states.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Note how the hash states \(h_1\) depends of the first block \(b_0\) that contains the secret key (or at least the begin of it).&lt;/p&gt;
 &lt;p&gt;Therefore, the \(h_1\) cannot be guessed by an adversary or any other internal state.&lt;/p&gt;
 &lt;p&gt;The final state however is &lt;em&gt;totally exposed&lt;/em&gt; by SHA-1: the concatenation of the state’s variables &lt;strong&gt;is&lt;/strong&gt; the resulting hash.&lt;/p&gt;
@@ -592,7 +771,7 @@ An adversary can submit \(ptext ∥ pad ∥ ext\) and pass it as authentic witho
 &lt;br /&gt;&lt;br /&gt;
 \(ptext\) is assumed to be known by the adversary; \(pad\) isn’t but it can be guessed.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/set-4-hashes/hash-ext-states.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/set-4-hashes/hash-ext-states.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The extended message must be padded &lt;em&gt;as if&lt;/em&gt; we were padding the whole message: in \(pad'\) we need to write the length of the whole message.&lt;/p&gt;
 &lt;p&gt;From the perspective of SHA-1 the whole input is the original message \(ptext\), the padding of the original SHA-1 call and the appended message \(ext\).&lt;/p&gt;
 &lt;p&gt;In other words, we compute \(H(ext)\) starting not from the initial hashing state \(h_0\) but from \(h_8 = H(k ∥ ptext)\).&lt;/p&gt;
@@ -769,7 +948,7 @@ Hash a key in 3 simple steps:
 &lt;br /&gt;&lt;br /&gt;
 3.- Finally xor’ them and the result will be the hash of the key.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/hashes/tabulation-hashing/tabulationhashing.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/hashes/tabulation-hashing/tabulationhashing.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="cython-implementation"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implementation&lt;/h2&gt;
 &lt;p&gt;While we have 3 free parameters, I will restrict these:&lt;/p&gt;
 &lt;ul&gt;
@@ -887,14 +1066,14 @@ The error (dispersion) of the metric is too tiny to be visible but a more detail
 &lt;br /&gt;&lt;br /&gt;
 Here the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;order&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; means datasets of \(2^{order}\) random numbers to hash.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/hashes/tabulation-hashing/cmp_runtime_32-32_and_64-64_full_lin.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/hashes/tabulation-hashing/cmp_runtime_32-32_and_64-64_full_lin.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Linear hashing performs better than tabulation hashing, probably because &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;numpy&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; is well optimized for computing a multiplication and a addition in a vectorized fashion.&lt;/p&gt;
 &lt;p&gt;In contrast my &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implementation does not take any advantage of such instructions.&lt;/p&gt;
 &lt;p&gt;Nevertheless tabulation hashing shows a consistent performance across the different datasets.&lt;/p&gt;
 &lt;p&gt;Note also that the performance of the linear hashing gets worst on larger datasets. The &lt;em&gt;why&lt;/em&gt; is an open question.&lt;/p&gt;
 &lt;p&gt;For reference here is the &lt;a href="/assets/hashes/tabulation-hashing/"&gt;code for plotting and raw dataset&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 id="noise-measurement-evaluation"&gt;Noise measurement evaluation&lt;/h2&gt;
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/hashes/tabulation-hashing/cmp_runtime_noise_full_lin.svg' /&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/hashes/tabulation-hashing/cmp_runtime_noise_full_lin.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;figcaption&gt;
 Dispersion of the elapsed time measured in each experiment (in nanoseconds). On top is tabulation hashing, on bottom is linear hashing.
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -938,7 +1117,7 @@ Encryption of a plaintext.
 &lt;br /&gt;&lt;br /&gt;
 Note how the secret key is used incorrectly as IV.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 50%;" class='' alt='' src='/img/matasano/k-eq-iv-enc.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 50%;" class='' align='middle' data='/img/matasano/k-eq-iv-enc.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="chosen-ciphertext"&gt;Chosen ciphertext&lt;/h2&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Decryption of a &lt;em&gt;chosen ciphertext&lt;/em&gt;.
@@ -947,7 +1126,7 @@ It is a 3-block ciphertext with the first and third blocks being the same and th
 &lt;br /&gt;&lt;br /&gt;
 Note that \(c_1\) can be an arbitrary encrypted block.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 45%;" class='' alt='' src='/img/matasano/k-eq-iv-attack.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 45%;" class='' align='middle' data='/img/matasano/k-eq-iv-attack.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="key-recovering"&gt;Key recovering&lt;/h2&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 The third block is decrypted and then xored with zeros, making the xor a no-operation.
@@ -962,7 +1141,7 @@ This is in general true for any CBC setup and it does not imply any vulnerabilit
 &lt;br /&gt;&lt;br /&gt;
 But as in this case, if the IV was initialized with the secret key, this now becomes a real attack with a &lt;strong&gt;full recover of the key&lt;/strong&gt;.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/k-eq-iv-recover.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 70%;" class='' align='middle' data='/img/matasano/k-eq-iv-recover.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 </content>
     <link href="https://book-of-gehn.github.io/articles/2023/01/23/Key-Recovering-from-CBC-with-IV-eq-K.html" rel="alternate" type="text/html" title="Key Recovering from CBC with `IV = K`{.mathjax}"/>
     <category term="cryptography" label="cryptography"/>
@@ -3309,7 +3488,7 @@ Histogram of TTL range between rounds of scans to the same host showing how much
 &lt;br /&gt;&lt;br /&gt;
 The dataset does not include hosts scanned only once. The vertical axis is in logarithmic scale.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The histogram may be misleading at first but remember that the vertical axis is in &lt;em&gt;logarithmic scale&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;That means that the main peak at 0 is almost 3 orders of magnitude larger than the three secondary peaks on the right.&lt;/p&gt;
 &lt;p&gt;This is compatible with the analysis made previously: the routes are highly stable and only a small fraction (0.39998%) are unstable with a large variance (represented by the right side of the histogram).&lt;/p&gt;
@@ -3333,10 +3512,10 @@ The dataset does not include hosts scanned only once. The vertical axis is in lo
 &lt;p&gt;That’s why we do a &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="o"&gt;.-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Back to the numbers, &lt;em&gt;what the hell do those peaks mean?&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id="analysis-of-the-3-secondary-peaks"&gt;Analysis of the 3 secondary peaks&lt;/h2&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' /&gt;
+&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Let’s ignore the peak at 0 (those are the stable routes). Why do we have 3 secondary peaks?&lt;/p&gt;
 &lt;p&gt;Focus on the peak at TTL range of 191 (the right most).&lt;/p&gt;
@@ -3436,7 +3615,7 @@ m=-128,  M=63&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Histogram of TTL observed: the peaks indicate the different operative systems and their relative position respect the expected positions estimate the mean distance between the hosts and the scanner in hop count.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/network/internet_scan/ttl_hist_log_scale.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;There are three really high peaks with \(~10^6\) count with one secondary peak at the left of each main peaks.&lt;/p&gt;
 &lt;p&gt;In the &lt;em&gt;x-axis&lt;/em&gt; are marked the typical TTLs values that the operative systems set by default. For some operative systems this may different depending of the version of the OS and the protocol of the packet.&lt;/p&gt;
 &lt;p&gt;We cannot do anything about the version of the OS but we can ignore the protocol because all the probes sent were TCP.&lt;/p&gt;
@@ -3477,7 +3656,7 @@ Reference: &lt;a href="https://subinsb.com/default-device-ttl-values/"&gt;Subin'
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Histogram of TTL observed but with the values shifted to the right to compensate the fact that the TTLs are decremented during their travel through the network.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale_shifted.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/network/internet_scan/ttl_hist_log_scale_shifted.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="ip-distribution"&gt;IP distribution&lt;/h2&gt;
 &lt;p&gt;We can get an idea of how the hosts scanned are distributed in the IP space.&lt;/p&gt;
 &lt;p&gt;Sorted by IP address, we can compute the first order difference (aka &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:ip&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:ip&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;: hosts in the same subnetwork will have very small differences.&lt;/p&gt;
@@ -3607,7 +3786,7 @@ It sends &lt;em&gt;at the same time&lt;/em&gt; the probes to &lt;em&gt;the same 
 &lt;br /&gt;&lt;br /&gt;
 Some time later it &lt;em&gt;may&lt;/em&gt; scan the same host &lt;em&gt;again&lt;/em&gt;. The collection of bursts to &lt;em&gt;the same host&lt;/em&gt; are the &lt;strong&gt;rounds&lt;/strong&gt; for that host.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 80%;" class='' alt='' src='/img/network/internet_scan/ip-burst-rounds.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 80%;" class='' alt='' src='/img/network/internet_scan/ip-burst-rounds.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h3 id="ttls-extrema-values-for-each-short-burst"&gt;TTLs extrema values for each short burst&lt;/h3&gt;
 &lt;p&gt;Let’s review the short bursts first, the probes sent to a host at the same time:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;julia&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;short_bursts_g&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;groupby&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="ss"&gt;:ip&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:timestamp&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
@@ -3958,7 +4137,7 @@ Histogram of intervals between probes to the same host-port in seconds.
 &lt;br /&gt;&lt;br /&gt;
 The median (5.0) and the mean (6.89) are labeled. The vertical axis is in logarithmic scale.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/time_interval_hist.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/network/internet_scan/time_interval_hist.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;This was more spread than I expected. Most of the intervals are in the low range but there is non-negligible count for the 15 secs interval.&lt;/p&gt;
 &lt;p&gt;A quick statistics for the intervals:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;julia&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;describe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;df2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:mean&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:std&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:min&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:q25&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:median&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:q75&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;:max&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="ss"&gt;:interval&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -4522,7 +4701,7 @@ $&lt;span class="w"&gt; &lt;/span&gt;adb&lt;span class="w"&gt; &lt;/span&gt;shel
     <content type="html">&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Visual proof that \(b^2 - a^2\) factorizes into \((b - a)(b + 1)\).
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/math/b2-a2.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/math/b2-a2.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 </content>
     <link href="https://book-of-gehn.github.io/articles/2021/08/12/Difference-of-Two-Squares.html" rel="alternate" type="text/html" title="Difference of two squares"/>
     <category term="math" label="math"/>
@@ -5054,7 +5233,7 @@ $$
 &lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;null_experiment&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; actually does &lt;strong&gt;not&lt;/strong&gt; use the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function and it is used to have an idea of how small the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;elapsed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; time can be.&lt;/p&gt;
 &lt;h2 id="experiments-results"&gt;Experiments results&lt;/h2&gt;
 &lt;p&gt;The first thing that we can see is how each &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; performed in each experiment.&lt;/p&gt;
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/z3/perf/mean-check-elapsed-per-func-experiment.svg' /&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/z3/perf/mean-check-elapsed-per-func-experiment.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;figcaption&gt;
 Mean &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;elapsed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; time (y axis) per &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function (x axis). Each subplot corresponds to a different experiment.
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -5071,7 +5250,7 @@ Mean &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Minimum &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;elapsed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; time (y axis) per &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function (x axis). Each subplot corresponds to a different experiment. Note how the plot has the same shape than before.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/z3/perf/min-check-elapsed-per-func-in-encrypt-experiment.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/z3/perf/min-check-elapsed-per-func-in-encrypt-experiment.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Nope, same thing.&lt;/p&gt;
 &lt;p&gt;Could be this discrepancy be just by luck? We need a measure independent from the time and Z3 tracks several statistics for that.&lt;/p&gt;
 &lt;p&gt;It’s unclear what they mean however.&lt;/p&gt;
@@ -5079,12 +5258,12 @@ Minimum &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Relation and linear regression between the time that &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; took and the amount of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;added&lt;/span&gt; &lt;span class="n"&gt;eqs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;. They follow almost a perfect linear relationship.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/z3/perf/rel-check-elapsed-and-added-eqs.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/z3/perf/rel-check-elapsed-and-added-eqs.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Let’s see how many &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;eqs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; were &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;added&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; in the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;encrypt_rounds_experiment&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Mean &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;added&lt;/span&gt; &lt;span class="n"&gt;eqs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (y axis) per &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function (x axis). Each subplot corresponds to a different experiment. Note how the plot has the same shape than before showing a strong relationship between &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;added&lt;/span&gt; &lt;span class="n"&gt;eqs&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;elapsed&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; time.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/z3/perf/mean-added-eqs-per-func-in-encrypt-experiment.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/z3/perf/mean-added-eqs-per-func-in-encrypt-experiment.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Same shape that before: for some reason Z3 added more eqs in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime_broadcasted&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; than in &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xtime_cancelled&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (both simplified) even if both are the same Z3 expressions.&lt;/p&gt;
 &lt;p&gt;So the discrepancy is not due the noise: Z3 indeed saw these two as different things.&lt;/p&gt;
 &lt;h3 id="code-and-results"&gt;Code and results&lt;/h3&gt;
@@ -5212,10 +5391,10 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;p&gt;So I resorted to use a preprocessor. Similar to Liquid I used &lt;a href="https://jinja.palletsprojects.com/en/3.0.x/"&gt;Jinja2&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;While all of these could be done, in theory, with Pandoc filters, I think that having a preprocessor and &lt;em&gt;template engine&lt;/em&gt; like Jinja2 can be quite handy.&lt;/p&gt;
 &lt;h2 id="images-and-diagrams"&gt;Images and diagrams&lt;/h2&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RvYy9zZWFib3JuLWNoZWF0c2hlZXQtdjEuc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2RvYy9zZWFib3JuLWNoZWF0c2hlZXQtdjEuc3ZnJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2RvYy9zZWFib3JuLWNoZWF0c2hlZXQtdjEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2RvYy9zZWFib3JuLWNoZWF0c2hlZXQtdjEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/doc/seaborn-cheatsheet-v1.svg' /&gt;
+&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/doc/seaborn-cheatsheet-v1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;I make a lot of diagrams, state machines and plots but I try to not make them by hand.&lt;/p&gt;
 &lt;p&gt;Tools that requires a human to do the layout are a waste of time (there are exceptions like me &lt;a href="/articles/2021/06/05/Seaborn-Cheatsheet.html"&gt;Seaborn Cheatsheet&lt;/a&gt;).&lt;/p&gt;
@@ -5290,7 +5469,7 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;p&gt;Yes, yes I could.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/stats/seaborn-cheatsheet-v1.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/stats/seaborn-cheatsheet-v1.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://seaborn.pydata.org/"&gt;Seaborn&lt;/a&gt; is a very simple but powerful plotting library on top of &lt;a href="https://matplotlib.org/"&gt;matplotlib&lt;/a&gt; designed for statistical analysis.&lt;/p&gt;
 &lt;p&gt;Quick links: &lt;a href="/assets/stats/seaborn-cheatsheet-v1.pdf"&gt;PDF (no bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-bg-v1.pdf"&gt;PDF (bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-v1.svg"&gt;SVG (no bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-bg-v1.svg"&gt;SVG (bg)&lt;/a&gt; .&lt;!--more--&gt;&lt;/p&gt;
 &lt;h2 id="instructions"&gt;Instructions&lt;/h2&gt;
@@ -7024,7 +7203,7 @@ Precise values; linear, proportional and additivity relations; and variables in 
 &lt;p&gt;There are a lot.&lt;/p&gt;
 &lt;p&gt;Other processes running, the OS scheduler making your program to &lt;em&gt;yield&lt;/em&gt; the CPU, the OS interrupting to process a more urgent task (like interruptions) and more.&lt;/p&gt;
 &lt;p&gt;Graphical interfaces, network traffic and disk usage add to the mix.&lt;/p&gt;
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/perf/timing/all-services-up-and-down.svg' /&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/perf/timing/all-services-up-and-down.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;figcaption&gt;
 The elapsed time of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;foo&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; executed 1000 times and sorted from the smallest value to the largest. The last 10 values were drop (not shown); numbers are in nanoseconds. On the left the experiment was done in a machine without any modification; on the right all the services were turned off, the CPU were isolated and the IRQ where disabled. Note not only how smaller values are obtained in the right environment (less noisy) but also the dispersion of the numbers is smaller: on the left the time goes from 0.765 to 0.8 ns (range of 0.035 ns) while on the right the time goes from 0.7635 to 0.7665 ns (range of 0.003 ns). One order of magnitude.
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -9647,7 +9826,7 @@ Even the person does not need to do anything. The boost can be transferred from 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Addresses of free frames are consumed from the FQ queue by the kernel (1). XDP then writes the incoming packet in a free frame (2) and pushes the address into the RX queue (3). The user application consumes from the RX queue (4) addresses of packets ready to be read or write (5). When it is done, the address is pushed back to the FQ for reuse (6).
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 80%;" class='' alt='' src='/img/debug/xdp-rx-rc/rx-rc-umem-cycle.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 80%;" class='' alt='' src='/img/debug/xdp-rx-rc/rx-rc-umem-cycle.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The packet descriptor returned by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;xsk_ring_cons__rx_desc&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; has two attributes: the packet’s address and its length.&lt;/p&gt;
 &lt;p&gt;The address is an &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint64_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; offset respect the UMEM’s base address.&lt;/p&gt;
 &lt;p&gt;&lt;label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtZnJhbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
@@ -9780,10 +9959,10 @@ If you didn’t realize, the timestamp was not zero’d either.
 &lt;p&gt;eBPF runs in the driver if this one supports it. If not, eBPF is executed in the kernel and the packets take a slightly larger path from the network card to user.&lt;/p&gt;
 &lt;p&gt;This path is known as the XDP generic path or just XDP generic.&lt;/p&gt;
 &lt;p&gt;Remember than the RX is a single-producer queue so it is not thread safe for concurrent pushes.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max_width: 120%;" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' /&gt;
+&lt;img style="max-width: 120%;" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;No problem when XDP runs in the driver but when it does in the generic mode, the kernel may be receiving several packets and pushing them &lt;strong&gt;concurrently&lt;/strong&gt; into the RX queue.&lt;/p&gt;
 &lt;blockquote&gt;
@@ -10523,7 +10702,7 @@ This is an example of &lt;a href="https://en.wikipedia.org/wiki/Dynamic_programm
 &lt;p&gt;A simple solution is to use an id: different ngrams will have different ids while the instances of the &lt;em&gt;same&lt;/em&gt; ngram will have the same id.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 45%;" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 45%;" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_positions.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The following Python fragment summarizes the above:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;# input: s, the original text&lt;/span&gt;
 &lt;span class="n"&gt;id_of_ngram&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
@@ -10552,7 +10731,7 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 60%;" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_count_filter.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 60%;" class='' alt='' src='/img/crypto/kasiski/kasiski_scan_count_filter.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The final result is a list of tuples &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;position&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; with the positions of the ngrams and their identifiers &lt;em&gt;sorted&lt;/em&gt; by their position.&lt;/p&gt;
 &lt;p&gt;The algorithm can be generalized to find all the non-unique ngrams of length &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; changing &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ngrams&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ngrams&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;The trick is how to build the list of ngrams of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; length &lt;em&gt;reusing&lt;/em&gt; the ngrams of length &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; found by the above algorithm.&lt;/p&gt;
@@ -10561,7 +10740,7 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 &lt;p&gt;In other words, they are consecutive.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 60%;" class='' alt='' src='/img/crypto/kasiski/kasiski_merge.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 60%;" class='' alt='' src='/img/crypto/kasiski/kasiski_merge.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;A merged ngram not necessary means that it is a repeated ngram but we know that any repeated ngram will be a merged one.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;id_of_ngram&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;span class="n"&gt;ngram_cnt_by_id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;defaultdict&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -10875,10 +11054,10 @@ Each thread and arrow is colored: reds for IO code and blues for CPU code.
 &lt;/ul&gt;
 &lt;h2 id="the-queues"&gt;The queues&lt;/h2&gt;
 &lt;p&gt;To make any insight the queues must track:&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/queues-stats.png' /&gt;
+&lt;img style="max-width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/queues-stats.png' /&gt;
 Metrics: in and out over time, plus drops and queue’s length. When two queues are connected, one of the metrics can be deduced from the other.
 &lt;/span&gt;&lt;/p&gt;
 &lt;ul&gt;
@@ -10890,10 +11069,10 @@ Metrics: in and out over time, plus drops and queue’s length. When two queues 
 &lt;p&gt;In a architecture where there are multiple queues, it is generally redundant to have a count of the items pushed and the items popped.&lt;/p&gt;
 &lt;p&gt;We could track only the items pushed and use that metric for the exit queue to estimate the items popped from the enter queue.&lt;/p&gt;
 &lt;p&gt;For example, if the thread H is pushing 10k items per second in the exit queue (that connects H with N), we can conclude that H is popping 10k items per seconds from its enter queue (that connects R with H).&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max_width: 40%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/reallycoolstuff.png' /&gt;
+&lt;img style="max-width: 40%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/reallycoolstuff.png' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;For analyzing the performance &lt;a href="http://www.brendangregg.com/usemethod.html"&gt;Brendan Gregg’s USE method&lt;/a&gt; states that every resource must be characterized by three metrics:&lt;/p&gt;
 &lt;ul&gt;
@@ -10909,30 +11088,30 @@ Metrics: in and out over time, plus drops and queue’s length. When two queues 
 &lt;p&gt;This is more generic way to analysis the performance of a system: using queues for statistics is a particular case.&lt;/p&gt;
 &lt;p&gt;But there is more…&lt;/p&gt;
 &lt;h2 id="batchbulk-for-free"&gt;Batch/Bulk for free&lt;/h2&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/chatty.png' /&gt;
+&lt;img style="max-width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/chatty.png' /&gt;
 Each message requires an encapsulation header and a &lt;em&gt;syscall&lt;/em&gt; to send it. Costs that you may per message; more messages means more you pay.
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The explicit queues allows to delay the processing but in exchange they allow to process the items in batch or bulk operations.&lt;/p&gt;
 &lt;p&gt;A classic example would be the database: instead of querying each time we could query every 1k items doing a single bulk operation.&lt;/p&gt;
 &lt;p&gt;For example, we could save 1k results in a single operation.&lt;/p&gt;
 &lt;p&gt;This not only save bandwidth with the database but also IO operations.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/less-chatty.png' /&gt;
+&lt;img style="max-width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/less-chatty.png' /&gt;
 Less is more. Also it enables specific per-bundle compression.
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The communication with the server could be also improved. Instead of sending a request per work item, we could send them in packs: less messages going back and forward through the network it is always a good deal.&lt;/p&gt;
 &lt;p&gt;Less chatty communication means more time and space for the real data, a better channel utilization.&lt;/p&gt;
 &lt;h2 id="asynchronous-for-free"&gt;Asynchronous for free&lt;/h2&gt;
 &lt;p&gt;And talking about network, sending a request and &lt;em&gt;waiting&lt;/em&gt; for the response is incredible slow.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/async.png' /&gt;
+&lt;img style="max-width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/async.png' /&gt;
 While a bulk calls amortize the cost per message, asynchronous calls make more use of the capacity of the network so you can send more in the same time.
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;We can send the requests &lt;em&gt;asynchronously&lt;/em&gt; to the server without waiting for the responses, and receive them later.&lt;/p&gt;
@@ -11322,26 +11501,26 @@ If the producer 2 updates the tail before the producer 1, the consumers may read
 &lt;!--more--&gt;
 &lt;p&gt;We need identifiers to operate the tables, make joins, and all kind of crazy data processing.&lt;/p&gt;
 &lt;p&gt;What would be a good one?&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max_width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/name.png' /&gt;
+&lt;img style="max-width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/name.png' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Their names and addresses? Quite old fashion. Collisions are possible and can be very frequent. &lt;br /&gt; Building an id based on the attributes of the person is not good in any case: it is a matter of time that the person change in some way (like change her address) to make the id &lt;em&gt;schema&lt;/em&gt; inconsistent.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="max_width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/ssn.png' /&gt;
+&lt;img style="max-width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/ssn.png' /&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Their government-level id, like the Social Security Number? Better but no, different countries have different identifier systems like &lt;a href="https://en.wikipedia.org/wiki/INSEE_code"&gt;INSEE&lt;/a&gt; in France. If you plan to use the software world-wide this will not work. &lt;br /&gt; And you are still depending on &lt;a href="https://www.ssa.gov/history/ssn/misused.html"&gt;humans&lt;/a&gt; to ensure uniqueness.&lt;/p&gt;
 &lt;p&gt;Their email? Everyone has an email, right? Yea… well. It is more nation agnostic but &lt;a href="https://gist.github.com/adamloving/4401361"&gt;still…&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 40%;" class='' alt='' src='/img/misc/ids/email.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 40%;" class='' alt='' src='/img/misc/ids/email.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Their DNA? That’s unique right?&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 40%;" class='' alt='' src='/img/misc/ids/sheep.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 40%;" class='' alt='' src='/img/misc/ids/sheep.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Keep it simple. Use a plain number.&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Just:&lt;/p&gt;
 &lt;ul&gt;
@@ -13260,12 +13439,12 @@ This unlocks the &lt;a href="https://cryptopals.com/sets/4/challenges/25"&gt;Bre
 &lt;p&gt;We just xor the known plaintext with the ciphertext at the correct location. No big deal.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ctr-edit-first-slice.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 70%;" class='' align='middle' data='/img/matasano/ctr-edit-first-slice.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;But with the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;inject_pad&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; function we are adding padding &lt;em&gt;before&lt;/em&gt; the location of the known plaintext and indeed &lt;strong&gt;we are moving its offset&lt;/strong&gt;.&lt;/p&gt;
 &lt;p&gt;So if we inject &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes the padding, &lt;em&gt;the window will move N bytes&lt;/em&gt; and we will able to recover &lt;em&gt;another&lt;/em&gt; &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;N&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; bytes of the key stream.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 75%;" class='' alt='' src='/img/matasano/ctr-edit-second-slice.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 75%;" class='' align='middle' data='/img/matasano/ctr-edit-second-slice.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Repeating this we can recover all the key stream (except the begin):&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;o&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;enumerate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pknown_offset&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;N&lt;/span&gt;&lt;span class="p"&gt;)):&lt;/span&gt; &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
@@ -13277,7 +13456,7 @@ This unlocks the &lt;a href="https://cryptopals.com/sets/4/challenges/25"&gt;Bre
 &lt;p&gt;In essential we use the partial known plaintext as a window to see a piece of the key stream and the &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;inject_pad&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; to &lt;em&gt;move&lt;/em&gt; the window to the right and recover more of it.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 80%;" class='' alt='' src='/img/matasano/ctr-edit-slicing-window.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 80%;" class='' align='middle' data='/img/matasano/ctr-edit-slicing-window.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The last key stream chunk recovered may contain bytes that does not belong to the original key stream.&lt;/p&gt;
 &lt;p&gt;We are not interested in those:&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;nlast&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ctext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;pknown_offset&lt;/span&gt;&lt;span class="p"&gt;:])&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;N&lt;/span&gt;
@@ -14559,18 +14738,18 @@ And this is how we could make the MT19937 a little harder: make the operation no
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h2 id="cbc-decryption-and-padding"&gt;CBC decryption and padding&lt;/h2&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIC8+Cm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIC8+Cm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsaWduPSdtaWRkbGUnIGRhdGE9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsaWduPSdtaWRkbGUnIGRhdGE9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 60%;" class='fullwidth' alt='' src='/img/matasano/cbc_padding_oracle_xor.svg' /&gt;
+&lt;object style="width: 60%;" class='fullwidth' align='middle' data='/img/matasano/cbc_padding_oracle_xor.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Let’s be \(m\) the ith plaintext block, \(c\) the i-1th ciphertext block and \(x\) the decryption of the ith ciphertext block.&lt;/p&gt;
 &lt;p&gt;Then, we can say that for CBC the plaintext block \(m\) is reconstructed from this:&lt;/p&gt;
 $$x \oplus c = m$$
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsaWduPSdtaWRkbGUnIGRhdGE9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsaWduPSdtaWRkbGUnIGRhdGE9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 90%;" class='fullwidth' alt='' src='/img/matasano/cbc_padding_oracle_patched.svg' /&gt;
+&lt;object style="width: 90%;" class='fullwidth' align='middle' data='/img/matasano/cbc_padding_oracle_patched.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Let’s say now that instead of \(c\) we use \(c'\), a &lt;em&gt;forged&lt;/em&gt; ciphertext block, if we are reconstructing the last plaintext block, this one will be:&lt;/p&gt;
 $$x \oplus c' = ?$$
@@ -15308,7 +15487,7 @@ You can run this code with &lt;a href="https://github.com/root-project/cling"&gt
 &lt;p&gt;If we modify one ciphertext block its decryption will be totally scrambled but we will have control of the &lt;em&gt;next&lt;/em&gt; plaintext block.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 60%;" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;label for='CldlIGRvbid0IGtub3cgaWYgb3VyIGluamVjdCBwbGFpbnRleHQKd2lsbCBiZSBhbGlnbmVkIHRvIHRoZSBibG9jayBzaXplIGJvdW5kYXJ5LiBUbyBlbnN1cmUgdGhhdCB3ZSBpbmplY3QKcGFkZGluZyBvZiB0d2ljZSB0aGUgYmxvY2sgc2l6ZSB0aGF0IHdhcnJhbnRpZXMgdGhhdCBhdCBsZWFzdCBvbmUgYmxvY2sKd2lsbCBiZSBmdWxsIHdpdGggb3VyIGBgQWBgcwptYXJnaW5ub3Rlcw==' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='CldlIGRvbid0IGtub3cgaWYgb3VyIGluamVjdCBwbGFpbnRleHQKd2lsbCBiZSBhbGlnbmVkIHRvIHRoZSBibG9jayBzaXplIGJvdW5kYXJ5LiBUbyBlbnN1cmUgdGhhdCB3ZSBpbmplY3QKcGFkZGluZyBvZiB0d2ljZSB0aGUgYmxvY2sgc2l6ZSB0aGF0IHdhcnJhbnRpZXMgdGhhdCBhdCBsZWFzdCBvbmUgYmxvY2sKd2lsbCBiZSBmdWxsIHdpdGggb3VyIGBgQWBgcwptYXJnaW5ub3Rlcw==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
@@ -15459,7 +15638,7 @@ We don’t know if our inject plaintext will be aligned to the block size bounda
 &lt;p&gt;The &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;posfix&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; just completes the crafting so the whole looks an email address.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 60%;" class='' alt='' src='/img/matasano/cut_and_paste_align_before_cut.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 60%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_before_cut.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h3 id="cut-the-block"&gt;Cut the block&lt;/h3&gt;
 &lt;p&gt;Now we encrypt the crafted profile. The trick is that &lt;strong&gt;we know&lt;/strong&gt; that a full block will be the encryption of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="s2"&gt;&amp;quot;admin&amp;quot;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and &lt;strong&gt;we know&lt;/strong&gt; exactly where.&lt;/p&gt;
 &lt;p&gt;This is because EBC encrypts all the blocks in the same way, no matter where they are.&lt;/p&gt;
@@ -15469,7 +15648,7 @@ We don’t know if our inject plaintext will be aligned to the block size bounda
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 60%;" class='' alt='' src='/img/matasano/cut_and_paste_align_cutting.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 60%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_cutting.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h3 id="paste-the-block"&gt;Paste the block&lt;/h3&gt;
 &lt;p&gt;Now, the final step.&lt;/p&gt;
 &lt;p&gt;&lt;label for='CkluIGEgcmVhbCBjYXNlIHlvdSB3aWxsIGFsc28gbWFrZSB5b3VyIHRoYXQgdGhlIGVtYWlsIGlzIGEgdmFsaWQgb25lOgp0aGUgd2hvbGUgdGhpbmcgaXMgYWJvdXQgZ2V0dGluZyAqeW91KiBhbiBhZG1pbi4KCklmIHlvdSBjYW5ub3QgbG9naW4gbGF0ZXIsIGl0IHdvdWxkIGJlIHBvaW50bGVzcy4KbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
@@ -15483,7 +15662,7 @@ If you cannot login later, it would be pointless.
 &lt;p&gt;In other words, what follows &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;role&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; must be at the begin of the next block.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 90%;" class='' alt='' src='/img/matasano/cut_and_paste_align_cutting2.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 90%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_cutting2.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Then we &lt;em&gt;paste the block&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;In its replacement we will put our crafted cipher block.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;profile_request_for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;b&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;me-AAAAAAAAAAAAAAAAA@evil.com&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -15493,7 +15672,7 @@ If you cannot login later, it would be pointless.
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 90%;" class='' alt='' src='/img/matasano/cut_and_paste_align_pasting.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 90%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_pasting.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;How many &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;A&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; we need to add will depend: I tried several times using &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;create_profile&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; as oracle until I got the payload aligned such the last &lt;em&gt;boundary&lt;/em&gt; matched and no error was throw.&lt;/p&gt;
 &lt;h2 id="forge"&gt;Forge!&lt;/h2&gt;
 &lt;p&gt;Voila!, the plaintext is recovered by the server, the padding removed and we get a admin profile.&lt;/p&gt;
@@ -15505,7 +15684,7 @@ If you cannot login later, it would be pointless.
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/cut_and_paste_align_pasted.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_pasted.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 </content>
     <link href="https://book-of-gehn.github.io/articles/2018/07/01/Cut-and-Paste-ECB-Blocks.html" rel="alternate" type="text/html" title="Cut and Paste ECB blocks"/>
     <category term="cryptography" label="cryptography"/>
@@ -15571,24 +15750,24 @@ In fact, there are two challenges: the &lt;a href="https://cryptopals.com/sets/2
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3 id="block-alignment"&gt;Block alignment&lt;/h3&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_misalign_by2.svg' /&gt;
+&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by2.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The prepended payload is constant but it is still unknown to the us/adversary.&lt;/p&gt;
 &lt;p&gt;Before proceed we need to know for how many bytes our attacker-controlled payload is misaligned.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_misalign_by1.svg' /&gt;
+&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Basically we start with a plaintext of &lt;em&gt;twice&lt;/em&gt; the size of the block size and we add one byte at time.&lt;/p&gt;
 &lt;p&gt;When we find two &lt;em&gt;consecutive&lt;/em&gt; cipher blocks that are the same, we are done.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/break_ecb_aligned.svg' /&gt;
+&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_aligned.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The amount of extra bytes that we added is the answer.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -15608,7 +15787,7 @@ In fact, there are two challenges: the &lt;a href="https://cryptopals.com/sets/2
 &lt;p&gt;This missing byte will be filled by the next &lt;em&gt;secret&lt;/em&gt; plaintext byte &lt;code class="none"&gt;?&lt;/code&gt;, unknown by us:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_1_byte.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 70%;" class='' align='middle' data='/img/matasano/ecb_break_1_byte.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;These two blocks will yield the same two cipher blocks only if the last byte of the first block (&lt;code class="none"&gt;x&lt;/code&gt;) is equal to the last byte of the second block (&lt;code class="none"&gt;?&lt;/code&gt;)&lt;/p&gt;
 &lt;p&gt;&lt;label for='ClRoZSBiZWF1dHkgb2YgdGhpcyBpcyB0aGF0IG5vIG1hdHRlciBpZiB0aGUga2V5IHVzZWQgdG8gZW5jcnlwdCBjaGFuZ2VzLAp0aGlzIHdpbGwgc3RpbGwgd29yayBhcyBsb25nIGFzIHRoZSBwbGFpbnRleHQgZG9lcyBub3QgY2hhbmdlLgoKRXZlbiBpZiB0aGUgbGVuZ3RoIG9mIHRoZSBwcmVmaXggKHBsYWludGV4dCAqYmVmb3JlKiBvdXIgY29udHJvbGxlZCBwYXJ0KQpjaGFuZ2VzLCBhcyBsb25nIGFzIGl0IGNoYW5nZXMgaW4gYSBzbWFsbCByYW5nZSwgaXQgaXMganVzdCBhIG1hdHRlciBvZgp0cnlpbmcgbW9yZSB0aW1lcy4KCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='ClRoZSBiZWF1dHkgb2YgdGhpcyBpcyB0aGF0IG5vIG1hdHRlciBpZiB0aGUga2V5IHVzZWQgdG8gZW5jcnlwdCBjaGFuZ2VzLAp0aGlzIHdpbGwgc3RpbGwgd29yayBhcyBsb25nIGFzIHRoZSBwbGFpbnRleHQgZG9lcyBub3QgY2hhbmdlLgoKRXZlbiBpZiB0aGUgbGVuZ3RoIG9mIHRoZSBwcmVmaXggKHBsYWludGV4dCAqYmVmb3JlKiBvdXIgY29udHJvbGxlZCBwYXJ0KQpjaGFuZ2VzLCBhcyBsb25nIGFzIGl0IGNoYW5nZXMgaW4gYSBzbWFsbCByYW5nZSwgaXQgaXMganVzdCBhIG1hdHRlciBvZgp0cnlpbmcgbW9yZSB0aW1lcy4KCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
@@ -15622,12 +15801,12 @@ Even if the length of the prefix (plaintext &lt;em&gt;before&lt;/em&gt; our cont
 &lt;p&gt;After found the value of &lt;code class="none"&gt;?&lt;/code&gt; we &lt;em&gt;shift&lt;/em&gt; the unknown plaintext on byte to the left and we continue breaking one byte at time.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_2_byte.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 70%;" class='' align='middle' data='/img/matasano/ecb_break_2_byte.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;After breaking &lt;code class="none"&gt;block_size&lt;/code&gt; bytes, we cannot shift to the left further.&lt;/p&gt;
 &lt;p&gt;But what we can do is to add an extra block: the probe block will not be testing its next block but the block that is 1 block to the right:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_break_n_byte.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 70%;" class='' align='middle' data='/img/matasano/ecb_break_n_byte.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The following is an implementation of the previous algorithm from &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt; that breaks the ECB cipher using a oracle.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.attacks.block_ciphers&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;decrypt_ecb_tail&lt;/span&gt;
 
@@ -15689,7 +15868,7 @@ Yeup, &lt;a href="https://cryptopals.com/sets/2/challenges/15"&gt;PKCS#7 padding
 &lt;p&gt;For the first plaintext block we use an &lt;a href="https://en.wikipedia.org/wiki/Initialization_vector"&gt;Initialization Vector&lt;/a&gt; for the XOR operation.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/cbc-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 60%;" class='' alt='' src='/img/matasano/cbc-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;This IV should be random but for the sake of the test it will be full of zeros.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;./posts/matasano/assets&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -15709,7 +15888,7 @@ Yeup, &lt;a href="https://cryptopals.com/sets/2/challenges/15"&gt;PKCS#7 padding
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;br /&gt; At difference with the encryption, the decryption of one block doesn't depend of any other: you can decrypt any block at random or in parallel.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 60%;" class='' alt='' src='/img/matasano/cbc-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h3 id="generating-secrets"&gt;Generating secrets&lt;/h3&gt;
 &lt;p&gt;&lt;label for='CldpdGggdGhlIGV4Y2VwdGlvbiBvZiB0aGUgKnNlZWQqIHRoYXQgd2lsbCBiZSBmaXggdG8gbWFrZSB0aGUgdGVzdApyZXByb2R1Y2libGUgYW5kIHRoZSAqYmxvY2sgc2lkZSogdG8gbWFrZSBpdCBhIGxpdHRsZSBlYXNpZXIuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='CldpdGggdGhlIGV4Y2VwdGlvbiBvZiB0aGUgKnNlZWQqIHRoYXQgd2lsbCBiZSBmaXggdG8gbWFrZSB0aGUgdGVzdApyZXByb2R1Y2libGUgYW5kIHRoZSAqYmxvY2sgc2lkZSogdG8gbWFrZSBpdCBhIGxpdHRsZSBlYXNpZXIuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
@@ -15772,15 +15951,15 @@ With the exception of the &lt;em&gt;seed&lt;/em&gt; that will be fix to make the
 &lt;p&gt;With a (partial) plaintext of twice the block size we can know if the cipher is using ECB or CBC because if it is using ECB, two same plaintext blocks will be encrypted to the same ciphertext block&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_no_prefix.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 70%;" class='' align='middle' data='/img/matasano/ecb_cbc_no_prefix.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;But because we have some &lt;em&gt;extra plaintext prepended&lt;/em&gt;, we cannot know if our two blocks will be &lt;em&gt;aligned to the block boundary&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_prefix_unaligned.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 70%;" class='' align='middle' data='/img/matasano/ecb_cbc_prefix_unaligned.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;To workaround this we set a plaintext three times the block size:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_prefix_aligned.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 70%;" class='' align='middle' data='/img/matasano/ecb_cbc_prefix_aligned.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Now it is a matter of counting duplicated blocks.&lt;/p&gt;
 &lt;p&gt;In &lt;a href="https://pypi.org/project/cryptonita/"&gt;cryptonita&lt;/a&gt; there is a convenient &lt;code class="none"&gt;iduplicates&lt;/code&gt; method for this.&lt;/p&gt;
 &lt;p&gt;If we found one block duplicated assume that we are using ECB otherwise CBC (so we will use &lt;code class="none"&gt;has_duplicates&lt;/code&gt; directly).&lt;/p&gt;
@@ -15832,7 +16011,7 @@ The ECB encrypted image on the right and its plaintext original version on the l
 &lt;p&gt;In ECB each plaintext block is encrypted using the same key.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/ecb-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 60%;" class='' alt='' src='/img/matasano/ecb-enc.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Decrypting is a piece of cake; this is just to get practice about &lt;a href="https://cryptopals.com/sets/1/challenges/7"&gt;AES in ECB mode&lt;/a&gt;&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;B&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;load_bytes&lt;/span&gt;     &lt;span class="c1"&gt;# byexample: +timeout=10&lt;/span&gt;
 
@@ -15851,7 +16030,7 @@ The ECB encrypted image on the right and its plaintext original version on the l
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Note how to encryption/decryption of one block don’t depend of any other: this allows the encryption/decryption to be at random places and in parallel.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="max_width: 60%;" class='' alt='' src='/img/matasano/ecb-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;img style="max-width: 60%;" class='' alt='' src='/img/matasano/ecb-dec.png' /&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="detecting-penguins"&gt;Detecting Penguins&lt;/h2&gt;
 &lt;p&gt;If two plaintext &lt;em&gt;blocks&lt;/em&gt; are the same, ECB will encrypt them to the &lt;em&gt;same&lt;/em&gt; ciphertext block.&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://cryptopals.com/sets/1/challenges/8"&gt;Detecting AES in ECB mode&lt;/a&gt; from a pool of random strings is therefore trivial: if the plaintext has two or more equal blocks, the ciphertext will have the same blocks repeated, something &lt;strong&gt;unlikely for a truly random string&lt;/strong&gt;.&lt;/p&gt;
@@ -15894,7 +16073,7 @@ This is because ECB encrypts to the same cipher block when the plain blocks are 
 &lt;br /&gt;&lt;br /&gt;
 Other vulnerable encryption modes will not be as easily detectable however.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/score_pinguins.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/score_pinguins.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;!--
 &gt;&gt;&gt; import sys
@@ -15968,10 +16147,10 @@ c_1 ⊕ c_2 &amp; = \left( p_1 ⊕ k_i \right)  ⊕ \left( p_2 ⊕ k_j \right)  
           &amp; = \left( p_1 ⊕ p_2 \right)
 \end{align*}$$
 &lt;p&gt;The idea is that the Hamming distance of them will be significantly shorter.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgLz4KQ29tcHV0ZSB0aGUgSGFtbWluZyBkaXN0YW5jZSBiZXR3ZWVuIGNvbnNlY3V0aXZlIGJsb2NrcyBvZiB0aGUgc2FtZQpsZW5ndGggYW5kIHRha2VzIHRoZSBtYXhpbXVtLiBUaGVuIHNjb3JlcyBpdC4KClNjb3JlcyBjbG9zZXIgdG8gMQptZWFucyBzbWFsbGVyIGRpc3RhbmNlcyBhbmQgdGhlcmVmb3JlIHRoZSBibG9ja3Mgb2YgY2lwaGVydGV4dCBsb29rcwp0aGF0IHdlcmUgeG9yJ2Qgd2l0aCAqdGhlIHNhbWUga2V5KiBhcyB0aGUgeG9yIG9mIHR3byBibG9ja3MgbG9va3MKKmxlc3MgcmFuZG9tKi4KClNjb3JlcyBjbG9zZXIgdG8gMCBhcmUgdGhlIG9wcG9zaXRlOiB0aGUgeG9yIG9mIHR3byBibG9ja3Mgc3RpbGwgbG9va3MKcmFuZG9tLgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgLz4KQ29tcHV0ZSB0aGUgSGFtbWluZyBkaXN0YW5jZSBiZXR3ZWVuIGNvbnNlY3V0aXZlIGJsb2NrcyBvZiB0aGUgc2FtZQpsZW5ndGggYW5kIHRha2VzIHRoZSBtYXhpbXVtLiBUaGVuIHNjb3JlcyBpdC4KClNjb3JlcyBjbG9zZXIgdG8gMQptZWFucyBzbWFsbGVyIGRpc3RhbmNlcyBhbmQgdGhlcmVmb3JlIHRoZSBibG9ja3Mgb2YgY2lwaGVydGV4dCBsb29rcwp0aGF0IHdlcmUgeG9yJ2Qgd2l0aCAqdGhlIHNhbWUga2V5KiBhcyB0aGUgeG9yIG9mIHR3byBibG9ja3MgbG9va3MKKmxlc3MgcmFuZG9tKi4KClNjb3JlcyBjbG9zZXIgdG8gMCBhcmUgdGhlIG9wcG9zaXRlOiB0aGUgeG9yIG9mIHR3byBibG9ja3Mgc3RpbGwgbG9va3MKcmFuZG9tLgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+CkNvbXB1dGUgdGhlIEhhbW1pbmcgZGlzdGFuY2UgYmV0d2VlbiBjb25zZWN1dGl2ZSBibG9ja3Mgb2YgdGhlIHNhbWUKbGVuZ3RoIGFuZCB0YWtlcyB0aGUgbWF4aW11bS4gVGhlbiBzY29yZXMgaXQuCgpTY29yZXMgY2xvc2VyIHRvIDEKbWVhbnMgc21hbGxlciBkaXN0YW5jZXMgYW5kIHRoZXJlZm9yZSB0aGUgYmxvY2tzIG9mIGNpcGhlcnRleHQgbG9va3MKdGhhdCB3ZXJlIHhvcidkIHdpdGggKnRoZSBzYW1lIGtleSogYXMgdGhlIHhvciBvZiB0d28gYmxvY2tzIGxvb2tzCipsZXNzIHJhbmRvbSouCgpTY29yZXMgY2xvc2VyIHRvIDAgYXJlIHRoZSBvcHBvc2l0ZTogdGhlIHhvciBvZiB0d28gYmxvY2tzIHN0aWxsIGxvb2tzCnJhbmRvbS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+CkNvbXB1dGUgdGhlIEhhbW1pbmcgZGlzdGFuY2UgYmV0d2VlbiBjb25zZWN1dGl2ZSBibG9ja3Mgb2YgdGhlIHNhbWUKbGVuZ3RoIGFuZCB0YWtlcyB0aGUgbWF4aW11bS4gVGhlbiBzY29yZXMgaXQuCgpTY29yZXMgY2xvc2VyIHRvIDEKbWVhbnMgc21hbGxlciBkaXN0YW5jZXMgYW5kIHRoZXJlZm9yZSB0aGUgYmxvY2tzIG9mIGNpcGhlcnRleHQgbG9va3MKdGhhdCB3ZXJlIHhvcidkIHdpdGggKnRoZSBzYW1lIGtleSogYXMgdGhlIHhvciBvZiB0d28gYmxvY2tzIGxvb2tzCipsZXNzIHJhbmRvbSouCgpTY29yZXMgY2xvc2VyIHRvIDAgYXJlIHRoZSBvcHBvc2l0ZTogdGhlIHhvciBvZiB0d28gYmxvY2tzIHN0aWxsIGxvb2tzCnJhbmRvbS4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/hamming1.svg' /&gt;
+&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/hamming1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 Compute the Hamming distance between consecutive blocks of the same length and takes the maximum. Then scores it.
 &lt;br /&gt;&lt;br /&gt;
 Scores closer to 1 means smaller distances and therefore the blocks of ciphertext looks that were xor’d with &lt;em&gt;the same key&lt;/em&gt; as the xor of two blocks looks &lt;em&gt;less random&lt;/em&gt;.
@@ -16026,7 +16205,7 @@ Score of each guess by method.
 &lt;br /&gt;&lt;br /&gt;
 Both methods agree on being 29 the most likely length but as the plot shows, both methods have quite different behaviours too.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/kl_guesses.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/kl_guesses.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;!--
 &gt;&gt;&gt; import sys
 &gt;&gt;&gt; sys.path.append("./z/py/plotting")
@@ -16048,7 +16227,7 @@ Both methods agree on being 29 the most likely length but as the plot shows, bot
 &lt;p&gt;So we need to do this for all the offsets between 0 and l. In other words:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;img style="width: 100%;" class='' alt='' src='/img/matasano/break_repeat_key_transpose.svg' /&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/break_repeat_key_transpose.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;To break this, we will need the frequency of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;etaoin&lt;/span&gt; &lt;span class="n"&gt;shrdlu&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (I’m assuming that the plaintext is in ASCII human plain English):&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.fuzzy_set&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;FuzzySet&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;most_common_plain_ngrams&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;FuzzySet&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
@@ -16330,7 +16509,7 @@ I wonder, what would happen if instead of xoring using the first byte we try the
 &lt;p&gt;Claiming that a string is uniformly random if &lt;em&gt;far from trivial&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;Even the NSA battery tests for randomness fail to measure the randomness of crafted strings.&lt;/p&gt;
 &lt;p&gt;Here is the plot of the scores calculated by the different methods:&lt;/p&gt;
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/scores_by_method.svg' /&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/scores_by_method.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;figcaption&gt;
 Scores by method. Notice how the element 170th gets the lower value in most cases indicating that the string is not random.
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -16682,10 +16861,10 @@ I/O&lt;span class="w"&gt; &lt;/span&gt;size&lt;span class="w"&gt; &lt;/span&gt;&
 &lt;p&gt;Watch out there, there is also a tool called &lt;code&gt;dd_rescue&lt;/code&gt; (notice the underscore) that has nothing to do with &lt;code&gt;GNU ddrescue&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;GNU ddrescue&lt;/code&gt;, from now on just &lt;code&gt;ddrescue&lt;/code&gt;, will copy a disk through three stages.&lt;/p&gt;
 &lt;p&gt;In the first, it reads blocks of data and copy them to the output in the same manner that &lt;code&gt;dd&lt;/code&gt; but unlike the latter, &lt;code&gt;ddrescue&lt;/code&gt; will not stop if it found an error nor will put zeros nor discard the block if the reading fails.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIC8+CkFmdGVyIHRoZSBpbml0aWFsIGJsb2NrLXdpc2UgcmVhZCwgYGRkX3Jlc2N1ZWAgcmUtcmVhZHMgYmxvY2tzIHdpdGgKZXJyb3JzLgoKRmlyc3QsIHJlYWRpbmcgZnJvbSB0aGUgZXh0cmVtZXMgdW50aWwgdGhlIGZpcnN0IGJhZCBzZWN0b3IKKCp0cmltbWluZyopIGFuZCB0aGVuIHRyeWluZyBlYWNoIHJlbWFpbmluZyBzZWN0b3IsIG9uZSBieSBvbmUgKCpzY3JhcGluZyopLgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIC8+CkFmdGVyIHRoZSBpbml0aWFsIGJsb2NrLXdpc2UgcmVhZCwgYGRkX3Jlc2N1ZWAgcmUtcmVhZHMgYmxvY2tzIHdpdGgKZXJyb3JzLgoKRmlyc3QsIHJlYWRpbmcgZnJvbSB0aGUgZXh0cmVtZXMgdW50aWwgdGhlIGZpcnN0IGJhZCBzZWN0b3IKKCp0cmltbWluZyopIGFuZCB0aGVuIHRyeWluZyBlYWNoIHJlbWFpbmluZyBzZWN0b3IsIG9uZSBieSBvbmUgKCpzY3JhcGluZyopLgptYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpBZnRlciB0aGUgaW5pdGlhbCBibG9jay13aXNlIHJlYWQsIGBkZF9yZXNjdWVgIHJlLXJlYWRzIGJsb2NrcyB3aXRoCmVycm9ycy4KCkZpcnN0LCByZWFkaW5nIGZyb20gdGhlIGV4dHJlbWVzIHVudGlsIHRoZSBmaXJzdCBiYWQgc2VjdG9yCigqdHJpbW1pbmcqKSBhbmQgdGhlbiB0cnlpbmcgZWFjaCByZW1haW5pbmcgc2VjdG9yLCBvbmUgYnkgb25lICgqc2NyYXBpbmcqKS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpBZnRlciB0aGUgaW5pdGlhbCBibG9jay13aXNlIHJlYWQsIGBkZF9yZXNjdWVgIHJlLXJlYWRzIGJsb2NrcyB3aXRoCmVycm9ycy4KCkZpcnN0LCByZWFkaW5nIGZyb20gdGhlIGV4dHJlbWVzIHVudGlsIHRoZSBmaXJzdCBiYWQgc2VjdG9yCigqdHJpbW1pbmcqKSBhbmQgdGhlbiB0cnlpbmcgZWFjaCByZW1haW5pbmcgc2VjdG9yLCBvbmUgYnkgb25lICgqc2NyYXBpbmcqKS4KbWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' /&gt;
+&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 After the initial block-wise read, &lt;code&gt;dd_rescue&lt;/code&gt; re-reads blocks with errors.
 &lt;br /&gt;&lt;br /&gt;
 First, reading from the extremes until the first bad sector (&lt;em&gt;trimming&lt;/em&gt;) and then trying each remaining sector, one by one (&lt;em&gt;scraping&lt;/em&gt;).

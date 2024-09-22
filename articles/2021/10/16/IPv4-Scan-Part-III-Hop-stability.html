@@ -131,7 +131,7 @@ It sends <em>at the same time</em> the probes to <em>the same host</em> in a <st
 <br /><br />
 Some time later it <em>may</em> scan the same host <em>again</em>. The collection of bursts to <em>the same host</em> are the <strong>rounds</strong> for that host.
 </span></figcaption>
-<img style="max_width: 80%;" class='' alt='' src='/img/network/internet_scan/ip-burst-rounds.png' /></figure></p>
+<img style="max-width: 80%;" class='' alt='' src='/img/network/internet_scan/ip-burst-rounds.png' /></figure></p>
 <h3 id="ttls-extrema-values-for-each-short-burst">TTLs extrema values for each short burst</h3>
 <p>Let’s review the short bursts first, the probes sent to a host at the same time:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">short_bursts_g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">groupby</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="ss">:ip</span><span class="p">,</span><span class="w"> </span><span class="ss">:timestamp</span><span class="p">])</span>

@@ -132,7 +132,7 @@ Hash a key in 3 simple steps:
 <br /><br />
 3.- Finally xor’ them and the result will be the hash of the key.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/hashes/tabulation-hashing/tabulationhashing.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/hashes/tabulation-hashing/tabulationhashing.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="cython-implementation"><code><span class="highlight-candombe-inline"><span class="n">cython</span></span></code> implementation</h2>
 <p>While we have 3 free parameters, I will restrict these:</p>
 <ul>
@@ -250,14 +250,14 @@ The error (dispersion) of the metric is too tiny to be visible but a more detail
 <br /><br />
 Here the <code><span class="highlight-candombe-inline"><span class="n">order</span></span></code> means datasets of \(2^{order}\) random numbers to hash.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/hashes/tabulation-hashing/cmp_runtime_32-32_and_64-64_full_lin.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/hashes/tabulation-hashing/cmp_runtime_32-32_and_64-64_full_lin.svg' type='image/svg+xml'></object></figure></p>
 <p>Linear hashing performs better than tabulation hashing, probably because <code><span class="highlight-candombe-inline"><span class="n">numpy</span></span></code> is well optimized for computing a multiplication and a addition in a vectorized fashion.</p>
 <p>In contrast my <code><span class="highlight-candombe-inline"><span class="n">cython</span></span></code> implementation does not take any advantage of such instructions.</p>
 <p>Nevertheless tabulation hashing shows a consistent performance across the different datasets.</p>
 <p>Note also that the performance of the linear hashing gets worst on larger datasets. The <em>why</em> is an open question.</p>
 <p>For reference here is the <a href="/assets/hashes/tabulation-hashing/">code for plotting and raw dataset</a>.</p>
 <h2 id="noise-measurement-evaluation">Noise measurement evaluation</h2>
-<p><figure class='fullwidth'><img style="width: 100%;" class='fullwidth' alt='' src='/img/hashes/tabulation-hashing/cmp_runtime_noise_full_lin.svg' />
+<p><figure class='fullwidth'><object style="width: 100%;" class='fullwidth' align='middle' data='/img/hashes/tabulation-hashing/cmp_runtime_noise_full_lin.svg' type='image/svg+xml'></object>
 <figcaption>
 Dispersion of the elapsed time measured in each experiment (in nanoseconds). On top is tabulation hashing, on bottom is linear hashing.
 </figcaption></figure></p>

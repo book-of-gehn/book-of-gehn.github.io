@@ -182,18 +182,18 @@ October 28, 2018
 </code></pre></div>
 
 <h2 id="cbc-decryption-and-padding">CBC decryption and padding</h2>
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIC8+Cm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIC8+Cm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsaWduPSdtaWRkbGUnIGRhdGE9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDYwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsaWduPSdtaWRkbGUnIGRhdGE9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3hvci5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 60%;" class='fullwidth' alt='' src='/img/matasano/cbc_padding_oracle_xor.svg' />
+<object style="width: 60%;" class='fullwidth' align='middle' data='/img/matasano/cbc_padding_oracle_xor.svg' type='image/svg+xml'></object>
 </span></p>
 <p>Let’s be \(m\) the ith plaintext block, \(c\) the i-1th ciphertext block and \(x\) the decryption of the ith ciphertext block.</p>
 <p>Then, we can say that for CBC the plaintext block \(m\) is reconstructed from this:</p>
 $$x \oplus c = m$$
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsdD0nJyBzcmM9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyAvPgptYXJnaW4=' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsaWduPSdtaWRkbGUnIGRhdGE9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDkwJTsiIGNsYXNzPSdmdWxsd2lkdGgnIGFsaWduPSdtaWRkbGUnIGRhdGE9Jy9pbWcvbWF0YXNhbm8vY2JjX3BhZGRpbmdfb3JhY2xlX3BhdGNoZWQuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 90%;" class='fullwidth' alt='' src='/img/matasano/cbc_padding_oracle_patched.svg' />
+<object style="width: 90%;" class='fullwidth' align='middle' data='/img/matasano/cbc_padding_oracle_patched.svg' type='image/svg+xml'></object>
 </span></p>
 <p>Let’s say now that instead of \(c\) we use \(c'\), a <em>forged</em> ciphertext block, if we are reconstructing the last plaintext block, this one will be:</p>
 $$x \oplus c' = ?$$

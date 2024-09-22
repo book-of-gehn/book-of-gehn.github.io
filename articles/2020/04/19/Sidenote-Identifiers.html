@@ -106,26 +106,26 @@ April 19, 2020
 <!--more-->
 <p>We need identifiers to operate the tables, make joins, and all kind of crazy data processing.</p>
 <p>What would be a good one?</p>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL25hbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/name.png' />
+<img style="max-width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/name.png' />
 </span></p>
 <p>Their names and addresses? Quite old fashion. Collisions are possible and can be very frequent. <br /> Building an id based on the attributes of the person is not good in any case: it is a matter of time that the person change in some way (like change her address) to make the id <em>schema</em> inconsistent.</p>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA3MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21pc2MvaWRzL3Nzbi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/ssn.png' />
+<img style="max-width: 70%;" class='fullwidth' alt='' src='/img/misc/ids/ssn.png' />
 </span></p>
 <p>Their government-level id, like the Social Security Number? Better but no, different countries have different identifier systems like <a href="https://en.wikipedia.org/wiki/INSEE_code">INSEE</a> in France. If you plan to use the software world-wide this will not work. <br /> And you are still depending on <a href="https://www.ssa.gov/history/ssn/misused.html">humans</a> to ensure uniqueness.</p>
 <p>Their email? Everyone has an email, right? Yea… well. It is more nation agnostic but <a href="https://gist.github.com/adamloving/4401361">still…</a></p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max_width: 40%;" class='' alt='' src='/img/misc/ids/email.png' /></figure></p>
+<img style="max-width: 40%;" class='' alt='' src='/img/misc/ids/email.png' /></figure></p>
 <p>Their DNA? That’s unique right?</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max_width: 40%;" class='' alt='' src='/img/misc/ids/sheep.png' /></figure></p>
+<img style="max-width: 40%;" class='' alt='' src='/img/misc/ids/sheep.png' /></figure></p>
 <p><em>Keep it simple. Use a plain number.</em></p>
 <p>Just:</p>
 <ul>

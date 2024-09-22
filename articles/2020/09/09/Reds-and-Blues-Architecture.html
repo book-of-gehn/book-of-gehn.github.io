@@ -157,10 +157,10 @@ Each thread and arrow is colored: reds for IO code and blues for CPU code.
 </ul>
 <h2 id="the-queues">The queues</h2>
 <p>To make any insight the queues must track:</p>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3F1ZXVlcy1zdGF0cy5wbmcnIC8+Ck1ldHJpY3M6IGluIGFuZCBvdXQgb3ZlciB0aW1lLCBwbHVzIGRyb3BzIGFuZCBxdWV1ZSdzIGxlbmd0aC4gV2hlbgp0d28gcXVldWVzIGFyZSBjb25uZWN0ZWQsIG9uZSBvZiB0aGUgbWV0cmljcyBjYW4gYmUgZGVkdWNlZCBmcm9tIHRoZQpvdGhlci4KbWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/queues-stats.png' />
+<img style="max-width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/queues-stats.png' />
 Metrics: in and out over time, plus drops and queue’s length. When two queues are connected, one of the metrics can be deduced from the other.
 </span></p>
 <ul>
@@ -172,10 +172,10 @@ Metrics: in and out over time, plus drops and queue’s length. When two queues 
 <p>In a architecture where there are multiple queues, it is generally redundant to have a count of the items pushed and the items popped.</p>
 <p>We could track only the items pushed and use that metric for the exit queue to estimate the items popped from the enter queue.</p>
 <p>For example, if the thread H is pushing 10k items per second in the exit queue (that connects H with N), we can conclude that H is popping 10k items per seconds from its enter queue (that connects R with H).</p>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA0MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL3JlYWxseWNvb2xzdHVmZi5wbmcnIC8+bWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 40%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/reallycoolstuff.png' />
+<img style="max-width: 40%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/reallycoolstuff.png' />
 </span></p>
 <p>For analyzing the performance <a href="http://www.brendangregg.com/usemethod.html">Brendan Gregg’s USE method</a> states that every resource must be characterized by three metrics:</p>
 <ul>
@@ -191,30 +191,30 @@ Metrics: in and out over time, plus drops and queue’s length. When two queues 
 <p>This is more generic way to analysis the performance of a system: using queues for statistics is a particular case.</p>
 <p>But there is more…</p>
 <h2 id="batchbulk-for-free">Batch/Bulk for free</h2>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2NoYXR0eS5wbmcnIC8+CkVhY2ggbWVzc2FnZSByZXF1aXJlcyBhbiBlbmNhcHN1bGF0aW9uIGhlYWRlciBhbmQgYSAqc3lzY2FsbCogdG8gc2VuZCBpdC4KQ29zdHMgdGhhdCB5b3UgbWF5IHBlciBtZXNzYWdlOyBtb3JlIG1lc3NhZ2VzIG1lYW5zIG1vcmUgeW91IHBheS4KbWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/chatty.png' />
+<img style="max-width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/chatty.png' />
 Each message requires an encapsulation header and a <em>syscall</em> to send it. Costs that you may per message; more messages means more you pay.
 </span></p>
 <p>The explicit queues allows to delay the processing but in exchange they allow to process the items in batch or bulk operations.</p>
 <p>A classic example would be the database: instead of querying each time we could query every 1k items doing a single bulk operation.</p>
 <p>For example, we could save 1k results in a single operation.</p>
 <p>This not only save bandwidth with the database but also IO operations.</p>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2xlc3MtY2hhdHR5LnBuZycgLz4KTGVzcyBpcyBtb3JlLiBBbHNvIGl0IGVuYWJsZXMgc3BlY2lmaWMgcGVyLWJ1bmRsZSBjb21wcmVzc2lvbi4KbWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/less-chatty.png' />
+<img style="max-width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/less-chatty.png' />
 Less is more. Also it enables specific per-bundle compression.
 </span></p>
 <p>The communication with the server could be also improved. Instead of sending a request per work item, we could send them in packs: less messages going back and forward through the network it is always a good deal.</p>
 <p>Less chatty communication means more time and space for the real data, a better channel utilization.</p>
 <h2 id="asynchronous-for-free">Asynchronous for free</h2>
 <p>And talking about network, sending a request and <em>waiting</em> for the response is incredible slow.</p>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2Rlc2lnbi9yZWQtYmx1ZS1hcmNoL2FzeW5jLnBuZycgLz4KV2hpbGUgYSBidWxrIGNhbGxzIGFtb3J0aXplIHRoZSBjb3N0IHBlciBtZXNzYWdlLCBhc3luY2hyb25vdXMKY2FsbHMgbWFrZSBtb3JlIHVzZSBvZiB0aGUgY2FwYWNpdHkgb2YgdGhlIG5ldHdvcmsgc28geW91IGNhbiBzZW5kCm1vcmUgaW4gdGhlIHNhbWUgdGltZS4KbWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/async.png' />
+<img style="max-width: 60%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/async.png' />
 While a bulk calls amortize the cost per message, asynchronous calls make more use of the capacity of the network so you can send more in the same time.
 </span></p>
 <p>We can send the requests <em>asynchronously</em> to the server without waiting for the responses, and receive them later.</p>

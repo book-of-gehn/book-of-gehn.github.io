@@ -314,7 +314,7 @@ June 14, 2021
 <p>The <code><span class="highlight-candombe-inline"><span class="n">null_experiment</span></span></code> actually does <strong>not</strong> use the <code><span class="highlight-candombe-inline"><span class="n">xtime</span><span class="o">*</span></span></code> function and it is used to have an idea of how small the <code><span class="highlight-candombe-inline"><span class="n">check</span><span class="o">-</span><span class="n">elapsed</span></span></code> time can be.</p>
 <h2 id="experiments-results">Experiments results</h2>
 <p>The first thing that we can see is how each <code><span class="highlight-candombe-inline"><span class="n">xtime</span><span class="o">*</span></span></code> performed in each experiment.</p>
-<p><figure class='fullwidth'><img style="width: 100%;" class='fullwidth' alt='' src='/img/z3/perf/mean-check-elapsed-per-func-experiment.svg' />
+<p><figure class='fullwidth'><object style="width: 100%;" class='fullwidth' align='middle' data='/img/z3/perf/mean-check-elapsed-per-func-experiment.svg' type='image/svg+xml'></object>
 <figcaption>
 Mean <code><span class="highlight-candombe-inline"><span class="n">check</span><span class="o">-</span><span class="n">elapsed</span></span></code> time (y axis) per <code><span class="highlight-candombe-inline"><span class="n">xtime</span><span class="o">*</span></span></code> function (x axis). Each subplot corresponds to a different experiment.
 </figcaption></figure></p>
@@ -331,7 +331,7 @@ Mean <code><span class="highlight-candombe-inline"><span class="n">check</span><
 <p><figure><figcaption><span markdown='1'>
 Minimum <code><span class="highlight-candombe-inline"><span class="n">check</span><span class="o">-</span><span class="n">elapsed</span></span></code> time (y axis) per <code><span class="highlight-candombe-inline"><span class="n">xtime</span><span class="o">*</span></span></code> function (x axis). Each subplot corresponds to a different experiment. Note how the plot has the same shape than before.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/z3/perf/min-check-elapsed-per-func-in-encrypt-experiment.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/z3/perf/min-check-elapsed-per-func-in-encrypt-experiment.svg' type='image/svg+xml'></object></figure></p>
 <p>Nope, same thing.</p>
 <p>Could be this discrepancy be just by luck? We need a measure independent from the time and Z3 tracks several statistics for that.</p>
 <p>It’s unclear what they mean however.</p>
@@ -339,12 +339,12 @@ Minimum <code><span class="highlight-candombe-inline"><span class="n">check</spa
 <p><figure><figcaption><span markdown='1'>
 Relation and linear regression between the time that <code><span class="highlight-candombe-inline"><span class="n">check</span><span class="p">()</span></span></code> took and the amount of <code><span class="highlight-candombe-inline"><span class="n">added</span> <span class="n">eqs</span></span></code>. They follow almost a perfect linear relationship.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/z3/perf/rel-check-elapsed-and-added-eqs.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/z3/perf/rel-check-elapsed-and-added-eqs.svg' type='image/svg+xml'></object></figure></p>
 <p>Let’s see how many <code><span class="highlight-candombe-inline"><span class="n">eqs</span></span></code> were <code><span class="highlight-candombe-inline"><span class="n">added</span></span></code> in the <code><span class="highlight-candombe-inline"><span class="n">encrypt_rounds_experiment</span></span></code>:</p>
 <p><figure><figcaption><span markdown='1'>
 Mean <code><span class="highlight-candombe-inline"><span class="n">added</span> <span class="n">eqs</span></span></code> (y axis) per <code><span class="highlight-candombe-inline"><span class="n">xtime</span><span class="o">*</span></span></code> function (x axis). Each subplot corresponds to a different experiment. Note how the plot has the same shape than before showing a strong relationship between <code><span class="highlight-candombe-inline"><span class="n">added</span> <span class="n">eqs</span></span></code> and the <code><span class="highlight-candombe-inline"><span class="n">check</span><span class="o">-</span><span class="n">elapsed</span></span></code> time.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/z3/perf/mean-added-eqs-per-func-in-encrypt-experiment.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/z3/perf/mean-added-eqs-per-func-in-encrypt-experiment.svg' type='image/svg+xml'></object></figure></p>
 <p>Same shape that before: for some reason Z3 added more eqs in <code><span class="highlight-candombe-inline"><span class="n">xtime_broadcasted</span></span></code> than in <code><span class="highlight-candombe-inline"><span class="n">xtime_cancelled</span></span></code> (both simplified) even if both are the same Z3 expressions.</p>
 <p>So the discrepancy is not due the noise: Z3 indeed saw these two as different things.</p>
 <h3 id="code-and-results">Code and results</h3>

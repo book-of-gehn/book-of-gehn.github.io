@@ -126,7 +126,7 @@ November 13, 2021
 <p><figure><figcaption><span markdown='1'>
 Histogram of TTL observed: the peaks indicate the different operative systems and their relative position respect the expected positions estimate the mean distance between the hosts and the scanner in hop count.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/network/internet_scan/ttl_hist_log_scale.svg' type='image/svg+xml'></object></figure></p>
 <p>There are three really high peaks with \(~10^6\) count with one secondary peak at the left of each main peaks.</p>
 <p>In the <em>x-axis</em> are marked the typical TTLs values that the operative systems set by default. For some operative systems this may different depending of the version of the OS and the protocol of the packet.</p>
 <p>We cannot do anything about the version of the OS but we can ignore the protocol because all the probes sent were TCP.</p>
@@ -167,7 +167,7 @@ Reference: <a href="https://subinsb.com/default-device-ttl-values/">Subin's Defa
 <p><figure><figcaption><span markdown='1'>
 Histogram of TTL observed but with the values shifted to the right to compensate the fact that the TTLs are decremented during their travel through the network.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/ttl_hist_log_scale_shifted.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/network/internet_scan/ttl_hist_log_scale_shifted.svg' type='image/svg+xml'></object></figure></p>
 <h2 id="ip-distribution">IP distribution</h2>
 <p>We can get an idea of how the hosts scanned are distributed in the IP space.</p>
 <p>Sorted by IP address, we can compute the first order difference (aka <code><span class="highlight-candombe-inline"><span class="n">df</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="ss">:ip</span><span class="p">]</span></span></code>: hosts in the same subnetwork will have very small differences.</p>

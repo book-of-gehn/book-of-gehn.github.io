@@ -207,7 +207,7 @@ July 1, 2018
 <p>The <code><span class="highlight-candombe-inline"><span class="n">posfix</span></span></code> just completes the crafting so the whole looks an email address.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 60%;" class='' alt='' src='/img/matasano/cut_and_paste_align_before_cut.svg' /></figure></p>
+<object style="width: 60%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_before_cut.svg' type='image/svg+xml'></object></figure></p>
 <h3 id="cut-the-block">Cut the block</h3>
 <p>Now we encrypt the crafted profile. The trick is that <strong>we know</strong> that a full block will be the encryption of <code><span class="highlight-candombe-inline"><span class="s2">&quot;admin&quot;</span></span></code> and <strong>we know</strong> exactly where.</p>
 <p>This is because EBC encrypts all the blocks in the same way, no matter where they are.</p>
@@ -217,7 +217,7 @@ July 1, 2018
 
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 60%;" class='' alt='' src='/img/matasano/cut_and_paste_align_cutting.svg' /></figure></p>
+<object style="width: 60%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_cutting.svg' type='image/svg+xml'></object></figure></p>
 <h3 id="paste-the-block">Paste the block</h3>
 <p>Now, the final step.</p>
 <p><label for='CkluIGEgcmVhbCBjYXNlIHlvdSB3aWxsIGFsc28gbWFrZSB5b3VyIHRoYXQgdGhlIGVtYWlsIGlzIGEgdmFsaWQgb25lOgp0aGUgd2hvbGUgdGhpbmcgaXMgYWJvdXQgZ2V0dGluZyAqeW91KiBhbiBhZG1pbi4KCklmIHlvdSBjYW5ub3QgbG9naW4gbGF0ZXIsIGl0IHdvdWxkIGJlIHBvaW50bGVzcy4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
@@ -231,7 +231,7 @@ If you cannot login later, it would be pointless.
 <p>In other words, what follows <code><span class="highlight-candombe-inline"><span class="n">role</span><span class="o">=</span></span></code> must be at the begin of the next block.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 90%;" class='' alt='' src='/img/matasano/cut_and_paste_align_cutting2.svg' /></figure></p>
+<object style="width: 90%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_cutting2.svg' type='image/svg+xml'></object></figure></p>
 <p>Then we <em>paste the block</em>.</p>
 <p>In its replacement we will put our crafted cipher block.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">profile_request_for</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;me-AAAAAAAAAAAAAAAAA@evil.com&#39;</span><span class="p">)</span>
@@ -241,7 +241,7 @@ If you cannot login later, it would be pointless.
 
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 90%;" class='' alt='' src='/img/matasano/cut_and_paste_align_pasting.svg' /></figure></p>
+<object style="width: 90%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_pasting.svg' type='image/svg+xml'></object></figure></p>
 <p>How many <code><span class="highlight-candombe-inline"><span class="n">A</span></span></code> we need to add will depend: I tried several times using <code><span class="highlight-candombe-inline"><span class="n">create_profile</span></span></code> as oracle until I got the payload aligned such the last <em>boundary</em> matched and no error was throw.</p>
 <h2 id="forge">Forge!</h2>
 <p>Voila!, the plaintext is recovered by the server, the padding removed and we get a admin profile.</p>
@@ -253,7 +253,7 @@ If you cannot login later, it would be pointless.
 
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/matasano/cut_and_paste_align_pasted.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_pasted.svg' type='image/svg+xml'></object></figure></p>
 <p class="small-subtitle-with-top-margin">
 Related tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography</a>, <a href='https://book-of-gehn.github.io/?tag="matasano"'>matasano</a>, <a href='https://book-of-gehn.github.io/?tag="cryptonita"'>cryptonita</a>, <a href='https://book-of-gehn.github.io/?tag="ECB"'>ECB</a>, <a href='https://book-of-gehn.github.io/?tag="forgery"'>forgery</a>, <a href='https://book-of-gehn.github.io/?tag="forge"'>forge</a>
 </p>

@@ -296,7 +296,7 @@ Histogram of intervals between probes to the same host-port in seconds.
 <br /><br />
 The median (5.0) and the mean (6.89) are labeled. The vertical axis is in logarithmic scale.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/network/internet_scan/time_interval_hist.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/network/internet_scan/time_interval_hist.svg' type='image/svg+xml'></object></figure></p>
 <p>This was more spread than I expected. Most of the intervals are in the low range but there is non-negligible count for the 15 secs interval.</p>
 <p>A quick statistics for the intervals:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="n">julia</span><span class="o">&gt;</span><span class="w"> </span><span class="n">describe</span><span class="p">(</span><span class="n">df2</span><span class="p">,</span><span class="w"> </span><span class="ss">:mean</span><span class="p">,</span><span class="w"> </span><span class="ss">:std</span><span class="p">,</span><span class="w"> </span><span class="ss">:min</span><span class="p">,</span><span class="w"> </span><span class="ss">:q25</span><span class="p">,</span><span class="w"> </span><span class="ss">:median</span><span class="p">,</span><span class="w"> </span><span class="ss">:q75</span><span class="p">,</span><span class="w"> </span><span class="ss">:max</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span><span class="o">=</span><span class="ss">:interval</span><span class="p">)</span>

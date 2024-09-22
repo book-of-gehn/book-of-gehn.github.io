@@ -114,6 +114,31 @@ $(document).ready(function () {
     filterPostsByQuery(tag);
 });
 </script>
+<div class="index-single-post" id="articles-2024-09-21-Behind-memcpy-memmove-html">
+<hr class="slender post-layout" />
+<a href="https://book-of-gehn.github.io/articles/2024/09/21/Behind-memcpy-memmove.html">
+<h2 class="larger">
+Behind <code>memcpy</code>/<code>memmove</code>: overlap, words and alignment
+</h2>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="memory"'>memory</a>, <a href='https://book-of-gehn.github.io/?tag="memcpy"'>memcpy</a>, <a href='https://book-of-gehn.github.io/?tag="copy"'>copy</a>, <a href='https://book-of-gehn.github.io/?tag="bytes"'>bytes</a>, <a href='https://book-of-gehn.github.io/?tag="xoz"'>xoz</a>
+</p>
+<p class="small-subtitle">
+September 21, 2024
+</p>
+<div>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IGF1dG87IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3hvei9tZW1jcHlfaW8vMDBfbm9fb3ZlcmxhcF9zZXR1cC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IGF1dG87IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3hvei9tZW1jcHlfaW8vMDBfbm9fb3ZlcmxhcF9zZXR1cC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<object style="width: auto;" class='fullwidth' align='middle' data='/img/xoz/memcpy_io/00_no_overlap_setup.svg' type='image/svg+xml'></object>
+</span></p>
+<p>How do <code>memcpy</code>/<code>memmove</code> work?</p>
+<p>I ended asking that question a few days ago while I was implementing the copy between sections of a file for the <code>xoz</code> library.</p>
+<p><code>memcpy</code> and <code>memmove</code> deal with memory, not with files, but I imagined that I could borrow some ideas anyways.</p>
+<p>And I did.</p>
+</div>
+</div>
 <div class="index-single-post" id="articles-2023-10-20-Man-in-the-Middle-Access-Point-html">
 <hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2023/10/20/Man-in-the-Middle-Access-Point.html">
@@ -174,10 +199,10 @@ April 5, 2023
 <div>
 <p>How can we know if a message is authentic or not?</p>
 <p>A trusted party with access to a private key <code>k</code> can compute an <em>authentication code</em> or MAC.</p>
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyAvPgpDb21wdXRlIHRoZSAqbWVzc2FnZSBhdXRoZW50aWNhdGlvbiBjb2RlKiAoTUFDKSBkb2luZyBgSChrIOKIpSBtKWAuCgpJbiB0aGVvcnkgb25seSB3aG8ga25vd3MgdGhlIHNlY3JldCBrZXkgYGtgIGNhbiBjcmVhdGUgYW5kIHZlcmlmeSB0aG9zZSwKYnV0IG5vLCB0aGlzIHNjaGVtYSBlcyBicm9rZW4uCgpUaGlzIHBvc3QgY292ZXJzICptYXRhc2FubyBjaGFsbGVuZ2VzKiBmcm9tClsyOCB0byAzMF0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzQpIHNvICpzcG9pbGVyIGFsZXJ0Ki4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyAvPgpDb21wdXRlIHRoZSAqbWVzc2FnZSBhdXRoZW50aWNhdGlvbiBjb2RlKiAoTUFDKSBkb2luZyBgSChrIOKIpSBtKWAuCgpJbiB0aGVvcnkgb25seSB3aG8ga25vd3MgdGhlIHNlY3JldCBrZXkgYGtgIGNhbiBjcmVhdGUgYW5kIHZlcmlmeSB0aG9zZSwKYnV0IG5vLCB0aGlzIHNjaGVtYSBlcyBicm9rZW4uCgpUaGlzIHBvc3QgY292ZXJzICptYXRhc2FubyBjaGFsbGVuZ2VzKiBmcm9tClsyOCB0byAzMF0oaHR0cHM6Ly9jcnlwdG9wYWxzLmNvbS9zZXRzLzQpIHNvICpzcG9pbGVyIGFsZXJ0Ki4KbWFyZ2lu' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQ29tcHV0ZSB0aGUgKm1lc3NhZ2UgYXV0aGVudGljYXRpb24gY29kZSogKE1BQykgZG9pbmcgYEgoayDiiKUgbSlgLgoKSW4gdGhlb3J5IG9ubHkgd2hvIGtub3dzIHRoZSBzZWNyZXQga2V5IGBrYCBjYW4gY3JlYXRlIGFuZCB2ZXJpZnkgdGhvc2UsCmJ1dCBubywgdGhpcyBzY2hlbWEgZXMgYnJva2VuLgoKVGhpcyBwb3N0IGNvdmVycyAqbWF0YXNhbm8gY2hhbGxlbmdlcyogZnJvbQpbMjggdG8gMzBdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80KSBzbyAqc3BvaWxlciBhbGVydCouCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQ29tcHV0ZSB0aGUgKm1lc3NhZ2UgYXV0aGVudGljYXRpb24gY29kZSogKE1BQykgZG9pbmcgYEgoayDiiKUgbSlgLgoKSW4gdGhlb3J5IG9ubHkgd2hvIGtub3dzIHRoZSBzZWNyZXQga2V5IGBrYCBjYW4gY3JlYXRlIGFuZCB2ZXJpZnkgdGhvc2UsCmJ1dCBubywgdGhpcyBzY2hlbWEgZXMgYnJva2VuLgoKVGhpcyBwb3N0IGNvdmVycyAqbWF0YXNhbm8gY2hhbGxlbmdlcyogZnJvbQpbMjggdG8gMzBdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80KSBzbyAqc3BvaWxlciBhbGVydCouCm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/set-4-hashes/hash-verifier-generic.svg' />
+<object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/set-4-hashes/hash-verifier-generic.svg' type='image/svg+xml'></object>
 Compute the <em>message authentication code</em> (MAC) doing <code>H(k ∥ m)</code>.
 <br /><br />
 In theory only who knows the secret key <code>k</code> can create and verify those, but no, this schema es broken.
@@ -225,10 +250,10 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography<
 January 23, 2023
 </p>
 <div>
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgLz4KbWFyZ2lu' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 100%;" class='fullwidth' alt='' src='/img/matasano/k-eq-iv-enc.svg' />
+<object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/k-eq-iv-enc.svg' type='image/svg+xml'></object>
 </span></p>
 <p>CBC requires an <em>initialization vector</em> (IV) that needs to be agreed by both encryption and decryption peers.</p>
 <p>IV needs to be random so you may be get tempted and use the secret key as IV.</p>
@@ -568,10 +593,10 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="pandas"'>pandas</a>, <a href
 November 13, 2021
 </p>
 <div>
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90dGxfaGlzdF9sb2dfc2NhbGUuc3ZnJyAvPgpIaXN0b2dyYW0gb2YgVFRMIG9ic2VydmVkOiB0aGUgcGVha3MgaW5kaWNhdGUgdGhlIGRpZmZlcmVudCBvcGVyYXRpdmUgc3lzdGVtcyBhbmQgdGhlaXIgcmVsYXRpdmUgcG9zaXRpb24gcmVzcGVjdCB0aGUgZXhwZWN0ZWQgcG9zaXRpb25zIGVzdGltYXRlIHRoZSBtZWFuIGRpc3RhbmNlIGJldHdlZW4gdGhlIGhvc3RzIGFuZCB0aGUgc2Nhbm5lciBpbiBob3AgY291bnQuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90dGxfaGlzdF9sb2dfc2NhbGUuc3ZnJyAvPgpIaXN0b2dyYW0gb2YgVFRMIG9ic2VydmVkOiB0aGUgcGVha3MgaW5kaWNhdGUgdGhlIGRpZmZlcmVudCBvcGVyYXRpdmUgc3lzdGVtcyBhbmQgdGhlaXIgcmVsYXRpdmUgcG9zaXRpb24gcmVzcGVjdCB0aGUgZXhwZWN0ZWQgcG9zaXRpb25zIGVzdGltYXRlIHRoZSBtZWFuIGRpc3RhbmNlIGJldHdlZW4gdGhlIGhvc3RzIGFuZCB0aGUgc2Nhbm5lciBpbiBob3AgY291bnQuCm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90dGxfaGlzdF9sb2dfc2NhbGUuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KSGlzdG9ncmFtIG9mIFRUTCBvYnNlcnZlZDogdGhlIHBlYWtzIGluZGljYXRlIHRoZSBkaWZmZXJlbnQgb3BlcmF0aXZlIHN5c3RlbXMgYW5kIHRoZWlyIHJlbGF0aXZlIHBvc2l0aW9uIHJlc3BlY3QgdGhlIGV4cGVjdGVkIHBvc2l0aW9ucyBlc3RpbWF0ZSB0aGUgbWVhbiBkaXN0YW5jZSBiZXR3ZWVuIHRoZSBob3N0cyBhbmQgdGhlIHNjYW5uZXIgaW4gaG9wIGNvdW50LgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90dGxfaGlzdF9sb2dfc2NhbGUuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KSGlzdG9ncmFtIG9mIFRUTCBvYnNlcnZlZDogdGhlIHBlYWtzIGluZGljYXRlIHRoZSBkaWZmZXJlbnQgb3BlcmF0aXZlIHN5c3RlbXMgYW5kIHRoZWlyIHJlbGF0aXZlIHBvc2l0aW9uIHJlc3BlY3QgdGhlIGV4cGVjdGVkIHBvc2l0aW9ucyBlc3RpbWF0ZSB0aGUgbWVhbiBkaXN0YW5jZSBiZXR3ZWVuIHRoZSBob3N0cyBhbmQgdGhlIHNjYW5uZXIgaW4gaG9wIGNvdW50LgptYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 100%;" class='fullwidth' alt='' src='/img/network/internet_scan/ttl_hist_log_scale.svg' />
+<object style="width: 100%;" class='fullwidth' align='middle' data='/img/network/internet_scan/ttl_hist_log_scale.svg' type='image/svg+xml'></object>
 Histogram of TTL observed: the peaks indicate the different operative systems and their relative position respect the expected positions estimate the mean distance between the hosts and the scanner in hop count.
 </span></p>
 <p>In the <a href="/articles/2021/09/19/IPv4-Scan-Part-II-Multiprobes-Analysis.html">Multiprobes Analysis</a>, we explored the statistics of the hosts and the communication to them.</p>
@@ -599,10 +624,10 @@ November 13, 2021
 <div>
 <p>In <a href="/articles/2021/10/16/IPv4-Scan-Part-III-Hop-stability.html">the post about Hop-Stability</a> we analyzed the TTL of the responses from all the scanned hosts.</p>
 <p>In particular we used the TTL range: the difference between the smallest and the greatest TTL seen per host.</p>
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPgpIaXN0b2dyYW0gb2YgVFRMIHJhbmdlIGJldHdlZW4gcm91bmRzIG9mIHNjYW5zIHRvIHRoZSBzYW1lIGhvc3Qgc2hvd2luZyBob3cgbXVjaCBzdGFibGUgdGhlIHJvdXRlcyBhcmUuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyAvPgpIaXN0b2dyYW0gb2YgVFRMIHJhbmdlIGJldHdlZW4gcm91bmRzIG9mIHNjYW5zIHRvIHRoZSBzYW1lIGhvc3Qgc2hvd2luZyBob3cgbXVjaCBzdGFibGUgdGhlIHJvdXRlcyBhcmUuCm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KSGlzdG9ncmFtIG9mIFRUTCByYW5nZSBiZXR3ZWVuIHJvdW5kcyBvZiBzY2FucyB0byB0aGUgc2FtZSBob3N0IHNob3dpbmcgaG93IG11Y2ggc3RhYmxlIHRoZSByb3V0ZXMgYXJlLgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi9tdWx0aXJvdW5kc190dGxfcmFuZ2VfdW5iaWFzZWRfX2hpc3Quc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KSGlzdG9ncmFtIG9mIFRUTCByYW5nZSBiZXR3ZWVuIHJvdW5kcyBvZiBzY2FucyB0byB0aGUgc2FtZSBob3N0IHNob3dpbmcgaG93IG11Y2ggc3RhYmxlIHRoZSByb3V0ZXMgYXJlLgptYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 100%;" class='fullwidth' alt='' src='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' />
+<object style="width: 100%;" class='fullwidth' align='middle' data='/img/network/internet_scan/multirounds_ttl_range_unbiased__hist.svg' type='image/svg+xml'></object>
 Histogram of TTL range between rounds of scans to the same host showing how much stable the routes are.
 </span></p>
 <p>With a range of 0 or very close we claimed that the route to the host was stable; with range larger than 7 we said the contrary.</p>
@@ -665,10 +690,10 @@ September 19, 2021
 </p>
 <div>
 <p>To my surprise the <a href="https://www.kaggle.com/signalspikes/internet-port-scan-1">dataset</a> preprocessed in my <a href="/articles/2021/09/10/IPv4-Scan-Dataset-Preprocessing.html">previous post</a> <strong>has</strong> duplicated entries. These are scans to the same host and port but with a different timestamp.</p>
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90aW1lX2ludGVydmFsX2hpc3Quc3ZnJyAvPgpIaXN0b2dyYW0gb2YgdGhlIGludGVydmFsIGJldHdlZW4gcHJvYmVzIHRvIHRoZSBzYW1lIGhvc3QtcG9ydCBpbiBzZWNvbmRzLgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90aW1lX2ludGVydmFsX2hpc3Quc3ZnJyAvPgpIaXN0b2dyYW0gb2YgdGhlIGludGVydmFsIGJldHdlZW4gcHJvYmVzIHRvIHRoZSBzYW1lIGhvc3QtcG9ydCBpbiBzZWNvbmRzLgptYXJnaW4=' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90aW1lX2ludGVydmFsX2hpc3Quc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KSGlzdG9ncmFtIG9mIHRoZSBpbnRlcnZhbCBiZXR3ZWVuIHByb2JlcyB0byB0aGUgc2FtZSBob3N0LXBvcnQgaW4gc2Vjb25kcy4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL25ldHdvcmsvaW50ZXJuZXRfc2Nhbi90aW1lX2ludGVydmFsX2hpc3Quc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KSGlzdG9ncmFtIG9mIHRoZSBpbnRlcnZhbCBiZXR3ZWVuIHByb2JlcyB0byB0aGUgc2FtZSBob3N0LXBvcnQgaW4gc2Vjb25kcy4KbWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 100%;" class='fullwidth' alt='' src='/img/network/internet_scan/time_interval_hist.svg' />
+<object style="width: 100%;" class='fullwidth' align='middle' data='/img/network/internet_scan/time_interval_hist.svg' type='image/svg+xml'></object>
 Histogram of the interval between probes to the same host-port in seconds.
 </span></p>
 <p>Questions like “which open port is more likely” will biased because the same host-port may be counted more than once.</p>
@@ -856,10 +881,10 @@ June 14, 2021
 <p>In the meantime, the CPU <em>stalls</em>.</p>
 <p>Modern CPUs use branch prediction, speculative execution and instruction reordering to minimize the impact of a branch.</p>
 <p>They do a good job but still a <em>branch</em> is potentially expensive so they are replaced by <em>branchless</em> variants.</p>
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL3ozL3BlcmYvbWluLWNoZWNrLWVsYXBzZWQtcGVyLWZ1bmMtaW4tZW5jcnlwdC1leHBlcmltZW50LnN2ZycgLz4KTWluaW11bSAgYGNoZWNrLWVsYXBzZWRgIHRpbWUgKHkgYXhpcykgcGVyIGJyYW5jaC9icmFuY2hsZXNzIGZ1bmN0aW9uICh4IGF4aXMpLgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL3ozL3BlcmYvbWluLWNoZWNrLWVsYXBzZWQtcGVyLWZ1bmMtaW4tZW5jcnlwdC1leHBlcmltZW50LnN2ZycgLz4KTWluaW11bSAgYGNoZWNrLWVsYXBzZWRgIHRpbWUgKHkgYXhpcykgcGVyIGJyYW5jaC9icmFuY2hsZXNzIGZ1bmN0aW9uICh4IGF4aXMpLgptYXJnaW4=' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3ozL3BlcmYvbWluLWNoZWNrLWVsYXBzZWQtcGVyLWZ1bmMtaW4tZW5jcnlwdC1leHBlcmltZW50LnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Ck1pbmltdW0gIGBjaGVjay1lbGFwc2VkYCB0aW1lICh5IGF4aXMpIHBlciBicmFuY2gvYnJhbmNobGVzcyBmdW5jdGlvbiAoeCBheGlzKS4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL3ozL3BlcmYvbWluLWNoZWNrLWVsYXBzZWQtcGVyLWZ1bmMtaW4tZW5jcnlwdC1leHBlcmltZW50LnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Ck1pbmltdW0gIGBjaGVjay1lbGFwc2VkYCB0aW1lICh5IGF4aXMpIHBlciBicmFuY2gvYnJhbmNobGVzcyBmdW5jdGlvbiAoeCBheGlzKS4KbWFyZ2lu' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 100%;" class='fullwidth' alt='' src='/img/z3/perf/min-check-elapsed-per-func-in-encrypt-experiment.svg' />
+<object style="width: 100%;" class='fullwidth' align='middle' data='/img/z3/perf/min-check-elapsed-per-func-in-encrypt-experiment.svg' type='image/svg+xml'></object>
 Minimum <code>check-elapsed</code> time (y axis) per branch/branchless function (x axis).
 </span></p>
 <p><code>If-Then-Else</code> or ITE for short, are symbolic expression that denotes a value chosen from two possible values based on a condition. These are the <em>symbolic branch</em>.</p>
@@ -913,7 +938,7 @@ June 5, 2021
 <p>Yes, yes I could.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/stats/seaborn-cheatsheet-v1.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/stats/seaborn-cheatsheet-v1.svg' type='image/svg+xml'></object></figure></p>
 <p><a href="https://seaborn.pydata.org/">Seaborn</a> is a very simple but powerful plotting library on top of <a href="https://matplotlib.org/">matplotlib</a> designed for statistical analysis.</p>
 <p>Quick links: <a href="/assets/seaborn-cheatsheet-v1.pdf">PDF (no bg)</a>, <a href="/assets/seaborn-cheatsheet-bg-v1.pdf">PDF (bg)</a>, <a href="/assets/seaborn-cheatsheet-v1.svg">SVG (no bg)</a>, <a href="/assets/seaborn-cheatsheet-bg-v1.svg">SVG (bg)</a> .</p>
 </div>
@@ -1525,7 +1550,7 @@ December 5, 2020
 <div>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max_width: 60%;" class='' alt='' src='/img/sociology/self-licensing-small.png' /></figure></p>
+<img style="max-width: 60%;" class='' alt='' src='/img/sociology/self-licensing-small.png' /></figure></p>
 </div>
 </div>
 <div class="index-single-post" id="articles-2020-11-29-RC-on-XDP-RX-Queue-html">
@@ -1542,10 +1567,10 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="debugging"'>debugging</a>, <
 November 29, 2020
 </p>
 <div>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 120%;" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' />
+<img style="max-width: 120%;" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' />
 </span></p>
 <p>Picture this: you’d been developing for six months a network sniffer using XDP, a kernel <em>in-pass</em> in Linux.</p>
 <p>Six months and when you are about to release it, you find not one but three bugs that shake all your understanding of XDP.</p>
@@ -1660,10 +1685,10 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="performance"'>performance</a
 September 9, 2020
 </p>
 <div>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMDAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZXNpZ24vcmVkLWJsdWUtYXJjaC9yZWRzLWFuZC1ibHVlcy1vcmlnaW5hbC5wbmcnIC8+Ck9yaWdpbmFsIGRlc2lnbjogYSBsaXR0bGUgbWVzc3kgd2l0aCBJTyBtaXhlZCB3aXRoIENQVSBib3VuZGVkIGNvZGUuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMDAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZXNpZ24vcmVkLWJsdWUtYXJjaC9yZWRzLWFuZC1ibHVlcy1vcmlnaW5hbC5wbmcnIC8+Ck9yaWdpbmFsIGRlc2lnbjogYSBsaXR0bGUgbWVzc3kgd2l0aCBJTyBtaXhlZCB3aXRoIENQVSBib3VuZGVkIGNvZGUuCm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMDAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZXNpZ24vcmVkLWJsdWUtYXJjaC9yZWRzLWFuZC1ibHVlcy1vcmlnaW5hbC5wbmcnIC8+Ck9yaWdpbmFsIGRlc2lnbjogYSBsaXR0bGUgbWVzc3kgd2l0aCBJTyBtaXhlZCB3aXRoIENQVSBib3VuZGVkIGNvZGUuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMDAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZXNpZ24vcmVkLWJsdWUtYXJjaC9yZWRzLWFuZC1ibHVlcy1vcmlnaW5hbC5wbmcnIC8+Ck9yaWdpbmFsIGRlc2lnbjogYSBsaXR0bGUgbWVzc3kgd2l0aCBJTyBtaXhlZCB3aXRoIENQVSBib3VuZGVkIGNvZGUuCm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 100%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/reds-and-blues-original.png' />
+<img style="max-width: 100%;" class='fullwidth' alt='' src='/img/design/red-blue-arch/reds-and-blues-original.png' />
 Original design: a little messy with IO mixed with CPU bounded code.
 </span></p>
 <p>Could we design an architecture that allows us to have insight about the performance of the system?</p>
@@ -1724,7 +1749,7 @@ April 19, 2020
 <p>What would be a nice identifier for the people in, let’s say, a database?</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max_width: 40%;" class='' alt='' src='/img/misc/ids/email.png' /></figure></p>
+<img style="max-width: 40%;" class='' alt='' src='/img/misc/ids/email.png' /></figure></p>
 </div>
 </div>
 <div class="index-single-post" id="articles-2020-03-22-Lock-Free-Queue-Part-I-html">
@@ -1982,7 +2007,7 @@ May 8, 2019
 <p>But this beautiful property of a CTR mode (and any other stream cipher) is actually a booby-trap.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 80%;" class='' alt='' src='/img/matasano/ctr-edit-slicing-window.svg' /></figure></p>
+<object style="width: 80%;" class='' align='middle' data='/img/matasano/ctr-edit-slicing-window.svg' type='image/svg+xml'></object></figure></p>
 </div>
 </div>
 <div class="index-single-post" id="articles-2019-03-20-Affine-Ciphers-html">
@@ -2209,10 +2234,10 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography<
 July 3, 2018
 </p>
 <div>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2NiYy1kZWMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2NiYy1kZWMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2NiYy1kZWMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiA2MCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL21hdGFzYW5vL2NiYy1kZWMucG5nJyAvPm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 60%;" class='fullwidth' alt='' src='/img/matasano/cbc-dec.png' />
+<img style="max-width: 60%;" class='fullwidth' alt='' src='/img/matasano/cbc-dec.png' />
 </span></p>
 <p>CBC does not offer any protection against an active attacker.</p>
 <p>Flipping some bits in a ciphertext block totally scrambles its plaintext but it has a very specific effect in the <em>next</em> plaintext block.</p>
@@ -2287,7 +2312,7 @@ June 9, 2018
 <p>In this post will review the Cipher Block Chaining mode (or CBC) and how we can build <a href="https://cryptopals.com/sets/2/challenges/11">an ECB/CBC detection oracle</a> to distinguish ECB from CBC using <a href="https://pypi.org/project/cryptonita/">cryptonita</a></p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 70%;" class='' alt='' src='/img/matasano/ecb_cbc_prefix_aligned.svg' /></figure></p>
+<object style="width: 70%;" class='' align='middle' data='/img/matasano/ecb_cbc_prefix_aligned.svg' type='image/svg+xml'></object></figure></p>
 <p><label for='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='KiotLSBTcG9pbGVyIEFsZXJ0ISAtLSoqbWFyZ2lubm90ZXM=' class='margin-toggle'/>
 <span class='marginnote'>
@@ -2347,7 +2372,7 @@ May 1, 2018
 <p>Shall we?</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/matasano/break_repeat_key_transpose.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/matasano/break_repeat_key_transpose.svg' type='image/svg+xml'></object></figure></p>
 </div>
 </div>
 <div class="index-single-post" id="articles-2018-04-01-A-string-of-coincidences-is-not-a-coincidence-html">
@@ -2443,10 +2468,10 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="forensics"'>forensics</a>
 December 18, 2016
 </p>
 <div>
-<p><label for='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIC8+bWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbHQ9Jycgc3JjPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIC8+bWFyZ2lu' class='margin-toggle'/>
+<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="width: 100%;" class='fullwidth' alt='' src='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' />
+<object style="width: 100%;" class='fullwidth' align='middle' data='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' type='image/svg+xml'></object>
 </span></p>
 <p>A friend of mine called me: a girl friend of him was hopeless trying to recover her thesis from a corrupted usb stick <em>three days</em> before her presentation.</p>
 <p>She was working in her thesis for almost a year, saving all the progresses in that usb stick. But what she didn’t know was that an usb memory has a limited number of writes and with more writes eventually the file system gets corrupted.</p>

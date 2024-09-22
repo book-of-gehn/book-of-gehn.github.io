@@ -118,7 +118,7 @@ The ECB encrypted image on the right and its plaintext original version on the l
 <p>In ECB each plaintext block is encrypted using the same key.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="max_width: 60%;" class='' alt='' src='/img/matasano/ecb-enc.png' /></figure></p>
+<img style="max-width: 60%;" class='' alt='' src='/img/matasano/ecb-enc.png' /></figure></p>
 <p>Decrypting is a piece of cake; this is just to get practice about <a href="https://cryptopals.com/sets/1/challenges/7">AES in ECB mode</a></p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">cryptonita</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">load_bytes</span>     <span class="c1"># byexample: +timeout=10</span>
 
@@ -137,7 +137,7 @@ The ECB encrypted image on the right and its plaintext original version on the l
 <p><figure><figcaption><span markdown='1'>
 Note how to encryption/decryption of one block don’t depend of any other: this allows the encryption/decryption to be at random places and in parallel.
 </span></figcaption>
-<img style="max_width: 60%;" class='' alt='' src='/img/matasano/ecb-dec.png' /></figure></p>
+<img style="max-width: 60%;" class='' alt='' src='/img/matasano/ecb-dec.png' /></figure></p>
 <h2 id="detecting-penguins">Detecting Penguins</h2>
 <p>If two plaintext <em>blocks</em> are the same, ECB will encrypt them to the <em>same</em> ciphertext block.</p>
 <p><a href="https://cryptopals.com/sets/1/challenges/8">Detecting AES in ECB mode</a> from a pool of random strings is therefore trivial: if the plaintext has two or more equal blocks, the ciphertext will have the same blocks repeated, something <strong>unlikely for a truly random string</strong>.</p>
@@ -180,7 +180,7 @@ This is because ECB encrypts to the same cipher block when the plain blocks are 
 <br /><br />
 Other vulnerable encryption modes will not be as easily detectable however.
 </span></figcaption>
-<img style="width: 100%;" class='' alt='' src='/img/matasano/score_pinguins.svg' /></figure></p>
+<object style="width: 100%;" class='' align='middle' data='/img/matasano/score_pinguins.svg' type='image/svg+xml'></object></figure></p>
 <p><br /></p>
 <!--
 >>> import sys

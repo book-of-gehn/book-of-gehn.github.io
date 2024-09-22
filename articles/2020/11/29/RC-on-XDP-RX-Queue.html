@@ -126,7 +126,7 @@ November 29, 2020
 <p><figure><figcaption><span markdown='1'>
 Addresses of free frames are consumed from the FQ queue by the kernel (1). XDP then writes the incoming packet in a free frame (2) and pushes the address into the RX queue (3). The user application consumes from the RX queue (4) addresses of packets ready to be read or write (5). When it is done, the address is pushed back to the FQ for reuse (6).
 </span></figcaption>
-<img style="max_width: 80%;" class='' alt='' src='/img/debug/xdp-rx-rc/rx-rc-umem-cycle.png' /></figure></p>
+<img style="max-width: 80%;" class='' alt='' src='/img/debug/xdp-rx-rc/rx-rc-umem-cycle.png' /></figure></p>
 <p>The packet descriptor returned by <code><span class="highlight-candombe-inline"><span class="n">xsk_ring_cons__rx_desc</span></span></code> has two attributes: the packet’s address and its length.</p>
 <p>The address is an <code><span class="highlight-candombe-inline"><span class="kt">uint64_t</span></span></code> offset respect the UMEM’s base address.</p>
 <p><label for='PGltZyAgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtZnJhbWUucG5nJyAvPm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
@@ -259,10 +259,10 @@ If you didn’t realize, the timestamp was not zero’d either.
 <p>eBPF runs in the driver if this one supports it. If not, eBPF is executed in the kernel and the packets take a slightly larger path from the network card to user.</p>
 <p>This path is known as the XDP generic path or just XDP generic.</p>
 <p>Remember than the RX is a single-producer queue so it is not thread safe for concurrent pushes.</p>
-<p><label for='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4X3dpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
+<p><label for='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PGltZyBzdHlsZT0ibWF4LXdpZHRoOiAxMjAlOyIgY2xhc3M9J2Z1bGx3aWR0aCcgYWx0PScnIHNyYz0nL2ltZy9kZWJ1Zy94ZHAtcngtcmMvcngtcmMtcXVldWVzLnBuZycgLz5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<img style="max_width: 120%;" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' />
+<img style="max-width: 120%;" class='fullwidth' alt='' src='/img/debug/xdp-rx-rc/rx-rc-queues.png' />
 </span></p>
 <p>No problem when XDP runs in the driver but when it does in the generic mode, the kernel may be receiving several packets and pushing them <strong>concurrently</strong> into the RX queue.</p>
 <blockquote>

@@ -209,7 +209,7 @@ March 7, 2021
 <p>There are a lot.</p>
 <p>Other processes running, the OS scheduler making your program to <em>yield</em> the CPU, the OS interrupting to process a more urgent task (like interruptions) and more.</p>
 <p>Graphical interfaces, network traffic and disk usage add to the mix.</p>
-<p><figure class='fullwidth'><img style="width: 100%;" class='fullwidth' alt='' src='/img/perf/timing/all-services-up-and-down.svg' />
+<p><figure class='fullwidth'><object style="width: 100%;" class='fullwidth' align='middle' data='/img/perf/timing/all-services-up-and-down.svg' type='image/svg+xml'></object>
 <figcaption>
 The elapsed time of <code><span class="highlight-candombe-inline"><span class="n">foo</span><span class="p">()</span></span></code> executed 1000 times and sorted from the smallest value to the largest. The last 10 values were drop (not shown); numbers are in nanoseconds. On the left the experiment was done in a machine without any modification; on the right all the services were turned off, the CPU were isolated and the IRQ where disabled. Note not only how smaller values are obtained in the right environment (less noisy) but also the dispersion of the numbers is smaller: on the left the time goes from 0.765 to 0.8 ns (range of 0.035 ns) while on the right the time goes from 0.7635 to 0.7665 ns (range of 0.003 ns). One order of magnitude.
 </figcaption></figure></p>

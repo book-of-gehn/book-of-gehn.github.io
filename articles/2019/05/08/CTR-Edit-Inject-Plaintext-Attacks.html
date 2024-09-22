@@ -245,12 +245,12 @@ This unlocks the <a href="https://cryptopals.com/sets/4/challenges/25">Break “
 <p>We just xor the known plaintext with the ciphertext at the correct location. No big deal.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 70%;" class='' alt='' src='/img/matasano/ctr-edit-first-slice.svg' /></figure></p>
+<object style="width: 70%;" class='' align='middle' data='/img/matasano/ctr-edit-first-slice.svg' type='image/svg+xml'></object></figure></p>
 <p>But with the <code><span class="highlight-candombe-inline"><span class="n">inject_pad</span></span></code> function we are adding padding <em>before</em> the location of the known plaintext and indeed <strong>we are moving its offset</strong>.</p>
 <p>So if we inject <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes the padding, <em>the window will move N bytes</em> and we will able to recover <em>another</em> <code><span class="highlight-candombe-inline"><span class="n">N</span></span></code> bytes of the key stream.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 75%;" class='' alt='' src='/img/matasano/ctr-edit-second-slice.svg' /></figure></p>
+<object style="width: 75%;" class='' align='middle' data='/img/matasano/ctr-edit-second-slice.svg' type='image/svg+xml'></object></figure></p>
 <p>Repeating this we can recover all the key stream (except the begin):</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">tmp</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">pknown_offset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">),</span> <span class="n">N</span><span class="p">)):</span> <span class="c1"># byexample: +timeout=10</span>
@@ -262,7 +262,7 @@ This unlocks the <a href="https://cryptopals.com/sets/4/challenges/25">Break “
 <p>In essential we use the partial known plaintext as a window to see a piece of the key stream and the <code><span class="highlight-candombe-inline"><span class="n">inject_pad</span></span></code> to <em>move</em> the window to the right and recover more of it.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<img style="width: 80%;" class='' alt='' src='/img/matasano/ctr-edit-slicing-window.svg' /></figure></p>
+<object style="width: 80%;" class='' align='middle' data='/img/matasano/ctr-edit-slicing-window.svg' type='image/svg+xml'></object></figure></p>
 <p>The last key stream chunk recovered may contain bytes that does not belong to the original key stream.</p>
 <p>We are not interested in those:</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">nlast</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ctext</span><span class="p">[</span><span class="n">pknown_offset</span><span class="p">:])</span> <span class="o">%</span> <span class="n">N</span>
