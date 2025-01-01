@@ -150,24 +150,24 @@ In fact, there are two challenges: the <a href="https://cryptopals.com/sets/2/ch
 </code></pre></div>
 
 <h3 id="block-alignment">Block alignment</h3>
-<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'/>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfbWlzYWxpZ25fYnkyLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfbWlzYWxpZ25fYnkyLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by2.svg' type='image/svg+xml'></object>
+<object  class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by2.svg' type='image/svg+xml'></object>
 </span></p>
 <p>The prepended payload is constant but it is still unknown to the us/adversary.</p>
 <p>Before proceed we need to know for how many bytes our attacker-controlled payload is misaligned.</p>
-<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'/>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfbWlzYWxpZ25fYnkxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfbWlzYWxpZ25fYnkxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/>
 <span class='marginnote'>
-<object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by1.svg' type='image/svg+xml'></object>
+<object  class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by1.svg' type='image/svg+xml'></object>
 </span></p>
 <p>Basically we start with a plaintext of <em>twice</em> the size of the block size and we add one byte at time.</p>
 <p>When we find two <em>consecutive</em> cipher blocks that are the same, we are done.</p>
-<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfYWxpZ25lZC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfYWxpZ25lZC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_aligned.svg' type='image/svg+xml'></object>
+<object  class='fullwidth' align='middle' data='/img/matasano/break_ecb_aligned.svg' type='image/svg+xml'></object>
 </span></p>
 <p>The amount of extra bytes that we added is the answer.</p>
 <div class="highlight-candombe"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">alignment</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_size</span><span class="p">):</span>
