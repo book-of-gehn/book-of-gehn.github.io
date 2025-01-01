@@ -8,7 +8,7 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>python-feedgen</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 01 Jan 2025 15:57:27 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 01 Jan 2025 16:26:25 +0000</lastBuildDate>
     <item>
       <title>Greenwald-Khanna e-approximated q-quantile - a review</title>
       <link>https://book-of-gehn.github.io/articles/2024/12/31/Greenwald-Khanna-E-Approximated-Q-Quantile.html</link>
@@ -20,7 +20,7 @@ Sorted observations stored in an array. Assuming 1-based index, the observation 
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Given \(n\) observations, finding which value is at rank \(r\) is trivially easy: if we store and sort the observations, the rank \(r\) will be at index \(r\).&lt;/p&gt;
 &lt;p&gt;But when \(n\) gets really large, it is unfeasible to store or sort &lt;em&gt;all&lt;/em&gt; the observations.&lt;/p&gt;
-&lt;p&gt;&lt;a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantiles-GK-algorithm.pdf"&gt;Greenwald and Khanna (GK01)&lt;/a&gt; developed a data structure that solves this but with a trade off: we can answer which value is at rank \(r\) within &lt;em&gt;certain error&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Greenwald and Khanna developed a data structure that solves this but with a trade off: we can answer which value is at rank \(r\) within &lt;em&gt;certain error&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;label for='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
 &lt;input type='checkbox' id='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
@@ -29,7 +29,7 @@ For the entire post I will talk about ranks. To deal with quantiles it is just a
 &lt;p&gt;It is called an \(q\)-quantile \(\epsilon\)-approximation &lt;em&gt;summary&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;I coded it, it didn’t work and after a week on this I realized that the original work of Greenwald an Khanna may have a few &lt;em&gt;imprecisions&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;This post describes how I rethinked the data structure from scratch, where I found the mentioned imprecisions and how I got a working implementation.&lt;/p&gt;
-&lt;p&gt;TL;DR -&amp;gt; &lt;a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py"&gt;python implementation in cryptonita&lt;/a&gt; &lt;!--more--&gt;&lt;/p&gt;
+&lt;p&gt;TL;DR -&amp;gt; &lt;a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py"&gt;python implementation in cryptonita&lt;/a&gt; &lt;!--more--&gt; Paper -&amp;gt; &lt;a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantiles-GK-algorithm.pdf"&gt;Greenwald and Khanna (GK01)&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id="square-one-what-is-wrong-with-using-a-sorted-array"&gt;Square one: what is wrong with using a sorted array?&lt;/h2&gt;
 &lt;p&gt;The cost is &lt;em&gt;not&lt;/em&gt; bad: sorting is \(O(n \textrm{log}(n))\) and answering is \(O(1)\). If we query multiple times, the cost of the sort will be amortized.&lt;/p&gt;
 &lt;p&gt;But this assumes that \(n\) is fixed and we have &lt;em&gt;all&lt;/em&gt; the observations at the moment of sorting.&lt;/p&gt;

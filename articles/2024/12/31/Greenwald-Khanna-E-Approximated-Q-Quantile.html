@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta name="description" content="Greenwald-Khanna e-approximated q-quantile - a review Sorted observations stored in an array. Assuming 1-based index, the observation at rank is at the index . Given observations, finding which value is at rank is trivially easy: if we store and sort the observations, the rank will be at index . But when gets really large, it is unfeasible to store or sort all the observations. Greenwald and Khanna (GK01) developed a data structure that solves this but with a trade off: we can answer which value is at rank within certain error. For the entire post I will talk about ranks. To deal with quantiles it is just a matter of computing its equivalent rank . It is called an -quantile -approximation summary. I coded it, it didn’t work and after a week on this I realized that the original work of Greenwald an Khanna may have a few imprecisions. This post describes how I rethinked the data structure from scratch, where I found the mentioned imprecisions and how I got a working implementation. TL;DR -&gt; python implementation in cryptonita">
+  <meta name="description" content="Greenwald-Khanna e-approximated q-quantile - a review Sorted observations stored in an array. Assuming 1-based index, the observation at rank is at the index . Given observations, finding which value is at rank is trivially easy: if we store and sort the observations, the rank will be at index . But when gets really large, it is unfeasible to store or sort all the observations. Greenwald and Khanna developed a data structure that solves this but with a trade off: we can answer which value is at rank within certain error. For the entire post I will talk about ranks. To deal with quantiles it is just a matter of computing its equivalent rank . It is called an -quantile -approximation summary. I coded it, it didn’t work and after a week on this I realized that the original work of Greenwald an Khanna may have a few imprecisions. This post describes how I rethinked the data structure from scratch, where I found the mentioned imprecisions and how I got a working implementation. TL;DR -&gt; python implementation in cryptonita">
 
   
   <script type="application/ld+json">
@@ -110,7 +110,7 @@ Sorted observations stored in an array. Assuming 1-based index, the observation 
 </span></p>
 <p>Given \(n\) observations, finding which value is at rank \(r\) is trivially easy: if we store and sort the observations, the rank \(r\) will be at index \(r\).</p>
 <p>But when \(n\) gets really large, it is unfeasible to store or sort <em>all</em> the observations.</p>
-<p><a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantiles-GK-algorithm.pdf">Greenwald and Khanna (GK01)</a> developed a data structure that solves this but with a trade off: we can answer which value is at rank \(r\) within <em>certain error</em>.</p>
+<p>Greenwald and Khanna developed a data structure that solves this but with a trade off: we can answer which value is at rank \(r\) within <em>certain error</em>.</p>
 <p><label for='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
 <input type='checkbox' id='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
 <span class='marginnote'>
@@ -119,7 +119,7 @@ For the entire post I will talk about ranks. To deal with quantiles it is just a
 <p>It is called an \(q\)-quantile \(\epsilon\)-approximation <em>summary</em>.</p>
 <p>I coded it, it didn’t work and after a week on this I realized that the original work of Greenwald an Khanna may have a few <em>imprecisions</em>.</p>
 <p>This post describes how I rethinked the data structure from scratch, where I found the mentioned imprecisions and how I got a working implementation.</p>
-<p>TL;DR -&gt; <a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py">python implementation in cryptonita</a> <!--more--></p>
+<p>TL;DR -&gt; <a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py">python implementation in cryptonita</a> <!--more--> Paper -&gt; <a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantiles-GK-algorithm.pdf">Greenwald and Khanna (GK01)</a></p>
 <h2 id="square-one-what-is-wrong-with-using-a-sorted-array">Square one: what is wrong with using a sorted array?</h2>
 <p>The cost is <em>not</em> bad: sorting is \(O(n \textrm{log}(n))\) and answering is \(O(1)\). If we query multiple times, the cost of the sort will be amortized.</p>
 <p>But this assumes that \(n\) is fixed and we have <em>all</em> the observations at the moment of sorting.</p>
