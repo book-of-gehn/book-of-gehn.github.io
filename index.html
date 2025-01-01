@@ -114,6 +114,40 @@ $(document).ready(function () {
     filterPostsByQuery(tag);
 });
 </script>
+<div class="index-single-post" id="articles-2024-12-31-Greenwald-Khanna-E-Approximated-Q-Quantile-html">
+<hr class="slender post-layout" />
+<a href="https://book-of-gehn.github.io/articles/2024/12/31/Greenwald-Khanna-E-Approximated-Q-Quantile.html">
+<h2 class="larger">
+Greenwald-Khanna e-approximated q-quantile - a review
+</h2>
+</a>
+<p class="small-subtitle">
+Tags: <a href='https://book-of-gehn.github.io/?tag="stats"'>stats</a>, <a href='https://book-of-gehn.github.io/?tag="quantile"'>quantile</a>, <a href='https://book-of-gehn.github.io/?tag="rank"'>rank</a>, <a href='https://book-of-gehn.github.io/?tag="sublinear"'>sublinear</a>
+</p>
+<p class="small-subtitle">
+December 31, 2024
+</p>
+<div>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDFfc2V0dXAuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KU29ydGVkIG9ic2VydmF0aW9ucyBzdG9yZWQgaW4gYW4gYXJyYXkuCkFzc3VtaW5nIDEtYmFzZWQgaW5kZXgsIHRoZSBvYnNlcnZhdGlvbiBhdCByYW5rIGByYAoqKmlzKiogYXQgdGhlIGluZGV4IGByYC4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDFfc2V0dXAuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KU29ydGVkIG9ic2VydmF0aW9ucyBzdG9yZWQgaW4gYW4gYXJyYXkuCkFzc3VtaW5nIDEtYmFzZWQgaW5kZXgsIHRoZSBvYnNlcnZhdGlvbiBhdCByYW5rIGByYAoqKmlzKiogYXQgdGhlIGluZGV4IGByYC4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<object  class='fullwidth' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/01_setup.svg' type='image/svg+xml'></object>
+Sorted observations stored in an array. Assuming 1-based index, the observation at rank <code>r</code> <strong>is</strong> at the index <code>r</code>.
+</span></p>
+<p>Given <code>n</code> observations, finding which value is at rank <code>r</code> is trivially easy: if we store and sort the observations, the rank <code>r</code> will be at index <code>r</code>.</p>
+<p>But when <code>n</code> gets really large, it is unfeasible to store or sort <em>all</em> the observations.</p>
+<p><a href="/assets/quantiles-GK-algorithm.pdf">Greenwald and Khanna (GK01)</a> developed a data structure that solves this but with a trade off: we can answer which value is at rank <code>r</code> within <em>certain error</em>.</p>
+<p><label for='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+For the entire post I will talk about ranks. To deal with quantiles it is just a matter of computing its equivalent rank <code>r \leftarrow q n</code>.
+</span></p>
+<p>It is called an <code>q</code>-quantile <code>\epsilon</code>-approximation <em>summary</em>.</p>
+<p>I coded it, it didn’t work and after a week on this I realized that the original work of Greenwald an Khanna may have a few <em>imprecisions</em>.</p>
+<p>This post describes how I rethinked the data structure from scratch, where I found the mentioned imprecisions and how I got a working implementation.</p>
+<p>TL;DR -&gt; <a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py">python implementation in cryptonita</a></p>
+</div>
+</div>
 <div class="index-single-post" id="articles-2024-09-21-Behind-memcpy-memmove-html">
 <hr class="slender post-layout" />
 <a href="https://book-of-gehn.github.io/articles/2024/09/21/Behind-memcpy-memmove.html">
@@ -199,10 +233,10 @@ April 5, 2023
 <div>
 <p>How can we know if a message is authentic or not?</p>
 <p>A trusted party with access to a private key <code>k</code> can compute an <em>authentication code</em> or MAC.</p>
-<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQ29tcHV0ZSB0aGUgKm1lc3NhZ2UgYXV0aGVudGljYXRpb24gY29kZSogKE1BQykgZG9pbmcgYEgoayDiiKUgbSlgLgoKSW4gdGhlb3J5IG9ubHkgd2hvIGtub3dzIHRoZSBzZWNyZXQga2V5IGBrYCBjYW4gY3JlYXRlIGFuZCB2ZXJpZnkgdGhvc2UsCmJ1dCBubywgdGhpcyBzY2hlbWEgZXMgYnJva2VuLgoKVGhpcyBwb3N0IGNvdmVycyAqbWF0YXNhbm8gY2hhbGxlbmdlcyogZnJvbQpbMjggdG8gMzBdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80KSBzbyAqc3BvaWxlciBhbGVydCouCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQ29tcHV0ZSB0aGUgKm1lc3NhZ2UgYXV0aGVudGljYXRpb24gY29kZSogKE1BQykgZG9pbmcgYEgoayDiiKUgbSlgLgoKSW4gdGhlb3J5IG9ubHkgd2hvIGtub3dzIHRoZSBzZWNyZXQga2V5IGBrYCBjYW4gY3JlYXRlIGFuZCB2ZXJpZnkgdGhvc2UsCmJ1dCBubywgdGhpcyBzY2hlbWEgZXMgYnJva2VuLgoKVGhpcyBwb3N0IGNvdmVycyAqbWF0YXNhbm8gY2hhbGxlbmdlcyogZnJvbQpbMjggdG8gMzBdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80KSBzbyAqc3BvaWxlciBhbGVydCouCm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9zZXQtNC1oYXNoZXMvaGFzaC12ZXJpZmllci1nZW5lcmljLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+CkNvbXB1dGUgdGhlICptZXNzYWdlIGF1dGhlbnRpY2F0aW9uIGNvZGUqIChNQUMpIGRvaW5nIGBIKGsg4oilIG0pYC4KCkluIHRoZW9yeSBvbmx5IHdobyBrbm93cyB0aGUgc2VjcmV0IGtleSBga2AgY2FuIGNyZWF0ZSBhbmQgdmVyaWZ5IHRob3NlLApidXQgbm8sIHRoaXMgc2NoZW1hIGVzIGJyb2tlbi4KClRoaXMgcG9zdCBjb3ZlcnMgKm1hdGFzYW5vIGNoYWxsZW5nZXMqIGZyb20KWzI4IHRvIDMwXShodHRwczovL2NyeXB0b3BhbHMuY29tL3NldHMvNCkgc28gKnNwb2lsZXIgYWxlcnQqLgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9zZXQtNC1oYXNoZXMvaGFzaC12ZXJpZmllci1nZW5lcmljLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+CkNvbXB1dGUgdGhlICptZXNzYWdlIGF1dGhlbnRpY2F0aW9uIGNvZGUqIChNQUMpIGRvaW5nIGBIKGsg4oilIG0pYC4KCkluIHRoZW9yeSBvbmx5IHdobyBrbm93cyB0aGUgc2VjcmV0IGtleSBga2AgY2FuIGNyZWF0ZSBhbmQgdmVyaWZ5IHRob3NlLApidXQgbm8sIHRoaXMgc2NoZW1hIGVzIGJyb2tlbi4KClRoaXMgcG9zdCBjb3ZlcnMgKm1hdGFzYW5vIGNoYWxsZW5nZXMqIGZyb20KWzI4IHRvIDMwXShodHRwczovL2NyeXB0b3BhbHMuY29tL3NldHMvNCkgc28gKnNwb2lsZXIgYWxlcnQqLgptYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/set-4-hashes/hash-verifier-generic.svg' type='image/svg+xml'></object>
+<object  class='fullwidth' align='middle' data='/img/matasano/set-4-hashes/hash-verifier-generic.svg' type='image/svg+xml'></object>
 Compute the <em>message authentication code</em> (MAC) doing <code>H(k ∥ m)</code>.
 <br /><br />
 In theory only who knows the secret key <code>k</code> can create and verify those, but no, this schema es broken.
@@ -250,10 +284,10 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="cryptography"'>cryptography<
 January 23, 2023
 </p>
 <div>
-<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2stZXEtaXYtZW5jLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9rLWVxLWl2LWVuYy5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9rLWVxLWl2LWVuYy5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/k-eq-iv-enc.svg' type='image/svg+xml'></object>
+<object  class='fullwidth' align='middle' data='/img/matasano/k-eq-iv-enc.svg' type='image/svg+xml'></object>
 </span></p>
 <p>CBC requires an <em>initialization vector</em> (IV) that needs to be agreed by both encryption and decryption peers.</p>
 <p>IV needs to be random so you may be get tempted and use the secret key as IV.</p>
@@ -938,7 +972,7 @@ June 5, 2021
 <p>Yes, yes I could.</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<object style="width: 100%;" class='' align='middle' data='/img/stats/seaborn-cheatsheet-v1.svg' type='image/svg+xml'></object></figure></p>
+<object  class='' align='middle' data='/img/stats/seaborn-cheatsheet-v1.svg' type='image/svg+xml'></object></figure></p>
 <p><a href="https://seaborn.pydata.org/">Seaborn</a> is a very simple but powerful plotting library on top of <a href="https://matplotlib.org/">matplotlib</a> designed for statistical analysis.</p>
 <p>Quick links: <a href="/assets/seaborn-cheatsheet-v1.pdf">PDF (no bg)</a>, <a href="/assets/seaborn-cheatsheet-bg-v1.pdf">PDF (bg)</a>, <a href="/assets/seaborn-cheatsheet-v1.svg">SVG (no bg)</a>, <a href="/assets/seaborn-cheatsheet-bg-v1.svg">SVG (bg)</a> .</p>
 </div>
@@ -2372,7 +2406,7 @@ May 1, 2018
 <p>Shall we?</p>
 <p><figure><figcaption><span markdown='1'>
 </span></figcaption>
-<object style="width: 100%;" class='' align='middle' data='/img/matasano/break_repeat_key_transpose.svg' type='image/svg+xml'></object></figure></p>
+<object  class='' align='middle' data='/img/matasano/break_repeat_key_transpose.svg' type='image/svg+xml'></object></figure></p>
 </div>
 </div>
 <div class="index-single-post" id="articles-2018-04-01-A-string-of-coincidences-is-not-a-coincidence-html">
@@ -2468,10 +2502,10 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="forensics"'>forensics</a>
 December 18, 2016
 </p>
 <div>
-<p><label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
-<input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0Pm1hcmdpbg==' class='margin-toggle'/>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9mb3JlbnNpY3MvdGhlc2lzLXJlY292ZXJpbmcvdHJpbW1pbmdfc2NyYXBpbmdfZGRyZXNjdWUuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9mb3JlbnNpY3MvdGhlc2lzLXJlY292ZXJpbmcvdHJpbW1pbmdfc2NyYXBpbmdfZGRyZXNjdWUuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'/>
 <span class='marginnote'>
-<object style="width: 100%;" class='fullwidth' align='middle' data='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' type='image/svg+xml'></object>
+<object  class='fullwidth' align='middle' data='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' type='image/svg+xml'></object>
 </span></p>
 <p>A friend of mine called me: a girl friend of him was hopeless trying to recover her thesis from a corrupted usb stick <em>three days</em> before her presentation.</p>
 <p>She was working in her thesis for almost a year, saving all the progresses in that usb stick. But what she didn’t know was that an usb memory has a limited number of writes and with more writes eventually the file system gets corrupted.</p>

@@ -1,0 +1,414 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="description" content="Greenwald-Khanna e-approximated q-quantile - a review Sorted observations stored in an array. Assuming 1-based index, the observation at rank is at the index . Given observations, finding which value is at rank is trivially easy: if we store and sort the observations, the rank will be at index . But when gets really large, it is unfeasible to store or sort all the observations. Greenwald and Khanna (GK01) developed a data structure that solves this but with a trade off: we can answer which value is at rank within certain error. For the entire post I will talk about ranks. To deal with quantiles it is just a matter of computing its equivalent rank . It is called an -quantile -approximation summary. I coded it, it didn’t work and after a week on this I realized that the original work of Greenwald an Khanna may have a few imprecisions. This post describes how I rethinked the data structure from scratch, where I found the mentioned imprecisions and how I got a working implementation. TL;DR -&gt; python implementation in cryptonita">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Greenwald-Khanna e-approximated q-quantile - a review",
+          
+          
+          "datePublished": "2024-12-31T00:00:00+00:00",
+          "dateModified": "2024-12-31T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
+  <title>Greenwald-Khanna e-approximated q-quantile - a review</title>
+
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2024/12/31/Greenwald-Khanna-E-Approximated-Q-Quantile.html">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      //root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+</header>
+<article class="group">
+<h1>
+Greenwald-Khanna e-approximated q-quantile - a review
+</h1>
+<p class="subtitle">
+December 31, 2024
+</p>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDFfc2V0dXAuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KU29ydGVkIG9ic2VydmF0aW9ucyBzdG9yZWQgaW4gYW4gYXJyYXkuCkFzc3VtaW5nIDEtYmFzZWQgaW5kZXgsIHRoZSBvYnNlcnZhdGlvbiBhdCByYW5rIGByYAoqKmlzKiogYXQgdGhlIGluZGV4IGByYC4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDFfc2V0dXAuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KU29ydGVkIG9ic2VydmF0aW9ucyBzdG9yZWQgaW4gYW4gYXJyYXkuCkFzc3VtaW5nIDEtYmFzZWQgaW5kZXgsIHRoZSBvYnNlcnZhdGlvbiBhdCByYW5rIGByYAoqKmlzKiogYXQgdGhlIGluZGV4IGByYC4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<object  class='fullwidth' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/01_setup.svg' type='image/svg+xml'></object>
+Sorted observations stored in an array. Assuming 1-based index, the observation at rank \(r\) <strong>is</strong> at the index \(r\).
+</span></p>
+<p>Given \(n\) observations, finding which value is at rank \(r\) is trivially easy: if we store and sort the observations, the rank \(r\) will be at index \(r\).</p>
+<p>But when \(n\) gets really large, it is unfeasible to store or sort <em>all</em> the observations.</p>
+<p><a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantiles-GK-algorithm.pdf">Greenwald and Khanna (GK01)</a> developed a data structure that solves this but with a trade off: we can answer which value is at rank \(r\) within <em>certain error</em>.</p>
+<p><label for='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+For the entire post I will talk about ranks. To deal with quantiles it is just a matter of computing its equivalent rank \(r \leftarrow q n\).
+</span></p>
+<p>It is called an \(q\)-quantile \(\epsilon\)-approximation <em>summary</em>.</p>
+<p>I coded it, it didn’t work and after a week on this I realized that the original work of Greenwald an Khanna may have a few <em>imprecisions</em>.</p>
+<p>This post describes how I rethinked the data structure from scratch, where I found the mentioned imprecisions and how I got a working implementation.</p>
+<p>TL;DR -&gt; <a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py">python implementation in cryptonita</a> <!--more--></p>
+<h2 id="square-one-what-is-wrong-with-using-a-sorted-array">Square one: what is wrong with using a sorted array?</h2>
+<p>The cost is <em>not</em> bad: sorting is \(O(n \textrm{log}(n))\) and answering is \(O(1)\). If we query multiple times, the cost of the sort will be amortized.</p>
+<p>But this assumes that \(n\) is fixed and we have <em>all</em> the observations at the moment of sorting.</p>
+<p>What would happen if we want to add new observations on the fly?</p>
+<p>You see, to keep the array sorted we find the insertion point of the new observation with a binary search \(O(\textrm{log}(n))\) and once we know where to insert, we need to <em>move</em> all the next elements of the array to make room. And this is \(O(n)\).</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/02_insert_bad_linear_time.svg' type='image/svg+xml'></object></figure></p>
+<p>And <em>that</em> displacement is bad.</p>
+<h2 id="implicit-computed-ranks">Implicit (computed) ranks</h2>
+<p>An array is a dead road; long live to a linked list!</p>
+<p>The downside is that we lose the \(O(1)\) for querying a rank but we avoid having to move the elements to make room for a new one.</p>
+<p>Or kind of.</p>
+<p>If we explicitly track the rank of each element we still have an \(O(n)\) insert because we would have to update <em>all</em> the next elements’ ranks.</p>
+<p><figure><figcaption><span markdown='1'>
+Example of inserting the value \(12\), at rank \(3\). The rank of <em>all</em> the observations on its right must be updated increasing their ranks by \(1\).
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/03_insert_bad_explicit_ranks.svg' type='image/svg+xml'></object></figure></p>
+<p>Instead, we store <em>tuples</em> of the form \(t_i = (v_i, g_i)\):</p>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDRfY29tcHV0ZWRfcmFua193aXRoX2cuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KRm9yIGV4YW1wbGUsIGBnXzEgKyBnXzIgKyBnXzMgPSAxICsgMSArIDEgPSAzYCBnaXZlcyB0aGUgcmFuayBvZiB0aGUgdGhpcmQgb2JzZXJ2YXRpb24gYDIwYC4KbWFyZ2lu' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDRfY29tcHV0ZWRfcmFua193aXRoX2cuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KRm9yIGV4YW1wbGUsIGBnXzEgKyBnXzIgKyBnXzMgPSAxICsgMSArIDEgPSAzYCBnaXZlcyB0aGUgcmFuayBvZiB0aGUgdGhpcmQgb2JzZXJ2YXRpb24gYDIwYC4KbWFyZ2lu' class='margin-toggle'/>
+<span class='marginnote'>
+<object  class='fullwidth' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/04_computed_rank_with_g.svg' type='image/svg+xml'></object>
+For example, \(g_1 + g_2 + g_3 = 1 + 1 + 1 = 3\) gives the rank of the third observation \(20\).
+</span></p>
+<ul>
+<li>\(v_i\): the value of observation.</li>
+<li>\(g_i\): the <em>gap</em> between that element’s rank and the previous’ rank.</li>
+</ul>
+<p>Every time we want to know the rank of any tuple \(t_i\) we compute \(\sum_{j \le i} g_j\).</p>
+<p>Now let’s review what happen when we insert the observation \(12\). The observations previous to it should not change but we know that \(20\) cannot be at rank \(3\) anymore but at least <em>one more</em>, making <em>room</em> for the new incoming \(12\).</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/04_insert_ok_g.svg' type='image/svg+xml'></object></figure></p>
+<p>In other words, adding a new observation <em>shifts by 1</em> the rank of all the observations on the right. But there is no need to update anything: setting \(g = 1\) for \(12\) is enough, no need to do any \(O(n)\) stuff.</p>
+<p><label for='CldlIGFyZSBnb2luZyB0byBpbXByb3ZlIHRoaXMgZXZlbiBmdXJ0aGVyIGF0IHRoZSBlbmQgb2YgdGhlIHBvc3QuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CldlIGFyZSBnb2luZyB0byBpbXByb3ZlIHRoaXMgZXZlbiBmdXJ0aGVyIGF0IHRoZSBlbmQgb2YgdGhlIHBvc3QuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+We are going to improve this even further at the end of the post.
+</span></p>
+<p>The insertions are now just \(O(log(n))\).</p>
+<h2 id="dont-keep-all-remove-some-tuples">Don’t keep all, remove some tuples</h2>
+<p>To handle very large \(n\) we cannot keep all the observations in memory: we <em>need</em> to remove some while still preserving the rank of the others within some error.</p>
+<p>For example, the tuple \(t_{i+1}\) with value \(12\) is at rank \(3\). If we remove the previous tuple \(t_i\), the value \(12\) <em>must</em> still be at rank \(3\).</p>
+<p>This is easy to achieve: we just need to increase \(g_{i+1}\) by \(g_i\).</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/05_delete_and_g_update.svg' type='image/svg+xml'></object></figure></p>
+<p>Here are a few more examples:</p>
+<p><figure><figcaption><span markdown='1'>
+You can corroborate that the observation \(21\) remains at rank \(5\) in all the cases.
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/05_delete_and_g_update_2_and_3.svg' type='image/svg+xml'></object></figure></p>
+<p>Removing tuples trades off space by accuracy.</p>
+<p>If we ask for the rank \(2\), we <em>lost</em> the precise answer but we can return an <em>approximated</em> one: if we answer with rank \(1\) (value \(4\)), we missed just be \(1\) rank.</p>
+<p><figure><figcaption><span markdown='1'>
+Ask for the observation at rank \(2\) but we answer with the observation at rank \(1\) effectively making a mistake of \(1\) rank.
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/06_query_and_error.svg' type='image/svg+xml'></object></figure></p>
+<p>In general we answer with the closest tuple so the maximum error is at the middle point and it is half the count of tuples removed in between the tuples.</p>
+<p><figure><figcaption><span markdown='1'>
+In this example, \(\lceil \frac{4 - 1}{2} \rceil = 2\)
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/08_computed_error.svg' type='image/svg+xml'></object></figure></p>
+<p>Luckily, we already are tracking how many tuples we removed: it is just the \(g_i\) value of the right-most tuple minus 1.</p>
+<p><figure><figcaption><span markdown='1'>
+Why the \(- 1\)? Because each \(g_i\) starts at \(1\) and increases by the same amount of removed tuples.
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/07_gap.svg' type='image/svg+xml'></object></figure></p>
+<p>So we can put a upper bound on the error for answering for a rank \(r\) that falls in the gap: \(\lceil \frac{g_i - 1}{2} \rceil\)</p>
+<h2 id="minimum-and-maximum-ranks">Minimum and maximum ranks</h2>
+<p>Let’s back to how we handle an insert. What would happen if we want to insert the value \(16\)?</p>
+<p><figure><figcaption><span markdown='1'>
+We don’t know what rank the value \(16\) should have but we know that it is between ranks \(2\) and \(6\).
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/09_insert_but_where.svg' type='image/svg+xml'></object></figure></p>
+<p><label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDlfaW5zZXJ0X2J1dF93aGVyZV9jaGVhdGluZy5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpJbiBmYWN0LCBpZiB3ZSBkaWRuJ3QgZGVsZXRlIGFueSB0dXBsZSwgdGhlIHByZWNpc2UgcmFuayBmb3IgYDE2YCBzaG91bGQgaGFkIGJlZW4gYDRgCndoaWNoIGl0IGlzIGJldHdlZW4gYDJgIGFuZCBgNWAuCm1hcmdpbg==' class='margin-toggle'>&#8853;</label>
+<input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDlfaW5zZXJ0X2J1dF93aGVyZV9jaGVhdGluZy5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpJbiBmYWN0LCBpZiB3ZSBkaWRuJ3QgZGVsZXRlIGFueSB0dXBsZSwgdGhlIHByZWNpc2UgcmFuayBmb3IgYDE2YCBzaG91bGQgaGFkIGJlZW4gYDRgCndoaWNoIGl0IGlzIGJldHdlZW4gYDJgIGFuZCBgNWAuCm1hcmdpbg==' class='margin-toggle'/>
+<span class='marginnote'>
+<object  class='fullwidth' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/09_insert_but_where_cheating.svg' type='image/svg+xml'></object>
+In fact, if we didn’t delete any tuple, the precise rank for \(16\) should had been \(4\) which it is between \(2\) and \(5\).
+</span></p>
+<p>The value \(16\) is between \(4\) and \(21\) so the rank of \(4\) should not change but the value \(21\) cannot longer be at rank \(5\) but at rank \(6\) to make room for the new observation.</p>
+<p>Therefore the value \(16\) is at rank between \(2\) and \(5\) (inclusive)</p>
+<p>Those ranks are the respective <em>minimum</em> and <em>maximum</em> ranks for \(16\).</p>
+$$\begin{align*}
+    \textrm{rmin}_i &= \textrm{rank}_{i-1} + 1                    \\
+    \textrm{rmax}_i & = \textrm{rank}_{i+1}
+\end{align*}$$
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/10_insert_rmin_rmax.svg' type='image/svg+xml'></object></figure></p>
+<p>But our tuples don’t have explicit ranks but relative offsets.</p>
+<p>From \(\textrm{rmin}_{i}\) we solve \(g_{i}\):</p>
+<p><label for='CkknbSB1c2luZyBoZXJlIGBcdGV4dHJte3JtYXh9X3tpKzF9YCB0byBiZSB0aGUgcmFuayAqYmVmb3JlKiB1cGRhdGluZwp0aGUgYGdfe2krMX1gIG9mIHRoZSB0dXBsZSBgdF97aSsxfWAuCkluIHRoZSBleGFtcGxlLCBgXHRleHRybXtybWF4fV97aSsxfWAgd291bGQgYmUgYDVgIG5vdCBgNmAuCgpJbiB0aGUgcHJhY3RpY2UgdGhpcyBkZXRhaWwgZG9lc24ndCBtYXR0ZXIgYmVjYXVzZSB0aGUgYWxnb3JpdGhtCndvdWxkIG5ldmVyIGJlIHdvcmtpbmcgd2l0aCByYW5rcyBkaXJlY3RseS4KbWFyZ2lubm90ZXM=' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkknbSB1c2luZyBoZXJlIGBcdGV4dHJte3JtYXh9X3tpKzF9YCB0byBiZSB0aGUgcmFuayAqYmVmb3JlKiB1cGRhdGluZwp0aGUgYGdfe2krMX1gIG9mIHRoZSB0dXBsZSBgdF97aSsxfWAuCkluIHRoZSBleGFtcGxlLCBgXHRleHRybXtybWF4fV97aSsxfWAgd291bGQgYmUgYDVgIG5vdCBgNmAuCgpJbiB0aGUgcHJhY3RpY2UgdGhpcyBkZXRhaWwgZG9lc24ndCBtYXR0ZXIgYmVjYXVzZSB0aGUgYWxnb3JpdGhtCndvdWxkIG5ldmVyIGJlIHdvcmtpbmcgd2l0aCByYW5rcyBkaXJlY3RseS4KbWFyZ2lubm90ZXM=' class='margin-toggle'/>
+<span class='marginnote'>
+I’m using here \(\textrm{rmax}_{i+1}\) to be the rank <em>before</em> updating the \(g_{i+1}\) of the tuple \(t_{i+1}\). In the example, \(\textrm{rmax}_{i+1}\) would be \(5\) not \(6\).
+<br /><br />
+In the practice this detail doesn’t matter because the algorithm would never be working with ranks directly.
+</span></p>
+$$\begin{align*}
+\textrm{rank}_{i} &= \textrm{rank}_{i-1} + 1      \\
+\textrm{rank}_{i} - \textrm{rank}_{i-1} &= 1      \\
+                                  g_{i} &= 1
+
+\end{align*}$$
+<p>Let’s define a new offset, \(\Delta_{i} = \textrm{rmax}_{i} - \textrm{rmin}_{i}\) which can be rewritten as:</p>
+$$\begin{align*}
+\textrm{rmax}_{i} & = \textrm{rank}_{i+1}               \\
+                  &= \textrm{rank}_{i-1} + g_{i+1}      \\
+\textrm{rmax}_{i} - \textrm{rmin}_{i} &= \textrm{rank}_{i-1} + g_{i+1} - \textrm{rmin}_{i}          \\
+\textrm{rmax}_{i} - \textrm{rmin}_{i} &= \textrm{rank}_{i-1} + g_{i+1} - \textrm{rank}_{i-1} - 1    \\
+                                      &= g_{i+1} - 1       \\
+                           \Delta_{i} &= g_{i+1} - 1
+\end{align*}$$
+<p>Our tuples now we have 3 values:</p>
+<ul>
+<li>\(v_i\): the observed value</li>
+<li>\(g_i\): the <em>gap</em> between the predecessor \(\textrm{rmin}_{i-1}\) to the current tuple’s \(\textrm{rmin}_i\).</li>
+<li>\(\Delta_i\): the difference between \(\textrm{rmax}_i\) and \(\textrm{rmin}_i\).</li>
+</ul>
+<h2 id="insert-revised">Insert, revised</h2>
+<p>But the above is incomplete. Let’s see an insert in between two observations that don’t have a single rank but a range.</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/11_setup_range.svg' type='image/svg+xml'></object></figure></p>
+<p>The value \(4\) may be at rank \(1\) or \(2\). We know for sure that the value \(16\) is after \(4\) so it cannot have a rank of \(1\) but it <em>could</em> have a rank of \(2\) or anything above.</p>
+<p>The \(\textrm{rmin}\) of \(4\) defines the \(\textrm{rmin}\) of \(16\).</p>
+<p>For the value \(21\) we do the same analysis: it may be at ranks \(5\) and \(6\) so the value \(16\) cannot be at rank \(6\) but it <em>could</em> be at rank \(5\) and above.</p>
+<p>In summary:</p>
+$$\begin{align*}
+    \textrm{rmin}_i &= \textrm{rmin}_{i-1} + 1                    \\
+    \textrm{rmax}_i & = \textrm{rmax}_{i+1} - 1
+\end{align*}$$
+<p>From the first equation we get \(g_i = 1\) for the inserted tuple \(t_i\) as we got before.</p>
+<p>\(\Delta_i\) is slightly different:</p>
+<p><label for='CkknbSB1c2luZyBoZXJlIGBcdGV4dHJte3JtYXh9X3tpKzF9YCB0byBiZSB0aGUgcmFuayAqYmVmb3JlKiB1cGRhdGluZwp0aGUgYGdfe2krMX1gIG9mIHRoZSB0dXBsZSBgdF97aSsxfWAuCm1hcmdpbm5vdGVz' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkknbSB1c2luZyBoZXJlIGBcdGV4dHJte3JtYXh9X3tpKzF9YCB0byBiZSB0aGUgcmFuayAqYmVmb3JlKiB1cGRhdGluZwp0aGUgYGdfe2krMX1gIG9mIHRoZSB0dXBsZSBgdF97aSsxfWAuCm1hcmdpbm5vdGVz' class='margin-toggle'/>
+<span class='marginnote'>
+I’m using here \(\textrm{rmax}_{i+1}\) to be the rank <em>before</em> updating the \(g_{i+1}\) of the tuple \(t_{i+1}\).
+</span></p>
+$$\begin{align*}
+       \Delta_i & = \textrm{rmax}_i - \textrm{rmin}_i                                       \\
+                & = \textrm{rmax}_{i+1} - \textrm{rmin}_{i-1} - 1                           \\
+                & = \textrm{rmin}_{i+1} + \Delta_{i+1} - \textrm{rmin}_{i-1} - 1            \\
+                & = \textrm{rmin}_{i-1} + g_{i+1} + \Delta_{i+1} - \textrm{rmin}_{i-1} - 1  \\
+       \Delta_i & = g_{i+1} + \Delta_{i+1} - 1
+\end{align*}$$
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/12_insert_range.svg' type='image/svg+xml'></object></figure></p>
+<h2 id="removed-tuples-count-revised">Removed tuples count, revised</h2>
+<p>We saw that \(g_i - 1\) counts for the tuples removed immediately before the tuple \(t_i\) but this is not enough.</p>
+<p>Visually we want to count the removed tuples from \(\textrm{rmin}_{i-1}\) to \(\textrm{rmax}_{i}\).</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/13_gap_range.svg' type='image/svg+xml'></object></figure></p>
+$$\begin{align*}
+    & = \textrm{rmax}_{i} - \textrm{rmin}_{i-1} - 1             \\
+    & = \Delta_i + \textrm{rmin}_{i} - \textrm{rmin}_{i-1} - 1  \\
+    & = \Delta_i + g_i - 1
+\end{align*}$$
+<p>With this, the upper bound error for answering for a rank \(r\) that falls in the gap becomes \(\lceil \frac{\Delta_i + g_i - 1}{2} \rceil\)</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/14_computed_error_range.svg' type='image/svg+xml'></object></figure></p>
+<h2 id="answer-revised">Answer, revised</h2>
+<p>To answer for a rank \(r\), we search any tuple whose ranks are fully contained in the range \((r - \lfloor \epsilon n \rfloor , r + \lfloor \epsilon n \rfloor)\).</p>
+<p>This is because we cannot answer with a tuple \(t_i\) if <em>any</em> of <em>its</em> possible ranks are outside of the range. Answering with such tuple will imply that we are potentially answering with a value with a truly rank beyond the tolerance \(\lfloor \epsilon n \rfloor\), hence having a relative error larger than \(\epsilon\).</p>
+<p><figure><figcaption><span markdown='1'>
+</span></figcaption>
+<object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/15_query_range.svg' type='image/svg+xml'></object></figure></p>
+<p>The answering requires a \(O(s)\) search where \(s\) is the count of tuples in the summary, much smaller than the total number of observations \(n\).</p>
+<h2 id="invariant-of-the-summary-we-can-always-guarantee-to-answer-any-rank">Invariant of the summary: we can always guarantee to answer any rank</h2>
+<p>It’s easy to see that if the maximum gap between 2 consecutive tuples is \(\Delta_i + g_i - 1\) (twice the maximum error), and if we keep this below \(2 \lfloor \epsilon n \rfloor\), we can always find the rank with an error of up to \(\epsilon n\) (just divide both expressions by 2).</p>
+<p>Not a proof but here we go with an intuition:</p>
+<ul>
+<li>you are looking for a rank \(r\) with maximum error of \(\lfloor \epsilon n \rfloor\)</li>
+<li>a tuple/rank is found iif the tuple’s rank range fully falls inside the \(2 \lfloor \epsilon n \rfloor\) window.</li>
+<li>not finding such tuple/rank means that the <em>almost</em> correct tuple has a rank range larger than \(2 \lfloor \epsilon n \rfloor\).</li>
+<li>in other words, \(\Delta_i \gt 2 \lfloor \epsilon n \rfloor\)</li>
+<li>but \(\Delta_i\) is a value that never changes (it is fixed when the tuple is inserted) and its value is \(g_{i+1} + \Delta_{i+1} - 1\)</li>
+<li>but \(g_{i+1} + \Delta_{i+1} - 1\) is also the maximum gap between the tuples \(t_i\) and \(t_{i+1}\) (it is twice the maximum error)</li>
+<li>and for hypothesis \(\Delta_{i+1} + g_{i+1} - 1 \lt 2 \lfloor \epsilon n \rfloor\) which conflicts with the above and leads to a contradiction</li>
+<li>so we should be able to find always a tuple for the query of rank \(r\) with a maximum error of \(\lfloor \epsilon n \rfloor\)</li>
+</ul>
+<p>In short, the summary <strong>always</strong> maintains the invariant:</p>
+$$\Delta_i + g_i - 1 \le 2 \lfloor \epsilon n \rfloor$$
+<p>This imposes a restriction when we can remove or not a tuple: a tuple can be removed if by doing so we are not creating a gap that violates the invariant.</p>
+<p>In other words, the tuple \(t_i\) can be removed iff:</p>
+$$g_i + \Delta_i + g_{i+1} + \Delta_{i+1} - 1 \le 2 \lfloor \epsilon n \rfloor$$
+<h2 id="amortization-via-deferring-inserts">Amortization via deferring inserts</h2>
+<p>So far we have \(O(\textrm{log} s)\) inserts. However, it is possible to defer the inserts, holding them in a temporal buffer and insert all them together later.</p>
+<p>Once the buffer is full, we sort it in \(O(b \textrm{log} b)\) and do a <em>merge</em> between it and the summary in \(O(s+b)\).</p>
+<p>We traded \(b\) inserts of \(O(\textrm{log} s)\) by one \(O(b \textrm{log} b) + O(s+b)\).</p>
+<p>Moreover, during the merge we can check if the tuple can be removed without violating the invariant.</p>
+<h2 id="wrapping-all-together">Wrapping all together</h2>
+<p>The <em>summary</em> data structure has 3 operations:</p>
+<ul>
+<li>insert</li>
+<li>merge</li>
+<li>query</li>
+</ul>
+<p>On each <em>insert</em>, store the observation in a buffer. Once the buffer reaches to the size of the current summary or to some predefined limit, merge it and create a new summary.</p>
+<p>The <em>merge</em> operation is as follows:</p>
+<ul>
+<li><p>sort the observations in the buffer</p></li>
+<li><p>iterate over the buffer and the summary at the same time from the largest to the smallest values; compare both tips and take the largest</p>
+<ul>
+<li>if the value comes from the buffer (new observation), create the tuple \(t_i = (v_i, g_i=1, \Delta_i=g_{i+1} + \Delta_{i+1})\)</li>
+<li>otherwise, the value comes from the summary, use its tuple</li>
+<li>insert the tuple \(t_i\) in the new summary only if otherwise would create a gap too large that would violate the invariant. The only exception is the last (smallest) value (the minimum) that must be inserted in the summary (so the summary always contains the extremes values).</li>
+</ul></li>
+</ul>
+<p>For <em>query</em>, we can offer answers for quantiles or ranks.</p>
+<p>To answer for the rank \(r\) we scan the summary, summing the \(g_j\) values along the way to compute:</p>
+$$\begin{align*}
+\textrm{rmin}_i &\leftarrow  \sum_{j \le i} g_j \\
+\textrm{rmax}_i &\leftarrow  \textrm{rmin}_i + \Delta_i
+\end{align*}$$
+<p>We stop once we find a tuple \(t_i\) that satisfies both inequalities:</p>
+$$\begin{align*}
+\textrm{rmin}_i &\ge r - \lfloor \epsilon n \rfloor      \\
+\textrm{rmax}_i &\le r + \lfloor \epsilon n \rfloor
+\end{align*}$$
+<p>To answer for the quantile \(q\), we compute the equivalent rank \(r \leftarrow q n\) and proceed as above.</p>
+<h2 id="so-which-are-the-discrepancies-with-greenwald-khannas-work">So, which are the discrepancies with Greenwald-Khanna’s work?</h2>
+<h3 id="typo-in-the-invariant">Typo in the invariant</h3>
+<p>Considere the <em>corollary 1</em> (GK01):</p>
+$$\textrm{max}(g_i + \Delta_i) \le 2 \epsilon n \quad \forall i$$
+<p>The incorrect part is \(g_i + \Delta_i\).</p>
+<p>For any new tuple, its \(g_i\) is \(1\) and it is easy to find a valid <em>small</em> \(n\) such \(2 \epsilon n\) is <em>smaller</em> than 1 and because \(\Delta_i\) is never negative, the corollary <em>does not hold</em>.</p>
+<p>I think that the expression should had been:</p>
+$$\textrm{max}(g_i + \Delta_i - 1) \le 2 \epsilon n \quad \forall i$$
+<p>The left side is always positive but it can be zero so it does not enter in conflict with the right side. This is just a slightly weaker version of the invariant mentioned in the blog post.</p>
+<p>And of course, it may no be an error at all ans just I’m not interpreting the paper correctly.</p>
+<h3 id="compress-and-bands">Compress and bands</h3>
+<p>The authors also implemented a separated routine called \(COMPRESS\) that removes unneeded tuples which requires the categorization of all the \(\Delta_i\) into <em>bands</em>.</p>
+<p>While they use the concept of <em>bands</em> to prove the properties of the algorithm, IMO, these are not needed for running it.</p>
+<h3 id="initial-delta_i">Initial \(\Delta_i\)</h3>
+<p>In the first sections of the paper, the authors define for a new tuple \(t_i\), its \(\Delta_i\) as \(\Delta_i = \lfloor 2 \epsilon n \rfloor\).</p>
+<p>This is a loose value but the authors used it to prove properties of the algorithm.</p>
+<p>In the next sections of the paper, they use \(\Delta_i = g_{i+1} + \Delta_{i+1}\) as in the blog post.</p>
+<h3 id="minimum-is-not-preserved">Minimum is not preserved</h3>
+<p>I didn’t explain this but in the <a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py">python implementation</a> I added some extra condition to delete or not a tuple: if the tuple is at one extreme (its value \(v\) is either the maximum or the minimum), do not delete it.</p>
+<p>This was the intention of the GK01 authors too but their implementation (or better said, its pseudo code) does not prevent the minimum to be removed.</p>
+<h2 id="conclusions">Conclusions</h2>
+<p>It was hard. You have no idea.</p>
+<p>Once I realized that the paper had some inconsistencies, it took me a week to fully understand and write down –from the scratch– the algorithm and summary data structure.</p>
+<p>But that was the easy part. It took me like a month to write this blog post and I truly have deep respect for Greenwald and Khanna.</p>
+<p>Writing this blog post taught me how hard is to explain something and even harder to it write without mistakes. I had to redo more than one diagram, fixing indices or adding a missing \(- 1\) and, of course, I’m quite sure there is room for improvements.</p>
+<p>This is also a reminder why publishing the full implementation, not just pseudo code, is so important. It is written in a formal language and it can be executed and put in test easy.</p>
+<p>For example, checking the incorrect invariant \(\textrm{max}(g_i + \Delta_i - 1) \le 2 \epsilon n \quad \forall i\) it would be trivial: just add an assert in the code.</p>
+<p>The code is never immune to errors, but it is a bit closer to the truth.</p>
+<h2 id="future-work">Future work</h2>
+<ul>
+<li><p>Combine multiples summaries (see <a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantiles-chapter-overview-multiple-algorithms-GK-combine-2-Summaries.pdf">Chapter-GK</a>: One may observe values produced from different places, summarized locally and then, somehow, combine these <em>local summaries</em> into a single one.</p></li>
+<li><p>Non-uniform error: GK’s <em>summary</em> answers with a fixed relative error across the entire range of ranks. In some applications one may want to have certain quantiles with less errors than others.</p></li>
+<li><p>Read about related problems (see <a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantile-estimation-for-very-large-infinite-data-stream--random-deterministic-probabilidad-linear.pdf">Quantiles over Data Streams: Experimental Comparisons, New Analyses, and Further Improvements</a></p>
+<p class="small-subtitle-with-top-margin">
+<p>Related tags: <a href='https://book-of-gehn.github.io/?tag="stats"'>stats</a>, <a href='https://book-of-gehn.github.io/?tag="quantile"'>quantile</a>, <a href='https://book-of-gehn.github.io/?tag="rank"'>rank</a>, <a href='https://book-of-gehn.github.io/?tag="sublinear"'>sublinear</a></p>
+</p></li>
+</ul>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+</article>
+<span class="print-footer">Greenwald-Khanna e-approximated q-quantile - a review - December 31, 2024 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+
+    <img src='http://192.34.63.156:6127/img/http%3A//127.0.0.1%3A4000/articles/2024/12/31/Greenwald-Khanna-E-Approximated-Q-Quantile.html.png' onerror="this.style.display='none'" async></img>
+</footer>
+</body>
+</html>

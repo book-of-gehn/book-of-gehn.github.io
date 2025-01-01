@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2024-09-22T03:20:56.834222+00:00</updated>
+  <updated>2025-01-01T15:57:27.511330+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -13,6 +13,300 @@
   <link href="https://book-of-gehn.github.io/feed.xml" rel="self"/>
   <generator uri="https://lkiesow.github.io/python-feedgen" version="0.9.0">python-feedgen</generator>
   <subtitle>The low and the high level of a lot of things: crypto, math, hacking and computer stuff.</subtitle>
+  <entry>
+    <id>https://book-of-gehn.github.io/articles/2024/12/31/Greenwald-Khanna-E-Approximated-Q-Quantile.html</id>
+    <title>Greenwald-Khanna e-approximated q-quantile - a review</title>
+    <updated>2024-12-31T00:00:00+00:00</updated>
+    <author>
+      <name>Martin Di Paola</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDFfc2V0dXAuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KU29ydGVkIG9ic2VydmF0aW9ucyBzdG9yZWQgaW4gYW4gYXJyYXkuCkFzc3VtaW5nIDEtYmFzZWQgaW5kZXgsIHRoZSBvYnNlcnZhdGlvbiBhdCByYW5rIGByYAoqKmlzKiogYXQgdGhlIGluZGV4IGByYC4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDFfc2V0dXAuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KU29ydGVkIG9ic2VydmF0aW9ucyBzdG9yZWQgaW4gYW4gYXJyYXkuCkFzc3VtaW5nIDEtYmFzZWQgaW5kZXgsIHRoZSBvYnNlcnZhdGlvbiBhdCByYW5rIGByYAoqKmlzKiogYXQgdGhlIGluZGV4IGByYC4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/01_setup.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+Sorted observations stored in an array. Assuming 1-based index, the observation at rank \(r\) &lt;strong&gt;is&lt;/strong&gt; at the index \(r\).
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;Given \(n\) observations, finding which value is at rank \(r\) is trivially easy: if we store and sort the observations, the rank \(r\) will be at index \(r\).&lt;/p&gt;
+&lt;p&gt;But when \(n\) gets really large, it is unfeasible to store or sort &lt;em&gt;all&lt;/em&gt; the observations.&lt;/p&gt;
+&lt;p&gt;&lt;a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantiles-GK-algorithm.pdf"&gt;Greenwald and Khanna (GK01)&lt;/a&gt; developed a data structure that solves this but with a trade off: we can answer which value is at rank \(r\) within &lt;em&gt;certain error&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkZvciB0aGUgZW50aXJlIHBvc3QgSSB3aWxsIHRhbGsgYWJvdXQgcmFua3MuIFRvIGRlYWwgd2l0aCBxdWFudGlsZXMKaXQgaXMganVzdCBhIG1hdHRlciBvZiBjb21wdXRpbmcgaXRzIGVxdWl2YWxlbnQgcmFuayBgciBcbGVmdGFycm93IHEgbmAuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+For the entire post I will talk about ranks. To deal with quantiles it is just a matter of computing its equivalent rank \(r \leftarrow q n\).
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;It is called an \(q\)-quantile \(\epsilon\)-approximation &lt;em&gt;summary&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;I coded it, it didn’t work and after a week on this I realized that the original work of Greenwald an Khanna may have a few &lt;em&gt;imprecisions&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;This post describes how I rethinked the data structure from scratch, where I found the mentioned imprecisions and how I got a working implementation.&lt;/p&gt;
+&lt;p&gt;TL;DR -&amp;gt; &lt;a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py"&gt;python implementation in cryptonita&lt;/a&gt; &lt;!--more--&gt;&lt;/p&gt;
+&lt;h2 id="square-one-what-is-wrong-with-using-a-sorted-array"&gt;Square one: what is wrong with using a sorted array?&lt;/h2&gt;
+&lt;p&gt;The cost is &lt;em&gt;not&lt;/em&gt; bad: sorting is \(O(n \textrm{log}(n))\) and answering is \(O(1)\). If we query multiple times, the cost of the sort will be amortized.&lt;/p&gt;
+&lt;p&gt;But this assumes that \(n\) is fixed and we have &lt;em&gt;all&lt;/em&gt; the observations at the moment of sorting.&lt;/p&gt;
+&lt;p&gt;What would happen if we want to add new observations on the fly?&lt;/p&gt;
+&lt;p&gt;You see, to keep the array sorted we find the insertion point of the new observation with a binary search \(O(\textrm{log}(n))\) and once we know where to insert, we need to &lt;em&gt;move&lt;/em&gt; all the next elements of the array to make room. And this is \(O(n)\).&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/02_insert_bad_linear_time.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;And &lt;em&gt;that&lt;/em&gt; displacement is bad.&lt;/p&gt;
+&lt;h2 id="implicit-computed-ranks"&gt;Implicit (computed) ranks&lt;/h2&gt;
+&lt;p&gt;An array is a dead road; long live to a linked list!&lt;/p&gt;
+&lt;p&gt;The downside is that we lose the \(O(1)\) for querying a rank but we avoid having to move the elements to make room for a new one.&lt;/p&gt;
+&lt;p&gt;Or kind of.&lt;/p&gt;
+&lt;p&gt;If we explicitly track the rank of each element we still have an \(O(n)\) insert because we would have to update &lt;em&gt;all&lt;/em&gt; the next elements’ ranks.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Example of inserting the value \(12\), at rank \(3\). The rank of &lt;em&gt;all&lt;/em&gt; the observations on its right must be updated increasing their ranks by \(1\).
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/03_insert_bad_explicit_ranks.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Instead, we store &lt;em&gt;tuples&lt;/em&gt; of the form \(t_i = (v_i, g_i)\):&lt;/p&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDRfY29tcHV0ZWRfcmFua193aXRoX2cuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KRm9yIGV4YW1wbGUsIGBnXzEgKyBnXzIgKyBnXzMgPSAxICsgMSArIDEgPSAzYCBnaXZlcyB0aGUgcmFuayBvZiB0aGUgdGhpcmQgb2JzZXJ2YXRpb24gYDIwYC4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDRfY29tcHV0ZWRfcmFua193aXRoX2cuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KRm9yIGV4YW1wbGUsIGBnXzEgKyBnXzIgKyBnXzMgPSAxICsgMSArIDEgPSAzYCBnaXZlcyB0aGUgcmFuayBvZiB0aGUgdGhpcmQgb2JzZXJ2YXRpb24gYDIwYC4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/04_computed_rank_with_g.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+For example, \(g_1 + g_2 + g_3 = 1 + 1 + 1 = 3\) gives the rank of the third observation \(20\).
+&lt;/span&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;\(v_i\): the value of observation.&lt;/li&gt;
+&lt;li&gt;\(g_i\): the &lt;em&gt;gap&lt;/em&gt; between that element’s rank and the previous’ rank.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Every time we want to know the rank of any tuple \(t_i\) we compute \(\sum_{j \le i} g_j\).&lt;/p&gt;
+&lt;p&gt;Now let’s review what happen when we insert the observation \(12\). The observations previous to it should not change but we know that \(20\) cannot be at rank \(3\) anymore but at least &lt;em&gt;one more&lt;/em&gt;, making &lt;em&gt;room&lt;/em&gt; for the new incoming \(12\).&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/04_insert_ok_g.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;In other words, adding a new observation &lt;em&gt;shifts by 1&lt;/em&gt; the rank of all the observations on the right. But there is no need to update anything: setting \(g = 1\) for \(12\) is enough, no need to do any \(O(n)\) stuff.&lt;/p&gt;
+&lt;p&gt;&lt;label for='CldlIGFyZSBnb2luZyB0byBpbXByb3ZlIHRoaXMgZXZlbiBmdXJ0aGVyIGF0IHRoZSBlbmQgb2YgdGhlIHBvc3QuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CldlIGFyZSBnb2luZyB0byBpbXByb3ZlIHRoaXMgZXZlbiBmdXJ0aGVyIGF0IHRoZSBlbmQgb2YgdGhlIHBvc3QuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+We are going to improve this even further at the end of the post.
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;The insertions are now just \(O(log(n))\).&lt;/p&gt;
+&lt;h2 id="dont-keep-all-remove-some-tuples"&gt;Don’t keep all, remove some tuples&lt;/h2&gt;
+&lt;p&gt;To handle very large \(n\) we cannot keep all the observations in memory: we &lt;em&gt;need&lt;/em&gt; to remove some while still preserving the rank of the others within some error.&lt;/p&gt;
+&lt;p&gt;For example, the tuple \(t_{i+1}\) with value \(12\) is at rank \(3\). If we remove the previous tuple \(t_i\), the value \(12\) &lt;em&gt;must&lt;/em&gt; still be at rank \(3\).&lt;/p&gt;
+&lt;p&gt;This is easy to achieve: we just need to increase \(g_{i+1}\) by \(g_i\).&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/05_delete_and_g_update.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Here are a few more examples:&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+You can corroborate that the observation \(21\) remains at rank \(5\) in all the cases.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/05_delete_and_g_update_2_and_3.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Removing tuples trades off space by accuracy.&lt;/p&gt;
+&lt;p&gt;If we ask for the rank \(2\), we &lt;em&gt;lost&lt;/em&gt; the precise answer but we can return an &lt;em&gt;approximated&lt;/em&gt; one: if we answer with rank \(1\) (value \(4\)), we missed just be \(1\) rank.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Ask for the observation at rank \(2\) but we answer with the observation at rank \(1\) effectively making a mistake of \(1\) rank.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/06_query_and_error.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;In general we answer with the closest tuple so the maximum error is at the middle point and it is half the count of tuples removed in between the tuples.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+In this example, \(\lceil \frac{4 - 1}{2} \rceil = 2\)
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/08_computed_error.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;Luckily, we already are tracking how many tuples we removed: it is just the \(g_i\) value of the right-most tuple minus 1.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+Why the \(- 1\)? Because each \(g_i\) starts at \(1\) and increases by the same amount of removed tuples.
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/07_gap.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;So we can put a upper bound on the error for answering for a rank \(r\) that falls in the gap: \(\lceil \frac{g_i - 1}{2} \rceil\)&lt;/p&gt;
+&lt;h2 id="minimum-and-maximum-ranks"&gt;Minimum and maximum ranks&lt;/h2&gt;
+&lt;p&gt;Let’s back to how we handle an insert. What would happen if we want to insert the value \(16\)?&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+We don’t know what rank the value \(16\) should have but we know that it is between ranks \(2\) and \(6\).
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/09_insert_but_where.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDlfaW5zZXJ0X2J1dF93aGVyZV9jaGVhdGluZy5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpJbiBmYWN0LCBpZiB3ZSBkaWRuJ3QgZGVsZXRlIGFueSB0dXBsZSwgdGhlIHByZWNpc2UgcmFuayBmb3IgYDE2YCBzaG91bGQgaGFkIGJlZW4gYDRgCndoaWNoIGl0IGlzIGJldHdlZW4gYDJgIGFuZCBgNWAuCm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9zdGF0cy9ncmVlbndhbGQta2hhbm5hLWUtYXBwcm94aW1hdGVkLXEtcXVhbnRpbGUvMDlfaW5zZXJ0X2J1dF93aGVyZV9jaGVhdGluZy5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpJbiBmYWN0LCBpZiB3ZSBkaWRuJ3QgZGVsZXRlIGFueSB0dXBsZSwgdGhlIHByZWNpc2UgcmFuayBmb3IgYDE2YCBzaG91bGQgaGFkIGJlZW4gYDRgCndoaWNoIGl0IGlzIGJldHdlZW4gYDJgIGFuZCBgNWAuCm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/09_insert_but_where_cheating.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+In fact, if we didn’t delete any tuple, the precise rank for \(16\) should had been \(4\) which it is between \(2\) and \(5\).
+&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;The value \(16\) is between \(4\) and \(21\) so the rank of \(4\) should not change but the value \(21\) cannot longer be at rank \(5\) but at rank \(6\) to make room for the new observation.&lt;/p&gt;
+&lt;p&gt;Therefore the value \(16\) is at rank between \(2\) and \(5\) (inclusive)&lt;/p&gt;
+&lt;p&gt;Those ranks are the respective &lt;em&gt;minimum&lt;/em&gt; and &lt;em&gt;maximum&lt;/em&gt; ranks for \(16\).&lt;/p&gt;
+$$\begin{align*}
+    \textrm{rmin}_i &amp;= \textrm{rank}_{i-1} + 1                    \\
+    \textrm{rmax}_i &amp; = \textrm{rank}_{i+1}
+\end{align*}$$
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/10_insert_rmin_rmax.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;But our tuples don’t have explicit ranks but relative offsets.&lt;/p&gt;
+&lt;p&gt;From \(\textrm{rmin}_{i}\) we solve \(g_{i}\):&lt;/p&gt;
+&lt;p&gt;&lt;label for='CkknbSB1c2luZyBoZXJlIGBcdGV4dHJte3JtYXh9X3tpKzF9YCB0byBiZSB0aGUgcmFuayAqYmVmb3JlKiB1cGRhdGluZwp0aGUgYGdfe2krMX1gIG9mIHRoZSB0dXBsZSBgdF97aSsxfWAuCkluIHRoZSBleGFtcGxlLCBgXHRleHRybXtybWF4fV97aSsxfWAgd291bGQgYmUgYDVgIG5vdCBgNmAuCgpJbiB0aGUgcHJhY3RpY2UgdGhpcyBkZXRhaWwgZG9lc24ndCBtYXR0ZXIgYmVjYXVzZSB0aGUgYWxnb3JpdGhtCndvdWxkIG5ldmVyIGJlIHdvcmtpbmcgd2l0aCByYW5rcyBkaXJlY3RseS4KbWFyZ2lubm90ZXM=' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkknbSB1c2luZyBoZXJlIGBcdGV4dHJte3JtYXh9X3tpKzF9YCB0byBiZSB0aGUgcmFuayAqYmVmb3JlKiB1cGRhdGluZwp0aGUgYGdfe2krMX1gIG9mIHRoZSB0dXBsZSBgdF97aSsxfWAuCkluIHRoZSBleGFtcGxlLCBgXHRleHRybXtybWF4fV97aSsxfWAgd291bGQgYmUgYDVgIG5vdCBgNmAuCgpJbiB0aGUgcHJhY3RpY2UgdGhpcyBkZXRhaWwgZG9lc24ndCBtYXR0ZXIgYmVjYXVzZSB0aGUgYWxnb3JpdGhtCndvdWxkIG5ldmVyIGJlIHdvcmtpbmcgd2l0aCByYW5rcyBkaXJlY3RseS4KbWFyZ2lubm90ZXM=' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+I’m using here \(\textrm{rmax}_{i+1}\) to be the rank &lt;em&gt;before&lt;/em&gt; updating the \(g_{i+1}\) of the tuple \(t_{i+1}\). In the example, \(\textrm{rmax}_{i+1}\) would be \(5\) not \(6\).
+&lt;br /&gt;&lt;br /&gt;
+In the practice this detail doesn’t matter because the algorithm would never be working with ranks directly.
+&lt;/span&gt;&lt;/p&gt;
+$$\begin{align*}
+\textrm{rank}_{i} &amp;= \textrm{rank}_{i-1} + 1      \\
+\textrm{rank}_{i} - \textrm{rank}_{i-1} &amp;= 1      \\
+                                  g_{i} &amp;= 1
+
+\end{align*}$$
+&lt;p&gt;Let’s define a new offset, \(\Delta_{i} = \textrm{rmax}_{i} - \textrm{rmin}_{i}\) which can be rewritten as:&lt;/p&gt;
+$$\begin{align*}
+\textrm{rmax}_{i} &amp; = \textrm{rank}_{i+1}               \\
+                  &amp;= \textrm{rank}_{i-1} + g_{i+1}      \\
+\textrm{rmax}_{i} - \textrm{rmin}_{i} &amp;= \textrm{rank}_{i-1} + g_{i+1} - \textrm{rmin}_{i}          \\
+\textrm{rmax}_{i} - \textrm{rmin}_{i} &amp;= \textrm{rank}_{i-1} + g_{i+1} - \textrm{rank}_{i-1} - 1    \\
+                                      &amp;= g_{i+1} - 1       \\
+                           \Delta_{i} &amp;= g_{i+1} - 1
+\end{align*}$$
+&lt;p&gt;Our tuples now we have 3 values:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;\(v_i\): the observed value&lt;/li&gt;
+&lt;li&gt;\(g_i\): the &lt;em&gt;gap&lt;/em&gt; between the predecessor \(\textrm{rmin}_{i-1}\) to the current tuple’s \(\textrm{rmin}_i\).&lt;/li&gt;
+&lt;li&gt;\(\Delta_i\): the difference between \(\textrm{rmax}_i\) and \(\textrm{rmin}_i\).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="insert-revised"&gt;Insert, revised&lt;/h2&gt;
+&lt;p&gt;But the above is incomplete. Let’s see an insert in between two observations that don’t have a single rank but a range.&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/11_setup_range.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;The value \(4\) may be at rank \(1\) or \(2\). We know for sure that the value \(16\) is after \(4\) so it cannot have a rank of \(1\) but it &lt;em&gt;could&lt;/em&gt; have a rank of \(2\) or anything above.&lt;/p&gt;
+&lt;p&gt;The \(\textrm{rmin}\) of \(4\) defines the \(\textrm{rmin}\) of \(16\).&lt;/p&gt;
+&lt;p&gt;For the value \(21\) we do the same analysis: it may be at ranks \(5\) and \(6\) so the value \(16\) cannot be at rank \(6\) but it &lt;em&gt;could&lt;/em&gt; be at rank \(5\) and above.&lt;/p&gt;
+&lt;p&gt;In summary:&lt;/p&gt;
+$$\begin{align*}
+    \textrm{rmin}_i &amp;= \textrm{rmin}_{i-1} + 1                    \\
+    \textrm{rmax}_i &amp; = \textrm{rmax}_{i+1} - 1
+\end{align*}$$
+&lt;p&gt;From the first equation we get \(g_i = 1\) for the inserted tuple \(t_i\) as we got before.&lt;/p&gt;
+&lt;p&gt;\(\Delta_i\) is slightly different:&lt;/p&gt;
+&lt;p&gt;&lt;label for='CkknbSB1c2luZyBoZXJlIGBcdGV4dHJte3JtYXh9X3tpKzF9YCB0byBiZSB0aGUgcmFuayAqYmVmb3JlKiB1cGRhdGluZwp0aGUgYGdfe2krMX1gIG9mIHRoZSB0dXBsZSBgdF97aSsxfWAuCm1hcmdpbm5vdGVz' class='margin-toggle'&gt; &amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='CkknbSB1c2luZyBoZXJlIGBcdGV4dHJte3JtYXh9X3tpKzF9YCB0byBiZSB0aGUgcmFuayAqYmVmb3JlKiB1cGRhdGluZwp0aGUgYGdfe2krMX1gIG9mIHRoZSB0dXBsZSBgdF97aSsxfWAuCm1hcmdpbm5vdGVz' class='margin-toggle'/&gt;
+&lt;span class='marginnote'&gt;
+I’m using here \(\textrm{rmax}_{i+1}\) to be the rank &lt;em&gt;before&lt;/em&gt; updating the \(g_{i+1}\) of the tuple \(t_{i+1}\).
+&lt;/span&gt;&lt;/p&gt;
+$$\begin{align*}
+       \Delta_i &amp; = \textrm{rmax}_i - \textrm{rmin}_i                                       \\
+                &amp; = \textrm{rmax}_{i+1} - \textrm{rmin}_{i-1} - 1                           \\
+                &amp; = \textrm{rmin}_{i+1} + \Delta_{i+1} - \textrm{rmin}_{i-1} - 1            \\
+                &amp; = \textrm{rmin}_{i-1} + g_{i+1} + \Delta_{i+1} - \textrm{rmin}_{i-1} - 1  \\
+       \Delta_i &amp; = g_{i+1} + \Delta_{i+1} - 1
+\end{align*}$$
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/12_insert_range.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id="removed-tuples-count-revised"&gt;Removed tuples count, revised&lt;/h2&gt;
+&lt;p&gt;We saw that \(g_i - 1\) counts for the tuples removed immediately before the tuple \(t_i\) but this is not enough.&lt;/p&gt;
+&lt;p&gt;Visually we want to count the removed tuples from \(\textrm{rmin}_{i-1}\) to \(\textrm{rmax}_{i}\).&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/13_gap_range.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+$$\begin{align*}
+    &amp; = \textrm{rmax}_{i} - \textrm{rmin}_{i-1} - 1             \\
+    &amp; = \Delta_i + \textrm{rmin}_{i} - \textrm{rmin}_{i-1} - 1  \\
+    &amp; = \Delta_i + g_i - 1
+\end{align*}$$
+&lt;p&gt;With this, the upper bound error for answering for a rank \(r\) that falls in the gap becomes \(\lceil \frac{\Delta_i + g_i - 1}{2} \rceil\)&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/14_computed_error_range.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id="answer-revised"&gt;Answer, revised&lt;/h2&gt;
+&lt;p&gt;To answer for a rank \(r\), we search any tuple whose ranks are fully contained in the range \((r - \lfloor \epsilon n \rfloor , r + \lfloor \epsilon n \rfloor)\).&lt;/p&gt;
+&lt;p&gt;This is because we cannot answer with a tuple \(t_i\) if &lt;em&gt;any&lt;/em&gt; of &lt;em&gt;its&lt;/em&gt; possible ranks are outside of the range. Answering with such tuple will imply that we are potentially answering with a value with a truly rank beyond the tolerance \(\lfloor \epsilon n \rfloor\), hence having a relative error larger than \(\epsilon\).&lt;/p&gt;
+&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
+&lt;/span&gt;&lt;/figcaption&gt;
+&lt;object  class='' align='middle' data='/img/stats/greenwald-khanna-e-approximated-q-quantile/15_query_range.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;p&gt;The answering requires a \(O(s)\) search where \(s\) is the count of tuples in the summary, much smaller than the total number of observations \(n\).&lt;/p&gt;
+&lt;h2 id="invariant-of-the-summary-we-can-always-guarantee-to-answer-any-rank"&gt;Invariant of the summary: we can always guarantee to answer any rank&lt;/h2&gt;
+&lt;p&gt;It’s easy to see that if the maximum gap between 2 consecutive tuples is \(\Delta_i + g_i - 1\) (twice the maximum error), and if we keep this below \(2 \lfloor \epsilon n \rfloor\), we can always find the rank with an error of up to \(\epsilon n\) (just divide both expressions by 2).&lt;/p&gt;
+&lt;p&gt;Not a proof but here we go with an intuition:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;you are looking for a rank \(r\) with maximum error of \(\lfloor \epsilon n \rfloor\)&lt;/li&gt;
+&lt;li&gt;a tuple/rank is found iif the tuple’s rank range fully falls inside the \(2 \lfloor \epsilon n \rfloor\) window.&lt;/li&gt;
+&lt;li&gt;not finding such tuple/rank means that the &lt;em&gt;almost&lt;/em&gt; correct tuple has a rank range larger than \(2 \lfloor \epsilon n \rfloor\).&lt;/li&gt;
+&lt;li&gt;in other words, \(\Delta_i \gt 2 \lfloor \epsilon n \rfloor\)&lt;/li&gt;
+&lt;li&gt;but \(\Delta_i\) is a value that never changes (it is fixed when the tuple is inserted) and its value is \(g_{i+1} + \Delta_{i+1} - 1\)&lt;/li&gt;
+&lt;li&gt;but \(g_{i+1} + \Delta_{i+1} - 1\) is also the maximum gap between the tuples \(t_i\) and \(t_{i+1}\) (it is twice the maximum error)&lt;/li&gt;
+&lt;li&gt;and for hypothesis \(\Delta_{i+1} + g_{i+1} - 1 \lt 2 \lfloor \epsilon n \rfloor\) which conflicts with the above and leads to a contradiction&lt;/li&gt;
+&lt;li&gt;so we should be able to find always a tuple for the query of rank \(r\) with a maximum error of \(\lfloor \epsilon n \rfloor\)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In short, the summary &lt;strong&gt;always&lt;/strong&gt; maintains the invariant:&lt;/p&gt;
+$$\Delta_i + g_i - 1 \le 2 \lfloor \epsilon n \rfloor$$
+&lt;p&gt;This imposes a restriction when we can remove or not a tuple: a tuple can be removed if by doing so we are not creating a gap that violates the invariant.&lt;/p&gt;
+&lt;p&gt;In other words, the tuple \(t_i\) can be removed iff:&lt;/p&gt;
+$$g_i + \Delta_i + g_{i+1} + \Delta_{i+1} - 1 \le 2 \lfloor \epsilon n \rfloor$$
+&lt;h2 id="amortization-via-deferring-inserts"&gt;Amortization via deferring inserts&lt;/h2&gt;
+&lt;p&gt;So far we have \(O(\textrm{log} s)\) inserts. However, it is possible to defer the inserts, holding them in a temporal buffer and insert all them together later.&lt;/p&gt;
+&lt;p&gt;Once the buffer is full, we sort it in \(O(b \textrm{log} b)\) and do a &lt;em&gt;merge&lt;/em&gt; between it and the summary in \(O(s+b)\).&lt;/p&gt;
+&lt;p&gt;We traded \(b\) inserts of \(O(\textrm{log} s)\) by one \(O(b \textrm{log} b) + O(s+b)\).&lt;/p&gt;
+&lt;p&gt;Moreover, during the merge we can check if the tuple can be removed without violating the invariant.&lt;/p&gt;
+&lt;h2 id="wrapping-all-together"&gt;Wrapping all together&lt;/h2&gt;
+&lt;p&gt;The &lt;em&gt;summary&lt;/em&gt; data structure has 3 operations:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;insert&lt;/li&gt;
+&lt;li&gt;merge&lt;/li&gt;
+&lt;li&gt;query&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;On each &lt;em&gt;insert&lt;/em&gt;, store the observation in a buffer. Once the buffer reaches to the size of the current summary or to some predefined limit, merge it and create a new summary.&lt;/p&gt;
+&lt;p&gt;The &lt;em&gt;merge&lt;/em&gt; operation is as follows:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;sort the observations in the buffer&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;iterate over the buffer and the summary at the same time from the largest to the smallest values; compare both tips and take the largest&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;if the value comes from the buffer (new observation), create the tuple \(t_i = (v_i, g_i=1, \Delta_i=g_{i+1} + \Delta_{i+1})\)&lt;/li&gt;
+&lt;li&gt;otherwise, the value comes from the summary, use its tuple&lt;/li&gt;
+&lt;li&gt;insert the tuple \(t_i\) in the new summary only if otherwise would create a gap too large that would violate the invariant. The only exception is the last (smallest) value (the minimum) that must be inserted in the summary (so the summary always contains the extremes values).&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For &lt;em&gt;query&lt;/em&gt;, we can offer answers for quantiles or ranks.&lt;/p&gt;
+&lt;p&gt;To answer for the rank \(r\) we scan the summary, summing the \(g_j\) values along the way to compute:&lt;/p&gt;
+$$\begin{align*}
+\textrm{rmin}_i &amp;\leftarrow  \sum_{j \le i} g_j \\
+\textrm{rmax}_i &amp;\leftarrow  \textrm{rmin}_i + \Delta_i
+\end{align*}$$
+&lt;p&gt;We stop once we find a tuple \(t_i\) that satisfies both inequalities:&lt;/p&gt;
+$$\begin{align*}
+\textrm{rmin}_i &amp;\ge r - \lfloor \epsilon n \rfloor      \\
+\textrm{rmax}_i &amp;\le r + \lfloor \epsilon n \rfloor
+\end{align*}$$
+&lt;p&gt;To answer for the quantile \(q\), we compute the equivalent rank \(r \leftarrow q n\) and proceed as above.&lt;/p&gt;
+&lt;h2 id="so-which-are-the-discrepancies-with-greenwald-khannas-work"&gt;So, which are the discrepancies with Greenwald-Khanna’s work?&lt;/h2&gt;
+&lt;h3 id="typo-in-the-invariant"&gt;Typo in the invariant&lt;/h3&gt;
+&lt;p&gt;Considere the &lt;em&gt;corollary 1&lt;/em&gt; (GK01):&lt;/p&gt;
+$$\textrm{max}(g_i + \Delta_i) \le 2 \epsilon n \quad \forall i$$
+&lt;p&gt;The incorrect part is \(g_i + \Delta_i\).&lt;/p&gt;
+&lt;p&gt;For any new tuple, its \(g_i\) is \(1\) and it is easy to find a valid &lt;em&gt;small&lt;/em&gt; \(n\) such \(2 \epsilon n\) is &lt;em&gt;smaller&lt;/em&gt; than 1 and because \(\Delta_i\) is never negative, the corollary &lt;em&gt;does not hold&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;I think that the expression should had been:&lt;/p&gt;
+$$\textrm{max}(g_i + \Delta_i - 1) \le 2 \epsilon n \quad \forall i$$
+&lt;p&gt;The left side is always positive but it can be zero so it does not enter in conflict with the right side. This is just a slightly weaker version of the invariant mentioned in the blog post.&lt;/p&gt;
+&lt;p&gt;And of course, it may no be an error at all ans just I’m not interpreting the paper correctly.&lt;/p&gt;
+&lt;h3 id="compress-and-bands"&gt;Compress and bands&lt;/h3&gt;
+&lt;p&gt;The authors also implemented a separated routine called \(COMPRESS\) that removes unneeded tuples which requires the categorization of all the \(\Delta_i\) into &lt;em&gt;bands&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;While they use the concept of &lt;em&gt;bands&lt;/em&gt; to prove the properties of the algorithm, IMO, these are not needed for running it.&lt;/p&gt;
+&lt;h3 id="initial-delta_i"&gt;Initial \(\Delta_i\)&lt;/h3&gt;
+&lt;p&gt;In the first sections of the paper, the authors define for a new tuple \(t_i\), its \(\Delta_i\) as \(\Delta_i = \lfloor 2 \epsilon n \rfloor\).&lt;/p&gt;
+&lt;p&gt;This is a loose value but the authors used it to prove properties of the algorithm.&lt;/p&gt;
+&lt;p&gt;In the next sections of the paper, they use \(\Delta_i = g_{i+1} + \Delta_{i+1}\) as in the blog post.&lt;/p&gt;
+&lt;h3 id="minimum-is-not-preserved"&gt;Minimum is not preserved&lt;/h3&gt;
+&lt;p&gt;I didn’t explain this but in the &lt;a href="https://github.com/cryptonitas/cryptonita/blob/93688906dbaf781618d86e17e0a156dfe806fbc5/cryptonita/stats/distribution_summary.py"&gt;python implementation&lt;/a&gt; I added some extra condition to delete or not a tuple: if the tuple is at one extreme (its value \(v\) is either the maximum or the minimum), do not delete it.&lt;/p&gt;
+&lt;p&gt;This was the intention of the GK01 authors too but their implementation (or better said, its pseudo code) does not prevent the minimum to be removed.&lt;/p&gt;
+&lt;h2 id="conclusions"&gt;Conclusions&lt;/h2&gt;
+&lt;p&gt;It was hard. You have no idea.&lt;/p&gt;
+&lt;p&gt;Once I realized that the paper had some inconsistencies, it took me a week to fully understand and write down –from the scratch– the algorithm and summary data structure.&lt;/p&gt;
+&lt;p&gt;But that was the easy part. It took me like a month to write this blog post and I truly have deep respect for Greenwald and Khanna.&lt;/p&gt;
+&lt;p&gt;Writing this blog post taught me how hard is to explain something and even harder to it write without mistakes. I had to redo more than one diagram, fixing indices or adding a missing \(- 1\) and, of course, I’m quite sure there is room for improvements.&lt;/p&gt;
+&lt;p&gt;This is also a reminder why publishing the full implementation, not just pseudo code, is so important. It is written in a formal language and it can be executed and put in test easy.&lt;/p&gt;
+&lt;p&gt;For example, checking the incorrect invariant \(\textrm{max}(g_i + \Delta_i - 1) \le 2 \epsilon n \quad \forall i\) it would be trivial: just add an assert in the code.&lt;/p&gt;
+&lt;p&gt;The code is never immune to errors, but it is a bit closer to the truth.&lt;/p&gt;
+&lt;h2 id="future-work"&gt;Future work&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Combine multiples summaries (see &lt;a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantiles-chapter-overview-multiple-algorithms-GK-combine-2-Summaries.pdf"&gt;Chapter-GK&lt;/a&gt;: One may observe values produced from different places, summarized locally and then, somehow, combine these &lt;em&gt;local summaries&lt;/em&gt; into a single one.&lt;/li&gt;
+&lt;li&gt;Non-uniform error: GK’s &lt;em&gt;summary&lt;/em&gt; answers with a fixed relative error across the entire range of ranks. In some applications one may want to have certain quantiles with less errors than others.&lt;/li&gt;
+&lt;li&gt;Read about related problems (see &lt;a href="/assets/stats/greenwald-khanna-e-approximated-q-quantile/quantile-estimation-for-very-large-infinite-data-stream--random-deterministic-probabilidad-linear.pdf"&gt;Quantiles over Data Streams: Experimental Comparisons, New Analyses, and Further Improvements&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    <link href="https://book-of-gehn.github.io/articles/2024/12/31/Greenwald-Khanna-E-Approximated-Q-Quantile.html" rel="alternate" type="text/html" title="Greenwald-Khanna e-approximated q-quantile - a review"/>
+    <category term="stats" label="stats"/>
+    <category term="quantile" label="quantile"/>
+    <category term="rank" label="rank"/>
+    <category term="sublinear" label="sublinear"/>
+    <published>2024-12-31T00:00:00+00:00</published>
+  </entry>
   <entry>
     <id>https://book-of-gehn.github.io/articles/2024/09/21/Behind-memcpy-memmove.html</id>
     <title>Behind `memcpy`/`memmove`: overlap, words and alignment</title>
@@ -701,10 +995,10 @@ Brute-forcing \(2^{32}\) is perfectly possible but a little slow for me so I wou
     </author>
     <content type="html">&lt;p&gt;How can we know if a message is authentic or not?&lt;/p&gt;
 &lt;p&gt;A trusted party with access to a private key \(k\) can compute an &lt;em&gt;authentication code&lt;/em&gt; or MAC.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQ29tcHV0ZSB0aGUgKm1lc3NhZ2UgYXV0aGVudGljYXRpb24gY29kZSogKE1BQykgZG9pbmcgYEgoayDiiKUgbSlgLgoKSW4gdGhlb3J5IG9ubHkgd2hvIGtub3dzIHRoZSBzZWNyZXQga2V5IGBrYCBjYW4gY3JlYXRlIGFuZCB2ZXJpZnkgdGhvc2UsCmJ1dCBubywgdGhpcyBzY2hlbWEgZXMgYnJva2VuLgoKVGhpcyBwb3N0IGNvdmVycyAqbWF0YXNhbm8gY2hhbGxlbmdlcyogZnJvbQpbMjggdG8gMzBdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80KSBzbyAqc3BvaWxlciBhbGVydCouCm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL3NldC00LWhhc2hlcy9oYXNoLXZlcmlmaWVyLWdlbmVyaWMuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQ29tcHV0ZSB0aGUgKm1lc3NhZ2UgYXV0aGVudGljYXRpb24gY29kZSogKE1BQykgZG9pbmcgYEgoayDiiKUgbSlgLgoKSW4gdGhlb3J5IG9ubHkgd2hvIGtub3dzIHRoZSBzZWNyZXQga2V5IGBrYCBjYW4gY3JlYXRlIGFuZCB2ZXJpZnkgdGhvc2UsCmJ1dCBubywgdGhpcyBzY2hlbWEgZXMgYnJva2VuLgoKVGhpcyBwb3N0IGNvdmVycyAqbWF0YXNhbm8gY2hhbGxlbmdlcyogZnJvbQpbMjggdG8gMzBdKGh0dHBzOi8vY3J5cHRvcGFscy5jb20vc2V0cy80KSBzbyAqc3BvaWxlciBhbGVydCouCm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9zZXQtNC1oYXNoZXMvaGFzaC12ZXJpZmllci1nZW5lcmljLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+CkNvbXB1dGUgdGhlICptZXNzYWdlIGF1dGhlbnRpY2F0aW9uIGNvZGUqIChNQUMpIGRvaW5nIGBIKGsg4oilIG0pYC4KCkluIHRoZW9yeSBvbmx5IHdobyBrbm93cyB0aGUgc2VjcmV0IGtleSBga2AgY2FuIGNyZWF0ZSBhbmQgdmVyaWZ5IHRob3NlLApidXQgbm8sIHRoaXMgc2NoZW1hIGVzIGJyb2tlbi4KClRoaXMgcG9zdCBjb3ZlcnMgKm1hdGFzYW5vIGNoYWxsZW5nZXMqIGZyb20KWzI4IHRvIDMwXShodHRwczovL2NyeXB0b3BhbHMuY29tL3NldHMvNCkgc28gKnNwb2lsZXIgYWxlcnQqLgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9zZXQtNC1oYXNoZXMvaGFzaC12ZXJpZmllci1nZW5lcmljLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+CkNvbXB1dGUgdGhlICptZXNzYWdlIGF1dGhlbnRpY2F0aW9uIGNvZGUqIChNQUMpIGRvaW5nIGBIKGsg4oilIG0pYC4KCkluIHRoZW9yeSBvbmx5IHdobyBrbm93cyB0aGUgc2VjcmV0IGtleSBga2AgY2FuIGNyZWF0ZSBhbmQgdmVyaWZ5IHRob3NlLApidXQgbm8sIHRoaXMgc2NoZW1hIGVzIGJyb2tlbi4KClRoaXMgcG9zdCBjb3ZlcnMgKm1hdGFzYW5vIGNoYWxsZW5nZXMqIGZyb20KWzI4IHRvIDMwXShodHRwczovL2NyeXB0b3BhbHMuY29tL3NldHMvNCkgc28gKnNwb2lsZXIgYWxlcnQqLgptYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/set-4-hashes/hash-verifier-generic.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/matasano/set-4-hashes/hash-verifier-generic.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 Compute the &lt;em&gt;message authentication code&lt;/em&gt; (MAC) doing \(H(k ∥ m)\).
 &lt;br /&gt;&lt;br /&gt;
 In theory only who knows the secret key \(k\) can create and verify those, but no, this schema es broken.
@@ -725,7 +1019,7 @@ This post covers &lt;em&gt;matasano challenges&lt;/em&gt; from &lt;a href="https
 &lt;p&gt;The last 8 bytes of the padding are reserved for storing the length of the un-padded input in bits.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/set-4-hashes/hash-overview.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object  class='' align='middle' data='/img/matasano/set-4-hashes/hash-overview.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="hashs-states"&gt;Hash’s states&lt;/h2&gt;
 &lt;p&gt;Initially SHA-1 begins with a well known state (composed by 5 &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="kt"&gt;uint32_t&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; integers).&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;h0&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x67452301&lt;/span&gt;
@@ -740,7 +1034,7 @@ This post covers &lt;em&gt;matasano challenges&lt;/em&gt; from &lt;a href="https
 &lt;p&gt;The final state is then used to compute the final hash.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/set-4-hashes/hash-states.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object  class='' align='middle' data='/img/matasano/set-4-hashes/hash-states.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;Note how the hash states \(h_1\) depends of the first block \(b_0\) that contains the secret key (or at least the begin of it).&lt;/p&gt;
 &lt;p&gt;Therefore, the \(h_1\) cannot be guessed by an adversary or any other internal state.&lt;/p&gt;
 &lt;p&gt;The final state however is &lt;em&gt;totally exposed&lt;/em&gt; by SHA-1: the concatenation of the state’s variables &lt;strong&gt;is&lt;/strong&gt; the resulting hash.&lt;/p&gt;
@@ -771,7 +1065,7 @@ An adversary can submit \(ptext ∥ pad ∥ ext\) and pass it as authentic witho
 &lt;br /&gt;&lt;br /&gt;
 \(ptext\) is assumed to be known by the adversary; \(pad\) isn’t but it can be guessed.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/set-4-hashes/hash-ext-states.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object  class='' align='middle' data='/img/matasano/set-4-hashes/hash-ext-states.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;The extended message must be padded &lt;em&gt;as if&lt;/em&gt; we were padding the whole message: in \(pad'\) we need to write the length of the whole message.&lt;/p&gt;
 &lt;p&gt;From the perspective of SHA-1 the whole input is the original message \(ptext\), the padding of the original SHA-1 call and the appended message \(ext\).&lt;/p&gt;
 &lt;p&gt;In other words, we compute \(H(ext)\) starting not from the initial hashing state \(h_0\) but from \(h_8 = H(k ∥ ptext)\).&lt;/p&gt;
@@ -948,7 +1242,7 @@ Hash a key in 3 simple steps:
 &lt;br /&gt;&lt;br /&gt;
 3.- Finally xor’ them and the result will be the hash of the key.
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="width: 100%;" class='' align='middle' data='/img/hashes/tabulation-hashing/tabulationhashing.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object  class='' align='middle' data='/img/hashes/tabulation-hashing/tabulationhashing.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2 id="cython-implementation"&gt;&lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;cython&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; implementation&lt;/h2&gt;
 &lt;p&gt;While we have 3 free parameters, I will restrict these:&lt;/p&gt;
 &lt;ul&gt;
@@ -4701,7 +4995,7 @@ $&lt;span class="w"&gt; &lt;/span&gt;adb&lt;span class="w"&gt; &lt;/span&gt;shel
     <content type="html">&lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 Visual proof that \(b^2 - a^2\) factorizes into \((b - a)(b + 1)\).
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="width: 100%;" class='' align='middle' data='/img/math/b2-a2.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object  class='' align='middle' data='/img/math/b2-a2.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 </content>
     <link href="https://book-of-gehn.github.io/articles/2021/08/12/Difference-of-Two-Squares.html" rel="alternate" type="text/html" title="Difference of two squares"/>
     <category term="math" label="math"/>
@@ -5391,10 +5685,10 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;p&gt;So I resorted to use a preprocessor. Similar to Liquid I used &lt;a href="https://jinja.palletsprojects.com/en/3.0.x/"&gt;Jinja2&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;While all of these could be done, in theory, with Pandoc filters, I think that having a preprocessor and &lt;em&gt;template engine&lt;/em&gt; like Jinja2 can be quite handy.&lt;/p&gt;
 &lt;h2 id="images-and-diagrams"&gt;Images and diagrams&lt;/h2&gt;
-&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2RvYy9zZWFib3JuLWNoZWF0c2hlZXQtdjEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2RvYy9zZWFib3JuLWNoZWF0c2hlZXQtdjEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD5tYXJnaW4=' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9kb2Mvc2VhYm9ybi1jaGVhdHNoZWV0LXYxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9kb2Mvc2VhYm9ybi1jaGVhdHNoZWV0LXYxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+bWFyZ2lu' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/doc/seaborn-cheatsheet-v1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/doc/seaborn-cheatsheet-v1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;I make a lot of diagrams, state machines and plots but I try to not make them by hand.&lt;/p&gt;
 &lt;p&gt;Tools that requires a human to do the layout are a waste of time (there are exceptions like me &lt;a href="/articles/2021/06/05/Seaborn-Cheatsheet.html"&gt;Seaborn Cheatsheet&lt;/a&gt;).&lt;/p&gt;
@@ -5469,7 +5763,7 @@ K_{2,1} p_{2,1} + K_{2,2} p_{2,2} = c_{2,2} \quad(\textrm{mod } m) \\$$
 &lt;p&gt;Yes, yes I could.&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="width: 100%;" class='' align='middle' data='/img/stats/seaborn-cheatsheet-v1.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object  class='' align='middle' data='/img/stats/seaborn-cheatsheet-v1.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://seaborn.pydata.org/"&gt;Seaborn&lt;/a&gt; is a very simple but powerful plotting library on top of &lt;a href="https://matplotlib.org/"&gt;matplotlib&lt;/a&gt; designed for statistical analysis.&lt;/p&gt;
 &lt;p&gt;Quick links: &lt;a href="/assets/stats/seaborn-cheatsheet-v1.pdf"&gt;PDF (no bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-bg-v1.pdf"&gt;PDF (bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-v1.svg"&gt;SVG (no bg)&lt;/a&gt;, &lt;a href="/assets/stats/seaborn-cheatsheet-bg-v1.svg"&gt;SVG (bg)&lt;/a&gt; .&lt;!--more--&gt;&lt;/p&gt;
 &lt;h2 id="instructions"&gt;Instructions&lt;/h2&gt;
@@ -10884,7 +11178,7 @@ Input-size/time-taken relationship of &lt;code&gt;&lt;span class="highlight-cand
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;./rbspy&lt;span class="w"&gt; &lt;/span&gt;report&lt;span class="w"&gt; &lt;/span&gt;-f&lt;span class="w"&gt; &lt;/span&gt;flamegraph&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;data.gz&lt;span class="w"&gt;  &lt;/span&gt;-o&lt;span class="w"&gt; &lt;/span&gt;out-good.svg&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="c1"&gt;# byexample: +skip&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img  class='fullwidth' alt='' src='/img/debug/ruby-process/flame-ruby-executor.png' /&gt;
+&lt;p&gt;&lt;figure class='fullwidth'&gt;&lt;img style="width: 100%;" class='fullwidth' alt='' src='/img/debug/ruby-process/flame-ruby-executor.png' /&gt;
 &lt;figcaption&gt;
 Flamegraph of 2 minutes sampling. On top a good behaving &lt;code&gt;executor.rb&lt;/code&gt;, spending most of the time waiting (right side). On bottom, its evil twin with a totally broken call stack.
 &lt;/figcaption&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -15684,7 +15978,7 @@ If you cannot login later, it would be pointless.
 
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/cut_and_paste_align_pasted.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object  class='' align='middle' data='/img/matasano/cut_and_paste_align_pasted.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 </content>
     <link href="https://book-of-gehn.github.io/articles/2018/07/01/Cut-and-Paste-ECB-Blocks.html" rel="alternate" type="text/html" title="Cut and Paste ECB blocks"/>
     <category term="cryptography" label="cryptography"/>
@@ -15750,24 +16044,24 @@ In fact, there are two challenges: the &lt;a href="https://cryptopals.com/sets/2
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3 id="block-alignment"&gt;Block alignment&lt;/h3&gt;
-&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTIuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfbWlzYWxpZ25fYnkyLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfbWlzYWxpZ25fYnkyLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by2.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by2.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The prepended payload is constant but it is still unknown to the us/adversary.&lt;/p&gt;
 &lt;p&gt;Before proceed we need to know for how many bytes our attacker-controlled payload is misaligned.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9taXNhbGlnbl9ieTEuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfbWlzYWxpZ25fYnkxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfbWlzYWxpZ25fYnkxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/matasano/break_ecb_misalign_by1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;Basically we start with a plaintext of &lt;em&gt;twice&lt;/em&gt; the size of the block size and we add one byte at time.&lt;/p&gt;
 &lt;p&gt;When we find two &lt;em&gt;consecutive&lt;/em&gt; cipher blocks that are the same, we are done.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2JyZWFrX2VjYl9hbGlnbmVkLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+Cm1hcmdpbg==' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfYWxpZ25lZC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9icmVha19lY2JfYWxpZ25lZC5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgptYXJnaW4=' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/break_ecb_aligned.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/matasano/break_ecb_aligned.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 &lt;/span&gt;&lt;/p&gt;
 &lt;p&gt;The amount of extra bytes that we added is the answer.&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;alignment&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;block_size&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -16147,10 +16441,10 @@ c_1 ⊕ c_2 &amp; = \left( p_1 ⊕ k_i \right)  ⊕ \left( p_2 ⊕ k_j \right)  
           &amp; = \left( p_1 ⊕ p_2 \right)
 \end{align*}$$
 &lt;p&gt;The idea is that the Hamming distance of them will be significantly shorter.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+CkNvbXB1dGUgdGhlIEhhbW1pbmcgZGlzdGFuY2UgYmV0d2VlbiBjb25zZWN1dGl2ZSBibG9ja3Mgb2YgdGhlIHNhbWUKbGVuZ3RoIGFuZCB0YWtlcyB0aGUgbWF4aW11bS4gVGhlbiBzY29yZXMgaXQuCgpTY29yZXMgY2xvc2VyIHRvIDEKbWVhbnMgc21hbGxlciBkaXN0YW5jZXMgYW5kIHRoZXJlZm9yZSB0aGUgYmxvY2tzIG9mIGNpcGhlcnRleHQgbG9va3MKdGhhdCB3ZXJlIHhvcidkIHdpdGggKnRoZSBzYW1lIGtleSogYXMgdGhlIHhvciBvZiB0d28gYmxvY2tzIGxvb2tzCipsZXNzIHJhbmRvbSouCgpTY29yZXMgY2xvc2VyIHRvIDAgYXJlIHRoZSBvcHBvc2l0ZTogdGhlIHhvciBvZiB0d28gYmxvY2tzIHN0aWxsIGxvb2tzCnJhbmRvbS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL21hdGFzYW5vL2hhbW1pbmcxLnN2ZycgdHlwZT0naW1hZ2Uvc3ZnK3htbCc+PC9vYmplY3Q+CkNvbXB1dGUgdGhlIEhhbW1pbmcgZGlzdGFuY2UgYmV0d2VlbiBjb25zZWN1dGl2ZSBibG9ja3Mgb2YgdGhlIHNhbWUKbGVuZ3RoIGFuZCB0YWtlcyB0aGUgbWF4aW11bS4gVGhlbiBzY29yZXMgaXQuCgpTY29yZXMgY2xvc2VyIHRvIDEKbWVhbnMgc21hbGxlciBkaXN0YW5jZXMgYW5kIHRoZXJlZm9yZSB0aGUgYmxvY2tzIG9mIGNpcGhlcnRleHQgbG9va3MKdGhhdCB3ZXJlIHhvcidkIHdpdGggKnRoZSBzYW1lIGtleSogYXMgdGhlIHhvciBvZiB0d28gYmxvY2tzIGxvb2tzCipsZXNzIHJhbmRvbSouCgpTY29yZXMgY2xvc2VyIHRvIDAgYXJlIHRoZSBvcHBvc2l0ZTogdGhlIHhvciBvZiB0d28gYmxvY2tzIHN0aWxsIGxvb2tzCnJhbmRvbS4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9oYW1taW5nMS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpDb21wdXRlIHRoZSBIYW1taW5nIGRpc3RhbmNlIGJldHdlZW4gY29uc2VjdXRpdmUgYmxvY2tzIG9mIHRoZSBzYW1lCmxlbmd0aCBhbmQgdGFrZXMgdGhlIG1heGltdW0uIFRoZW4gc2NvcmVzIGl0LgoKU2NvcmVzIGNsb3NlciB0byAxCm1lYW5zIHNtYWxsZXIgZGlzdGFuY2VzIGFuZCB0aGVyZWZvcmUgdGhlIGJsb2NrcyBvZiBjaXBoZXJ0ZXh0IGxvb2tzCnRoYXQgd2VyZSB4b3InZCB3aXRoICp0aGUgc2FtZSBrZXkqIGFzIHRoZSB4b3Igb2YgdHdvIGJsb2NrcyBsb29rcwoqbGVzcyByYW5kb20qLgoKU2NvcmVzIGNsb3NlciB0byAwIGFyZSB0aGUgb3Bwb3NpdGU6IHRoZSB4b3Igb2YgdHdvIGJsb2NrcyBzdGlsbCBsb29rcwpyYW5kb20uCm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9tYXRhc2Fuby9oYW1taW5nMS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpDb21wdXRlIHRoZSBIYW1taW5nIGRpc3RhbmNlIGJldHdlZW4gY29uc2VjdXRpdmUgYmxvY2tzIG9mIHRoZSBzYW1lCmxlbmd0aCBhbmQgdGFrZXMgdGhlIG1heGltdW0uIFRoZW4gc2NvcmVzIGl0LgoKU2NvcmVzIGNsb3NlciB0byAxCm1lYW5zIHNtYWxsZXIgZGlzdGFuY2VzIGFuZCB0aGVyZWZvcmUgdGhlIGJsb2NrcyBvZiBjaXBoZXJ0ZXh0IGxvb2tzCnRoYXQgd2VyZSB4b3InZCB3aXRoICp0aGUgc2FtZSBrZXkqIGFzIHRoZSB4b3Igb2YgdHdvIGJsb2NrcyBsb29rcwoqbGVzcyByYW5kb20qLgoKU2NvcmVzIGNsb3NlciB0byAwIGFyZSB0aGUgb3Bwb3NpdGU6IHRoZSB4b3Igb2YgdHdvIGJsb2NrcyBzdGlsbCBsb29rcwpyYW5kb20uCm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/matasano/hamming1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/matasano/hamming1.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 Compute the Hamming distance between consecutive blocks of the same length and takes the maximum. Then scores it.
 &lt;br /&gt;&lt;br /&gt;
 Scores closer to 1 means smaller distances and therefore the blocks of ciphertext looks that were xor’d with &lt;em&gt;the same key&lt;/em&gt; as the xor of two blocks looks &lt;em&gt;less random&lt;/em&gt;.
@@ -16227,7 +16521,7 @@ Both methods agree on being 29 the most likely length but as the plot shows, bot
 &lt;p&gt;So we need to do this for all the offsets between 0 and l. In other words:&lt;/p&gt;
 &lt;p&gt;&lt;figure&gt;&lt;figcaption&gt;&lt;span markdown='1'&gt;
 &lt;/span&gt;&lt;/figcaption&gt;
-&lt;object style="width: 100%;" class='' align='middle' data='/img/matasano/break_repeat_key_transpose.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;object  class='' align='middle' data='/img/matasano/break_repeat_key_transpose.svg' type='image/svg+xml'&gt;&lt;/object&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;p&gt;To break this, we will need the frequency of &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;etaoin&lt;/span&gt; &lt;span class="n"&gt;shrdlu&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; (I’m assuming that the plaintext is in ASCII human plain English):&lt;/p&gt;
 &lt;div class="highlight-candombe"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;cryptonita.fuzzy_set&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;FuzzySet&lt;/span&gt;
 &lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;most_common_plain_ngrams&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;FuzzySet&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
@@ -16861,10 +17155,10 @@ I/O&lt;span class="w"&gt; &lt;/span&gt;size&lt;span class="w"&gt; &lt;/span&gt;&
 &lt;p&gt;Watch out there, there is also a tool called &lt;code&gt;dd_rescue&lt;/code&gt; (notice the underscore) that has nothing to do with &lt;code&gt;GNU ddrescue&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;GNU ddrescue&lt;/code&gt;, from now on just &lt;code&gt;ddrescue&lt;/code&gt;, will copy a disk through three stages.&lt;/p&gt;
 &lt;p&gt;In the first, it reads blocks of data and copy them to the output in the same manner that &lt;code&gt;dd&lt;/code&gt; but unlike the latter, &lt;code&gt;ddrescue&lt;/code&gt; will not stop if it found an error nor will put zeros nor discard the block if the reading fails.&lt;/p&gt;
-&lt;p&gt;&lt;label for='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpBZnRlciB0aGUgaW5pdGlhbCBibG9jay13aXNlIHJlYWQsIGBkZF9yZXNjdWVgIHJlLXJlYWRzIGJsb2NrcyB3aXRoCmVycm9ycy4KCkZpcnN0LCByZWFkaW5nIGZyb20gdGhlIGV4dHJlbWVzIHVudGlsIHRoZSBmaXJzdCBiYWQgc2VjdG9yCigqdHJpbW1pbmcqKSBhbmQgdGhlbiB0cnlpbmcgZWFjaCByZW1haW5pbmcgc2VjdG9yLCBvbmUgYnkgb25lICgqc2NyYXBpbmcqKS4KbWFyZ2lu' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
-&lt;input type='checkbox' id='PG9iamVjdCBzdHlsZT0id2lkdGg6IDEwMCU7IiBjbGFzcz0nZnVsbHdpZHRoJyBhbGlnbj0nbWlkZGxlJyBkYXRhPScvaW1nL2ZvcmVuc2ljcy90aGVzaXMtcmVjb3ZlcmluZy90cmltbWluZ19zY3JhcGluZ19kZHJlc2N1ZS5zdmcnIHR5cGU9J2ltYWdlL3N2Zyt4bWwnPjwvb2JqZWN0PgpBZnRlciB0aGUgaW5pdGlhbCBibG9jay13aXNlIHJlYWQsIGBkZF9yZXNjdWVgIHJlLXJlYWRzIGJsb2NrcyB3aXRoCmVycm9ycy4KCkZpcnN0LCByZWFkaW5nIGZyb20gdGhlIGV4dHJlbWVzIHVudGlsIHRoZSBmaXJzdCBiYWQgc2VjdG9yCigqdHJpbW1pbmcqKSBhbmQgdGhlbiB0cnlpbmcgZWFjaCByZW1haW5pbmcgc2VjdG9yLCBvbmUgYnkgb25lICgqc2NyYXBpbmcqKS4KbWFyZ2lu' class='margin-toggle'/&gt;
+&lt;p&gt;&lt;label for='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9mb3JlbnNpY3MvdGhlc2lzLXJlY292ZXJpbmcvdHJpbW1pbmdfc2NyYXBpbmdfZGRyZXNjdWUuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQWZ0ZXIgdGhlIGluaXRpYWwgYmxvY2std2lzZSByZWFkLCBgZGRfcmVzY3VlYCByZS1yZWFkcyBibG9ja3Mgd2l0aAplcnJvcnMuCgpGaXJzdCwgcmVhZGluZyBmcm9tIHRoZSBleHRyZW1lcyB1bnRpbCB0aGUgZmlyc3QgYmFkIHNlY3RvcgooKnRyaW1taW5nKikgYW5kIHRoZW4gdHJ5aW5nIGVhY2ggcmVtYWluaW5nIHNlY3Rvciwgb25lIGJ5IG9uZSAoKnNjcmFwaW5nKikuCm1hcmdpbg==' class='margin-toggle'&gt;&amp;#8853;&lt;/label&gt;
+&lt;input type='checkbox' id='PG9iamVjdCAgY2xhc3M9J2Z1bGx3aWR0aCcgYWxpZ249J21pZGRsZScgZGF0YT0nL2ltZy9mb3JlbnNpY3MvdGhlc2lzLXJlY292ZXJpbmcvdHJpbW1pbmdfc2NyYXBpbmdfZGRyZXNjdWUuc3ZnJyB0eXBlPSdpbWFnZS9zdmcreG1sJz48L29iamVjdD4KQWZ0ZXIgdGhlIGluaXRpYWwgYmxvY2std2lzZSByZWFkLCBgZGRfcmVzY3VlYCByZS1yZWFkcyBibG9ja3Mgd2l0aAplcnJvcnMuCgpGaXJzdCwgcmVhZGluZyBmcm9tIHRoZSBleHRyZW1lcyB1bnRpbCB0aGUgZmlyc3QgYmFkIHNlY3RvcgooKnRyaW1taW5nKikgYW5kIHRoZW4gdHJ5aW5nIGVhY2ggcmVtYWluaW5nIHNlY3Rvciwgb25lIGJ5IG9uZSAoKnNjcmFwaW5nKikuCm1hcmdpbg==' class='margin-toggle'/&gt;
 &lt;span class='marginnote'&gt;
-&lt;object style="width: 100%;" class='fullwidth' align='middle' data='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' type='image/svg+xml'&gt;&lt;/object&gt;
+&lt;object  class='fullwidth' align='middle' data='/img/forensics/thesis-recovering/trimming_scraping_ddrescue.svg' type='image/svg+xml'&gt;&lt;/object&gt;
 After the initial block-wise read, &lt;code&gt;dd_rescue&lt;/code&gt; re-reads blocks with errors.
 &lt;br /&gt;&lt;br /&gt;
 First, reading from the extremes until the first bad sector (&lt;em&gt;trimming&lt;/em&gt;) and then trying each remaining sector, one by one (&lt;em&gt;scraping&lt;/em&gt;).
