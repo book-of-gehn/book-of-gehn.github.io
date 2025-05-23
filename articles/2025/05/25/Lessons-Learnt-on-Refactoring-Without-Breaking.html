@@ -1,0 +1,333 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="description" content="Lessons Learnt on Refactoring Without Breaking ">
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      
+          "@type": "BlogPosting",
+          "headline": "Lessons Learnt on Refactoring Without Breaking",
+          
+          
+          "datePublished": "2025-05-25T00:00:00+00:00",
+          "dateModified": "2025-05-25T00:00:00+00:00",
+          
+
+          "author": [{
+              "@type": "Person",
+              "name": "Martin Di Paola",
+              "url": "https://book-of-gehn.github.io"
+            }]
+      
+    }
+  </script>
+
+
+  
+
+  <title>Lessons Learnt on Refactoring Without Breaking</title>
+
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+
+  
+  <link rel="alternate" type="application/rss+xml" href="https://book-of-gehn.github.io/rss.xml">
+
+  <link rel="canonical" href="https://book-of-gehn.github.io/articles/2025/05/25/Lessons-Learnt-on-Refactoring-Without-Breaking.html">
+
+  <link href='/css/load-lato-fonts.min.css' rel='stylesheet' type='text/css'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      //root: "/js/MathJax-2.7.7",
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["\\(","\\)"]]},
+      TeX: {
+        Macros: {
+          
+        }
+      }
+    });
+  </script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js' async></script>
+
+  <script src="/js/jquery-3.6.0.min.js"></script>
+
+  <script src='/js/underscore-1.9.1.min.js' ></script>
+
+  <script src='/js/d3-7.4.2.min.js'></script>
+
+  <script src='/js/venn/venn-0.2.14.min.js'></script>
+  <script src='/js/venn/helper.min.js'></script>
+
+  <script src='/js/fix_syntax_highlight.min.js'></script>
+  <link rel="stylesheet" type="text/css" href="/css/tufte.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/latex.min.css">
+
+  <link rel="stylesheet" type="text/css" href="/css/font-awesome-5.min.css">
+
+  <script src='/js/lunr-2.3.9.min.js'></script>
+  <script src='/js/search_index.js'></script>
+  <script src='/js/search.min.js'></script>
+</head>
+<body>
+<header>
+                <hgroup class="header-group">
+        <h1 class="header-title"><a href="/">The Book of Gehn</a></h1>
+                </hgroup>
+                <ul class="header-list">
+                    <li><a href="https://byexamples.github.io">byexample</a></li>
+                    <li><a href="https://bisturi.github.io">bisturi</a></li>
+                    <li>
+                        <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+                        <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+                    </li>
+                </ul>
+        
+        
+
+    
+
+</header>
+<article class="group">
+<h1>
+Lessons Learnt on Refactoring Without Breaking
+</h1>
+<p class="subtitle">
+May 25, 2025
+</p>
+<p>In <a href="https://github.com/eldipa/xoz">xoz</a>, every single piece of content data is associated with a <em>descriptor</em>. The content data may fit in the descriptor structure so it is placed somewhere else in the <code><span class="highlight-candombe-inline"><span class="n">xoz</span></span></code> file.</p>
+<p>This content is referenced by the descriptor by a object called <code><span class="highlight-candombe-inline"><span class="n">Segment</span></span></code> that knows how to recover the descriptor’s content.</p>
+<p>I eventually realized that a single segment would not be enough: if the descriptor would like to have multiple contents <em>parts</em>, the descriptor should own multiple segments as well.</p>
+<p><em>“I should replace <code><span class="highlight-candombe-inline"><span class="n">Segment</span><span class="w"> </span><span class="n">segm</span><span class="p">;</span></span></code> by <code><span class="highlight-candombe-inline"><span class="n">Segment</span><span class="w"> </span><span class="n">segm</span><span class="p">[];</span></span></code> and that’s all - a simple refactor - how hard could be?”</em></p>
+<p>Hell…</p>
+<ul>
+<li>the branch ended with 69 commits, <a href="https://github.com/eldipa/xoz/commit/5521498b16a2bd24440a865c88f25c141be4271c">squashed in a single commit</a></li>
+<li>it was 1 month of work</li>
+<li>41 files were changed</li>
+<li>with 3014 insertions and 1479 deletions in total</li>
+</ul>
+<p>It was hard, not because it was difficult the change but because it was really hard to not break 300 tests with a single change.</p>
+<p>This post is a summary of a few good lessons learnt.</p>
+<h2 id="the-price-of-breaking-backward-compatibility">The price of breaking backward compatibility</h2>
+<p>Let me show exactly how was the situation before the refactor.</p>
+<p>The descriptor is stored <em>in disk</em> as as follows:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">struct</span><span class="w"> </span><span class="nc">descriptor_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">own_content</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// mask: 0x8000</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">lo_isize</span><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w">   </span><span class="c1">// mask: 0x7c00</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">has_id</span><span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// mask: 0x0200</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">type</span><span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="mi">9</span><span class="p">;</span><span class="w">   </span><span class="c1">// mask: 0x01ff</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="cm">/* present if own_content == 1 */</span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">large</span><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">      </span><span class="c1">// mask: 0x8000</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">lo_csize</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">15</span><span class="p">;</span><span class="w">     </span><span class="c1">// mask: 0x7fff</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="cm">/* present if own_content == 1 and large == 1 */</span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">hi_csize</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cm">/* present if own_content == 1 */</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">segment_t</span><span class="w"> </span><span class="n">segm</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<p>It is obvious that if I wanted to change the single <code><span class="highlight-candombe-inline"><span class="n">segm</span></span></code> by an array, I needed to store <em>in disk</em> how many elements segments the array has, how many <em>“parts”</em> the content has: a <code><span class="highlight-candombe-inline"><span class="n">content_part_cnt</span></span></code> counter.</p>
+<p>The problem is that <code><span class="highlight-candombe-inline"><span class="n">xoz</span></span></code> has almost 500 tests and most of them check directly or indirectly how <strong>exactly</strong> a descriptor is written to disk.</p>
+<p>Adding a new field will break a lot of them if not all.</p>
+<p>Even if some tests don’t check what is written, they compute a <strong>checksum</strong> of the structure. Adding <code><span class="highlight-candombe-inline"><span class="n">content_part_cnt</span></span></code> will make the checksum differ and again, more tests would be broken.</p>
+<p>By that time <code><span class="highlight-candombe-inline"><span class="n">xoz</span></span></code> was not released to the public so changing the file format in such non-backward compatible way was fine… <strong>except for me!</strong></p>
+<h2 id="lesson-1-minimize-the-changes">Lesson 1: minimize the changes</h2>
+<p>The <code><span class="highlight-candombe-inline"><span class="n">own_content</span></span></code> signals if the descriptor has or not a segment. With multiple content parts (multiple segments), that bit would signal if there is at least one segment.</p>
+<p>This means that one segment is always implicit if <code><span class="highlight-candombe-inline"><span class="n">own_content</span></span></code> is set. A <code><span class="highlight-candombe-inline"><span class="n">content_part_cnt</span></span></code> does not have to count how many parts are but how many are plus the one implicit. A <code><span class="highlight-candombe-inline"><span class="n">content_part_cnt</span></span></code> valued to zero would mean that there is one content part.</p>
+<p><em>So what?</em></p>
+<p><code><span class="highlight-candombe-inline"><span class="n">xoz</span></span></code> uses the same checksum that the IP protocol uses: it is not very robust but it can be computed easily and in particular, adding 2-bytes zeros does not change the checksum.</p>
+<p>So for all my tests that have a single segment, <code><span class="highlight-candombe-inline"><span class="n">content_part_cnt</span></span></code> will be zero and for such tests, the checksum will not change.</p>
+<p>I cannot avoid fixing the tests that check <em>exactly</em> what is written to disk but I can prevent breaking the ones that check the checksum.</p>
+<p>This is how the structure looks like now:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">struct</span><span class="w"> </span><span class="nc">descriptor_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">own_content</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// mask: 0x8000</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">lo_isize</span><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w">   </span><span class="c1">// mask: 0x7c00</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">has_id</span><span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// mask: 0x0200</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">type</span><span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="mi">9</span><span class="p">;</span><span class="w">   </span><span class="c1">// mask: 0x01ff</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="cm">/* present if own_content == 1 */</span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">content_part_cnt</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cm">/* present if own_content == 1 */</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">content_part_t</span><span class="w"> </span><span class="n">cdata_entries</span><span class="p">[</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">content_part_cnt</span><span class="p">];</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<p>Another detail: the <code><span class="highlight-candombe-inline"><span class="n">large</span></span></code>, <code><span class="highlight-candombe-inline"><span class="n">lo_csize</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">hi_csize</span></span></code> fields define the size of the content part so now they are bundled together with its segment <code><span class="highlight-candombe-inline"><span class="n">segm</span></span></code>. The <code><span class="highlight-candombe-inline"><span class="n">content_part_t</span></span></code> has the same layout as before to not break more tests.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">struct</span><span class="w"> </span><span class="nc">content_part_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">large</span><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">      </span><span class="c1">// mask: 0x8000</span>
+<span class="w">        </span><span class="n">uint</span><span class="w"> </span><span class="n">lo_csize</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">15</span><span class="p">;</span><span class="w">     </span><span class="c1">// mask: 0x7fff</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="cm">/* present if large == 1 */</span>
+<span class="w">    </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">hi_csize</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">segment_t</span><span class="w"> </span><span class="n">segm</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<h2 id="lesson-2-if-you-break-too-much-stop-and-step-back">Lesson 2: if you break too much, stop and step back</h2>
+<p>Once I resolved the disk format it was time to do the refactor of the structures in memory and run the tests.</p>
+<p>But when I tried to do a much larger change in the code base, <em>hell</em>, too many broken tests! Much more that I anticipated.</p>
+<p>I faced this situation several times and the lesson that I learnt was <em>“if you break too much, stop and step back”</em>.</p>
+<p>No, it was not a bug, it was a <strong>symptom</strong> that the refactor was <strong>too disruptive</strong> to be done in a single changeset.</p>
+<p>Starting to do multiple sub-fixes + sub-refactors, all at once, while having the tests broken was a <strong>no-go</strong>. Doing it so it’s like going for a driving, blind.</p>
+<p>Step back and try something smaller…, even if you are going to throw it away later.</p>
+<h2 id="lesson-3-do-incomplete-throw-away-refactors-keep-all-tests-passing">Lesson 3: do incomplete throw-away refactors, keep all tests passing</h2>
+<p>Step back and try something smaller…, small incomplete refactors <em>even</em> if you are going to <em>throw it away later</em>.</p>
+<p>For example, I <em>only</em> modified the read-from-disk and write-to-disk functions and maintain all the rest of the code from using the first segment loaded.</p>
+<p>That allowed me to test the read/write of the new <code><span class="highlight-candombe-inline"><span class="n">content_part_cnt</span></span></code> and fix the tests being 99% sure that if a test was broken it was because I added 2 zero bytes (<code><span class="highlight-candombe-inline"><span class="n">content_part_cnt</span></span></code>) and nothing else.</p>
+<p>I was sure that part of the code that I did it was temporal and not part of the real refactor but doing these intermedian changes allowed me to <em>keep the tests passing all the time</em> (after a reasonable amount of fixing).</p>
+<p>But I eventually I got stuck.</p>
+<h2 id="lesson-4-if-decoupling-is-hard-isolate-first-with-spies">Lesson 4: if decoupling is hard, isolate first (with spies)</h2>
+<p>In <code><span class="highlight-candombe-inline"><span class="n">xoz</span></span></code>, the <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> objects are managed by <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> sets.</p>
+<p>These <em>sets</em> are an unorder collections of descriptors, not just in memory but also in disk. There is an <em>intimate relationship</em> between those two in order to operate efficiently. In fact, <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> <strong>is</strong> a <code><span class="highlight-candombe-inline"><span class="k">friend</span></span></code> class of <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code>.</p>
+<p>And this <strong>is</strong> a problem.</p>
+<p>Changing the internals of <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> made the logic in <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> to change in unexpected ways.</p>
+<p><label for='CkJ1dCB3aHk/IEJlY2F1c2Ugb2YgbGlmZS4KCkFuZCBiZWNhdXNlIGBEZXNjcmlwdG9yU2V0YCB3YXMgZGV2ZWxvcGVkIG11Y2ggZWFybGllci4gQmFjayB0aGVuCnRoZSBgRGVzY3JpcHRvcmAgY2xhc3MgZGlkbid0IG9mZmVyIGFueSBwdWJsaWMgQVBJIHRvIG1hbmFnZSB0aGUgY29udGVudApzZWdtZW50IGJ1dCBhbHNvIGJlY2F1c2UgdXNpbmcgdGhlIGludGVybmFscywgYERlc2NyaXB0b3JTZXRgIGNvdWxkIGRvCnRoaW5ncyBoYXJkIHRvIGdldCBkb25lIG90aGVyd2lzZS4KClRpbWUgcGFzc2VkLCBhbmQgYERlc2NyaXB0b3JgIGFjcXVpcmVkIGEgc2ltcGxpZmllZCwgaGlnaC1sZXZlbCBBUEkKZm9yIG1hbmFnaW5nIGl0cyBjb250ZW50LiBHcmVhdCBmb3IgYW55IHN1YmNsYXNzIG9mIGl0IGJ1dCB0b28gbGltaXRlZApmb3IgYERlc2NyaXB0b3JTZXRgLgptYXJnaW5ub3Rlcw==' class='margin-toggle'> &#8853;</label>
+<input type='checkbox' id='CkJ1dCB3aHk/IEJlY2F1c2Ugb2YgbGlmZS4KCkFuZCBiZWNhdXNlIGBEZXNjcmlwdG9yU2V0YCB3YXMgZGV2ZWxvcGVkIG11Y2ggZWFybGllci4gQmFjayB0aGVuCnRoZSBgRGVzY3JpcHRvcmAgY2xhc3MgZGlkbid0IG9mZmVyIGFueSBwdWJsaWMgQVBJIHRvIG1hbmFnZSB0aGUgY29udGVudApzZWdtZW50IGJ1dCBhbHNvIGJlY2F1c2UgdXNpbmcgdGhlIGludGVybmFscywgYERlc2NyaXB0b3JTZXRgIGNvdWxkIGRvCnRoaW5ncyBoYXJkIHRvIGdldCBkb25lIG90aGVyd2lzZS4KClRpbWUgcGFzc2VkLCBhbmQgYERlc2NyaXB0b3JgIGFjcXVpcmVkIGEgc2ltcGxpZmllZCwgaGlnaC1sZXZlbCBBUEkKZm9yIG1hbmFnaW5nIGl0cyBjb250ZW50LiBHcmVhdCBmb3IgYW55IHN1YmNsYXNzIG9mIGl0IGJ1dCB0b28gbGltaXRlZApmb3IgYERlc2NyaXB0b3JTZXRgLgptYXJnaW5ub3Rlcw==' class='margin-toggle'/>
+<span class='marginnote'>
+But why? Because of life.
+<br /><br />
+And because <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> was developed much earlier. Back then the <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> class didn’t offer any public API to manage the content segment but also because using the internals, <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> could do things hard to get done otherwise.
+<br /><br />
+Time passed, and <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> acquired a simplified, high-level API for managing its content. Great for any subclass of it but too limited for <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code>.
+</span></p>
+<p>And to make it worse, <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> used its own self-managed content segment (to store the descriptors in the set) <strong>bypassing the public interface</strong> of <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> to interact with the content.</p>
+<p>The following is a oversimplification of the code:</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Descriptor</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="k">friend</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">DescriptorSet</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// old, single-part content logic (but still the one working by now)</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">csize</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Segment</span><span class="w"> </span><span class="n">segm</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// new, multi-part content logic (loaded from disk, but not in use)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">content_part_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cparts</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DescriptorSet</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Descriptor</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">own_csize</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Segment</span><span class="w"> </span><span class="n">own_managed_segm</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">update</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// attention! DescriptorSet is overriding Descriptor&#39;s (old) internal state!</span>
+<span class="w">    </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">segm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">own_managed_segm</span><span class="p">;</span>
+<span class="w">    </span><span class="k">this</span><span class="o">-&gt;</span><span class="n">csize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">own_csize</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<p>Before trying to do any change, I needed to isolate what <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> knew of <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code>. You may think, <em>“ok, just add a bunch of public <code><span class="highlight-candombe-inline"><span class="n">set</span><span class="p">()</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">get</span><span class="p">()</span></span></code> methods to <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> and make <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> to use them instead of accessing the internals</em>.</p>
+<p>But no, adding just <code><span class="highlight-candombe-inline"><span class="n">set</span><span class="p">()</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">get</span><span class="p">()</span></span></code> would lead to a bad design. And worse, those public methods would be callable from <em>anybody</em>, not just <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code>.</p>
+<p>My approach was to use <strong>spies</strong>: classes that <em>are</em> <code><span class="highlight-candombe-inline"><span class="k">friend</span></span></code> of <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> and implement a small subset of the functionality needed by <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> making <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> a friend <strong>not longer</strong>.</p>
+<div class="highlight-candombe"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Descriptor</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="k">friend</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">DSpy</span><span class="p">;</span><span class="w"> </span><span class="c1">// DescriptorSet is not longer a friend</span>
+
+<span class="w">  </span><span class="c1">// old, single-part content logic (but still the one working by now)</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">csize</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Segment</span><span class="w"> </span><span class="n">segm</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// new, multi-part content logic (loaded from disk, but not in use)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">content_part_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cparts</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DSpy</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="n">Descriptor</span><span class="o">&amp;</span><span class="w"> </span><span class="n">dsc</span><span class="p">;</span>
+
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">update_segm</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Segment</span><span class="o">&amp;</span><span class="w"> </span><span class="n">segm</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">csize</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// internals access, to the old logic</span>
+<span class="w">    </span><span class="n">dsc</span><span class="p">.</span><span class="n">segm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">segm</span><span class="p">;</span>
+<span class="w">    </span><span class="n">dsc</span><span class="p">.</span><span class="n">csize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">csize</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DescriptorSet</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Descriptor</span><span class="w"> </span><span class="p">{</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">  </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">own_csize</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Segment</span><span class="w"> </span><span class="n">own_managed_segm</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">update</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Not longer accessing anything private</span>
+<span class="w">    </span><span class="n">DSpy</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">).</span><span class="n">update_segm</span><span class="p">(</span><span class="n">own_managed_segm</span><span class="p">,</span><span class="w"> </span><span class="n">own_csize</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<p>It may not seem like much, I’m still exposing the internals <strong>but</strong>:</p>
+<ul>
+<li>I have <strong>mapped</strong> exactly <strong>which</strong> internals I’m leaking: they are in the <code><span class="highlight-candombe-inline"><span class="n">DSpy</span></span></code> methods, a much <strong>smaller</strong> place too look. For comparison, <code><span class="highlight-candombe-inline"><span class="n">DSpy</span></span></code> has 3 methods of 1 line each and <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> has ~40 methods with a total of more than 1000 lines of code.</li>
+<li>The use of spies allows me to be <strong>selective</strong> to which internals I want to leak: I have a small <code><span class="highlight-candombe-inline"><span class="n">DSpy</span></span></code> class for <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> and another, larger <code><span class="highlight-candombe-inline"><span class="n">DSpyForTesting</span></span></code> for testing but nobody is a direct friend of <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> so nobody has access to the entire internals.</li>
+</ul>
+<h2 id="lesson-5-chop-chop-one-small-bite-at-time">Lesson 5: chop-chop, one small bite at time</h2>
+<p>With the spies in place, I took each of their methods, one by one, and started to figure out how to remove it, doing the necessary changes in <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code> and fixing the tests, if required.</p>
+<p>I started with a <code><span class="highlight-candombe-inline"><span class="n">DSpy</span></span></code> with ~8 non-trivial methods and today I reduced it to just 2, one-liners. Each method removed, each simplification lead to a smaller, much easier to understand, interaction between <code><span class="highlight-candombe-inline"><span class="n">Descriptor</span></span></code> and <code><span class="highlight-candombe-inline"><span class="n">DescriptorSet</span></span></code>.</p>
+<p>Only then I took the leap to remplace any use of the old single-part implementation by the new one. The real refactor.</p>
+<p>The result?</p>
+<ul>
+<li>the branch ended with 69 commits, <a href="https://github.com/eldipa/xoz/commit/5521498b16a2bd24440a865c88f25c141be4271c">squashed in a single commit</a></li>
+<li>it was 1 month of work</li>
+<li>41 files were changed</li>
+<li>with 3014 insertions and 1479 deletions in total</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<ul>
+<li><p>Try to break as little as possible.</p></li>
+<li><p>If you break too much, stop and step back</p></li>
+<li><p>Incomplete throw-away code is ok, keep your tests passing, don’t get blind.</p></li>
+<li><p>Decouple, and if it is hard, isolate first.</p></li>
+<li><p>Split your refactor into the smallest chunks possible and go one by one.</p>
+<p class="small-subtitle-with-top-margin">
+<p>Related tags: <a href='https://book-of-gehn.github.io/?tag="xoz"'>xoz</a>, <a href='https://book-of-gehn.github.io/?tag="cpp"'>cpp</a>, <a href='https://book-of-gehn.github.io/?tag="refactor"'>refactor</a></p>
+</p></li>
+</ul>
+<script src="https://utteranc.es/client.js"
+        repo="book-of-gehn/book-of-gehn.github.io"
+        issue-term="pathname"
+        label="comments-utteranc"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+</article>
+<span class="print-footer">Lessons Learnt on Refactoring Without Breaking - May 25, 2025 - Martin Di Paola</span>
+<footer>
+    <hr class="slender">
+    <div class="credits">
+        <span>&copy;
+            Martin Di Paola
+        </span></br>
+            <a class="raw_link" href="/atom.xml"><img height="16px" width="16px" src="/img/rss-32px.png" /></a>
+            <a class="raw_link" href="https://github.com/eldipa"><img height="16px" width="16px" src="/img/github.png" /></a>
+        <br>
+        
+        <a href="mailto:martinp.dipaola@gmail.com">martinp.dipaola@gmail.com</a></span></br> <br>
+        
+    </div>
+
+    <img src='http://192.34.63.156:6127/img/http%3A//127.0.0.1%3A4000/articles/2025/05/25/Lessons-Learnt-on-Refactoring-Without-Breaking.html.png' onerror="this.style.display='none'" async></img>
+</footer>
+</body>
+</html>
