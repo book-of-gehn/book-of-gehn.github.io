@@ -128,7 +128,11 @@ Tags: <a href='https://book-of-gehn.github.io/?tag="xoz"'>xoz</a>, <a href='http
 May 25, 2025
 </p>
 <div>
-
+<p>In <a href="https://github.com/eldipa/xoz">xoz</a>, every single piece of content data is associated with a <em>descriptor</em>. The content data may fit in the descriptor structure so it is placed somewhere else in the <code>xoz</code> file.</p>
+<p>This content is referenced by the descriptor by a object called <code>Segment</code> that knows how to recover the descriptor’s content.</p>
+<p>I eventually realized that a single segment would not be enough: if the descriptor would like to have multiple contents <em>parts</em>, the descriptor should own multiple segments as well.</p>
+<p><em>“I should replace <code>Segment segm;</code> by <code>Segment segm[];</code> and that’s all - a simple refactor - how hard could be?”</em></p>
+<p>Hell…</p>
 </div>
 </div>
 <div class="index-single-post" id="articles-2024-12-31-Greenwald-Khanna-E-Approximated-Q-Quantile-html">

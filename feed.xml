@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <id>https://book-of-gehn.github.io</id>
   <title>The Book of Gehn</title>
-  <updated>2025-05-23T15:17:26.103620+00:00</updated>
+  <updated>2026-09-26T18:28:46.565623+00:00</updated>
   <author>
     <name>Martin Di Paola</name>
     <email>martinp.dipaola@gmail.com</email>
@@ -24,7 +24,7 @@
 &lt;p&gt;This content is referenced by the descriptor by a object called &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Segment&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; that knows how to recover the descriptor’s content.&lt;/p&gt;
 &lt;p&gt;I eventually realized that a single segment would not be enough: if the descriptor would like to have multiple contents &lt;em&gt;parts&lt;/em&gt;, the descriptor should own multiple segments as well.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;“I should replace &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Segment&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;segm&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; by &lt;code&gt;&lt;span class="highlight-candombe-inline"&gt;&lt;span class="n"&gt;Segment&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;segm&lt;/span&gt;&lt;span class="p"&gt;[];&lt;/span&gt;&lt;/span&gt;&lt;/code&gt; and that’s all - a simple refactor - how hard could be?”&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;Hell…&lt;/p&gt;
+&lt;p&gt;Hell…&lt;!--more--&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;the branch ended with 69 commits, &lt;a href="https://github.com/eldipa/xoz/commit/5521498b16a2bd24440a865c88f25c141be4271c"&gt;squashed in a single commit&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;it was 1 month of work&lt;/li&gt;

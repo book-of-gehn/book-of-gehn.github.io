@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta name="description" content="Lessons Learnt on Refactoring Without Breaking ">
+  <meta name="description" content="Lessons Learnt on Refactoring Without Breaking In xoz, every single piece of content data is associated with a descriptor. The content data may fit in the descriptor structure so it is placed somewhere else in the file. This content is referenced by the descriptor by a object called that knows how to recover the descriptor’s content. I eventually realized that a single segment would not be enough: if the descriptor would like to have multiple contents parts, the descriptor should own multiple segments as well. “I should replace by and that’s all - a simple refactor - how hard could be?” Hell…">
 
   
   <script type="application/ld+json">
@@ -106,7 +106,7 @@ May 25, 2025
 <p>This content is referenced by the descriptor by a object called <code><span class="highlight-candombe-inline"><span class="n">Segment</span></span></code> that knows how to recover the descriptor’s content.</p>
 <p>I eventually realized that a single segment would not be enough: if the descriptor would like to have multiple contents <em>parts</em>, the descriptor should own multiple segments as well.</p>
 <p><em>“I should replace <code><span class="highlight-candombe-inline"><span class="n">Segment</span><span class="w"> </span><span class="n">segm</span><span class="p">;</span></span></code> by <code><span class="highlight-candombe-inline"><span class="n">Segment</span><span class="w"> </span><span class="n">segm</span><span class="p">[];</span></span></code> and that’s all - a simple refactor - how hard could be?”</em></p>
-<p>Hell…</p>
+<p>Hell…<!--more--></p>
 <ul>
 <li>the branch ended with 69 commits, <a href="https://github.com/eldipa/xoz/commit/5521498b16a2bd24440a865c88f25c141be4271c">squashed in a single commit</a></li>
 <li>it was 1 month of work</li>
